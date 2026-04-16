@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: dumpit
+
+  profiles:
+    active: local
+
+  jackson:
+    time-zone: Asia/Seoul
+    serialization:
+      write-dates-as-timestamps: false
+
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            scope:
+              - email
+              - profile
+              - https://www.googleapis.com/auth/calendar
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: false
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  model: gpt-4o-mini
+
+app:
+  frontend-url: http://localhost:5173
+  cors:
+    allowed-origins: http://localhost:5173
+
+logging:
+  level:
+    org.springframework.security: INFO

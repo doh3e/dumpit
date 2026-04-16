@@ -1,0 +1,48 @@
+@import url("https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary:   #E05D5D;
+  --color-secondary: #FF8C42;
+  --color-accent:    #F9F9F9;
+  --color-dark:      #1A1A1A;
+  --outline:         2px solid #1A1A1A;
+  --shadow-kitschy:  4px 4px 0px #1A1A1A;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Mona12', system-ui, sans-serif;
+  background-color: var(--color-accent);
+  color: var(--color-dark);
+  -webkit-font-smoothing: none;
+}
+
+@layer components {
+  .btn-kitschy {
+    @apply font-extrabold px-6 py-3 border-2 border-dark rounded-lg;
+    box-shadow: var(--shadow-kitschy);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  .btn-kitschy:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px #1A1A1A;
+  }
+
+  .card-kitschy {
+    @apply bg-white border-2 border-dark rounded-xl p-5;
+    box-shadow: var(--shadow-kitschy);
+  }
+
+  .heading-kitschy {
+    @apply font-black text-dark tracking-wide;
+    font-family: 'Press Start 2P', 'Mona12', sans-serif;
+  }
+}
