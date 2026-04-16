@@ -1,0 +1,9 @@
+build/
+bin/
+.gradle/
+out/
+.idea/
+*.iml
+.env
+application-local.yml
+application-prod.yml

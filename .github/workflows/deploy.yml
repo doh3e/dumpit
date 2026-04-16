@@ -1,0 +1,36 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend to EC2
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/dumpit
+            git pull origin main
+            cd backend
+            docker build -t dumpit-backend .
+            docker stop dumpit-backend || true
+            docker rm dumpit-backend || true
+            docker run -d \
+              --name dumpit-backend \
+              --network dumpit-net \
+              -p 8080:8080 \
+              --env-file ~/dumpit/.env \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              --restart unless-stopped \
+              dumpit-backend
