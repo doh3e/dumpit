@@ -1,4 +1,5 @@
 import { NavLink, Link } from 'react-router-dom'
+import PomodoroTimer from '../PomodoroTimer'
 
 const MENU = [
   { label: '나의 태스크', path: '/dashboard' },
@@ -6,7 +7,7 @@ const MENU = [
   { label: '코인샵', path: '/shop' },
 ]
 
-export default function Sidebar({ onOpenSettings }) {
+export default function Sidebar({ onOpenSettings, tasks }) {
   return (
     <aside className="hidden lg:flex flex-col w-56 min-h-full bg-white border-r-2 border-dark pt-6 pb-10 px-3 gap-1">
       <Link to="/dashboard" className="flex items-center justify-center mb-4 px-2">
@@ -28,6 +29,13 @@ export default function Sidebar({ onOpenSettings }) {
           {label}
         </NavLink>
       ))}
+
+      <div className="mt-4 pt-4 border-t-2 border-dark/20">
+        <h4 className="text-[10px] font-black text-dark/40 uppercase tracking-wider px-2 mb-1">
+          Pomodoro
+        </h4>
+        <PomodoroTimer tasks={tasks} compact />
+      </div>
 
       <div className="mt-auto pt-4 border-t-2 border-dark/20">
         <button
