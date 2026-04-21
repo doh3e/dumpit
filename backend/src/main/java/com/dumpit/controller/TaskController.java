@@ -59,6 +59,14 @@ public class TaskController {
         return ResponseEntity.ok(TaskResponse.from(task));
     }
 
+    @PostMapping("/{taskId}/reanalyze")
+    public ResponseEntity<TaskResponse> reanalyzePriority(
+            @AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("taskId") UUID taskId) {
+        Task task = taskService.reanalyzePriority(principal.getAttribute("email"), taskId);
+        return ResponseEntity.ok(TaskResponse.from(task));
+    }
+
     @DeleteMapping("/{taskId}")
     public ResponseEntity<Void> deleteTask(
             @AuthenticationPrincipal OAuth2User principal,
