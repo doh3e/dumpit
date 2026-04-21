@@ -21,16 +21,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/dumpit
+            git fetch origin main
+            git checkout main
             git pull origin main
-            cd backend
-            docker build -t dumpit-backend .
-            docker stop dumpit-backend || true
-            docker rm dumpit-backend || true
-            docker run -d \
-              --name dumpit-backend \
-              --network dumpit-net \
-              -p 8080:8080 \
-              --env-file ~/dumpit/.env \
-              -e SPRING_PROFILES_ACTIVE=prod \
-              --restart unless-stopped \
-              dumpit-backend
+            sudo docker-compose down
+            sudo docker-compose up -d --build
