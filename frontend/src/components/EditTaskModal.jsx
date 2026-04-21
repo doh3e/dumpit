@@ -10,7 +10,12 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   const [estimatedMinutes, setEstimatedMinutes] = useState(
     task.estimatedMinutes ?? ''
   )
+  const [priorityScore, setPriorityScore] = useState(
+    task.userPriorityScore ?? task.aiPriorityScore ?? 0.5
+  )
+  const isUserOverridden = task.userPriorityScore != null
   const [saving, setSaving] = useState(false)
+  const [reanalyzing, setReanalyzing] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -23,6 +28,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         description: description.trim() || null,
         deadline: deadline || null,
         estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes) : null,
+        userPriorityScore: priorityScore,
       })
       onUpdated()
     } catch {
@@ -97,6 +103,53 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
               className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-dark/60 mb-1">
+            중요도 ({Math.round(priorityScore * 100)}점)
+            {isUserOverridden && (
+              <button
+                type="button"
+                onClick={() => setPriorityScore(task.aiPriorityScore ?? 0.5)}
+                className="ml-2 text-[10px] text-primary underline"
+              >
+                AI 점수로 초기화
+              </button>
+            )}
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={priorityScore}
+            onChange={(e) => setPriorityScore(parseFloat(e.target.value))}
+            className="w-full accent-primary"
+          />
+          <div className="flex justify-between text-[10px] text-dark/40 font-bold mt-1">
+            <span>낮음</span>
+            <span>보통</span>
+            <span>높음</span>
+          </div>
+          <button
+            type="button"
+            disabled={reanalyzing}
+            onClick={async () => {
+              setReanalyzing(true)
+              try {
+                const res = await api.post(`/tasks/${task.taskId}/reanalyze`)
+                setPriorityScore(res.data.aiPriorityScore ?? 0.5)
+              } catch {
+                alert('AI 재분석에 실패했어요.')
+              } finally {
+                setReanalyzing(false)
+              }
+            }}
+            className="mt-2 w-full text-xs font-bold text-primary border-2 border-primary rounded-lg py-1.5 hover:bg-primary/10 transition-colors disabled:opacity-50"
+          >
+            {reanalyzing ? 'AI 분석 중...' : 'AI 우선순위 재분석'}
+          </button>
         </div>
 
         <div className="flex gap-3 pt-2">

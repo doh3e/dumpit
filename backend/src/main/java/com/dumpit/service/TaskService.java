@@ -86,6 +86,24 @@ public class TaskService {
     }
 
     @Transactional
+    public Task reanalyzePriority(String email, UUID taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new IllegalArgumentException("태스크를 찾을 수 없습니다"));
+
+        if (!task.getUser().getEmail().equals(email)) {
+            throw new IllegalArgumentException("권한이 없습니다");
+        }
+
+        OpenAiService.PriorityResult priority =
+                openAiService.scorePriority(task.getTitle(), task.getDescription(),
+                        task.getDeadline(), task.getEstimatedMinutes());
+        task.setAiPriorityScore(priority.score());
+        task.setUserPriorityScore(null);
+
+        return taskRepository.save(task);
+    }
+
+    @Transactional
     public void deleteTask(String email, UUID taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("태스크를 찾을 수 없습니다"));
