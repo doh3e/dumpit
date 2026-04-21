@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import api from '../services/api'
 
 export default function EditTaskModal({ task, onClose, onUpdated }) {
@@ -48,8 +49,8 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div className="absolute inset-0 bg-dark/40" onClick={onClose} />
 
       <form
@@ -176,6 +177,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           </button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body
   )
 }

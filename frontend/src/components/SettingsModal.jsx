@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import api from '../services/api'
 
 const DEFAULT_START = 9
@@ -29,8 +30,8 @@ export default function SettingsModal({ onClose }) {
     onClose()
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark/40" onClick={onClose}>
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-dark/40" onClick={onClose}>
       <div
         className="card-kitschy w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -124,6 +125,5 @@ export default function SettingsModal({ onClose }) {
           </button>
         </div>
       </div>
-    </div>
-  )
+    </div>, document.body)
 }
