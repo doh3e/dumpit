@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { label: '코인샵', path: '/shop' },
 ]
 
-export default function Header() {
+export default function Header({ onOpenDrawer }) {
   const { pathname } = useLocation()
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -28,12 +28,24 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-primary border-b-2 border-dark shadow-kitschy">
       <div className="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <img src="/text_logo.png" alt="DumpIt" className="h-24 w-auto" />
-          <span className="text-[10px] font-bold bg-secondary text-white px-2 py-0.5 rounded border border-dark">
-            BETA
-          </span>
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Hamburger button - only below lg */}
+          <button
+            onClick={onOpenDrawer}
+            className="lg:hidden w-9 h-9 rounded-lg border-2 border-white text-white flex flex-col items-center justify-center gap-1 hover:bg-white/10 transition-colors"
+            aria-label="메뉴 열기"
+          >
+            <span className="block w-4 h-0.5 bg-white" />
+            <span className="block w-4 h-0.5 bg-white" />
+            <span className="block w-4 h-0.5 bg-white" />
+          </button>
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <img src="/text_logo.png" alt="DumpIt" className="h-24 w-auto" />
+            <span className="text-[10px] font-bold bg-secondary text-white px-2 py-0.5 rounded border border-dark">
+              BETA
+            </span>
+          </Link>
+        </div>
 
         <nav className="hidden md:flex items-center gap-1">
           {NAV_ITEMS.map(({ label, path }) => (

@@ -10,6 +10,7 @@ import api from '../../services/api'
 export default function Layout() {
   const [showSettings, setShowSettings] = useState(false)
   const [showMobileTimer, setShowMobileTimer] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [tasks, setTasks] = useState([])
 
   useEffect(() => {
@@ -20,9 +21,14 @@ export default function Layout() {
 
   return (
     <div className="flex flex-col min-h-screen bg-accent">
-      <Header />
+      <Header onOpenDrawer={() => setDrawerOpen(true)} />
       <div className="flex flex-1">
-        <Sidebar onOpenSettings={() => setShowSettings(true)} tasks={tasks} />
+        <Sidebar
+          onOpenSettings={() => setShowSettings(true)}
+          tasks={tasks}
+          isDrawerOpen={drawerOpen}
+          onCloseDrawer={() => setDrawerOpen(false)}
+        />
         <main className="flex-1 p-6 max-w-5xl mx-auto w-full">
           <Outlet />
         </main>
