@@ -51,6 +51,7 @@ public class BrainDumpService {
                     deadline, aiTask.estimatedMinutes());
             task.setBrainDump(dump);
             task.setAiPriorityScore(aiTask.priorityScore() != null ? aiTask.priorityScore() : 0.5);
+            task.setCategory(parseCategory(aiTask.category()));
 
             tasks.add(taskRepository.save(task));
         }
@@ -59,6 +60,15 @@ public class BrainDumpService {
         brainDumpRepository.save(dump);
 
         return new BrainDumpResult(dump.getDumpId(), tasks);
+    }
+
+    private Task.Category parseCategory(String raw) {
+        if (raw == null || raw.isBlank()) return Task.Category.OTHER;
+        try {
+            return Task.Category.valueOf(raw.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Task.Category.OTHER;
+        }
     }
 
     private LocalDateTime parseDeadline(String deadlineStr) {

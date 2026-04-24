@@ -36,7 +36,8 @@ public class TaskController {
                 principal.getAttribute("email"),
                 req.title(), req.description(),
                 req.deadline(), req.estimatedMinutes(),
-                req.startTime(), req.endTime(), req.isLocked()
+                req.startTime(), req.endTime(), req.isLocked(),
+                req.category()
         );
         return ResponseEntity.ok(TaskResponse.from(task));
     }
@@ -53,7 +54,7 @@ public class TaskController {
                         req.title(), req.description(), req.status(),
                         req.userPriorityScore(), req.deadline(),
                         req.estimatedMinutes(), req.startTime(), req.endTime(),
-                        req.isLocked()
+                        req.isLocked(), req.category()
                 )
         );
         return ResponseEntity.ok(TaskResponse.from(task));

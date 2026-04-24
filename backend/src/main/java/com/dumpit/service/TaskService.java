@@ -30,7 +30,7 @@ public class TaskService {
     public Task createTask(String email, String title, String description,
                            LocalDateTime deadline, Integer estimatedMinutes,
                            LocalDateTime startTime, LocalDateTime endTime,
-                           Boolean isLocked) {
+                           Boolean isLocked, Task.Category category) {
         User user = findUser(email);
         Task task = Task.of(user, title, description, deadline, estimatedMinutes);
 
@@ -42,7 +42,22 @@ public class TaskService {
                 openAiService.scorePriority(title, description, deadline, estimatedMinutes);
         task.setAiPriorityScore(priority.score());
 
+        if (category != null) {
+            task.setCategory(category);
+        } else {
+            task.setCategory(parseCategory(priority.category()));
+        }
+
         return taskRepository.save(task);
+    }
+
+    private Task.Category parseCategory(String raw) {
+        if (raw == null || raw.isBlank()) return Task.Category.OTHER;
+        try {
+            return Task.Category.valueOf(raw.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Task.Category.OTHER;
+        }
     }
 
     @Transactional
@@ -65,6 +80,7 @@ public class TaskService {
         if (fields.endTime() != null) task.setEndTime(fields.endTime());
         if (fields.isLocked() != null) task.setIsLocked(fields.isLocked());
         if (fields.userPriorityScore() != null) task.setUserPriorityScore(fields.userPriorityScore());
+        if (fields.category() != null) task.setCategory(fields.category());
 
         // DONE 전환 시 코인 지급 (우선순위 기반: 10~50)
         if (prevStatus != Task.Status.DONE && task.getStatus() == Task.Status.DONE) {
@@ -129,6 +145,7 @@ public class TaskService {
             Integer estimatedMinutes,
             LocalDateTime startTime,
             LocalDateTime endTime,
-            Boolean isLocked
+            Boolean isLocked,
+            Task.Category category
     ) {}
 }

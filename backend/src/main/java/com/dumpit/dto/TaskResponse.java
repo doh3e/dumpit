@@ -10,6 +10,7 @@ public record TaskResponse(
         String title,
         String description,
         String status,
+        String category,
         Double aiPriorityScore,
         Double userPriorityScore,
         Double effectivePriority,
@@ -25,6 +26,7 @@ public record TaskResponse(
         return new TaskResponse(
                 t.getTaskId(), t.getTitle(), t.getDescription(),
                 t.getStatus().name(),
+                t.getCategory() != null ? t.getCategory().name() : Task.Category.OTHER.name(),
                 t.getAiPriorityScore(), t.getUserPriorityScore(),
                 t.getEffectivePriority(),
                 t.getDeadline(), t.getEstimatedMinutes(),

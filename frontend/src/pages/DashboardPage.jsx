@@ -6,6 +6,7 @@ import CircularTimetable from '../components/CircularTimetable/CircularTimetable
 import MiniCalendar from '../components/MiniCalendar'
 import AddTaskModal from '../components/AddTaskModal'
 import EditTaskModal from '../components/EditTaskModal'
+import { getCategory } from '../constants/categories'
 
 const STATUS_LABEL = {
   TODO: { label: '할 예정', color: 'bg-accent border-dark text-dark' },
@@ -168,6 +169,7 @@ export default function DashboardPage() {
                   const { label, color } = STATUS_LABEL[task.status] ?? STATUS_LABEL.TODO
                   const urgency = getUrgencyInfo(task.deadline)
                   const uStyle = urgency?.level ? URGENCY_STYLE[urgency.level] : null
+                  const cat = getCategory(task.category)
                   return (
                     <div
                       key={task.taskId}
@@ -184,6 +186,9 @@ export default function DashboardPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${color}`}>
                             {label}
+                          </span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cat.color}`}>
+                            {cat.emoji} {cat.label}
                           </span>
                           {task.isLocked && (
                             <span className="text-[10px] font-bold px-2 py-0.5 bg-secondary/20 border border-secondary rounded-full text-secondary">

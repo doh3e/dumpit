@@ -66,14 +66,17 @@ public class OpenAiService {
 
         String prompt = """
             당신은 지능형 일정 관리 서비스 '덤핏(Dumpit)'의 우선순위 분석 엔진입니다.
-            제시된 태스크를 심층 분석하여 0.0(낮음)에서 1.0(높음) 사이의 우선순위 점수를 산출하세요.
+            제시된 태스크를 심층 분석하여 0.0(낮음)에서 1.0(높음) 사이의 우선순위 점수와 카테고리를 산출하세요.
 
-            [카테고리 분류 — 먼저 태스크가 어떤 유형인지 판단]
-            A. 필수/생존형: 업무 마감, 과제 제출, 시험 준비, 면접, 계약, 납부 등 → 기본 가중치 높음
-            B. 대인 약속형: 사람과의 약속, 미팅, 팀 회의, 상담 등 → 상대방이 있으므로 변경 불가, 높은 가중치
-            C. 자기계발형: 공부, 독서, 운동, 자격증 준비 등 → 중간 가중치
-            D. 일상/관리형: 청소, 장보기, 은행 업무 등 → 마감이 없으면 낮은 가중치
-            E. 여가/유희형: 게임, 영화, 놀기, SNS 등 → 가장 낮은 가중치
+            [카테고리 분류 — 다음 8개 중 정확히 하나 선택]
+            - WORK: 업무, 회사 일, 프로젝트, 마감, 보고서 등 직업적 업무
+            - STUDY: 공부, 과제, 시험 준비, 강의 수강, 자격증 준비 등 학업
+            - APPOINTMENT: 사람과의 약속, 미팅, 면접, 병원 예약, 상담 등 시간이 정해진 약속
+            - CHORE: 청소, 빨래, 장보기, 설거지, 정리 등 집안일
+            - ROUTINE: 매일/매주 반복하는 습관, 일기, 약 복용, 출석 체크 등
+            - HEALTH: 운동, 병원 방문, 약 먹기, 건강 관리, 재활 등 건강 관련
+            - HOBBY: 게임, 영화 감상, 독서(취미), SNS, 여가 활동
+            - OTHER: 위 어디에도 명확히 속하지 않는 경우
 
             [점수 산출 기준 — 가중치 합산]
             1. 마감 긴급도 (40%%):
@@ -84,11 +87,11 @@ public class OpenAiService {
                - 3일 이상 → 0.2~0.5
                - 마감 없음 → 카테고리에 따라 0.1~0.4
             2. 카테고리 중요도 (30%%):
-               - A(필수/생존형) → 0.8~1.0
-               - B(대인 약속형) → 0.7~0.9
-               - C(자기계발형) → 0.4~0.6
-               - D(일상/관리형) → 0.2~0.4
-               - E(여가/유희형) → 0.05~0.2
+               - WORK, STUDY, APPOINTMENT → 0.7~1.0 (직업/학업/대인 약속은 높게)
+               - HEALTH → 0.6~0.9 (건강은 중요하지만 개인 루틴이면 중간)
+               - ROUTINE, CHORE → 0.2~0.5
+               - HOBBY → 0.05~0.2
+               - OTHER → 문맥에 따라 0.2~0.5
             3. 미이행 시 불이익 (20%%):
                - 금전적/학업적/직업적 불이익이 크면 높은 점수
                - 타인에게 피해가 가면 높은 점수
@@ -104,7 +107,8 @@ public class OpenAiService {
             - 긴급도: %s
             - 예상소요시간: %s분
 
-            반드시 {"score": 실수, "reason": "문자열"} 형식의 JSON으로만 응답하세요.
+            반드시 {"score": 실수, "category": "카테고리_영문_상수", "reason": "문자열"} 형식의 JSON으로만 응답하세요.
+            category 필드는 반드시 위 8개 중 하나(WORK/STUDY/APPOINTMENT/CHORE/ROUTINE/HEALTH/HOBBY/OTHER)여야 합니다.
             reason에는 카테고리 판단과 점수 산출 근거를 간결하게 작성하세요.
             """.formatted(nowStr, title, description != null ? description : "내용 없음",
                     deadlineStr, urgencyInfo,
@@ -115,7 +119,7 @@ public class OpenAiService {
             return objectMapper.readValue(json, PriorityResult.class);
         } catch (Exception e) {
             log.error("우선순위 분석 실패: {}", e.getMessage());
-            return new PriorityResult(0.5, "AI 분석 오류로 인한 기본값 할당");
+            return new PriorityResult(0.5, "OTHER", "AI 분석 오류로 인한 기본값 할당");
         }
     }
 
@@ -128,11 +132,21 @@ public class OpenAiService {
             1. 마이크로 태스킹: 큰 규모의 업무는 5개 이하의 작은 태스크로 쪼개세요.
             2. 성격 파악: 대면 약속, 생계형 업무, 단순 취미를 구분하여 우선순위 점수(0.0~1.0)를 매깁니다.
             3. 시간 추출: 문맥에서 예상 소요 시간과 기한을 최대한 추론하세요.
+            4. 카테고리 분류: 각 태스크를 다음 8개 중 정확히 하나로 분류하세요.
+               - WORK: 업무, 회사 일, 프로젝트, 보고서 등
+               - STUDY: 공부, 과제, 시험 준비, 강의 수강, 자격증 등
+               - APPOINTMENT: 사람과의 약속, 미팅, 면접, 예약된 상담 등
+               - CHORE: 청소, 빨래, 장보기, 설거지 등 집안일
+               - ROUTINE: 반복 습관, 일기, 약 복용, 출석 체크 등
+               - HEALTH: 운동, 병원 방문, 건강 관리 등
+               - HOBBY: 게임, 영화, 취미 활동, SNS 등
+               - OTHER: 위 어디에도 명확히 속하지 않는 경우
 
             [입력 텍스트]
             "%s"
 
-            반드시 {"tasks": [{"title": "...", "description": "...", "deadline": "YYYY-MM-DD HH:mm", "estimatedMinutes": 60, "priorityScore": 0.8}]} 형식의 JSON으로 응답하세요.
+            반드시 {"tasks": [{"title": "...", "description": "...", "deadline": "YYYY-MM-DD HH:mm", "estimatedMinutes": 60, "priorityScore": 0.8, "category": "WORK"}]} 형식의 JSON으로 응답하세요.
+            category 필드는 반드시 WORK/STUDY/APPOINTMENT/CHORE/ROUTINE/HEALTH/HOBBY/OTHER 중 하나여야 합니다.
             """.formatted(rawText);
 
         try {
@@ -177,7 +191,7 @@ public class OpenAiService {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record PriorityResult(double score, String reason) {}
+    public record PriorityResult(double score, String category, String reason) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record BrainDumpResult(List<BrainDumpTask> tasks) {}
@@ -188,7 +202,8 @@ public class OpenAiService {
             String description,
             String deadline,
             Integer estimatedMinutes,
-            Double priorityScore
+            Double priorityScore,
+            String category
     ) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
