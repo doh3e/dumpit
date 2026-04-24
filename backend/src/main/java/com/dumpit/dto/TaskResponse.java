@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record TaskResponse(
         UUID taskId,
+        UUID parentTaskId,
         String title,
         String description,
         String status,
@@ -24,7 +25,9 @@ public record TaskResponse(
 ) {
     public static TaskResponse from(Task t) {
         return new TaskResponse(
-                t.getTaskId(), t.getTitle(), t.getDescription(),
+                t.getTaskId(),
+                t.getParentTask() != null ? t.getParentTask().getTaskId() : null,
+                t.getTitle(), t.getDescription(),
                 t.getStatus().name(),
                 t.getCategory() != null ? t.getCategory().name() : Task.Category.OTHER.name(),
                 t.getAiPriorityScore(), t.getUserPriorityScore(),

@@ -31,6 +31,7 @@ public class Task {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_task_id")
+    @Setter
     private Task parentTask;
 
     @ManyToOne(fetch = FetchType.LAZY)

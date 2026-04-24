@@ -53,6 +53,25 @@ function getUrgencyInfo(deadline) {
   return null
 }
 
+function groupByParent(list) {
+  const byId = new Map(list.map((t) => [t.taskId, t]))
+  const childrenOf = new Map()
+  for (const t of list) {
+    if (t.parentTaskId && byId.has(t.parentTaskId)) {
+      if (!childrenOf.has(t.parentTaskId)) childrenOf.set(t.parentTaskId, [])
+      childrenOf.get(t.parentTaskId).push(t)
+    }
+  }
+  const result = []
+  for (const t of list) {
+    if (t.parentTaskId && byId.has(t.parentTaskId)) continue
+    result.push(t)
+    const kids = childrenOf.get(t.taskId)
+    if (kids) result.push(...kids)
+  }
+  return result
+}
+
 const URGENCY_STYLE = {
   red: {
     badge: 'bg-red-500 text-white border-red-500 animate-pulse',
@@ -101,7 +120,9 @@ export default function DashboardPage() {
     } catch { /* ignore */ }
   }
 
-  const activeTasks = tasks.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED')
+  const activeTasks = groupByParent(
+    tasks.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED')
+  )
   const doneTasks = tasks.filter((t) => {
     if (t.status !== 'DONE') return false
     if (!t.deadline) return true
@@ -170,12 +191,13 @@ export default function DashboardPage() {
                   const urgency = getUrgencyInfo(task.deadline)
                   const uStyle = urgency?.level ? URGENCY_STYLE[urgency.level] : null
                   const cat = getCategory(task.category)
+                  const isChild = !!task.parentTaskId
                   return (
                     <div
                       key={task.taskId}
                       className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-colors ${
                         uStyle ? uStyle.card : 'border-dark/10 hover:border-dark/30'
-                      }`}
+                      } ${isChild ? 'ml-6 border-l-4 border-l-secondary' : ''}`}
                     >
                       <button
                         onClick={() => toggleStatus(task)}
@@ -190,6 +212,11 @@ export default function DashboardPage() {
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cat.color}`}>
                             {cat.emoji} {cat.label}
                           </span>
+                          {isChild && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 bg-secondary/10 border border-secondary/40 rounded-full text-secondary">
+                              ↳ 서브
+                            </span>
+                          )}
                           {task.isLocked && (
                             <span className="text-[10px] font-bold px-2 py-0.5 bg-secondary/20 border border-secondary rounded-full text-secondary">
                               고정

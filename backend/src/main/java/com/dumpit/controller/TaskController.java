@@ -4,6 +4,7 @@ import com.dumpit.dto.TaskRequest;
 import com.dumpit.dto.TaskResponse;
 import com.dumpit.dto.TaskUpdateRequest;
 import com.dumpit.entity.Task;
+import com.dumpit.service.OpenAiService;
 import com.dumpit.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +68,25 @@ public class TaskController {
         Task task = taskService.reanalyzePriority(principal.getAttribute("email"), taskId);
         return ResponseEntity.ok(TaskResponse.from(task));
     }
+
+    @PostMapping("/{taskId}/split/propose")
+    public ResponseEntity<OpenAiService.SubtaskResult> proposeSplit(
+            @AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("taskId") UUID taskId) {
+        return ResponseEntity.ok(taskService.proposeSubtasks(principal.getAttribute("email"), taskId));
+    }
+
+    @PostMapping("/{taskId}/split")
+    public ResponseEntity<List<TaskResponse>> createSplit(
+            @AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("taskId") UUID taskId,
+            @RequestBody SplitRequest req) {
+        List<Task> children = taskService.createSubtasks(
+                principal.getAttribute("email"), taskId, req.subtasks());
+        return ResponseEntity.ok(children.stream().map(TaskResponse::from).toList());
+    }
+
+    public record SplitRequest(List<TaskService.SubtaskInput> subtasks) {}
 
     @DeleteMapping("/{taskId}")
     public ResponseEntity<Void> deleteTask(

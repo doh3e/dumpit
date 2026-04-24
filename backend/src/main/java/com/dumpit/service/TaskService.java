@@ -119,6 +119,45 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
+    @Transactional(readOnly = true)
+    public OpenAiService.SubtaskResult proposeSubtasks(String email, UUID taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new IllegalArgumentException("태스크를 찾을 수 없습니다"));
+
+        if (!task.getUser().getEmail().equals(email)) {
+            throw new IllegalArgumentException("권한이 없습니다");
+        }
+
+        return openAiService.proposeSubtasks(task.getTitle(), task.getDescription(),
+                task.getEstimatedMinutes());
+    }
+
+    @Transactional
+    public List<Task> createSubtasks(String email, UUID parentTaskId, List<SubtaskInput> subtasks) {
+        Task parent = taskRepository.findById(parentTaskId)
+                .orElseThrow(() -> new IllegalArgumentException("태스크를 찾을 수 없습니다"));
+
+        if (!parent.getUser().getEmail().equals(email)) {
+            throw new IllegalArgumentException("권한이 없습니다");
+        }
+
+        User user = parent.getUser();
+        List<Task> created = new java.util.ArrayList<>();
+        for (SubtaskInput input : subtasks) {
+            if (input.title() == null || input.title().isBlank()) continue;
+
+            Task child = Task.of(user, input.title().trim(),
+                    input.description() != null ? input.description().trim() : null,
+                    parent.getDeadline(), input.estimatedMinutes());
+            child.setParentTask(parent);
+            child.setCategory(parent.getCategory());
+            child.setAiPriorityScore(parent.getAiPriorityScore());
+
+            created.add(taskRepository.save(child));
+        }
+        return created;
+    }
+
     @Transactional
     public void deleteTask(String email, UUID taskId) {
         Task task = taskRepository.findById(taskId)
@@ -135,6 +174,12 @@ public class TaskService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다"));
     }
+
+    public record SubtaskInput(
+            String title,
+            String description,
+            Integer estimatedMinutes
+    ) {}
 
     public record TaskUpdateFields(
             String title,

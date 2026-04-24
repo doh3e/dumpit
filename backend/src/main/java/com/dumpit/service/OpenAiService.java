@@ -71,22 +71,22 @@ public class OpenAiService {
             [카테고리 분류 — 다음 8개 중 정확히 하나 선택]
             - WORK: 업무, 회사 일, 프로젝트, 마감, 보고서 등 직업적 업무
             - STUDY: 공부, 과제, 시험 준비, 강의 수강, 자격증 준비 등 학업
-            - APPOINTMENT: 사람과의 약속, 미팅, 면접, 병원 예약, 상담 등 시간이 정해진 약속
+            - APPOINTMENT: 중요한 사람과의 약속, 미팅, 면접, 병원 예약, 상담 등 시간이 정해진 약속
             - CHORE: 청소, 빨래, 장보기, 설거지, 정리 등 집안일
             - ROUTINE: 매일/매주 반복하는 습관, 일기, 약 복용, 출석 체크 등
             - HEALTH: 운동, 병원 방문, 약 먹기, 건강 관리, 재활 등 건강 관련
-            - HOBBY: 게임, 영화 감상, 독서(취미), SNS, 여가 활동
+            - HOBBY: 게임, 영화 감상, 독서(취미), SNS, 친구와의 활동, 여가 활동
             - OTHER: 위 어디에도 명확히 속하지 않는 경우
 
             [점수 산출 기준 — 가중치 합산]
-            1. 마감 긴급도 (40%%):
+            1. 마감 긴급도 (30%%):
                - 이미 지남 → 0.95~1.0
                - 1시간 이내 → 0.85~0.95
                - 오늘 내 → 0.7~0.85
                - 1~3일 → 0.5~0.7
                - 3일 이상 → 0.2~0.5
                - 마감 없음 → 카테고리에 따라 0.1~0.4
-            2. 카테고리 중요도 (30%%):
+            2. 카테고리 중요도 (40%%):
                - WORK, STUDY, APPOINTMENT → 0.7~1.0 (직업/학업/대인 약속은 높게)
                - HEALTH → 0.6~0.9 (건강은 중요하지만 개인 루틴이면 중간)
                - ROUTINE, CHORE → 0.2~0.5
@@ -120,6 +120,37 @@ public class OpenAiService {
         } catch (Exception e) {
             log.error("우선순위 분석 실패: {}", e.getMessage());
             return new PriorityResult(0.5, "OTHER", "AI 분석 오류로 인한 기본값 할당");
+        }
+    }
+
+    public SubtaskResult proposeSubtasks(String title, String description, Integer estimatedMinutes) {
+        String prompt = """
+            당신은 '덤핏(Dumpit)'의 태스크 분할 전문가입니다. 큰 단위의 할 일을 실행 가능한 작은 단위로 쪼개세요.
+
+            [분할 가이드]
+            1. 3~5개의 서브태스크로 나누세요. 너무 잘게 쪼개지 말고 의미 있는 단위로.
+            2. 각 서브태스크는 단독으로 시작/완료가 가능해야 합니다.
+            3. 시간순/작업 흐름상 논리적 순서로 배열하세요.
+            4. 각 서브태스크에 예상 소요시간을 분 단위로 추론하세요.
+            5. 부모 태스크의 예상 시간(%s분)을 합리적으로 분배하세요.
+
+            [원본 태스크]
+            - 제목: %s
+            - 상세: %s
+
+            반드시 {"subtasks": [{"title": "...", "description": "...", "estimatedMinutes": 30}]} 형식의 JSON으로 응답하세요.
+            description은 간결하게 한 줄로, 없으면 빈 문자열로 두세요.
+            """.formatted(
+                    estimatedMinutes != null ? estimatedMinutes : "미정",
+                    title,
+                    description != null ? description : "내용 없음");
+
+        try {
+            String json = callChatApi(prompt, "큰 태스크를 실행 가능한 작은 서브태스크로 분할하는 전문가입니다.");
+            return objectMapper.readValue(json, SubtaskResult.class);
+        } catch (Exception e) {
+            log.error("태스크 분할 실패: {}", e.getMessage());
+            throw new RuntimeException("AI 분할 중 오류가 발생했습니다.");
         }
     }
 
@@ -195,6 +226,16 @@ public class OpenAiService {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record BrainDumpResult(List<BrainDumpTask> tasks) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record SubtaskResult(List<SubtaskProposal> subtasks) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record SubtaskProposal(
+            String title,
+            String description,
+            Integer estimatedMinutes
+    ) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record BrainDumpTask(

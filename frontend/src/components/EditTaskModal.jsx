@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../services/api'
 import { CATEGORIES } from '../constants/categories'
+import SubtaskProposalModal from './SubtaskProposalModal'
 
 export default function EditTaskModal({ task, onClose, onUpdated }) {
+  const [showSplit, setShowSplit] = useState(false)
   const [title, setTitle] = useState(task.title || '')
   const [description, setDescription] = useState(task.description || '')
   const [deadline, setDeadline] = useState(
@@ -176,6 +178,16 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           </button>
         </div>
 
+        {!task.parentTaskId && (
+          <button
+            type="button"
+            onClick={() => setShowSplit(true)}
+            className="w-full text-xs font-bold text-secondary border-2 border-secondary rounded-lg py-2 hover:bg-secondary/10 transition-colors"
+          >
+            ✂️ AI로 쪼개기 (3~5개 서브태스크)
+          </button>
+        )}
+
         <div className="flex gap-3 pt-2">
           <button
             type="button"
@@ -200,6 +212,17 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           </button>
         </div>
       </form>
+
+      {showSplit && (
+        <SubtaskProposalModal
+          task={task}
+          onClose={() => setShowSplit(false)}
+          onCreated={() => {
+            setShowSplit(false)
+            onUpdated()
+          }}
+        />
+      )}
     </div>,
     document.body
   )
