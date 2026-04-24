@@ -1,5 +1,6 @@
 package com.dumpit.dto;
 
+import com.dumpit.entity.Task;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -12,5 +13,6 @@ public record TaskRequest(
         Integer estimatedMinutes,
         LocalDateTime startTime,
         LocalDateTime endTime,
-        Boolean isLocked
+        Boolean isLocked,
+        Task.Category category
 ) {}

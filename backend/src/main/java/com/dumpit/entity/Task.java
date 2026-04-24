@@ -18,6 +18,7 @@ public class Task {
 
     public enum Status { TODO, IN_PROGRESS, DONE, CANCELLED }
     public enum SyncSource { LOCAL, GOOGLE }
+    public enum Category { WORK, STUDY, APPOINTMENT, CHORE, ROUTINE, HEALTH, HOBBY, OTHER }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,6 +31,7 @@ public class Task {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_task_id")
+    @Setter
     private Task parentTask;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,6 +50,11 @@ public class Task {
     @Column(nullable = false)
     @Setter
     private Status status = Status.TODO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Setter
+    private Category category = Category.OTHER;
 
     @Setter
     private LocalDateTime deadline;

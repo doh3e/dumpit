@@ -1,5 +1,6 @@
 package com.dumpit.dto;
 
+import com.dumpit.entity.Task;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
@@ -13,5 +14,6 @@ public record TaskUpdateRequest(
         Integer estimatedMinutes,
         LocalDateTime startTime,
         LocalDateTime endTime,
-        Boolean isLocked
+        Boolean isLocked,
+        Task.Category category
 ) {}
