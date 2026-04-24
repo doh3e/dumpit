@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../services/api'
+import { CATEGORIES } from '../constants/categories'
+import SubtaskProposalModal from './SubtaskProposalModal'
 
 export default function EditTaskModal({ task, onClose, onUpdated }) {
+  const [showSplit, setShowSplit] = useState(false)
   const [title, setTitle] = useState(task.title || '')
   const [description, setDescription] = useState(task.description || '')
   const [deadline, setDeadline] = useState(
@@ -14,6 +17,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   const [priorityScore, setPriorityScore] = useState(
     task.userPriorityScore ?? task.aiPriorityScore ?? 0.5
   )
+  const [category, setCategory] = useState(task.category || 'OTHER')
   const isUserOverridden = task.userPriorityScore != null
   const [saving, setSaving] = useState(false)
   const [reanalyzing, setReanalyzing] = useState(false)
@@ -30,6 +34,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         deadline: deadline || null,
         estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes) : null,
         userPriorityScore: priorityScore,
+        category,
       })
       onUpdated()
     } catch {
@@ -107,6 +112,26 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         </div>
 
         <div>
+          <label className="block text-xs font-bold text-dark/60 mb-1">카테고리</label>
+          <div className="flex flex-wrap gap-1.5">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => setCategory(c.value)}
+                className={`px-2.5 py-1 rounded-full text-xs font-bold border-2 transition-all ${
+                  category === c.value
+                    ? 'bg-primary text-white border-dark'
+                    : 'bg-accent text-dark border-dark/20 hover:border-dark'
+                }`}
+              >
+                {c.emoji} {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
           <label className="block text-xs font-bold text-dark/60 mb-1">
             중요도 ({Math.round(priorityScore * 100)}점)
             {isUserOverridden && (
@@ -153,6 +178,16 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           </button>
         </div>
 
+        {!task.parentTaskId && (
+          <button
+            type="button"
+            onClick={() => setShowSplit(true)}
+            className="w-full text-xs font-bold text-secondary border-2 border-secondary rounded-lg py-2 hover:bg-secondary/10 transition-colors"
+          >
+            ✂️ AI로 쪼개기 (3~5개 서브태스크)
+          </button>
+        )}
+
         <div className="flex gap-3 pt-2">
           <button
             type="button"
@@ -177,6 +212,17 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           </button>
         </div>
       </form>
+
+      {showSplit && (
+        <SubtaskProposalModal
+          task={task}
+          onClose={() => setShowSplit(false)}
+          onCreated={() => {
+            setShowSplit(false)
+            onUpdated()
+          }}
+        />
+      )}
     </div>,
     document.body
   )

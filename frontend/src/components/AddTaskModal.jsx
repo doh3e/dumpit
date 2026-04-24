@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../services/api'
+import { CATEGORIES } from '../constants/categories'
 
 export default function AddTaskModal({ onClose, onCreated }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [deadline, setDeadline] = useState('')
   const [estimatedMinutes, setEstimatedMinutes] = useState('')
+  const [category, setCategory] = useState('')
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -20,6 +22,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
         description: description.trim() || null,
         deadline: deadline || null,
         estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes) : null,
+        category: category || null,
       })
       onCreated()
     } catch {
@@ -85,6 +88,39 @@ export default function AddTaskModal({ onClose, onCreated }) {
               min="1"
               className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
             />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-dark/60 mb-1">
+            카테고리 (비워두면 AI가 자동 분류)
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setCategory('')}
+              className={`px-2.5 py-1 rounded-full text-xs font-bold border-2 transition-all ${
+                category === ''
+                  ? 'bg-dark text-white border-dark'
+                  : 'bg-accent text-dark border-dark/20 hover:border-dark'
+              }`}
+            >
+              AI 자동
+            </button>
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => setCategory(c.value)}
+                className={`px-2.5 py-1 rounded-full text-xs font-bold border-2 transition-all ${
+                  category === c.value
+                    ? 'bg-primary text-white border-dark'
+                    : 'bg-accent text-dark border-dark/20 hover:border-dark'
+                }`}
+              >
+                {c.emoji} {c.label}
+              </button>
+            ))}
           </div>
         </div>
 
