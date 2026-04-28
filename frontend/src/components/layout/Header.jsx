@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import DeadlineNudgeMenu from '../DeadlineNudgeMenu'
 
 const NAV_ITEMS = [
   { label: '대시보드', path: '/dashboard' },
@@ -8,7 +9,7 @@ const NAV_ITEMS = [
   { label: '코인샵', path: '/shop' },
 ]
 
-export default function Header({ onOpenDrawer }) {
+export default function Header({ onOpenDrawer, tasks = [] }) {
   const { pathname } = useLocation()
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -64,6 +65,8 @@ export default function Header({ onOpenDrawer }) {
         </nav>
 
         <div className="flex items-center gap-3">
+          <DeadlineNudgeMenu tasks={tasks} />
+
           <div className="hidden sm:flex items-center gap-1 bg-secondary border-2 border-dark rounded-full px-3 py-1 shadow-kitschy">
             <span className="text-sm font-extrabold text-white">{user?.coins ?? 0} C</span>
           </div>

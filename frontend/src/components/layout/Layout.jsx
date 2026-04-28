@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import Header from './Header'
@@ -14,15 +14,27 @@ export default function Layout() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [tasks, setTasks] = useState([])
 
-  useEffect(() => {
+  const fetchTasks = useCallback(() => {
     api.get('/tasks')
       .then((res) => setTasks(res.data))
       .catch(() => setTasks([]))
   }, [])
 
+  useEffect(() => {
+    fetchTasks()
+
+    const interval = window.setInterval(fetchTasks, 60000)
+    window.addEventListener('focus', fetchTasks)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', fetchTasks)
+    }
+  }, [fetchTasks])
+
   return (
     <div className="flex flex-col min-h-screen bg-accent">
-      <Header onOpenDrawer={() => setDrawerOpen(true)} />
+      <Header onOpenDrawer={() => setDrawerOpen(true)} tasks={tasks} />
       <div className="flex flex-1">
         <Sidebar
           onOpenSettings={() => setShowSettings(true)}
