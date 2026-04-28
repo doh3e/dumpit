@@ -34,6 +34,9 @@ public class User {
     @Column(nullable = false)
     private Integer coinBalance = 0;
 
+    @Column(nullable = false)
+    private Boolean isAdmin = false;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
