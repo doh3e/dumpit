@@ -34,7 +34,7 @@ export default function Layout() {
 
   return (
     <div className="flex flex-col min-h-screen bg-accent">
-      <Header onOpenDrawer={() => setDrawerOpen(true)} tasks={tasks} />
+      <Header onOpenDrawer={() => setDrawerOpen(true)} />
       <div className="flex flex-1">
         <Sidebar
           onOpenSettings={() => setShowSettings(true)}

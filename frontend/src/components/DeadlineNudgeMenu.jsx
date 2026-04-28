@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import api from '../services/api'
 
-const DAY_MS = 24 * 60 * 60 * 1000
 const NOTIFIED_KEY = 'dumpit.deadlineNudges.notified'
 
 function getNotificationPermission() {
@@ -48,36 +48,20 @@ function formatRemaining(deadline) {
   return `${minutes}분 남음`
 }
 
-function getDeadlineNudges(tasks) {
-  const now = Date.now()
-
-  return tasks
-    .filter((task) => task.status !== 'DONE' && task.status !== 'CANCELLED')
-    .map((task) => {
-      const deadline = parseDate(task.deadline)
-      if (!deadline || Number.isNaN(deadline.getTime())) return null
-
-      const diffMs = deadline.getTime() - now
-      if (diffMs > DAY_MS) return null
-
-      return {
-        ...task,
-        diffMs,
-        isOverdue: diffMs < 0,
-      }
-    })
-    .filter(Boolean)
-    .sort((a, b) => a.diffMs - b.diffMs)
-}
-
-export default function DeadlineNudgeMenu({ tasks = [] }) {
+export default function DeadlineNudgeMenu() {
   const [open, setOpen] = useState(false)
   const [permission, setPermission] = useState(getNotificationPermission)
+  const [nudges, setNudges] = useState([])
   const menuRef = useRef(null)
-  const nudges = useMemo(() => getDeadlineNudges(tasks), [tasks])
   const urgentCount = nudges.length
   const canAskPermission = permission === 'default'
   const isNotificationOn = permission === 'granted'
+
+  const fetchNudges = useCallback(() => {
+    api.get('/notifications/deadline-nudges')
+      .then((res) => setNudges(res.data))
+      .catch(() => setNudges([]))
+  }, [])
 
   const requestPermission = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -104,7 +88,16 @@ export default function DeadlineNudgeMenu({ tasks = [] }) {
 
   useEffect(() => {
     setPermission(getNotificationPermission())
-  }, [])
+    fetchNudges()
+
+    const interval = window.setInterval(fetchNudges, 60000)
+    window.addEventListener('focus', fetchNudges)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', fetchNudges)
+    }
+  }, [fetchNudges])
 
   useEffect(() => {
     if (permission !== 'granted' || nudges.length === 0) return
@@ -207,7 +200,7 @@ export default function DeadlineNudgeMenu({ tasks = [] }) {
                     to="/dashboard"
                     onClick={() => setOpen(false)}
                     className={`block rounded-lg border-2 p-3 transition-colors ${
-                      task.isOverdue
+                      task.overdue
                         ? 'border-red-500 bg-red-50 hover:bg-red-100'
                         : 'border-yellow-400 bg-yellow-50 hover:bg-yellow-100'
                     }`}
@@ -217,7 +210,7 @@ export default function DeadlineNudgeMenu({ tasks = [] }) {
                         {task.title}
                       </p>
                       <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black ${
-                        task.isOverdue
+                        task.overdue
                           ? 'border-red-500 bg-red-500 text-white'
                           : 'border-yellow-500 bg-yellow-300 text-dark'
                       }`}>

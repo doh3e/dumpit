@@ -19,6 +19,12 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 1s
+
   security:
     oauth2:
       client:
