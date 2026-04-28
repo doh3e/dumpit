@@ -43,6 +43,12 @@ openai:
   api-key: ${OPENAI_API_KEY:}
   model: gpt-4o-mini
 
+mail:
+  resend:
+    api-key: ${RESEND_API_KEY:}
+  from: ${MAIL_FROM:onboarding@resend.dev}
+  admin-notification: ${ADMIN_NOTIFICATION_EMAIL:dumpitadmin@gmail.com}
+
 app:
   frontend-url: http://localhost:5173
   cors:

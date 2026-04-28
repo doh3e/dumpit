@@ -1,5 +1,6 @@
 import { NavLink, Link } from 'react-router-dom'
 import PomodoroTimer from '../PomodoroTimer'
+import { useAuth } from '../../context/AuthContext'
 
 const MENU = [
   { label: '나의 태스크', path: '/dashboard' },
@@ -8,6 +9,7 @@ const MENU = [
 ]
 
 export default function Sidebar({ onOpenSettings, tasks, isDrawerOpen, onCloseDrawer }) {
+  const { user } = useAuth()
   const handleNavClick = () => {
     if (onCloseDrawer) onCloseDrawer()
   }
@@ -38,6 +40,22 @@ export default function Sidebar({ onOpenSettings, tasks, isDrawerOpen, onCloseDr
           {label}
         </NavLink>
       ))}
+
+      {user?.isAdmin && (
+        <NavLink
+          to="/admin"
+          onClick={handleNavClick}
+          className={({ isActive }) =>
+            `flex items-center px-4 py-3 rounded-lg font-bold text-sm border-2 transition-all ${
+              isActive
+                ? 'bg-secondary text-white border-dark shadow-kitschy'
+                : 'text-secondary border-transparent hover:bg-accent hover:border-secondary'
+            }`
+          }
+        >
+          ⚙️ 문의 관리
+        </NavLink>
+      )}
 
       <div className="mt-4 pt-4 border-t-2 border-dark/20">
         <h4 className="text-[10px] font-black text-dark/40 uppercase tracking-wider px-2 mb-1">

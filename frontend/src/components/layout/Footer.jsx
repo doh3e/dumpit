@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import PrivacyPolicyModal from '../PrivacyPolicyModal'
+import ContactModal from '../ContactModal'
 
-export default function Footer({ onOpenContact }) {
+export default function Footer() {
   const [showPrivacy, setShowPrivacy] = useState(false)
+  const [showContact, setShowContact] = useState(false)
 
   return (
     <>
@@ -25,23 +27,20 @@ export default function Footer({ onOpenContact }) {
             >
               개인정보 처리방침
             </button>
-            {onOpenContact && (
-              <>
-                <span className="text-dark/20">|</span>
-                <button
-                  type="button"
-                  onClick={onOpenContact}
-                  className="text-dark/60 hover:text-primary transition-colors"
-                >
-                  문의하기
-                </button>
-              </>
-            )}
+            <span className="text-dark/20">|</span>
+            <button
+              type="button"
+              onClick={() => setShowContact(true)}
+              className="text-dark/60 hover:text-primary transition-colors"
+            >
+              문의하기
+            </button>
           </div>
         </div>
       </footer>
 
       {showPrivacy && <PrivacyPolicyModal onClose={() => setShowPrivacy(false)} />}
+      {showContact && <ContactModal onClose={() => setShowContact(false)} />}
     </>
   )
 }
