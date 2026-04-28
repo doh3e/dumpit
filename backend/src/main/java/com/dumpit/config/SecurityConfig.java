@@ -68,6 +68,11 @@ public class SecurityConfig {
                     response.setContentType("application/json");
                     response.getWriter().write("{\"error\":\"Unauthorized\"}");
                 })
+                .accessDeniedHandler((request, response, denied) -> {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Forbidden\"}");
+                })
             )
 
             .oauth2Login(oauth2 -> oauth2
