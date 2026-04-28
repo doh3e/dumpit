@@ -6,6 +6,7 @@ import DeadlineNudgeMenu from '../DeadlineNudgeMenu'
 const NAV_ITEMS = [
   { label: '대시보드', path: '/dashboard' },
   { label: '브레인 덤프', path: '/brain-dump' },
+  { label: '아이디어', path: '/ideas' },
   { label: '코인샵', path: '/shop' },
 ]
 

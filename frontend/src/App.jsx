@@ -4,6 +4,7 @@ import Layout from './components/layout/Layout'
 import HomePage from './pages/HomePage'
 import DashboardPage from './pages/DashboardPage'
 import BrainDumpPage from './pages/BrainDumpPage'
+import IdeaDumpPage from './pages/IdeaDumpPage'
 import ShopPage from './pages/ShopPage'
 import AdminPage from './pages/AdminPage'
 
@@ -40,6 +41,9 @@ function AppRoutes() {
         } />
         <Route path="/brain-dump" element={
           <PrivateRoute><BrainDumpPage /></PrivateRoute>
+        } />
+        <Route path="/ideas" element={
+          <PrivateRoute><IdeaDumpPage /></PrivateRoute>
         } />
         <Route path="/shop" element={
           <PrivateRoute><ShopPage /></PrivateRoute>
