@@ -1,16 +1,13 @@
 package com.dumpit.dto;
 
+import com.dumpit.entity.Task;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import com.dumpit.entity.Task;
-
 import java.util.UUID;
 
-public record IdeaRequest(
-        @NotBlank @Size(max = 200) String title,
-        @Size(max = 5000) String content,
-        Boolean pinned,
+public record IdeaBulkRequest(
+        @NotBlank @Size(max = 5000) String rawText,
         Task.Category category,
         UUID parentIdeaId
 ) {}

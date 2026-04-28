@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import api from '../services/api'
+import { CATEGORIES, getCategory } from '../constants/categories'
 
-const EMPTY_FORM = { title: '', content: '', pinned: false }
+const EMPTY_QUICK = { rawText: '', category: 'OTHER', parentIdeaId: '' }
+const EMPTY_DETAIL = { title: '', content: '', category: 'OTHER', pinned: false, parentIdeaId: '' }
 
 function parseDate(value) {
   if (!value) return null
@@ -14,71 +16,135 @@ function parseDate(value) {
 function formatDate(value) {
   const date = parseDate(value)
   if (!date || Number.isNaN(date.getTime())) return ''
+  return date.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
 
-  return date.toLocaleString('ko-KR', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+function buildTreeRows(ideas, query) {
+  const keyword = query.trim().toLowerCase()
+  const byParent = new Map()
+  const byId = new Map()
+
+  ideas.forEach((idea) => {
+    byId.set(idea.ideaId, idea)
+    const key = idea.parentIdeaId || 'root'
+    if (!byParent.has(key)) byParent.set(key, [])
+    byParent.get(key).push(idea)
   })
+
+  const matches = (idea) => {
+    if (!keyword) return true
+    return idea.title?.toLowerCase().includes(keyword) || idea.content?.toLowerCase().includes(keyword)
+  }
+
+  const hasMatchingDescendant = (idea) => {
+    if (matches(idea)) return true
+    return (byParent.get(idea.ideaId) || []).some(hasMatchingDescendant)
+  }
+
+  const rows = []
+  const visit = (idea, depth) => {
+    if (!hasMatchingDescendant(idea)) return
+    rows.push({
+      idea,
+      depth,
+      childCount: byParent.get(idea.ideaId)?.length || 0,
+    })
+    ;(byParent.get(idea.ideaId) || []).forEach((child) => visit(child, depth + 1))
+  }
+
+  ;(byParent.get('root') || []).forEach((idea) => visit(idea, 0))
+  ideas
+    .filter((idea) => idea.parentIdeaId && !byId.has(idea.parentIdeaId))
+    .forEach((idea) => visit(idea, 0))
+
+  return rows
 }
 
 export default function IdeaDumpPage() {
   const [ideas, setIdeas] = useState([])
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [editingId, setEditingId] = useState(null)
+  const [selectedId, setSelectedId] = useState(null)
+  const [quickForm, setQuickForm] = useState(EMPTY_QUICK)
+  const [detailForm, setDetailForm] = useState(EMPTY_DETAIL)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
+  const selectedIdea = useMemo(
+    () => ideas.find((idea) => idea.ideaId === selectedId) || null,
+    [ideas, selectedId]
+  )
+
+  const rows = useMemo(() => buildTreeRows(ideas, query), [ideas, query])
+  const childCounts = useMemo(() => {
+    const counts = new Map()
+    ideas.forEach((idea) => {
+      if (!idea.parentIdeaId) return
+      counts.set(idea.parentIdeaId, (counts.get(idea.parentIdeaId) || 0) + 1)
+    })
+    return counts
+  }, [ideas])
+
+  const selectableParents = useMemo(
+    () => ideas.filter((idea) => idea.ideaId !== selectedId),
+    [ideas, selectedId]
+  )
+
   const fetchIdeas = () => {
     api.get('/ideas')
-      .then((res) => setIdeas(res.data))
+      .then((res) => {
+        setIdeas(res.data)
+        if (!selectedId && res.data.length > 0) setSelectedId(res.data[0].ideaId)
+      })
       .catch(() => setIdeas([]))
       .finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchIdeas() }, [])
 
-  const filteredIdeas = useMemo(() => {
-    const keyword = query.trim().toLowerCase()
-    if (!keyword) return ideas
+  useEffect(() => {
+    if (!selectedIdea) {
+      setDetailForm(EMPTY_DETAIL)
+      return
+    }
 
-    return ideas.filter((idea) => (
-      idea.title?.toLowerCase().includes(keyword)
-      || idea.content?.toLowerCase().includes(keyword)
-    ))
-  }, [ideas, query])
+    setDetailForm({
+      title: selectedIdea.title || '',
+      content: selectedIdea.content || '',
+      category: selectedIdea.category || 'OTHER',
+      pinned: Boolean(selectedIdea.pinned),
+      parentIdeaId: selectedIdea.parentIdeaId || '',
+    })
+  }, [selectedIdea])
 
-  const resetForm = () => {
-    setForm(EMPTY_FORM)
-    setEditingId(null)
-    setError(null)
-  }
+  const splitLines = (rawText) => rawText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
 
-  const handleSubmit = async (event) => {
+  const handleQuickSubmit = async (event) => {
     event.preventDefault()
-    if (!form.title.trim() || saving) return
+    const lines = splitLines(quickForm.rawText)
+    if (lines.length === 0 || saving) return
 
     setSaving(true)
     setError(null)
 
     try {
-      if (editingId) {
-        await api.patch(`/ideas/${editingId}`, {
-          title: form.title.trim(),
-          content: form.content.trim(),
-          pinned: form.pinned,
+      if (lines.length === 1) {
+        const res = await api.post('/ideas', {
+          title: lines[0],
+          content: '',
+          category: quickForm.category,
+          parentIdeaId: quickForm.parentIdeaId || null,
         })
+        setSelectedId(res.data.ideaId)
       } else {
-        await api.post('/ideas', {
-          title: form.title.trim(),
-          content: form.content.trim(),
-          pinned: form.pinned,
+        const res = await api.post('/ideas/bulk', {
+          rawText: quickForm.rawText,
+          category: quickForm.category,
+          parentIdeaId: quickForm.parentIdeaId || null,
         })
+        if (res.data[0]) setSelectedId(res.data[0].ideaId)
       }
-      resetForm()
+      setQuickForm(EMPTY_QUICK)
       fetchIdeas()
     } catch (err) {
       setError(err.response?.data?.error || '아이디어를 저장하지 못했어요.')
@@ -87,34 +153,76 @@ export default function IdeaDumpPage() {
     }
   }
 
-  const startEdit = (idea) => {
-    setEditingId(idea.ideaId)
-    setForm({
-      title: idea.title || '',
-      content: idea.content || '',
-      pinned: Boolean(idea.pinned),
-    })
-    setError(null)
-  }
+  const saveDetail = async () => {
+    if (!selectedIdea || !detailForm.title.trim() || saving) return
 
-  const togglePin = async (idea) => {
+    setSaving(true)
+    setError(null)
+
     try {
-      await api.patch(`/ideas/${idea.ideaId}`, { pinned: !idea.pinned })
+      const res = await api.patch(`/ideas/${selectedIdea.ideaId}`, {
+        title: detailForm.title.trim(),
+        content: detailForm.content.trim(),
+        category: detailForm.category,
+        pinned: detailForm.pinned,
+        parentIdeaId: detailForm.parentIdeaId || null,
+      })
+      setSelectedId(res.data.ideaId)
       fetchIdeas()
-    } catch {
-      setError('핀 상태를 바꾸지 못했어요.')
+    } catch (err) {
+      setError(err.response?.data?.error || '아이디어를 수정하지 못했어요.')
+    } finally {
+      setSaving(false)
     }
   }
 
-  const deleteIdea = async (idea) => {
-    if (!window.confirm('이 아이디어를 삭제할까요?')) return
+  const addChildIdea = async () => {
+    if (!selectedIdea || saving) return
+
+    setSaving(true)
+    setError(null)
 
     try {
-      await api.delete(`/ideas/${idea.ideaId}`)
-      if (editingId === idea.ideaId) resetForm()
+      const res = await api.post('/ideas', {
+        title: '새 하위 아이디어',
+        content: '',
+        category: selectedIdea.category || 'OTHER',
+        parentIdeaId: selectedIdea.ideaId,
+      })
+      setSelectedId(res.data.ideaId)
       fetchIdeas()
-    } catch {
-      setError('아이디어를 삭제하지 못했어요.')
+    } catch (err) {
+      setError(err.response?.data?.error || '하위 아이디어를 만들지 못했어요.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const convertToTask = async () => {
+    if (!selectedIdea || selectedIdea.convertedTaskId || saving) return
+
+    setSaving(true)
+    setError(null)
+
+    try {
+      await api.post(`/ideas/${selectedIdea.ideaId}/convert-to-task`)
+      fetchIdeas()
+    } catch (err) {
+      setError(err.response?.data?.error || '태스크로 전환하지 못했어요.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deleteSelected = async () => {
+    if (!selectedIdea || !window.confirm('이 아이디어를 삭제할까요?')) return
+
+    try {
+      await api.delete(`/ideas/${selectedIdea.ideaId}`)
+      setSelectedId(null)
+      fetchIdeas()
+    } catch (err) {
+      setError(err.response?.data?.error || '아이디어를 삭제하지 못했어요.')
     }
   }
 
@@ -124,7 +232,7 @@ export default function IdeaDumpPage() {
         <div>
           <h2 className="heading-kitschy text-2xl">아이디어 덤프</h2>
           <p className="mt-2 text-sm font-semibold text-dark/60">
-            당장 할 일은 아니지만 놓치기 아까운 생각을 모아두세요.
+            할 일로 만들기 전의 생각을 모으고, 묶고, 필요할 때 태스크로 바꿔요.
           </p>
         </div>
         <div className="card-kitschy !py-3">
@@ -133,72 +241,53 @@ export default function IdeaDumpPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-6">
-        <form onSubmit={handleSubmit} className="card-kitschy space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="font-extrabold text-dark">
-              {editingId ? '아이디어 수정' : '빠른 저장'}
-            </h3>
-            {editingId && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="text-xs font-extrabold text-dark/50 hover:text-primary"
-              >
-                취소
-              </button>
-            )}
-          </div>
-
-          <label className="block">
-            <span className="text-xs font-black text-dark/50">제목</span>
-            <input
-              value={form.title}
-              onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-              maxLength={200}
-              placeholder="언젠가 해보고 싶은 것"
-              className="mt-2 w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-xs font-black text-dark/50">메모</span>
-            <textarea
-              value={form.content}
-              onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
-              maxLength={5000}
-              rows={8}
-              placeholder="아직 태스크로 만들 필요 없는 생각을 편하게 적어두세요."
-              className="mt-2 w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold leading-relaxed outline-none focus:border-primary"
-            />
-          </label>
-
-          <label className="flex items-center gap-2 text-sm font-extrabold text-dark">
-            <input
-              type="checkbox"
-              checked={form.pinned}
-              onChange={(e) => setForm((prev) => ({ ...prev, pinned: e.target.checked }))}
-              className="w-4 h-4 accent-primary"
-            />
-            위에 고정
-          </label>
-
-          {error && (
-            <p className="rounded-lg border-2 border-primary bg-primary/10 px-3 py-2 text-xs font-bold text-primary">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={!form.title.trim() || saving}
-            className="btn-kitschy w-full bg-primary text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      <form onSubmit={handleQuickSubmit} className="card-kitschy space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_160px_200px] gap-3">
+          <textarea
+            value={quickForm.rawText}
+            onChange={(e) => setQuickForm((prev) => ({ ...prev, rawText: e.target.value }))}
+            rows={3}
+            maxLength={5000}
+            placeholder={'아이디어를 한 줄에 하나씩 적어보세요.\n여러 줄이면 각각 따로 저장됩니다.'}
+            className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+          />
+          <select
+            value={quickForm.category}
+            onChange={(e) => setQuickForm((prev) => ({ ...prev, category: e.target.value }))}
+            className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
           >
-            {saving ? '저장 중...' : editingId ? '수정 완료' : '아이디어 저장'}
-          </button>
-        </form>
+            {CATEGORIES.map((category) => (
+              <option key={category.value} value={category.value}>{category.label}</option>
+            ))}
+          </select>
+          <select
+            value={quickForm.parentIdeaId}
+            onChange={(e) => setQuickForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
+            className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
+          >
+            <option value="">상위 없음</option>
+            {ideas.map((idea) => (
+              <option key={idea.ideaId} value={idea.ideaId}>{idea.title}</option>
+            ))}
+          </select>
+        </div>
+        <button
+          type="submit"
+          disabled={!quickForm.rawText.trim() || saving}
+          className="btn-kitschy bg-primary text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          줄 단위로 저장
+        </button>
+      </form>
 
-        <div className="space-y-4">
+      {error && (
+        <div className="card-kitschy !py-3 bg-primary/10 border-primary">
+          <p className="text-sm font-bold text-primary">{error}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(0,1.1fr)] gap-6">
+        <section className="space-y-3">
           <div className="card-kitschy !p-3">
             <input
               value={query}
@@ -212,76 +301,142 @@ export default function IdeaDumpPage() {
             <div className="card-kitschy text-center py-12">
               <p className="font-bold text-dark/50">불러오는 중...</p>
             </div>
-          ) : filteredIdeas.length === 0 ? (
+          ) : rows.length === 0 ? (
             <div className="card-kitschy text-center py-12">
-              <p className="font-extrabold text-dark">
-                {ideas.length === 0 ? '아직 저장한 아이디어가 없어요' : '검색 결과가 없어요'}
-              </p>
-              <p className="mt-2 text-xs font-semibold text-dark/50">
-                떠오른 생각을 왼쪽에 던져두면 됩니다.
-              </p>
+              <p className="font-extrabold text-dark">아이디어가 아직 없어요</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredIdeas.map((idea) => (
-                <article
-                  key={idea.ideaId}
-                  className={`card-kitschy !p-4 ${idea.pinned ? 'bg-yellow-50' : ''}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {idea.pinned && (
-                          <span className="rounded-full border border-yellow-500 bg-yellow-300 px-2 py-0.5 text-[10px] font-black text-dark">
-                            고정
-                          </span>
-                        )}
-                        <span className="text-[10px] font-bold text-dark/40">
-                          {formatDate(idea.updatedAt || idea.createdAt)}
-                        </span>
-                      </div>
-                      <h3 className="mt-1 truncate text-base font-black text-dark">
-                        {idea.title}
-                      </h3>
+            <div className="space-y-2">
+              {rows.map(({ idea, depth, childCount }) => {
+                const category = getCategory(idea.category)
+                const isSelected = selectedId === idea.ideaId
+                return (
+                  <button
+                    key={idea.ideaId}
+                    type="button"
+                    onClick={() => setSelectedId(idea.ideaId)}
+                    className={`w-full text-left rounded-lg border-2 p-3 transition-colors ${
+                      isSelected ? 'border-dark bg-white shadow-kitschy' : 'border-dark/10 bg-white hover:border-dark/30'
+                    }`}
+                    style={{ paddingLeft: `${12 + depth * 18}px` }}
+                  >
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
+                        {category.label}
+                      </span>
+                      {idea.pinned && <span className="text-[10px] font-black text-yellow-600">고정</span>}
+                      {idea.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
+                      {childCount > 0 && <span className="text-[10px] font-black text-dark/40">하위 {childCount}</span>}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => togglePin(idea)}
-                      className={`shrink-0 rounded-lg border-2 border-dark px-2 py-1 text-xs font-black ${
-                        idea.pinned ? 'bg-yellow-300 text-dark' : 'bg-accent text-dark'
-                      }`}
-                    >
-                      {idea.pinned ? '해제' : '고정'}
-                    </button>
-                  </div>
-
-                  {idea.content && (
-                    <p className="mt-3 whitespace-pre-wrap text-sm font-semibold leading-relaxed text-dark/70">
-                      {idea.content}
-                    </p>
-                  )}
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => startEdit(idea)}
-                      className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-xs font-black text-dark hover:bg-accent"
-                    >
-                      수정
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteIdea(idea)}
-                      className="rounded-lg border-2 border-primary bg-white px-3 py-2 text-xs font-black text-primary hover:bg-primary hover:text-white"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </article>
-              ))}
+                    <p className="mt-1 truncate text-sm font-black text-dark">{idea.title}</p>
+                  </button>
+                )
+              })}
             </div>
           )}
-        </div>
+        </section>
+
+        <section className="card-kitschy min-h-[28rem]">
+          {!selectedIdea ? (
+            <div className="h-full min-h-[20rem] flex items-center justify-center text-center">
+              <div>
+                <p className="font-extrabold text-dark">아이디어를 선택하세요</p>
+                <p className="mt-2 text-xs font-semibold text-dark/50">목록 제목을 누르면 세부 메모를 편집할 수 있어요.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-bold text-dark/40">수정 {formatDate(selectedIdea.updatedAt)}</p>
+                  <h3 className="mt-1 text-lg font-black text-dark">아이디어 상세</h3>
+                </div>
+                <label className="flex items-center gap-2 text-sm font-extrabold text-dark">
+                  <input
+                    type="checkbox"
+                    checked={detailForm.pinned}
+                    onChange={(e) => setDetailForm((prev) => ({ ...prev, pinned: e.target.checked }))}
+                    className="w-4 h-4 accent-primary"
+                  />
+                  고정
+                </label>
+              </div>
+
+              <input
+                value={detailForm.title}
+                onChange={(e) => setDetailForm((prev) => ({ ...prev, title: e.target.value }))}
+                maxLength={200}
+                className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-base font-black outline-none focus:border-primary"
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <select
+                  value={detailForm.category}
+                  onChange={(e) => setDetailForm((prev) => ({ ...prev, category: e.target.value }))}
+                  className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
+                >
+                  {CATEGORIES.map((category) => (
+                    <option key={category.value} value={category.value}>{category.label}</option>
+                  ))}
+                </select>
+                <select
+                  value={detailForm.parentIdeaId}
+                  onChange={(e) => setDetailForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
+                  className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
+                >
+                  <option value="">상위 없음</option>
+                  {selectableParents.map((idea) => (
+                    <option key={idea.ideaId} value={idea.ideaId}>{idea.title}</option>
+                  ))}
+                </select>
+              </div>
+
+              <textarea
+                value={detailForm.content}
+                onChange={(e) => setDetailForm((prev) => ({ ...prev, content: e.target.value }))}
+                maxLength={5000}
+                rows={12}
+                placeholder="이 아이디어의 세부 메모를 적어두세요."
+                className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold leading-relaxed outline-none focus:border-primary"
+              />
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={saveDetail}
+                  disabled={!detailForm.title.trim() || saving}
+                  className="btn-kitschy bg-primary text-white text-sm py-2 disabled:opacity-50"
+                >
+                  저장
+                </button>
+                <button
+                  type="button"
+                  onClick={addChildIdea}
+                  disabled={saving}
+                  className="btn-kitschy bg-secondary text-white text-sm py-2 disabled:opacity-50"
+                >
+                  하위 아이디어
+                </button>
+                <button
+                  type="button"
+                  onClick={convertToTask}
+                  disabled={saving || Boolean(selectedIdea.convertedTaskId)}
+                  className="btn-kitschy bg-dark text-white text-sm py-2 disabled:opacity-50"
+                >
+                  {selectedIdea.convertedTaskId ? '태스크 전환됨' : '태스크로 전환'}
+                </button>
+                <button
+                  type="button"
+                  onClick={deleteSelected}
+                  disabled={saving || childCounts.get(selectedIdea.ideaId) > 0}
+                  className="btn-kitschy bg-accent text-primary text-sm py-2 disabled:opacity-40"
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

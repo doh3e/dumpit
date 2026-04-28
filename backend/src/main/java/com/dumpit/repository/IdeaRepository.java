@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface IdeaRepository extends JpaRepository<Idea, UUID> {
 
     List<Idea> findByUserOrderByPinnedDescUpdatedAtDesc(User user);
+
+    boolean existsByParentIdea(Idea parentIdea);
 }
