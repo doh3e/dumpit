@@ -127,12 +127,16 @@ public class OpenAiServiceImpl implements OpenAiService {
 
     @Override
     public BrainDumpResult analyzeBrainDump(String rawText) {
+        String nowStr = LocalDateTime.now().format(DISPLAY_FORMAT);
         String prompt = """
             You analyze a brain dump for the Dumpit productivity app.
             Extract actionable tasks and return only valid JSON in this shape:
             {"tasks":[{"title":"...", "description":"...", "deadline":"YYYY-MM-DDTHH:mm:ss", "estimatedMinutes":60, "priorityScore":0.8, "category":"WORK"}]}
 
             Rules:
+            - Current time is %s. ALL deadlines must be in the future relative to this time.
+            - When the user mentions a date like "5월 1일" without a year, use the upcoming occurrence: same year if still ahead, next year otherwise.
+            - Never use a year earlier than the current year.
             - Split large or vague thoughts into practical tasks.
             - Use null or omit meaningfully impossible values, but keep valid JSON.
             - priorityScore must be between 0.0 and 1.0.
@@ -141,7 +145,7 @@ public class OpenAiServiceImpl implements OpenAiService {
 
             Brain dump:
             %s
-            """.formatted(rawText);
+            """.formatted(nowStr, rawText);
 
         try {
             String json = callChatApi(prompt, "Return strict JSON only.");
