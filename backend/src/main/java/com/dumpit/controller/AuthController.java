@@ -24,17 +24,18 @@ public class AuthController {
         }
 
         String email = principal.getAttribute("email");
-        int coins = userRepository.findByEmail(email)
-                .map(User::getCoinBalance)
-                .orElse(0);
+        User user = userRepository.findByEmail(email).orElse(null);
+        int coins = user != null ? user.getCoinBalance() : 0;
+        boolean isAdmin = user != null && Boolean.TRUE.equals(user.getIsAdmin());
 
         return ResponseEntity.ok(new UserMeResponse(
             email,
             principal.getAttribute("name"),
             principal.getAttribute("picture"),
-            coins
+            coins,
+            isAdmin
         ));
     }
 
-    public record UserMeResponse(String email, String name, String picture, int coins) {}
+    public record UserMeResponse(String email, String name, String picture, int coins, boolean isAdmin) {}
 }

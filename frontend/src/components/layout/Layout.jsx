@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import Header from './Header'
 import Sidebar from './Sidebar'
+import Footer from './Footer'
 import SettingsModal from '../SettingsModal'
 import PomodoroTimer from '../PomodoroTimer'
 import api from '../../services/api'
@@ -33,6 +34,8 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      <Footer />
 
       {/* Mobile floating timer button - only visible below lg */}
       <button

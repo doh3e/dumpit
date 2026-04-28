@@ -5,11 +5,20 @@ import HomePage from './pages/HomePage'
 import DashboardPage from './pages/DashboardPage'
 import BrainDumpPage from './pages/BrainDumpPage'
 import ShopPage from './pages/ShopPage'
+import AdminPage from './pages/AdminPage'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <div className="min-h-screen bg-accent" />
   return user ? children : <Navigate to="/" replace />
+}
+
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="min-h-screen bg-accent" />
+  if (!user) return <Navigate to="/" replace />
+  if (!user.isAdmin) return <Navigate to="/dashboard" replace />
+  return children
 }
 
 function PublicOnlyRoute({ children }) {
@@ -34,6 +43,9 @@ function AppRoutes() {
         } />
         <Route path="/shop" element={
           <PrivateRoute><ShopPage /></PrivateRoute>
+        } />
+        <Route path="/admin" element={
+          <AdminRoute><AdminPage /></AdminRoute>
         } />
       </Route>
 
