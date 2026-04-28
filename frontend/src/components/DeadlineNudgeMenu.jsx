@@ -2,6 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const DAY_MS = 24 * 60 * 60 * 1000
+const NOTIFIED_KEY = 'dumpit.deadlineNudges.notified'
+
+function getNotificationPermission() {
+  if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported'
+  return window.Notification.permission
+}
 
 function parseDate(value) {
   if (!value) return null
@@ -66,9 +72,22 @@ function getDeadlineNudges(tasks) {
 
 export default function DeadlineNudgeMenu({ tasks = [] }) {
   const [open, setOpen] = useState(false)
+  const [permission, setPermission] = useState(getNotificationPermission)
   const menuRef = useRef(null)
   const nudges = useMemo(() => getDeadlineNudges(tasks), [tasks])
   const urgentCount = nudges.length
+  const canAskPermission = permission === 'default'
+  const isNotificationOn = permission === 'granted'
+
+  const requestPermission = async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setPermission('unsupported')
+      return
+    }
+
+    const result = await window.Notification.requestPermission()
+    setPermission(result)
+  }
 
   useEffect(() => {
     if (!open) return
@@ -82,6 +101,46 @@ export default function DeadlineNudgeMenu({ tasks = [] }) {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [open])
+
+  useEffect(() => {
+    setPermission(getNotificationPermission())
+  }, [])
+
+  useEffect(() => {
+    if (permission !== 'granted' || nudges.length === 0) return
+
+    let notified = []
+    try {
+      notified = JSON.parse(window.localStorage.getItem(NOTIFIED_KEY) || '[]')
+    } catch {
+      notified = []
+    }
+
+    const notifiedSet = new Set(notified)
+    const pending = nudges.filter((task) => {
+      const key = `${task.taskId}:${task.deadline}`
+      return !notifiedSet.has(key)
+    })
+
+    pending.slice(0, 3).forEach((task) => {
+      const key = `${task.taskId}:${task.deadline}`
+      const notification = new window.Notification('DumpIt 마감 알림', {
+        body: `${task.title} · ${formatRemaining(task.deadline)}`,
+        icon: '/favicon-48x48.png',
+        tag: key,
+      })
+
+      notification.onclick = () => {
+        window.focus()
+        window.location.assign('/dashboard')
+        notification.close()
+      }
+
+      notifiedSet.add(key)
+    })
+
+    window.localStorage.setItem(NOTIFIED_KEY, JSON.stringify([...notifiedSet].slice(-200)))
+  }, [nudges, permission])
 
   return (
     <div className="relative" ref={menuRef}>
@@ -110,6 +169,29 @@ export default function DeadlineNudgeMenu({ tasks = [] }) {
             <div className="flex items-center justify-between gap-3 px-1 pb-2 border-b-2 border-dark/10">
               <p className="text-sm font-black text-dark">마감 임박</p>
               <span className="text-[10px] font-extrabold text-dark/50">24시간 이내</span>
+            </div>
+
+            <div className="mt-3 rounded-lg border-2 border-dark/10 bg-accent p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-extrabold text-dark">컴퓨터 알림</p>
+                  <p className="mt-0.5 text-[11px] font-semibold text-dark/50">
+                    {permission === 'unsupported' && '이 브라우저에서는 지원하지 않아요.'}
+                    {permission === 'denied' && '브라우저 설정에서 알림 차단을 해제해야 해요.'}
+                    {permission === 'default' && '허용하면 열린 탭에서 팝업으로 알려드려요.'}
+                    {isNotificationOn && '켜져 있어요. 같은 마감은 한 번만 알려드려요.'}
+                  </p>
+                </div>
+                {canAskPermission && (
+                  <button
+                    type="button"
+                    onClick={requestPermission}
+                    className="shrink-0 rounded-lg border-2 border-dark bg-primary px-3 py-2 text-[11px] font-black text-white shadow-kitschy hover:bg-secondary transition-colors"
+                  >
+                    켜기
+                  </button>
+                )}
+              </div>
             </div>
 
             {urgentCount === 0 ? (
