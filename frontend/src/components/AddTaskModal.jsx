@@ -5,11 +5,18 @@ import { CATEGORIES } from '../constants/categories'
 import AiUsageBadge from './AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
+function getTodayDefaultDeadline() {
+  const d = new Date()
+  d.setHours(23, 59, 0, 0)
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export default function AddTaskModal({ onClose, onCreated }) {
   const aiUsage = useAiUsage()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [deadline, setDeadline] = useState('')
+  const [deadline, setDeadline] = useState(getTodayDefaultDeadline)
   const [estimatedMinutes, setEstimatedMinutes] = useState('')
   const [category, setCategory] = useState('')
   const [saving, setSaving] = useState(false)
