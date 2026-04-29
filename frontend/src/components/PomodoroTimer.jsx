@@ -30,7 +30,8 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
   const [showSettings, setShowSettings] = useState(false)
   const intervalRef = useRef(null)
 
-  const activeTasks = tasks.filter(
+  const taskList = Array.isArray(tasks) ? tasks : []
+  const activeTasks = taskList.filter(
     (t) => t.status !== 'DONE' && t.status !== 'CANCELLED'
   )
 

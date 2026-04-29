@@ -8,10 +8,12 @@ import SettingsModal from '../SettingsModal'
 import HelpModal from '../HelpModal'
 import PomodoroTimer from '../PomodoroTimer'
 import api from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 
 const HELP_SEEN_KEY = 'dumpit_help_seen'
 
 export default function Layout() {
+  const { user } = useAuth()
   const [showSettings, setShowSettings] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [showMobileTimer, setShowMobileTimer] = useState(false)
@@ -19,12 +21,21 @@ export default function Layout() {
   const [tasks, setTasks] = useState([])
 
   const fetchTasks = useCallback(() => {
+    if (!user) {
+      setTasks([])
+      return
+    }
     api.get('/tasks')
-      .then((res) => setTasks(res.data))
+      .then((res) => setTasks(Array.isArray(res.data) ? res.data : []))
       .catch(() => setTasks([]))
-  }, [])
+  }, [user])
 
   useEffect(() => {
+    if (!user) {
+      setTasks([])
+      return
+    }
+
     fetchTasks()
 
     const interval = window.setInterval(fetchTasks, 60000)
@@ -34,7 +45,7 @@ export default function Layout() {
       window.clearInterval(interval)
       window.removeEventListener('focus', fetchTasks)
     }
-  }, [fetchTasks])
+  }, [fetchTasks, user])
 
   useEffect(() => {
     if (!localStorage.getItem(HELP_SEEN_KEY)) {
