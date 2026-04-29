@@ -6,6 +6,7 @@ const MENU = [
   { label: '나의 태스크', path: '/dashboard' },
   { label: '브레인 덤프', path: '/brain-dump' },
   { label: '아이디어 덤프', path: '/ideas' },
+  { label: '루틴', path: '/routines' },
   { label: '코인샵', path: '/shop' },
 ]
 

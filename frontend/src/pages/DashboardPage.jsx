@@ -36,6 +36,19 @@ function formatDeadline(deadline) {
   })
 }
 
+function isSameLocalDate(a, b) {
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate()
+}
+
+function isVisibleToday(task) {
+  if (!task.deadline) return true
+  const deadline = parseDate(task.deadline)
+  if (!deadline || Number.isNaN(deadline.getTime())) return true
+  return isSameLocalDate(deadline, new Date())
+}
+
 function getUrgencyInfo(deadline) {
   const d = parseDate(deadline)
   if (!d || isNaN(d)) return null
@@ -121,12 +134,14 @@ export default function DashboardPage() {
   }
 
   const activeTasks = groupByParent(
-    tasks.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED')
+    tasks.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED' && isVisibleToday(t))
   )
   const doneTasks = tasks.filter((t) => {
     if (t.status !== 'DONE') return false
     if (!t.deadline) return true
-    return new Date(t.deadline) >= new Date()
+    const deadline = parseDate(t.deadline)
+    if (!deadline || Number.isNaN(deadline.getTime())) return true
+    return isSameLocalDate(deadline, new Date()) || deadline > new Date()
   })
 
   return (
