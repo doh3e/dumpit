@@ -19,6 +19,12 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      timeout: 1s
+
   security:
     oauth2:
       client:
@@ -40,14 +46,14 @@ server:
         secure: false
 
 openai:
-  api-key: ${OPENAI_API_KEY:}
+  api-key: ${OPENAI_API_KEY}
   model: gpt-4o-mini
 
 mail:
   resend:
-    api-key: ${RESEND_API_KEY:}
-  from: ${MAIL_FROM:onboarding@resend.dev}
-  admin-notification: ${ADMIN_NOTIFICATION_EMAIL:dumpitadmin@gmail.com}
+    api-key: ${RESEND_API_KEY}
+  from: ${MAIL_FROM}
+  admin-notification: ${ADMIN_NOTIFICATION_EMAIL}
 
 app:
   frontend-url: http://localhost:5173

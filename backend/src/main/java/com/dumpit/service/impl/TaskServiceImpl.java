@@ -4,6 +4,7 @@ import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
+import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.TaskService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final OpenAiService openAiService;
+    private final DeadlineNudgeService deadlineNudgeService;
 
     @Override
     @Transactional(readOnly = true)
@@ -52,7 +54,9 @@ public class TaskServiceImpl implements TaskService {
             task.setCategory(parseCategory(priority.category()));
         }
 
-        return taskRepository.save(task);
+        Task saved = taskRepository.save(task);
+        deadlineNudgeService.index(saved);
+        return saved;
     }
 
     @Override
@@ -92,7 +96,9 @@ public class TaskServiceImpl implements TaskService {
             userRepository.save(task.getUser());
         }
 
-        return taskRepository.save(task);
+        Task saved = taskRepository.save(task);
+        deadlineNudgeService.index(saved);
+        return saved;
     }
 
     @Override
@@ -150,7 +156,9 @@ public class TaskServiceImpl implements TaskService {
             child.setCategory(parent.getCategory());
             child.setAiPriorityScore(parent.getAiPriorityScore());
 
-            created.add(taskRepository.save(child));
+            Task saved = taskRepository.save(child);
+            deadlineNudgeService.index(saved);
+            created.add(saved);
         }
         return created;
     }
@@ -165,6 +173,7 @@ public class TaskServiceImpl implements TaskService {
             throw new IllegalArgumentException("沅뚰븳???놁뒿?덈떎");
         }
 
+        deadlineNudgeService.remove(task);
         taskRepository.delete(task);
     }
 
