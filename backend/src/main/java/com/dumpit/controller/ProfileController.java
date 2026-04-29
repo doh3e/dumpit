@@ -68,18 +68,20 @@ public class ProfileController {
             categoryBreakdown.put(cat.name(), count);
         }
 
-        LocalDate heatmapStart = LocalDate.now().minusWeeks(16);
+        LocalDate heatmapStart = LocalDate.now().minusWeeks(28);
         List<LocalDateTime> completedAts = taskRepository.findCompletedAtSince(user, heatmapStart.atStartOfDay());
 
-        Set<LocalDate> doneDays = completedAts.stream()
+        Map<LocalDate, Long> completedCountByDate = completedAts.stream()
                 .map(LocalDateTime::toLocalDate)
-                .collect(Collectors.toSet());
+                .collect(Collectors.groupingBy(date -> date, LinkedHashMap::new, Collectors.counting()));
+
+        Set<LocalDate> doneDays = completedCountByDate.keySet();
 
         int streak = calcStreak(doneDays);
 
         Map<String, Integer> heatmap = new LinkedHashMap<>();
         for (LocalDate d = heatmapStart; !d.isAfter(LocalDate.now()); d = d.plusDays(1)) {
-            heatmap.put(d.toString(), doneDays.contains(d) ? 1 : 0);
+            heatmap.put(d.toString(), completedCountByDate.getOrDefault(d, 0L).intValue());
         }
 
         long brainDumpCount = brainDumpRepository.countByUser(user);

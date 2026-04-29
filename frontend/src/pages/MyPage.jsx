@@ -53,6 +53,13 @@ const STAT_CARDS = (stats) => [
   { label: '저장한 아이디어', value: stats.ideaCount, bg: 'bg-purple-100', text: 'text-dark' },
 ]
 
+const heatmapColorClass = (count) => {
+  if (count >= 3) return 'bg-primary border-dark/30'
+  if (count === 2) return 'bg-primary/60 border-primary/40'
+  if (count === 1) return 'bg-primary/25 border-primary/25'
+  return 'bg-dark/10 border-transparent'
+}
+
 function HeatmapGrid({ heatmap }) {
   const entries = Object.entries(heatmap)
   const today = new Date()
@@ -85,12 +92,8 @@ function HeatmapGrid({ heatmap }) {
               return (
                 <div
                   key={di}
-                  title={`${dateStr}${count ? ' ✓' : ''}`}
-                  className={`w-3 h-3 rounded-sm border ${
-                    count
-                      ? 'bg-primary border-dark/30'
-                      : 'bg-dark/10 border-transparent'
-                  } ${isToday ? 'ring-1 ring-dark' : ''}`}
+                  title={`${dateStr} · ${count}개 완료`}
+                  className={`w-3 h-3 rounded-sm border ${heatmapColorClass(count)} ${isToday ? 'ring-1 ring-dark' : ''}`}
                 />
               )
             })}
@@ -239,7 +242,7 @@ export default function MyPage() {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const start = new Date(today)
-    start.setDate(start.getDate() - 111)
+    start.setDate(start.getDate() - 28 * 7)
     for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
       m[d.toISOString().slice(0, 10)] = 0
     }
@@ -336,14 +339,21 @@ export default function MyPage() {
         <div className="card-kitschy !p-4 space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-black text-dark">완료 기록</p>
-            <span className="text-[10px] font-bold text-dark/40">최근 16주</span>
+            <span className="text-[10px] font-bold text-dark/40">최근 28주</span>
           </div>
           <HeatmapGrid heatmap={heatmap} />
-          <div className="flex items-center gap-2 mt-1">
-            <div className="w-3 h-3 rounded-sm bg-dark/10" />
-            <span className="text-[9px] text-dark/30">없음</span>
-            <div className="w-3 h-3 rounded-sm bg-primary ml-2" />
-            <span className="text-[9px] text-dark/30">완료</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+            {[
+              ['없음', 0],
+              ['1개 완료', 1],
+              ['2개 완료', 2],
+              ['3개 이상 완료', 3],
+            ].map(([label, count]) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <div className={`w-3 h-3 rounded-sm border ${heatmapColorClass(count)}`} />
+                <span className="text-[9px] text-dark/40">{label}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}

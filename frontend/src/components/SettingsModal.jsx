@@ -22,6 +22,16 @@ function getNotificationPermission() {
   return window.Notification.permission
 }
 
+function isIOSDevice() {
+  if (typeof navigator === 'undefined') return false
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+}
+
+function isStandaloneWebApp() {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
+}
+
 function loadThresholds() {
   try {
     const saved = localStorage.getItem(THRESHOLDS_KEY)
@@ -46,8 +56,14 @@ export default function SettingsModal({ onClose }) {
   const [permission, setPermission] = useState(getNotificationPermission)
   const [notificationsEnabled, setNotificationsEnabled] = useState(loadNotificationsEnabled)
   const [selectedThresholds, setSelectedThresholds] = useState(loadThresholds)
+  const [testSent, setTestSent] = useState(false)
   const [purchases, setPurchases] = useState([])
   const [loadingPurchases, setLoadingPurchases] = useState(true)
+  const isIOS = isIOSDevice()
+  const isStandalone = isStandaloneWebApp()
+  const notificationNote = isIOS && !isStandalone
+    ? '아이폰/아이패드에서는 홈 화면에 추가한 앱에서만 백그라운드 웹 푸시가 가능해요. 현재 알림은 Dumpit을 열어둔 상태에서 동작해요.'
+    : '현재 알림은 Dumpit 탭이나 앱이 열려 있을 때 마감 정보를 확인해 띄워요.'
 
   const handleNotificationToggle = async () => {
     if (permission === 'unsupported' || permission === 'denied') return
@@ -73,6 +89,27 @@ export default function SettingsModal({ onClose }) {
       localStorage.setItem(THRESHOLDS_KEY, JSON.stringify(next))
       return next
     })
+  }
+
+  const sendTestNotification = async () => {
+    if (permission === 'unsupported' || permission === 'denied') return
+
+    let currentPermission = permission
+    if (currentPermission === 'default') {
+      currentPermission = await window.Notification.requestPermission()
+      setPermission(currentPermission)
+    }
+    if (currentPermission !== 'granted') return
+
+    localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, '1')
+    setNotificationsEnabled(true)
+    new window.Notification('Dumpit! 테스트 알림', {
+      body: '알림 설정이 정상이에요.',
+      icon: '/favicon-48x48.png',
+      tag: 'dumpit-test-notification',
+    })
+    setTestSent(true)
+    window.setTimeout(() => setTestSent(false), 2500)
   }
 
   useEffect(() => {
@@ -166,6 +203,20 @@ export default function SettingsModal({ onClose }) {
               <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white border border-dark/20 transition-all ${
                 permission === 'granted' && notificationsEnabled ? 'left-[18px]' : 'left-0.5'
               }`} />
+            </button>
+          </div>
+
+          <div className="mt-3 rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
+            <p className="text-[11px] font-medium text-dark/50 leading-relaxed">
+              {notificationNote}
+            </p>
+            <button
+              type="button"
+              onClick={sendTestNotification}
+              disabled={permission === 'unsupported' || permission === 'denied'}
+              className="mt-3 w-full rounded-lg border-2 border-dark bg-accent px-3 py-2 text-xs font-black text-dark shadow-kitschy transition-transform active:translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {testSent ? '테스트 알림을 보냈어요' : '테스트 알림 보내기'}
             </button>
           </div>
 
