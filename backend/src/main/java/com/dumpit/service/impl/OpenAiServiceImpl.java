@@ -13,6 +13,7 @@ import org.springframework.web.client.RestClientResponseException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -163,6 +164,16 @@ public class OpenAiServiceImpl implements OpenAiService {
             - Current time is %s. ALL deadlines must be in the future relative to this time.
             - When the user mentions a date like "5월 1일" without a year, use the upcoming occurrence: same year if still ahead, next year otherwise.
             - Never use a year earlier than the current year.
+            - Prefer explicit due dates/times, relative due dates/times, or well-known fixed event dates from the user's text.
+            - If a task has no explicit deadline, assign a reasonable soft deadline between today and 3 days from now based on urgency, effort, and task type.
+            - Use today 23:59:00 for urgent, quick, administrative, or clearly immediate tasks.
+            - Use tomorrow or 2 days from now for errands, preparation, chores, and tasks that should be handled soon.
+            - Use 3 days from now for flexible low-urgency tasks.
+            - Do not assign a deadline later than 3 days from now unless the user explicitly gives a later date or a fixed event implies it.
+            - Date-only deadlines must use 23:59:00 unless the user gives a specific time.
+            - Expressions that describe quantity or duration, such as "일주일 치", "한 달치", or "3시간짜리", are NOT deadlines by themselves.
+            - If one global due date clearly applies to multiple tasks, apply the same deadline to those tasks.
+            - For Korean fixed-date events, infer the correct upcoming date only when it is directly relevant to the task. Example: "어버이날 선물" is due by May 8 at 23:59.
             - Split large or vague thoughts into practical tasks.
             - Use null or omit meaningfully impossible values, but keep valid JSON.
             - priorityScore must be between 0.0 and 1.0.
@@ -185,7 +196,7 @@ public class OpenAiServiceImpl implements OpenAiService {
                     .map((task) -> new BrainDumpTask(
                             trimToLimit(task.title(), 200),
                             trimToLimit(task.description(), 1000),
-                            task.deadline(),
+                            normalizeFutureDeadline(task.deadline()),
                             clampMinutes(task.estimatedMinutes()),
                             task.priorityScore() != null ? clamp(task.priorityScore(), 0.0, 1.0) : 0.5,
                             safeCategory(task.category())
@@ -269,6 +280,17 @@ public class OpenAiServiceImpl implements OpenAiService {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.length() <= limit ? trimmed : trimmed.substring(0, limit);
+    }
+
+    private String normalizeFutureDeadline(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            LocalDateTime deadline = LocalDateTime.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            if (!deadline.isAfter(LocalDateTime.now())) return null;
+            return deadline.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        } catch (DateTimeParseException ex) {
+            return null;
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

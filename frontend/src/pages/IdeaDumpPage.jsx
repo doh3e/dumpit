@@ -437,7 +437,7 @@ export default function IdeaDumpPage() {
 
               <div className="rounded-lg border-2 border-dark/20 bg-white p-3">
                 <div className="flex items-center justify-between gap-3">
-                  <h4 className="text-sm font-black text-dark">자녀 아이디어</h4>
+                  <h4 className="text-sm font-black text-dark">하위 아이디어</h4>
                   <span className="text-[10px] font-black text-dark/40">{selectedChildren.length}개</span>
                 </div>
                 {selectedChildren.length === 0 ? (
