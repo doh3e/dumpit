@@ -111,6 +111,9 @@ public class Task {
     @Setter
     private String externalEventId;
 
+    @Setter
+    private LocalDateTime completedAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

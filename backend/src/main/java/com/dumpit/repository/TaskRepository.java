@@ -54,4 +54,32 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
         ORDER BY t.deadline ASC
     """)
     List<Task> findDeadlineNudges(@Param("user") User user, @Param("cutoff") LocalDateTime cutoff);
+
+    long countByUserAndStatus(User user, Task.Status status);
+
+    @Query("""
+        SELECT t FROM Task t
+        WHERE t.user = :user
+          AND t.status NOT IN ('DONE', 'CANCELLED')
+          AND t.deadline IS NOT NULL
+          AND t.deadline < :now
+        ORDER BY t.deadline ASC
+    """)
+    List<Task> findOverdueTasks(@Param("user") User user, @Param("now") LocalDateTime now);
+
+    @Query("""
+        SELECT t.category, COUNT(t) FROM Task t
+        WHERE t.user = :user AND t.status = 'DONE'
+        GROUP BY t.category
+    """)
+    List<Object[]> countDoneByCategory(@Param("user") User user);
+
+    @Query("""
+        SELECT t.completedAt FROM Task t
+        WHERE t.user = :user
+          AND t.status = 'DONE'
+          AND t.completedAt >= :since
+        ORDER BY t.completedAt DESC
+    """)
+    List<LocalDateTime> findCompletedAtSince(@Param("user") User user, @Param("since") LocalDateTime since);
 }
