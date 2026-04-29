@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { label: '브레인 덤프', path: '/brain-dump' },
   { label: '아이디어 덤프', path: '/ideas' },
   { label: '루틴', path: '/routines' },
+  { label: '마이페이지', path: '/mypage' },
 ]
 
 const AI_COST_ROWS = [
@@ -172,6 +173,13 @@ export default function Header({ onOpenDrawer }) {
                 <div className="card-kitschy py-2 min-w-[160px]">
                   <p className="px-4 py-1 text-xs font-bold text-dark/50 truncate">{user?.email}</p>
                   <hr className="my-1 border-dark/10" />
+                  <Link
+                    to="/mypage"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-4 py-2 text-sm font-bold text-dark hover:bg-accent rounded transition-colors"
+                  >
+                    마이페이지
+                  </Link>
                   <button
                     onClick={() => { setMenuOpen(false); logout() }}
                     className="w-full text-left px-4 py-2 text-sm font-bold text-dark hover:bg-primary hover:text-white rounded transition-colors"
