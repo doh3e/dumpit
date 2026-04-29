@@ -10,6 +10,7 @@ import RoutinePage from './pages/RoutinePage'
 import ShopPage from './pages/ShopPage'
 import AdminPage from './pages/AdminPage'
 import MyPage from './pages/MyPage'
+import PrivacyPage from './pages/PrivacyPage'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -62,6 +63,7 @@ function AppRoutes() {
         } />
       </Route>
 
+      <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
