@@ -68,13 +68,27 @@ public class ProfileController {
             categoryBreakdown.put(cat.name(), count);
         }
 
-        int streak = calcStreak(user);
+        LocalDateTime since16w = LocalDateTime.now().minusWeeks(16);
+        List<LocalDateTime> completedAts = taskRepository.findCompletedAtSince(user, since16w);
+
+        Set<LocalDate> doneDays = completedAts.stream()
+                .map(LocalDateTime::toLocalDate)
+                .collect(Collectors.toSet());
+
+        int streak = calcStreak(doneDays);
+
+        Map<String, Integer> heatmap = new LinkedHashMap<>();
+        for (int i = 111; i >= 0; i--) {
+            LocalDate d = LocalDate.now().minusDays(i);
+            heatmap.put(d.toString(), doneDays.contains(d) ? 1 : 0);
+        }
+
         long brainDumpCount = brainDumpRepository.countByUser(user);
         long ideaCount = ideaRepository.countByUser(user);
 
         return ResponseEntity.ok(new StatsResponse(
                 totalDone, totalTodo, totalInProgress,
-                categoryBreakdown, streak,
+                categoryBreakdown, streak, heatmap,
                 brainDumpCount, ideaCount,
                 user.getCoinBalance()
         ));
@@ -95,14 +109,7 @@ public class ProfileController {
         return ResponseEntity.ok(result);
     }
 
-    private int calcStreak(User user) {
-        LocalDateTime since = LocalDateTime.now().minusDays(365);
-        List<LocalDateTime> completedAts = taskRepository.findCompletedAtSince(user, since);
-
-        Set<LocalDate> doneDays = completedAts.stream()
-                .map(LocalDateTime::toLocalDate)
-                .collect(Collectors.toSet());
-
+    private int calcStreak(Set<LocalDate> doneDays) {
         int streak = 0;
         LocalDate day = LocalDate.now();
         while (doneDays.contains(day)) {
@@ -132,7 +139,7 @@ public class ProfileController {
     public record ProfileUpdateRequest(String bio, String nickname) {}
     public record StatsResponse(
             long totalDone, long totalTodo, long totalInProgress,
-            Map<String, Long> categoryBreakdown, int streak,
+            Map<String, Long> categoryBreakdown, int streak, Map<String, Integer> heatmap,
             long brainDumpCount, long ideaCount, int coinBalance) {}
     public record OverdueTaskResponse(
             UUID taskId, String title, String category,
