@@ -115,8 +115,8 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
         isLocked: true,
       })
       if (onTaskAdded) onTaskAdded()
-    } catch {
-      alert('태스크 추가에 실패했어요')
+    } catch (err) {
+      alert(err.response?.data?.error || '태스크 추가에 실패했어요')
     } finally {
       setAddingEventId(null)
     }
@@ -241,7 +241,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
       <div className="flex items-center gap-4 mt-3 justify-center">
         <div className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-secondary" />
-          <span className="text-[10px] font-bold text-dark/50">마감일</span>
+          <span className="text-[10px] font-bold text-dark/50">태스크</span>
         </div>
         <div className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-blue-500" />

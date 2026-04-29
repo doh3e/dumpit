@@ -5,11 +5,15 @@ import Header from './Header'
 import Sidebar from './Sidebar'
 import Footer from './Footer'
 import SettingsModal from '../SettingsModal'
+import HelpModal from '../HelpModal'
 import PomodoroTimer from '../PomodoroTimer'
 import api from '../../services/api'
 
+const HELP_SEEN_KEY = 'dumpit_help_seen'
+
 export default function Layout() {
   const [showSettings, setShowSettings] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const [showMobileTimer, setShowMobileTimer] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [tasks, setTasks] = useState([])
@@ -32,12 +36,27 @@ export default function Layout() {
     }
   }, [fetchTasks])
 
+  useEffect(() => {
+    if (!localStorage.getItem(HELP_SEEN_KEY)) {
+      setShowHelp(true)
+    }
+  }, [])
+
+  const handleCloseHelp = () => {
+    localStorage.setItem(HELP_SEEN_KEY, '1')
+    setShowHelp(false)
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-accent">
-      <Header onOpenDrawer={() => setDrawerOpen(true)} />
+      <Header
+        onOpenDrawer={() => setDrawerOpen(true)}
+        onOpenHelp={() => setShowHelp(true)}
+      />
       <div className="flex flex-1">
         <Sidebar
           onOpenSettings={() => setShowSettings(true)}
+          onOpenHelp={() => setShowHelp(true)}
           tasks={tasks}
           isDrawerOpen={drawerOpen}
           onCloseDrawer={() => setDrawerOpen(false)}
@@ -81,6 +100,7 @@ export default function Layout() {
       )}
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showHelp && <HelpModal onClose={handleCloseHelp} />}
     </div>
   )
 }

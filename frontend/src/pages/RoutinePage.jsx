@@ -264,7 +264,7 @@ export default function RoutinePage() {
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               rows={3}
-              maxLength={2000}
+              maxLength={1000}
               className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
             />
           </div>

@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public record IdeaUpdateRequest(
         @Size(max = 200) String title,
-        @Size(max = 5000) String content,
+        @Size(max = 3000) String content,
         Boolean pinned,
         Task.Category category,
         UUID parentIdeaId

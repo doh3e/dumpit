@@ -1,5 +1,6 @@
 package com.dumpit.config;
 
+import com.dumpit.service.AiUsageLimitExceededException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,12 @@ public class GlobalExceptionHandler {
                 .orElse("입력값이 올바르지 않습니다");
         return ResponseEntity.badRequest()
                 .body(Map.of("error", message));
+    }
+
+    @ExceptionHandler(AiUsageLimitExceededException.class)
+    public ResponseEntity<Map<String, String>> handleAiUsageLimit(AiUsageLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(Map.of("error", ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

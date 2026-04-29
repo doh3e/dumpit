@@ -7,6 +7,8 @@ import com.dumpit.entity.Task;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.TaskService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -80,13 +82,26 @@ public class TaskController {
     public ResponseEntity<List<TaskResponse>> createSplit(
             @AuthenticationPrincipal OAuth2User principal,
             @PathVariable("taskId") UUID taskId,
-            @RequestBody SplitRequest req) {
+            @Valid @RequestBody SplitRequest req) {
+        List<TaskService.SubtaskInput> subtasks = req.subtasks().stream()
+                .map((subtask) -> new TaskService.SubtaskInput(
+                        subtask.title(),
+                        subtask.description(),
+                        subtask.estimatedMinutes()
+                ))
+                .toList();
         List<Task> children = taskService.createSubtasks(
-                principal.getAttribute("email"), taskId, req.subtasks());
+                principal.getAttribute("email"), taskId, subtasks);
         return ResponseEntity.ok(children.stream().map(TaskResponse::from).toList());
     }
 
-    public record SplitRequest(List<TaskService.SubtaskInput> subtasks) {}
+    public record SplitRequest(List<@Valid SubtaskRequest> subtasks) {}
+
+    public record SubtaskRequest(
+            @NotBlank @Size(max = 200) String title,
+            @Size(max = 1000) String description,
+            Integer estimatedMinutes
+    ) {}
 
     @DeleteMapping("/{taskId}")
     public ResponseEntity<Void> deleteTask(

@@ -1,5 +1,6 @@
 package com.dumpit.service;
 
+import com.dumpit.dto.DumpConfirmRequest;
 import com.dumpit.entity.Task;
 
 import java.util.List;
@@ -9,5 +10,7 @@ public interface BrainDumpService {
 
     BrainDumpResult analyze(String email, String rawText);
 
-    record BrainDumpResult(UUID dumpId, List<Task> tasks) {}
+    List<Task> confirm(String email, UUID dumpId, List<DumpConfirmRequest.TaskInput> tasks);
+
+    record BrainDumpResult(UUID dumpId, List<com.dumpit.service.OpenAiService.BrainDumpTask> tasks) {}
 }

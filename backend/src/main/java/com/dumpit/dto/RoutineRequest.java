@@ -11,7 +11,7 @@ import java.util.Set;
 
 public record RoutineRequest(
         @NotBlank @Size(max = 200) String name,
-        @Size(max = 2000) String description,
+        @Size(max = 1000) String description,
         Boolean enabled,
         @NotNull Routine.RepeatType repeatType,
         Set<Integer> daysOfWeek,

@@ -3,8 +3,11 @@ import { createPortal } from 'react-dom'
 import api from '../services/api'
 import { CATEGORIES } from '../constants/categories'
 import SubtaskProposalModal from './SubtaskProposalModal'
+import AiUsageBadge from './AiUsageBadge'
+import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 export default function EditTaskModal({ task, onClose, onUpdated }) {
+  const aiUsage = useAiUsage()
   const [showSplit, setShowSplit] = useState(false)
   const [title, setTitle] = useState(task.title || '')
   const [description, setDescription] = useState(task.description || '')
@@ -82,7 +85,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            maxLength={2000}
+            maxLength={1000}
             className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary resize-none"
           />
         </div>
@@ -160,14 +163,15 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           </div>
           <button
             type="button"
-            disabled={reanalyzing}
+            disabled={reanalyzing || !aiUsage.hasEnough(1)}
             onClick={async () => {
               setReanalyzing(true)
               try {
                 const res = await api.post(`/tasks/${task.taskId}/reanalyze`)
                 setPriorityScore(res.data.aiPriorityScore ?? 0.5)
-              } catch {
-                alert('AI 재분석에 실패했어요.')
+                dispatchAiUsed()
+              } catch (err) {
+                alert(err.response?.data?.error || 'AI 재분석에 실패했어요.')
               } finally {
                 setReanalyzing(false)
               }
@@ -176,13 +180,17 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           >
             {reanalyzing ? 'AI 분석 중...' : 'AI 우선순위 재분석'}
           </button>
+          <div className="mt-2">
+            <AiUsageBadge usage={aiUsage.usage} cost={1} />
+          </div>
         </div>
 
         {!task.parentTaskId && (
           <button
             type="button"
             onClick={() => setShowSplit(true)}
-            className="w-full text-xs font-bold text-secondary border-2 border-secondary rounded-lg py-2 hover:bg-secondary/10 transition-colors"
+            disabled={!aiUsage.hasEnough(3)}
+            className="w-full text-xs font-bold text-secondary border-2 border-secondary rounded-lg py-2 hover:bg-secondary/10 transition-colors disabled:opacity-50"
           >
             ✂️ AI로 쪼개기 (3~5개 서브태스크)
           </button>

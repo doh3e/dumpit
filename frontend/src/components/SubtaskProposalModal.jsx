@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../services/api'
+import AiUsageBadge from './AiUsageBadge'
+import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 export default function SubtaskProposalModal({ task, onClose, onCreated }) {
+  const aiUsage = useAiUsage()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -19,7 +22,8 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
         }))
         setSubtasks(proposed)
       })
-      .catch(() => setError('AI 분할 제안에 실패했어요. 다시 시도해주세요.'))
+      .then(() => dispatchAiUsed())
+      .catch((err) => setError(err.response?.data?.error || 'AI 분할 제안에 실패했어요. 다시 시도해주세요.'))
       .finally(() => setLoading(false))
   }, [task.taskId])
 
@@ -66,6 +70,8 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
           </p>
         </div>
 
+        <AiUsageBadge usage={aiUsage.usage} cost={3} />
+
         {loading ? (
           <div className="text-center py-10">
             <p className="font-bold text-dark/50 text-sm">AI가 쪼개는 중...</p>
@@ -101,6 +107,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         value={s.title}
                         onChange={(e) => updateField(idx, 'title', e.target.value)}
                         placeholder="서브태스크 제목"
+                        maxLength={200}
                         className="w-full px-2 py-1 border-2 border-dark rounded text-sm font-bold bg-white outline-none focus:border-primary"
                         disabled={!s.include}
                       />
@@ -109,6 +116,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         onChange={(e) => updateField(idx, 'description', e.target.value)}
                         rows={1}
                         placeholder="메모 (선택)"
+                        maxLength={1000}
                         className="w-full px-2 py-1 border-2 border-dark/30 rounded text-xs font-semibold bg-white outline-none focus:border-primary resize-none"
                         disabled={!s.include}
                       />

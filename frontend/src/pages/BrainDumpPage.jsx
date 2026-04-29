@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import AiUsageBadge from '../components/AiUsageBadge'
+import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 const PLACEHOLDER = `예) 내일까지 기획서 초안 써야 하고, 이번 주 금요일 팀 발표 준비도 해야 해. 오늘 점심 약속 있고 오후엔 헬스장도 가야 함. 아, 이메일 답장도 밀려있어...`
 
@@ -16,11 +18,23 @@ function getPriorityLabel(score) {
   return '낮음'
 }
 
+function formatDeadline(value) {
+  if (!value) return null
+  const d = Array.isArray(value)
+    ? new Date(value[0], (value[1] || 1) - 1, value[2] || 1, value[3] || 0, value[4] || 0)
+    : new Date(value)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 export default function BrainDumpPage() {
+  const aiUsage = useAiUsage()
   const [text, setText] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [result, setResult] = useState(null)
+  const [result, setResult] = useState(null)   // { dumpId, tasks: [...] }
+  const [selected, setSelected] = useState([]) // boolean[]
   const [error, setError] = useState(null)
+  const [isSaving, setIsSaving] = useState(false)
   const navigate = useNavigate()
 
   const handleAnalyze = async () => {
@@ -31,12 +45,46 @@ export default function BrainDumpPage() {
     try {
       const res = await api.post('/brain-dump', { rawText: text.trim() })
       setResult(res.data)
+      setSelected(res.data.tasks.map(() => true))
+      dispatchAiUsed()
     } catch (err) {
-      setError(err.response?.data?.message || 'AI 분석에 실패했어요. 다시 시도해주세요.')
+      setError(err.response?.data?.error || err.response?.data?.message || 'AI 분석에 실패했어요. 다시 시도해주세요.')
     } finally {
       setIsAnalyzing(false)
     }
   }
+
+  const toggleAll = (value) => setSelected(result.tasks.map(() => value))
+
+  const handleConfirm = async (all) => {
+    const tasks = result.tasks
+      .filter((_, i) => all || selected[i])
+      .map((t) => ({
+        title: t.title,
+        description: t.description || null,
+        priorityScore: t.aiPriorityScore ?? 0.5,
+        category: t.category || 'OTHER',
+        deadline: t.deadline || null,
+        estimatedMinutes: t.estimatedMinutes || null,
+      }))
+
+    if (tasks.length === 0) {
+      alert('등록할 태스크를 하나 이상 선택해주세요.')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      await api.post(`/brain-dump/${result.dumpId}/confirm`, { tasks })
+      navigate('/dashboard')
+    } catch {
+      alert('태스크 등록에 실패했어요.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const selectedCount = selected.filter(Boolean).length
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -53,26 +101,29 @@ export default function BrainDumpPage() {
           onChange={(e) => setText(e.target.value)}
           placeholder={PLACEHOLDER}
           rows={7}
-          maxLength={5000}
+          maxLength={3000}
           className="w-full resize-none bg-transparent font-semibold text-dark placeholder:text-dark/30 outline-none text-sm leading-relaxed"
         />
         <div className="flex items-center justify-between mt-4 pt-4 border-t-2 border-dark/10">
-          <span className="text-xs text-dark/40 font-medium">{text.length}자 입력됨</span>
+          <span className="text-xs text-dark/40 font-medium">{text.length} / 3000자 입력됨</span>
           <div className="flex gap-3">
             <button
-              onClick={() => { setText(''); setResult(null); setError(null) }}
+              onClick={() => { setText(''); setResult(null); setError(null); setSelected([]) }}
               className="btn-kitschy bg-accent text-dark text-sm py-2"
             >
               지우기
             </button>
             <button
               onClick={handleAnalyze}
-              disabled={!text.trim() || isAnalyzing}
+              disabled={!text.trim() || isAnalyzing || !aiUsage.hasEnough(5)}
               className="btn-kitschy bg-primary text-white text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isAnalyzing ? '분석 중...' : 'AI 분석하기'}
             </button>
           </div>
+        </div>
+        <div className="mt-3">
+          <AiUsageBadge usage={aiUsage.usage} cost={5} />
         </div>
       </div>
 
@@ -84,40 +135,85 @@ export default function BrainDumpPage() {
 
       {result && (
         <div className="space-y-3">
-          <h3 className="heading-kitschy text-lg">AI 분석 결과</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="heading-kitschy text-lg">AI 분석 결과</h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => toggleAll(true)}
+                className="text-xs font-black text-dark/50 hover:text-primary"
+              >
+                전체 선택
+              </button>
+              <span className="text-dark/20">|</span>
+              <button
+                onClick={() => toggleAll(false)}
+                className="text-xs font-black text-dark/50 hover:text-primary"
+              >
+                전체 해제
+              </button>
+            </div>
+          </div>
+
           {result.tasks.map((item, i) => {
             const priorityLabel = getPriorityLabel(item.aiPriorityScore ?? 0.5)
+            const deadlineStr = formatDeadline(item.deadline)
+            const isChecked = selected[i] ?? true
+
             return (
-              <div key={item.taskId || i} className="card-kitschy flex items-start gap-4">
-                <span className="text-xl font-black text-primary font-display">
+              <label
+                key={i}
+                className={`flex items-start gap-3 card-kitschy cursor-pointer transition-opacity ${
+                  isChecked ? '' : 'opacity-40'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={(e) =>
+                    setSelected((prev) => prev.map((v, idx) => idx === i ? e.target.checked : v))
+                  }
+                  className="mt-1 w-4 h-4 accent-primary flex-shrink-0"
+                />
+                <span className="text-xl font-black text-primary font-display leading-none mt-0.5">
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="font-extrabold text-dark">{item.title}</p>
-                  <p className="text-xs text-dark/50 font-medium mt-0.5">
-                    {item.deadline && `마감: ${new Date(item.deadline).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · `}
-                    {item.estimatedMinutes && `예상 ${item.estimatedMinutes}분`}
-                  </p>
+                  {(deadlineStr || item.estimatedMinutes) && (
+                    <p className="text-xs text-dark/50 font-medium mt-0.5">
+                      {deadlineStr && `마감: ${deadlineStr}`}
+                      {deadlineStr && item.estimatedMinutes && ' · '}
+                      {item.estimatedMinutes && `예상 ${item.estimatedMinutes}분`}
+                    </p>
+                  )}
                 </div>
                 <span className={`text-xs font-bold px-3 py-1 rounded-full border-2 flex-shrink-0 ${PRIORITY_COLOR[priorityLabel]}`}>
                   {priorityLabel}
                 </span>
-              </div>
+              </label>
             )
           })}
 
           <div className="flex gap-3 mt-4">
             <button
-              onClick={() => { setText(''); setResult(null) }}
-              className="btn-kitschy flex-1 bg-accent text-dark font-extrabold"
+              onClick={() => { setText(''); setResult(null); setSelected([]) }}
+              className="btn-kitschy bg-accent text-dark font-extrabold text-sm"
             >
               새로 작성
             </button>
             <button
-              onClick={() => navigate('/dashboard')}
-              className="btn-kitschy flex-1 bg-dark text-white font-extrabold"
+              onClick={() => handleConfirm(false)}
+              disabled={isSaving || selectedCount === 0}
+              className="btn-kitschy flex-1 bg-secondary text-white font-extrabold text-sm disabled:opacity-50"
             >
-              대시보드로 이동
+              {isSaving ? '등록 중...' : `선택한 ${selectedCount}개 등록`}
+            </button>
+            <button
+              onClick={() => handleConfirm(true)}
+              disabled={isSaving}
+              className="btn-kitschy flex-1 bg-primary text-white font-extrabold text-sm disabled:opacity-50"
+            >
+              {isSaving ? '등록 중...' : '모두 등록'}
             </button>
           </div>
         </div>

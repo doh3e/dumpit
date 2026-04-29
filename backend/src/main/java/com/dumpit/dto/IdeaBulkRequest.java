@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 public record IdeaBulkRequest(
-        @NotBlank @Size(max = 5000) String rawText,
+        @NotBlank @Size(max = 3000) String rawText,
         Task.Category category,
         UUID parentIdeaId
 ) {}

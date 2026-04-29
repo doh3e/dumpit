@@ -3,14 +3,14 @@ import PomodoroTimer from '../PomodoroTimer'
 import { useAuth } from '../../context/AuthContext'
 
 const MENU = [
-  { label: '나의 태스크', path: '/dashboard' },
+  { label: '대시보드', path: '/dashboard' },
   { label: '브레인 덤프', path: '/brain-dump' },
   { label: '아이디어 덤프', path: '/ideas' },
   { label: '루틴', path: '/routines' },
-  { label: '코인샵', path: '/shop' },
+  { label: '마이페이지', path: '/mypage' },
 ]
 
-export default function Sidebar({ onOpenSettings, tasks, isDrawerOpen, onCloseDrawer }) {
+export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, isDrawerOpen, onCloseDrawer }) {
   const { user } = useAuth()
   const handleNavClick = () => {
     if (onCloseDrawer) onCloseDrawer()
@@ -66,7 +66,14 @@ export default function Sidebar({ onOpenSettings, tasks, isDrawerOpen, onCloseDr
         <PomodoroTimer tasks={tasks} compact />
       </div>
 
-      <div className="mt-auto pt-4 border-t-2 border-dark/20">
+      <div className="mt-auto pt-4 border-t-2 border-dark/20 flex flex-col gap-1">
+        <button
+          onClick={() => { handleNavClick(); onOpenHelp?.() }}
+          className="w-full flex items-center gap-2 px-4 py-3 rounded-lg font-bold text-sm text-dark border-2 border-transparent hover:bg-accent hover:border-dark transition-all"
+        >
+          <span className="w-5 h-5 rounded-full border-2 border-dark text-xs font-black flex items-center justify-center flex-shrink-0">?</span>
+          도움말
+        </button>
         <button
           onClick={() => { handleNavClick(); onOpenSettings() }}
           className="w-full flex items-center px-4 py-3 rounded-lg font-bold text-sm text-dark border-2 border-transparent hover:bg-accent hover:border-dark transition-all"

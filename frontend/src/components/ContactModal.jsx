@@ -96,7 +96,7 @@ export default function ContactModal({ onClose }) {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={6}
-                maxLength={5000}
+                maxLength={3000}
                 placeholder="문의 내용을 자세히 적어주세요"
                 className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary resize-none"
                 disabled={!user}

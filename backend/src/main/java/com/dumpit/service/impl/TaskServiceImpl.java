@@ -4,6 +4,7 @@ import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
+import com.dumpit.service.AiUsageService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.TaskService;
@@ -23,6 +24,7 @@ public class TaskServiceImpl implements TaskService {
     private final UserRepository userRepository;
     private final OpenAiService openAiService;
     private final DeadlineNudgeService deadlineNudgeService;
+    private final AiUsageService aiUsageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -44,6 +46,7 @@ public class TaskServiceImpl implements TaskService {
         if (endTime != null) task.setEndTime(endTime);
         if (isLocked != null) task.setIsLocked(isLocked);
 
+        aiUsageService.consume(email, AiUsageService.UsageType.TASK_PRIORITY);
         OpenAiService.PriorityResult priority =
                 openAiService.scorePriority(title, description, deadline, estimatedMinutes);
         task.setAiPriorityScore(priority.score());
@@ -63,10 +66,10 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public Task updateTask(String email, UUID taskId, TaskUpdateFields fields) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new IllegalArgumentException("?쒖뒪?щ? 李얠쓣 ???놁뒿?덈떎"));
+                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!task.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("沅뚰븳???놁뒿?덈떎");
+            throw new IllegalArgumentException("Unauthorized");
         }
 
         Task.Status prevStatus = task.getStatus();
@@ -83,15 +86,15 @@ public class TaskServiceImpl implements TaskService {
         if (fields.category() != null) task.setCategory(fields.category());
 
         if (prevStatus != Task.Status.DONE && task.getStatus() == Task.Status.DONE) {
-            double priority = task.getEffectivePriority() != null ? task.getEffectivePriority() : 0.5;
-            int coins = (int) (10 + priority * 40);
+            task.setCompletedAt(LocalDateTime.now());
+            int coins = calcCompletionCoins(task);
             task.getUser().addCoins(coins);
             userRepository.save(task.getUser());
         }
 
         if (prevStatus == Task.Status.DONE && task.getStatus() != Task.Status.DONE) {
-            double priority = task.getEffectivePriority() != null ? task.getEffectivePriority() : 0.5;
-            int coins = (int) (10 + priority * 40);
+            task.setCompletedAt(null);
+            int coins = calcCompletionCoins(task);
             task.getUser().spendCoins(coins);
             userRepository.save(task.getUser());
         }
@@ -105,12 +108,13 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public Task reanalyzePriority(String email, UUID taskId) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new IllegalArgumentException("?쒖뒪?щ? 李얠쓣 ???놁뒿?덈떎"));
+                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!task.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("沅뚰븳???놁뒿?덈떎");
+            throw new IllegalArgumentException("Unauthorized");
         }
 
+        aiUsageService.consume(email, AiUsageService.UsageType.TASK_REANALYZE);
         OpenAiService.PriorityResult priority =
                 openAiService.scorePriority(task.getTitle(), task.getDescription(),
                         task.getDeadline(), task.getEstimatedMinutes());
@@ -124,12 +128,13 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(readOnly = true)
     public OpenAiService.SubtaskResult proposeSubtasks(String email, UUID taskId) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new IllegalArgumentException("?쒖뒪?щ? 李얠쓣 ???놁뒿?덈떎"));
+                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!task.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("沅뚰븳???놁뒿?덈떎");
+            throw new IllegalArgumentException("Unauthorized");
         }
 
+        aiUsageService.consume(email, AiUsageService.UsageType.SUBTASK_PROPOSAL);
         return openAiService.proposeSubtasks(task.getTitle(), task.getDescription(),
                 task.getEstimatedMinutes());
     }
@@ -138,10 +143,10 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public List<Task> createSubtasks(String email, UUID parentTaskId, List<SubtaskInput> subtasks) {
         Task parent = taskRepository.findById(parentTaskId)
-                .orElseThrow(() -> new IllegalArgumentException("?쒖뒪?щ? 李얠쓣 ???놁뒿?덈떎"));
+                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!parent.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("沅뚰븳???놁뒿?덈떎");
+            throw new IllegalArgumentException("Unauthorized");
         }
 
         User user = parent.getUser();
@@ -167,14 +172,23 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public void deleteTask(String email, UUID taskId) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new IllegalArgumentException("?쒖뒪?щ? 李얠쓣 ???놁뒿?덈떎"));
+                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!task.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("沅뚰븳???놁뒿?덈떎");
+            throw new IllegalArgumentException("Unauthorized");
         }
 
         deadlineNudgeService.remove(task);
         taskRepository.delete(task);
+    }
+
+    private int calcCompletionCoins(Task task) {
+        LocalDateTime deadline = task.getDeadline();
+        if (deadline != null && deadline.isBefore(LocalDateTime.now())) {
+            return 5;
+        }
+        double priority = task.getEffectivePriority() != null ? task.getEffectivePriority() : 0.5;
+        return (int) (10 + priority * 40);
     }
 
     private Task.Category parseCategory(String raw) {
@@ -188,6 +202,6 @@ public class TaskServiceImpl implements TaskService {
 
     private User findUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("?좎?瑜?李얠쓣 ???놁뒿?덈떎"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 }

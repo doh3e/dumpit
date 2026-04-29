@@ -5,5 +5,5 @@ import jakarta.validation.constraints.Size;
 
 public record InquiryRequest(
         @NotBlank @Size(max = 200) String subject,
-        @NotBlank @Size(max = 5000) String message
+        @NotBlank @Size(max = 3000) String message
 ) {}
