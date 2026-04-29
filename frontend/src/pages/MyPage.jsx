@@ -1,7 +1,36 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import coinImage from '../assets/coin_image.png'
+
+function useDragScroll() {
+  const ref = useRef(null)
+  const isDragging = useRef(false)
+  const startX = useRef(0)
+  const scrollLeft = useRef(0)
+
+  const onPointerDown = useCallback((e) => {
+    isDragging.current = true
+    startX.current = e.clientX - ref.current.offsetLeft
+    scrollLeft.current = ref.current.scrollLeft
+    ref.current.style.cursor = 'grabbing'
+    ref.current.setPointerCapture(e.pointerId)
+  }, [])
+
+  const onPointerMove = useCallback((e) => {
+    if (!isDragging.current) return
+    e.preventDefault()
+    const x = e.clientX - ref.current.offsetLeft
+    ref.current.scrollLeft = scrollLeft.current - (x - startX.current)
+  }, [])
+
+  const onPointerUp = useCallback(() => {
+    isDragging.current = false
+    if (ref.current) ref.current.style.cursor = 'grab'
+  }, [])
+
+  return { ref, onPointerDown, onPointerMove, onPointerUp }
+}
 
 const CATEGORY_LABEL = {
   WORK: '업무', STUDY: '학습', APPOINTMENT: '약속',
@@ -138,6 +167,7 @@ export default function MyPage() {
   const [savingBio, setSavingBio] = useState(false)
   const [completingTask, setCompletingTask] = useState(null)
   const bioRef = useRef(null)
+  const sliderDrag = useDragScroll()
 
   useEffect(() => {
     Promise.all([
@@ -203,6 +233,16 @@ export default function MyPage() {
 
   const statCards = stats ? STAT_CARDS(stats) : []
 
+  const heatmap = stats?.heatmap ?? (() => {
+    const m = {}
+    for (let i = 111; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      m[d.toISOString().slice(0, 10)] = 0
+    }
+    return m
+  })()
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
 
@@ -264,11 +304,19 @@ export default function MyPage() {
       {statCards.length > 0 && (
         <div>
           <p className="text-xs font-black text-dark/40 uppercase tracking-wider mb-2 px-1">통계</p>
-          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none">
+          <div
+            ref={sliderDrag.ref}
+            onPointerDown={sliderDrag.onPointerDown}
+            onPointerMove={sliderDrag.onPointerMove}
+            onPointerUp={sliderDrag.onPointerUp}
+            onPointerLeave={sliderDrag.onPointerUp}
+            className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none select-none cursor-grab"
+            style={{ scrollBehavior: 'smooth' }}
+          >
             {statCards.map(({ label, value, bg, text, sub, icon }) => (
               <div
                 key={label}
-                className={`snap-start flex-shrink-0 w-32 h-32 rounded-2xl border-2 border-dark shadow-kitschy ${bg} flex flex-col items-center justify-center gap-1 p-3`}
+                className={`snap-start flex-shrink-0 w-32 h-32 rounded-2xl border-2 border-dark shadow-kitschy ${bg} flex flex-col items-center justify-center gap-1 p-3 transition-transform duration-150 active:scale-95`}
               >
                 {icon && <img src={icon} alt="" className="w-6 h-6 object-contain mb-0.5" />}
                 <p className={`text-3xl font-black leading-none ${text}`}>{value}</p>
@@ -281,13 +329,13 @@ export default function MyPage() {
       )}
 
       {/* GitHub-style heatmap */}
-      {stats?.heatmap && (
+      {stats && (
         <div className="card-kitschy !p-4 space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-black text-dark">완료 기록</p>
             <span className="text-[10px] font-bold text-dark/40">최근 16주</span>
           </div>
-          <HeatmapGrid heatmap={stats.heatmap} />
+          <HeatmapGrid heatmap={heatmap} />
           <div className="flex items-center gap-2 mt-1">
             <div className="w-3 h-3 rounded-sm bg-dark/10" />
             <span className="text-[9px] text-dark/30">없음</span>
@@ -299,7 +347,7 @@ export default function MyPage() {
 
       {/* Pie chart */}
       <div className="card-kitschy !p-4 space-y-3">
-        <p className="text-sm font-black text-dark">카테고리별 완료</p>
+        <p className="text-sm font-black text-dark">완료 태스크 카테고리 별 분포</p>
         {pieData.length === 0 ? (
           <p className="text-xs font-semibold text-dark/40 py-4 text-center">
             태스크를 완료하면 여기서 카테고리 분포를 볼 수 있어요.
