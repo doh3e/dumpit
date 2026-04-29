@@ -330,7 +330,7 @@ export default function RoutinePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-dark/60 mb-1">생성 시간</label>
+              <label className="block text-xs font-bold text-dark/60 mb-1">루틴 실행 시간</label>
               <input
                 type="time"
                 value={form.createTime}

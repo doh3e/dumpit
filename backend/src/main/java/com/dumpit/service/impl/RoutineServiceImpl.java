@@ -44,7 +44,9 @@ public class RoutineServiceImpl implements RoutineService {
         User user = findUser(email);
         Routine routine = Routine.of(user, request.name().trim());
         apply(routine, request);
-        return routineRepository.save(routine);
+        Routine saved = routineRepository.save(routine);
+        generateRoutineTaskForDate(saved, LocalDate.now());
+        return saved;
     }
 
     @Override
@@ -52,7 +54,9 @@ public class RoutineServiceImpl implements RoutineService {
     public Routine updateRoutine(String email, UUID routineId, RoutineRequest request) {
         Routine routine = findOwnedRoutine(email, routineId);
         apply(routine, request);
-        return routineRepository.save(routine);
+        Routine saved = routineRepository.save(routine);
+        generateRoutineTaskForDate(saved, LocalDate.now());
+        return saved;
     }
 
     @Override
@@ -60,7 +64,11 @@ public class RoutineServiceImpl implements RoutineService {
     public Routine toggleRoutine(String email, UUID routineId, boolean enabled) {
         Routine routine = findOwnedRoutine(email, routineId);
         routine.setEnabled(enabled);
-        return routineRepository.save(routine);
+        Routine saved = routineRepository.save(routine);
+        if (enabled) {
+            generateRoutineTaskForDate(saved, LocalDate.now());
+        }
+        return saved;
     }
 
     @Override
@@ -75,37 +83,10 @@ public class RoutineServiceImpl implements RoutineService {
     @Transactional
     public int generateDueRoutines() {
         LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
         int generated = 0;
 
-        for (Routine routine : routineRepository.findByEnabledTrueAndCreateTimeLessThanEqual(now)) {
-            if (!shouldGenerateOn(routine, today)) continue;
-            if (today.equals(routine.getLastGeneratedDate())) continue;
-            if (taskRepository.existsByRoutineRoutineIdAndRoutineScheduledDate(routine.getRoutineId(), today)) {
-                routine.setLastGeneratedDate(today);
-                continue;
-            }
-
-            Task task = Task.of(
-                    routine.getUser(),
-                    routine.getName(),
-                    routine.getDescription(),
-                    today.atTime(23, 59, 59),
-                    null
-            );
-            task.setCategory(Task.Category.ROUTINE);
-            task.setAiPriorityScore(0.5);
-            task.setRoutine(routine);
-            task.setRoutineScheduledDate(today);
-
-            try {
-                Task saved = taskRepository.save(task);
-                deadlineNudgeService.index(saved);
-                routine.setLastGeneratedDate(today);
-                generated++;
-            } catch (DataIntegrityViolationException ignored) {
-                routine.setLastGeneratedDate(today);
-            }
+        for (Routine routine : routineRepository.findByEnabledTrue()) {
+            if (generateRoutineTaskForDate(routine, today)) generated++;
         }
 
         return generated;
@@ -138,6 +119,38 @@ public class RoutineServiceImpl implements RoutineService {
 
         routine.setDaysOfWeek(toCsv(request.daysOfWeek()));
         routine.setDaysOfMonth(toCsv(request.daysOfMonth()));
+    }
+
+    private boolean generateRoutineTaskForDate(Routine routine, LocalDate date) {
+        if (!shouldGenerateOn(routine, date)) return false;
+        if (date.equals(routine.getLastGeneratedDate())) return false;
+        if (taskRepository.existsByRoutineRoutineIdAndRoutineScheduledDate(routine.getRoutineId(), date)) {
+            routine.setLastGeneratedDate(date);
+            return false;
+        }
+
+        Task task = Task.of(
+                routine.getUser(),
+                routine.getName(),
+                routine.getDescription(),
+                date.atTime(23, 59, 59),
+                null
+        );
+        task.setStartTime(LocalDateTime.of(date, routine.getCreateTime()));
+        task.setCategory(Task.Category.ROUTINE);
+        task.setAiPriorityScore(0.5);
+        task.setRoutine(routine);
+        task.setRoutineScheduledDate(date);
+
+        try {
+            Task saved = taskRepository.save(task);
+            deadlineNudgeService.index(saved);
+            routine.setLastGeneratedDate(date);
+            return true;
+        } catch (DataIntegrityViolationException ignored) {
+            routine.setLastGeneratedDate(date);
+            return false;
+        }
     }
 
     private void validateDateRange(LocalDate startDate, LocalDate endDate) {
