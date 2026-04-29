@@ -170,11 +170,12 @@ export default function MyPage() {
 
       {/* Stats grid */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <StatCard label="완료한 태스크" value={stats.totalDone} />
           <StatCard label="연속 완료" value={`${stats.streak}일`} sub="오늘 기준" />
-          <StatCard label="보유 코인" value={`🪙 ${stats.coinBalance}`} />
-          <StatCard label="브레인 덤프" value={stats.brainDumpCount} sub={`아이디어 ${stats.ideaCount}개`} />
+          <StatCard label="보유 코인" value={stats.coinBalance} sub="coin" />
+          <StatCard label="브레인 덤프" value={stats.brainDumpCount} />
+          <StatCard label="저장한 아이디어" value={stats.ideaCount} />
         </div>
       )}
 
