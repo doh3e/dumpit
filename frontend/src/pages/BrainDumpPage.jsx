@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import AiUsageBadge from '../components/AiUsageBadge'
-import useAiUsage from '../hooks/useAiUsage'
+import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 const PLACEHOLDER = `예) 내일까지 기획서 초안 써야 하고, 이번 주 금요일 팀 발표 준비도 해야 해. 오늘 점심 약속 있고 오후엔 헬스장도 가야 함. 아, 이메일 답장도 밀려있어...`
 
@@ -34,7 +34,7 @@ export default function BrainDumpPage() {
     try {
       const res = await api.post('/brain-dump', { rawText: text.trim() })
       setResult(res.data)
-      aiUsage.refresh()
+      dispatchAiUsed()
     } catch (err) {
       setError(err.response?.data?.error || err.response?.data?.message || 'AI 분석에 실패했어요. 다시 시도해주세요.')
     } finally {

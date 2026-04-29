@@ -2,12 +2,22 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import DeadlineNudgeMenu from '../DeadlineNudgeMenu'
+import useAiUsage from '../../hooks/useAiUsage'
 
 const NAV_ITEMS = [
   { label: '대시보드', path: '/dashboard' },
   { label: '브레인 덤프', path: '/brain-dump' },
-  { label: '아이디어', path: '/ideas' },
+  { label: '아이디어 덤프', path: '/ideas' },
   { label: '루틴', path: '/routines' },
+]
+
+const AI_COST_ROWS = [
+  ['일일 총 한도', '100점', true],
+  ['태스크 추가 및 AI 분석', '1점', false],
+  ['우선순위 재분석', '1점', false],
+  ['서브태스크 제안', '3점', false],
+  ['브레인 덤프 분석', '5점', false],
+  ['그 외 모든 활동', '무료', false],
 ]
 
 export default function Header({ onOpenDrawer }) {
@@ -15,6 +25,7 @@ export default function Header({ onOpenDrawer }) {
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
+  const { usage } = useAiUsage()
 
   useEffect(() => {
     if (!menuOpen) return
@@ -26,6 +37,14 @@ export default function Header({ onOpenDrawer }) {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [menuOpen])
+
+  const aiColor = !usage
+    ? 'text-white/60'
+    : usage.remaining >= 50
+    ? 'text-white'
+    : usage.remaining >= 20
+    ? 'text-yellow-200'
+    : 'text-red-200'
 
   return (
     <header className="sticky top-0 z-50 bg-primary border-b-2 border-dark shadow-kitschy">
@@ -68,17 +87,69 @@ export default function Header({ onOpenDrawer }) {
         <div className="flex items-center gap-3">
           <DeadlineNudgeMenu />
 
+          {/* AI usage badge */}
+          {usage && (
+            <div
+              className="group relative hidden sm:flex items-center gap-1.5 bg-white/25 border-2 border-white/80 rounded-full px-3 py-1 cursor-default select-none"
+              tabIndex={0}
+              aria-label="AI 사용량 안내"
+            >
+              <span className="text-xs text-white leading-none">⚡</span>
+              <span className={`text-sm font-extrabold leading-none ${aiColor}`}>
+                {usage.remaining}
+              </span>
+
+              <div className="pointer-events-none absolute right-0 top-10 z-50 w-72 rounded-lg border-2 border-dark bg-white shadow-kitschy text-left opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
+                <div className="px-3 py-2.5 border-b border-dark/10">
+                  <p className="text-xs font-black text-dark">⚡ AI 사용량 (오늘)</p>
+                  <p className="text-[11px] font-bold text-dark/50 mt-0.5">
+                    남은 사용량:{' '}
+                    <span className={usage.remaining === 0 ? 'text-primary' : 'text-dark'}>
+                      {usage.remaining}
+                    </span>{' '}
+                    / {usage.limit}
+                  </p>
+                </div>
+                <div className="px-3 py-2 border-b border-dark/10">
+                  <p className="text-[10px] font-semibold text-dark/50 leading-relaxed">
+                    Dumpit!은 베타 서비스 중이에요. 모든 활동이 무료인 대신
+                    AI 기능에는 일일 사용량 제한이 있어요.
+                  </p>
+                </div>
+                {AI_COST_ROWS.map(([label, cost, isTotal]) => (
+                  <div
+                    key={label}
+                    className={`flex items-center justify-between px-3 py-1.5 border-b border-dark/5 last:border-0 ${
+                      isTotal ? 'bg-dark/5' : ''
+                    }`}
+                  >
+                    <span className={`text-xs ${isTotal ? 'font-black text-dark' : 'font-semibold text-dark/70'}`}>
+                      {label}
+                    </span>
+                    <span className="text-xs font-black text-dark">{cost}</span>
+                  </div>
+                ))}
+                <div className="px-3 py-2 border-t border-dark/10">
+                  <p className="text-[10px] font-semibold text-dark/40">매일 자정(KST)에 초기화돼요.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Coin badge */}
           <div
-            className="group relative hidden sm:flex items-center gap-1 bg-secondary border-2 border-dark rounded-full px-3 py-1 shadow-kitschy"
+            className="group relative hidden sm:flex items-center gap-1.5 bg-white/25 border-2 border-white/80 rounded-full px-3 py-1 cursor-default select-none"
             tabIndex={0}
             aria-label="보유 코인 안내"
           >
-            <span className="text-sm font-extrabold text-white">{user?.coins ?? 0} C</span>
+            <span className="text-xs text-white leading-none">🪙</span>
+            <span className="text-sm font-extrabold text-white leading-none">{user?.coins ?? 0}</span>
             <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg border-2 border-dark bg-white px-3 py-2 text-left text-xs font-bold text-dark/70 opacity-0 shadow-kitschy transition-opacity group-hover:opacity-100 group-focus:opacity-100">
               추후 열릴 코인샵에서 다양한 테마와 스티커 등을 교환할 수 있어요.
             </div>
           </div>
 
+          {/* User menu */}
           <div className="relative" ref={menuRef}>
             {user?.picture ? (
               <img

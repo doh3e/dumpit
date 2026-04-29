@@ -241,7 +241,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
       <div className="flex items-center gap-4 mt-3 justify-center">
         <div className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-secondary" />
-          <span className="text-[10px] font-bold text-dark/50">마감일</span>
+          <span className="text-[10px] font-bold text-dark/50">태스크</span>
         </div>
         <div className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-blue-500" />

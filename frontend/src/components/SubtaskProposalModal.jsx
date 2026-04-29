@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../services/api'
 import AiUsageBadge from './AiUsageBadge'
-import useAiUsage from '../hooks/useAiUsage'
+import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 export default function SubtaskProposalModal({ task, onClose, onCreated }) {
   const aiUsage = useAiUsage()
@@ -22,7 +22,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
         }))
         setSubtasks(proposed)
       })
-      .then(() => aiUsage.refresh())
+      .then(() => dispatchAiUsed())
       .catch((err) => setError(err.response?.data?.error || 'AI 분할 제안에 실패했어요. 다시 시도해주세요.'))
       .finally(() => setLoading(false))
   }, [task.taskId])

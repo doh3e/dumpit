@@ -152,9 +152,9 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="heading-kitschy text-2xl">나의 태스크</h2>
+          <h2 className="heading-kitschy text-2xl">대시보드</h2>
           <p className="mt-2 text-sm font-semibold text-dark/60">
-            오늘의 할 일을 확인하고 관리해보세요
+            오늘의 할 일을 확인하고 시간을 효율적으로 관리해보세요
           </p>
         </div>
         <div className="flex gap-2">
@@ -162,7 +162,7 @@ export default function DashboardPage() {
             onClick={() => setShowAddModal(true)}
             className="btn-kitschy bg-secondary text-white text-sm"
           >
-            + 직접 추가
+            + 태스크 추가
           </button>
           <Link
             to="/brain-dump"
@@ -200,7 +200,7 @@ export default function DashboardPage() {
                   {tasks.length === 0 ? '아직 할 일이 없어요!' : '모든 할 일 완료!'}
                 </p>
                 <p className="text-xs text-dark/50 mt-2">
-                  브레인 덤프나 직접 추가로 시작해보세요
+                  브레인 덤프나 직접 추가를 통해 시작해보세요
                 </p>
               </div>
             ) : (

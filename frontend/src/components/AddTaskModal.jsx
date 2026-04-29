@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import api from '../services/api'
 import { CATEGORIES } from '../constants/categories'
 import AiUsageBadge from './AiUsageBadge'
-import useAiUsage from '../hooks/useAiUsage'
+import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 export default function AddTaskModal({ onClose, onCreated }) {
   const aiUsage = useAiUsage()
@@ -27,7 +27,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
         estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes) : null,
         category: category || null,
       })
-      aiUsage.refresh()
+      dispatchAiUsed()
       onCreated()
     } catch (err) {
       alert(err.response?.data?.error || '태스크 생성에 실패했어요. 다시 시도해주세요.')

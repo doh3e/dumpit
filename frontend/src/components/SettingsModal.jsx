@@ -5,6 +5,35 @@ import api from '../services/api'
 const DEFAULT_START = 9
 const DEFAULT_END = 22
 
+const THRESHOLDS = [
+  { min: 720, label: '12시간 전' },
+  { min: 360, label: '6시간 전' },
+  { min: 180, label: '3시간 전' },
+  { min: 60,  label: '1시간 전' },
+  { min: 30,  label: '30분 전' },
+  { min: 10,  label: '10분 전' },
+]
+const THRESHOLDS_KEY = 'dumpit_notification_thresholds'
+const NOTIFICATIONS_ENABLED_KEY = 'dumpit_notifications_enabled'
+const DEFAULT_THRESHOLDS = [60]
+
+function getNotificationPermission() {
+  if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported'
+  return window.Notification.permission
+}
+
+function loadThresholds() {
+  try {
+    const saved = localStorage.getItem(THRESHOLDS_KEY)
+    if (saved) return JSON.parse(saved)
+  } catch {}
+  return DEFAULT_THRESHOLDS
+}
+
+function loadNotificationsEnabled() {
+  return localStorage.getItem(NOTIFICATIONS_ENABLED_KEY) !== '0'
+}
+
 export default function SettingsModal({ onClose }) {
   const [routineStart, setRoutineStart] = useState(() => {
     const v = localStorage.getItem('dumpit_routine_start')
@@ -14,8 +43,37 @@ export default function SettingsModal({ onClose }) {
     const v = localStorage.getItem('dumpit_routine_end')
     return v ? Number(v) : DEFAULT_END
   })
+  const [permission, setPermission] = useState(getNotificationPermission)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(loadNotificationsEnabled)
+  const [selectedThresholds, setSelectedThresholds] = useState(loadThresholds)
   const [purchases, setPurchases] = useState([])
   const [loadingPurchases, setLoadingPurchases] = useState(true)
+
+  const handleNotificationToggle = async () => {
+    if (permission === 'unsupported' || permission === 'denied') return
+
+    if (permission === 'default') {
+      const result = await window.Notification.requestPermission()
+      setPermission(result)
+      if (result === 'granted') {
+        localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, '1')
+        setNotificationsEnabled(true)
+      }
+      return
+    }
+
+    const next = !notificationsEnabled
+    localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, next ? '1' : '0')
+    setNotificationsEnabled(next)
+  }
+
+  const toggleThreshold = (min) => {
+    setSelectedThresholds((prev) => {
+      const next = prev.includes(min) ? prev.filter((t) => t !== min) : [...prev, min]
+      localStorage.setItem(THRESHOLDS_KEY, JSON.stringify(next))
+      return next
+    })
+  }
 
   useEffect(() => {
     api.get('/shop/items')
@@ -78,6 +136,60 @@ export default function SettingsModal({ onClose }) {
               </select>
             </div>
           </div>
+        </section>
+
+        <hr className="border-dark/10 mb-6" />
+
+        <section className="mb-6">
+          <h3 className="font-extrabold text-dark text-sm mb-3">알림</h3>
+          <div className="flex items-center justify-between gap-4 rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-dark">마감 임박 알림</p>
+              <p className="mt-0.5 text-xs font-medium text-dark/50">
+                {permission === 'unsupported' && '이 브라우저에서는 지원하지 않아요.'}
+                {permission === 'denied' && '브라우저 설정에서 알림 차단을 해제해야 해요.'}
+                {permission === 'default' && '허용하면 마감 24시간 전에 팝업으로 알려드려요.'}
+                {permission === 'granted' && (notificationsEnabled ? '켜져 있어요.' : '꺼져 있어요.')}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleNotificationToggle}
+              disabled={permission === 'unsupported' || permission === 'denied'}
+              className={`relative w-11 h-6 rounded-full border-2 transition-colors flex-shrink-0 ${
+                permission === 'granted' && notificationsEnabled
+                  ? 'bg-primary border-primary'
+                  : 'bg-dark/20 border-dark/30'
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
+              aria-label="마감 임박 알림 토글"
+            >
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white border border-dark/20 transition-all ${
+                permission === 'granted' && notificationsEnabled ? 'left-[18px]' : 'left-0.5'
+              }`} />
+            </button>
+          </div>
+
+          {permission !== 'unsupported' && (
+            <div className="mt-3 rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
+              <p className="text-xs font-bold text-dark mb-2">알림 시점</p>
+              <p className="text-[11px] font-medium text-dark/50 mb-3">
+                처음 감지 시는 항상 알려드려요. 추가로 받을 시점을 선택하세요.
+              </p>
+              <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
+                {THRESHOLDS.map(({ min, label }) => (
+                  <label key={min} className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={selectedThresholds.includes(min)}
+                      onChange={() => toggleThreshold(min)}
+                      className="w-4 h-4 accent-primary rounded"
+                    />
+                    <span className="text-xs font-semibold text-dark/70">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         <hr className="border-dark/10 mb-6" />

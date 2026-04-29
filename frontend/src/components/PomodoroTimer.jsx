@@ -63,9 +63,9 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
     playAlarm()
     setCompletedCount((c) => c + 1)
     try {
-      await api.post('/pomodoro/complete')
+      const res = await api.post('/pomodoro/complete', { focusMinutes: focusMin })
       refreshCoins()
-      setCoinToast(15)
+      setCoinToast(res.data.coins)
       setTimeout(() => setCoinToast(null), 2500)
     } catch {
       /* ignore */
@@ -73,7 +73,7 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
     setMode(MODE.BREAK)
     setRemaining(breakMin * 60)
     setRunning(true)
-  }, [playAlarm, refreshCoins, breakMin])
+  }, [playAlarm, refreshCoins, breakMin, focusMin])
 
   const handleBreakComplete = useCallback(() => {
     playAlarm()

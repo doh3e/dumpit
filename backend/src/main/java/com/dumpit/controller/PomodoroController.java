@@ -16,24 +16,34 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PomodoroController {
 
-    private static final int POMODORO_COIN_REWARD = 15;
-
     private final UserRepository userRepository;
 
     @PostMapping("/complete")
     @Transactional
     public ResponseEntity<Map<String, Object>> completeSession(
-            @AuthenticationPrincipal OAuth2User principal) {
+            @AuthenticationPrincipal OAuth2User principal,
+            @RequestBody(required = false) Map<String, Object> body) {
+
+        int focusMinutes = extractFocusMinutes(body);
+        int coins = Math.max(1, focusMinutes / 5);
+
         String email = principal.getAttribute("email");
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다"));
 
-        user.addCoins(POMODORO_COIN_REWARD);
+        user.addCoins(coins);
         userRepository.save(user);
 
         return ResponseEntity.ok(Map.of(
-                "coins", POMODORO_COIN_REWARD,
+                "coins", coins,
                 "totalCoins", user.getCoinBalance()
         ));
+    }
+
+    private static int extractFocusMinutes(Map<String, Object> body) {
+        if (body == null) return 25;
+        Object val = body.get("focusMinutes");
+        if (!(val instanceof Number n)) return 25;
+        return Math.max(1, Math.min(120, n.intValue()));
     }
 }

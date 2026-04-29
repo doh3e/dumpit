@@ -56,7 +56,7 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-20 max-w-3xl w-full">
           {[
-            { title: '나의 태스크', desc: '오늘의 할 일을 시간표와 대시보드로 한 눈에 파악하기' },
+            { title: '대시보드', desc: '오늘의 할 일을 대시보드로 한 눈에 파악하기' },
             { title: '브레인 덤프', desc: '줄글로 쏟아내고 AI를 통해 할 일로 정리하기' },
             { title: '아이디어 덤프', desc: '새로운 아이디어를 자유롭게 기록하고 정리하기' },
             { title: '루틴 관리', desc: '반복적으로 해야할 일을 루틴으로 등록해 관리하기' },

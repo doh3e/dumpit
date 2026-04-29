@@ -3,6 +3,27 @@ import { Link } from 'react-router-dom'
 import api from '../services/api'
 
 const NOTIFIED_KEY = 'dumpit.deadlineNudges.notified'
+const THRESHOLDS_KEY = 'dumpit_notification_thresholds'
+const NOTIFICATIONS_ENABLED_KEY = 'dumpit_notifications_enabled'
+const DEFAULT_THRESHOLDS = [60]
+const THRESHOLD_WINDOW_MIN = 5
+
+const THRESHOLD_LABELS = {
+  720: '12시간 전',
+  360: '6시간 전',
+  180: '3시간 전',
+  60:  '1시간 전',
+  30:  '30분 전',
+  10:  '10분 전',
+}
+
+function getSelectedThresholds() {
+  try {
+    const saved = localStorage.getItem(THRESHOLDS_KEY)
+    if (saved) return JSON.parse(saved)
+  } catch {}
+  return DEFAULT_THRESHOLDS
+}
 
 function getNotificationPermission() {
   if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported'
@@ -54,8 +75,6 @@ export default function DeadlineNudgeMenu() {
   const [nudges, setNudges] = useState([])
   const menuRef = useRef(null)
   const urgentCount = nudges.length
-  const canAskPermission = permission === 'default'
-  const isNotificationOn = permission === 'granted'
 
   const fetchNudges = useCallback(() => {
     api.get('/notifications/deadline-nudges')
@@ -101,6 +120,9 @@ export default function DeadlineNudgeMenu() {
 
   useEffect(() => {
     if (permission !== 'granted' || nudges.length === 0) return
+    if (localStorage.getItem(NOTIFICATIONS_ENABLED_KEY) === '0') return
+
+    const selectedThresholds = getSelectedThresholds()
 
     let notified = []
     try {
@@ -110,27 +132,46 @@ export default function DeadlineNudgeMenu() {
     }
 
     const notifiedSet = new Set(notified)
-    const pending = nudges.filter((task) => {
-      const key = `${task.taskId}:${task.deadline}`
-      return !notifiedSet.has(key)
-    })
 
-    pending.slice(0, 3).forEach((task) => {
-      const key = `${task.taskId}:${task.deadline}`
-      const notification = new window.Notification('DumpIt 마감 알림', {
-        body: `${task.title} · ${formatRemaining(task.deadline)}`,
+    const fire = (body, tag) => {
+      const n = new window.Notification('Dumpit! 마감 알림', {
+        body,
         icon: '/favicon-48x48.png',
-        tag: key,
+        tag,
       })
+      n.onclick = () => { window.focus(); window.location.assign('/dashboard'); n.close() }
+    }
 
-      notification.onclick = () => {
-        window.focus()
-        window.location.assign('/dashboard')
-        notification.close()
+    let count = 0
+    for (const task of nudges) {
+      if (count >= 5) break
+
+      // 처음 감지 시 (항상)
+      const firstKey = `${task.taskId}:${task.deadline}:first`
+      if (!notifiedSet.has(firstKey)) {
+        fire(`${task.title} · ${formatRemaining(task.deadline)}`, firstKey)
+        notifiedSet.add(firstKey)
+        count++
       }
 
-      notifiedSet.add(key)
-    })
+      // 유저가 선택한 시점별 알림
+      const deadline = parseDate(task.deadline)
+      if (!deadline) continue
+      const minutesLeft = (deadline.getTime() - Date.now()) / 60000
+
+      for (const thresholdMin of selectedThresholds) {
+        if (count >= 5) break
+        const key = `${task.taskId}:${task.deadline}:${thresholdMin}`
+        if (!notifiedSet.has(key)) {
+          const diff = minutesLeft - thresholdMin
+          if (diff >= -THRESHOLD_WINDOW_MIN && diff <= THRESHOLD_WINDOW_MIN && minutesLeft > 0) {
+            fire(`${task.title} · ${THRESHOLD_LABELS[thresholdMin]} 마감 예정`, key)
+            notifiedSet.add(key)
+            count++
+          }
+        }
+      }
+    }
 
     window.localStorage.setItem(NOTIFIED_KEY, JSON.stringify([...notifiedSet].slice(-200)))
   }, [nudges, permission])
@@ -140,17 +181,16 @@ export default function DeadlineNudgeMenu() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className={`relative w-9 h-9 rounded-lg border-2 border-dark shadow-kitschy flex items-center justify-center font-black transition-colors ${
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-extrabold text-sm transition-colors ${
           urgentCount > 0
-            ? 'bg-yellow-300 text-dark hover:bg-yellow-200'
-            : 'bg-white text-dark/60 hover:text-dark'
+            ? 'bg-yellow-300/30 border-yellow-200/80 text-yellow-100 hover:bg-yellow-300/40'
+            : 'bg-white/25 border-white/80 text-white/60 hover:bg-white/30'
         }`}
         aria-label="마감 임박 알림"
-        title="마감 임박 알림"
       >
-        !
+        <span className="text-xs leading-none">!</span>
         {urgentCount > 0 && (
-          <span className="absolute -right-2 -top-2 min-w-5 h-5 px-1 rounded-full bg-red-500 border-2 border-dark text-[10px] leading-4 text-white">
+          <span className="text-sm font-extrabold leading-none">
             {urgentCount > 9 ? '9+' : urgentCount}
           </span>
         )}
@@ -162,29 +202,6 @@ export default function DeadlineNudgeMenu() {
             <div className="flex items-center justify-between gap-3 px-1 pb-2 border-b-2 border-dark/10">
               <p className="text-sm font-black text-dark">마감 임박</p>
               <span className="text-[10px] font-extrabold text-dark/50">24시간 이내</span>
-            </div>
-
-            <div className="mt-3 rounded-lg border-2 border-dark/10 bg-accent p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-xs font-extrabold text-dark">컴퓨터 알림</p>
-                  <p className="mt-0.5 text-[11px] font-semibold text-dark/50">
-                    {permission === 'unsupported' && '이 브라우저에서는 지원하지 않아요.'}
-                    {permission === 'denied' && '브라우저 설정에서 알림 차단을 해제해야 해요.'}
-                    {permission === 'default' && '허용하면 열린 탭에서 팝업으로 알려드려요.'}
-                    {isNotificationOn && '켜져 있어요. 같은 마감은 한 번만 알려드려요.'}
-                  </p>
-                </div>
-                {canAskPermission && (
-                  <button
-                    type="button"
-                    onClick={requestPermission}
-                    className="shrink-0 rounded-lg border-2 border-dark bg-primary px-3 py-2 text-[11px] font-black text-white shadow-kitschy hover:bg-secondary transition-colors"
-                  >
-                    켜기
-                  </button>
-                )}
-              </div>
             </div>
 
             {urgentCount === 0 ? (

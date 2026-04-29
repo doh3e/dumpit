@@ -4,7 +4,7 @@ import api from '../services/api'
 import { CATEGORIES } from '../constants/categories'
 import SubtaskProposalModal from './SubtaskProposalModal'
 import AiUsageBadge from './AiUsageBadge'
-import useAiUsage from '../hooks/useAiUsage'
+import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 export default function EditTaskModal({ task, onClose, onUpdated }) {
   const aiUsage = useAiUsage()
@@ -169,7 +169,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
               try {
                 const res = await api.post(`/tasks/${task.taskId}/reanalyze`)
                 setPriorityScore(res.data.aiPriorityScore ?? 0.5)
-                aiUsage.refresh()
+                dispatchAiUsed()
               } catch (err) {
                 alert(err.response?.data?.error || 'AI 재분석에 실패했어요.')
               } finally {

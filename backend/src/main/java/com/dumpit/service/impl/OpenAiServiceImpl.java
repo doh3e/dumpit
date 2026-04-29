@@ -119,6 +119,7 @@ public class OpenAiServiceImpl implements OpenAiService {
             - Keep titles short and clear.
             - Keep descriptions brief. Use an empty string if not needed.
             - Distribute total time realistically based on the parent task.
+            - All title and description fields MUST be written in Korean (한국어).
 
             <user_input>
             Parent title: %s
@@ -167,6 +168,7 @@ public class OpenAiServiceImpl implements OpenAiService {
             - priorityScore must be between 0.0 and 1.0.
             - category must be one of WORK, STUDY, APPOINTMENT, CHORE, ROUTINE, HEALTH, HOBBY, OTHER.
             - Focus on tasks that a user can actually execute.
+            - All title and description fields MUST be written in Korean (한국어).
 
             <user_input>
             Brain dump:
