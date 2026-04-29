@@ -27,6 +27,12 @@ jobs:
       - name: Build
         run: chmod +x gradlew && ./gradlew build -x test --no-daemon
 
+      - name: Prepare Docker artifact
+        if: github.ref == 'refs/heads/main'
+        run: |
+          JAR_PATH=$(find build/libs -maxdepth 1 -type f -name "*.jar" ! -name "*plain.jar" | head -n 1)
+          cp "$JAR_PATH" build/libs/app.jar
+
       - name: Build Docker image
         if: github.ref == 'refs/heads/main'
         run: docker build -t dumpit-backend .
