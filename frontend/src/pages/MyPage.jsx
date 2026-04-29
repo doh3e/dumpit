@@ -236,12 +236,10 @@ export default function MyPage() {
 
   const heatmap = stats?.heatmap ?? (() => {
     const m = {}
-    const serviceStart = new Date('2026-04-25')
-    const sixteenWeeksAgo = new Date()
-    sixteenWeeksAgo.setDate(sixteenWeeksAgo.getDate() - 111)
-    const start = serviceStart > sixteenWeeksAgo ? serviceStart : sixteenWeeksAgo
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+    const start = new Date(today)
+    start.setDate(start.getDate() - 111)
     for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
       m[d.toISOString().slice(0, 10)] = 0
     }

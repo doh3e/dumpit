@@ -68,13 +68,8 @@ public class ProfileController {
             categoryBreakdown.put(cat.name(), count);
         }
 
-        LocalDate serviceStart = LocalDate.of(2026, 4, 25);
-        LocalDate heatmapStart = serviceStart.isAfter(LocalDate.now().minusWeeks(16))
-                ? serviceStart
-                : LocalDate.now().minusWeeks(16);
-        LocalDateTime since = heatmapStart.atStartOfDay();
-
-        List<LocalDateTime> completedAts = taskRepository.findCompletedAtSince(user, since);
+        LocalDate heatmapStart = LocalDate.now().minusWeeks(16);
+        List<LocalDateTime> completedAts = taskRepository.findCompletedAtSince(user, heatmapStart.atStartOfDay());
 
         Set<LocalDate> doneDays = completedAts.stream()
                 .map(LocalDateTime::toLocalDate)
