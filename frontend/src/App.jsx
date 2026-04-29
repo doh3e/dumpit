@@ -9,6 +9,7 @@ import IdeaDumpPage from './pages/IdeaDumpPage'
 import RoutinePage from './pages/RoutinePage'
 import ShopPage from './pages/ShopPage'
 import AdminPage from './pages/AdminPage'
+import MyPage from './pages/MyPage'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -52,6 +53,9 @@ function AppRoutes() {
         } />
         <Route path="/shop" element={
           <PrivateRoute><ShopPage /></PrivateRoute>
+        } />
+        <Route path="/mypage" element={
+          <PrivateRoute><MyPage /></PrivateRoute>
         } />
         <Route path="/admin" element={
           <AdminRoute><AdminPage /></AdminRoute>

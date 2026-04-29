@@ -27,19 +27,28 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
         String providerId = oAuth2User.getAttribute("sub");
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
+        String picture = oAuth2User.getAttribute("picture");
 
         if (providerId == null) {
             throw new OAuth2AuthenticationException(
-                    new OAuth2Error("invalid_token"), "Google sub claim???놁뒿?덈떎."
+                    new OAuth2Error("invalid_token"), "Google sub claim is missing."
             );
         }
 
         userRepository.findByProviderAndProviderId(provider, providerId)
-                .orElseGet(() -> {
-                    log.info("?좉퇋 ?좎? 媛?? provider={}, id_prefix={}",
-                            provider, providerId.substring(0, 6) + "...");
-                    return userRepository.save(User.of(email, name, provider, providerId));
-                });
+                .ifPresentOrElse(
+                        existing -> {
+                            existing.updatePicture(picture);
+                            userRepository.save(existing);
+                        },
+                        () -> {
+                            log.info("New user registered: provider={}, id_prefix={}",
+                                    provider, providerId.substring(0, 6) + "...");
+                            User newUser = User.of(email, name, provider, providerId);
+                            newUser.updatePicture(picture);
+                            userRepository.save(newUser);
+                        }
+                );
 
         return oAuth2User;
     }

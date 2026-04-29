@@ -25,6 +25,11 @@ public class User {
 
     private String nickname;
 
+    private String picture;
+
+    @Column(length = 500)
+    private String bio;
+
     @Column(nullable = false)
     private String provider;
 
@@ -50,6 +55,18 @@ public class User {
         user.provider = provider;
         user.providerId = providerId;
         return user;
+    }
+
+    public void updatePicture(String picture) {
+        this.picture = picture;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateBio(String bio) {
+        this.bio = bio;
     }
 
     public void addCoins(int coins) {
