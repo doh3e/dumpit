@@ -3,9 +3,12 @@ package com.dumpit.repository;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,4 +25,33 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     List<Task> findByUserOrderByPriority(@Param("user") User user);
 
     List<Task> findByUserAndStatusOrderByCreatedAtDesc(User user, Task.Status status);
+
+    boolean existsByRoutineRoutineIdAndRoutineScheduledDate(UUID routineId, LocalDate routineScheduledDate);
+
+    @Modifying
+    @Query("""
+        UPDATE Task t
+        SET t.routine = null
+        WHERE t.routine.routineId = :routineId
+    """)
+    void clearRoutineReference(@Param("routineId") UUID routineId);
+
+    @Query("""
+        SELECT t FROM Task t
+        WHERE t.user = :user
+          AND t.status NOT IN ('DONE', 'CANCELLED')
+          AND t.deadline IS NOT NULL
+        ORDER BY t.deadline ASC
+    """)
+    List<Task> findDeadlineIndexCandidates(@Param("user") User user);
+
+    @Query("""
+        SELECT t FROM Task t
+        WHERE t.user = :user
+          AND t.status NOT IN ('DONE', 'CANCELLED')
+          AND t.deadline IS NOT NULL
+          AND t.deadline <= :cutoff
+        ORDER BY t.deadline ASC
+    """)
+    List<Task> findDeadlineNudges(@Param("user") User user, @Param("cutoff") LocalDateTime cutoff);
 }

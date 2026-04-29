@@ -8,10 +8,19 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tasks")
+@Table(
+        name = "tasks",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_tasks_routine_scheduled_date",
+                        columnNames = {"routine_id", "routine_scheduled_date"}
+                )
+        }
+)
 @Getter
 @NoArgsConstructor
 public class Task {
@@ -38,6 +47,17 @@ public class Task {
     @JoinColumn(name = "dump_id")
     @Setter
     private BrainDump brainDump;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "routine_id")
+    @Setter
+    private Routine routine;
+
+    @Column(name = "routine_id", insertable = false, updatable = false)
+    private UUID routineId;
+
+    @Setter
+    private LocalDate routineScheduledDate;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     @Setter

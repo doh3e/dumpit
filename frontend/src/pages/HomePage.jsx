@@ -36,8 +36,8 @@ export default function HomePage() {
             <p className="font-bold text-2xl text-dark/90 my-4">
               그냥 다 쏟아내세요!
             </p>
-            덤핏이 <u>AI와 유저들의 데이터</u>를 통해<br />
-            우선순위를 정하고 일정을 잡아드려요.
+            덤핏이 <u>AI</u>를 통해 우선순위를 정하고<br />
+            할 일을 알기 쉽게 정리해드려요.
           </p>
         </div>
 
@@ -58,7 +58,8 @@ export default function HomePage() {
           {[
             { title: '브레인 덤프', desc: '줄글로 쏟아내면 AI가 할 일 목록으로 정리' },
             { title: '원형 일과표', desc: '24시간 파이차트로 하루를 한눈에 파악' },
-            { title: '코인 보상', desc: '일정 달성하면 코인으로 아이템 획득' },
+            { title: '아이디어 덤프', desc: '새로운 아이디어를 자유롭게 기록하고 정리' },
+            { title: '내가 한 일 기록', desc: '얼마나 잘 완료했는지 코인보상과 요약을 통해 보기' },
           ].map(({ title, desc }) => (
             <div key={title} className="card-kitschy text-left">
               <h3 className="font-extrabold text-dark text-base mb-1">{title}</h3>

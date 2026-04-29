@@ -1,8 +1,17 @@
 services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    restart: unless-stopped
+
   backend:
     build: ./backend
     ports:
       - "8080:8080"
+    depends_on:
+      - redis
     environment:
       SPRING_PROFILES_ACTIVE: local
       SPRING_DATASOURCE_URL: ${DB_URL}
@@ -12,7 +21,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       RESEND_API_KEY: ${RESEND_API_KEY}
       MAIL_FROM: ${MAIL_FROM}
-      ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL:-dumpitadmin@gmail.com}
+      ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL}
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       SERVER_FORWARD_HEADERS_STRATEGY: framework
@@ -20,4 +29,12 @@ services:
       SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"
       APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:5173}
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.0}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
     restart: unless-stopped
+
+volumes:
+  redis_data:

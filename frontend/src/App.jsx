@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import * as Sentry from '@sentry/react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/layout/Layout'
 import HomePage from './pages/HomePage'
 import DashboardPage from './pages/DashboardPage'
 import BrainDumpPage from './pages/BrainDumpPage'
+import IdeaDumpPage from './pages/IdeaDumpPage'
+import RoutinePage from './pages/RoutinePage'
 import ShopPage from './pages/ShopPage'
 import AdminPage from './pages/AdminPage'
 
@@ -41,6 +44,12 @@ function AppRoutes() {
         <Route path="/brain-dump" element={
           <PrivateRoute><BrainDumpPage /></PrivateRoute>
         } />
+        <Route path="/ideas" element={
+          <PrivateRoute><IdeaDumpPage /></PrivateRoute>
+        } />
+        <Route path="/routines" element={
+          <PrivateRoute><RoutinePage /></PrivateRoute>
+        } />
         <Route path="/shop" element={
           <PrivateRoute><ShopPage /></PrivateRoute>
         } />
@@ -58,7 +67,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <Sentry.ErrorBoundary fallback={<div className="min-h-screen bg-accent" />}>
+          <AppRoutes />
+        </Sentry.ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   )
