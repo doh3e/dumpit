@@ -6,6 +6,7 @@ import com.dumpit.entity.User;
 import com.dumpit.repository.BrainDumpRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
+import com.dumpit.service.AiUsageService;
 import com.dumpit.service.BrainDumpService;
 import com.dumpit.service.OpenAiService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class BrainDumpServiceImpl implements BrainDumpService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final OpenAiService openAiService;
+    private final AiUsageService aiUsageService;
 
     @Override
     @Transactional
@@ -36,6 +38,8 @@ public class BrainDumpServiceImpl implements BrainDumpService {
 
         BrainDump dump = BrainDump.of(user, rawText);
         brainDumpRepository.save(dump);
+
+        aiUsageService.consume(email, AiUsageService.UsageType.BRAIN_DUMP);
 
         OpenAiService.BrainDumpResult aiResult;
         try {

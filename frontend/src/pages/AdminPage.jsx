@@ -159,7 +159,7 @@ export default function AdminPage() {
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}
                     rows={6}
-                    maxLength={10000}
+                    maxLength={3000}
                     placeholder="답변 내용을 입력하세요"
                     className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary resize-none"
                   />

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 public record TaskUpdateRequest(
         @Size(max = 200) String title,
-        @Size(max = 2000) String description,
+        @Size(max = 1000) String description,
         String status,
         Double userPriorityScore,
         LocalDateTime deadline,

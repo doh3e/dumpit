@@ -4,6 +4,7 @@ import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
+import com.dumpit.service.AiUsageService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.TaskService;
@@ -23,6 +24,7 @@ public class TaskServiceImpl implements TaskService {
     private final UserRepository userRepository;
     private final OpenAiService openAiService;
     private final DeadlineNudgeService deadlineNudgeService;
+    private final AiUsageService aiUsageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -44,6 +46,7 @@ public class TaskServiceImpl implements TaskService {
         if (endTime != null) task.setEndTime(endTime);
         if (isLocked != null) task.setIsLocked(isLocked);
 
+        aiUsageService.consume(email, AiUsageService.UsageType.TASK_PRIORITY);
         OpenAiService.PriorityResult priority =
                 openAiService.scorePriority(title, description, deadline, estimatedMinutes);
         task.setAiPriorityScore(priority.score());
@@ -111,6 +114,7 @@ public class TaskServiceImpl implements TaskService {
             throw new IllegalArgumentException("沅뚰븳???놁뒿?덈떎");
         }
 
+        aiUsageService.consume(email, AiUsageService.UsageType.TASK_REANALYZE);
         OpenAiService.PriorityResult priority =
                 openAiService.scorePriority(task.getTitle(), task.getDescription(),
                         task.getDeadline(), task.getEstimatedMinutes());
@@ -130,6 +134,7 @@ public class TaskServiceImpl implements TaskService {
             throw new IllegalArgumentException("沅뚰븳???놁뒿?덈떎");
         }
 
+        aiUsageService.consume(email, AiUsageService.UsageType.SUBTASK_PROPOSAL);
         return openAiService.proposeSubtasks(task.getTitle(), task.getDescription(),
                 task.getEstimatedMinutes());
     }

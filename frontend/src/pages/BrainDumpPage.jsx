@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import AiUsageBadge from '../components/AiUsageBadge'
+import useAiUsage from '../hooks/useAiUsage'
 
 const PLACEHOLDER = `예) 내일까지 기획서 초안 써야 하고, 이번 주 금요일 팀 발표 준비도 해야 해. 오늘 점심 약속 있고 오후엔 헬스장도 가야 함. 아, 이메일 답장도 밀려있어...`
 
@@ -17,6 +19,7 @@ function getPriorityLabel(score) {
 }
 
 export default function BrainDumpPage() {
+  const aiUsage = useAiUsage()
   const [text, setText] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [result, setResult] = useState(null)
@@ -31,8 +34,9 @@ export default function BrainDumpPage() {
     try {
       const res = await api.post('/brain-dump', { rawText: text.trim() })
       setResult(res.data)
+      aiUsage.refresh()
     } catch (err) {
-      setError(err.response?.data?.message || 'AI 분석에 실패했어요. 다시 시도해주세요.')
+      setError(err.response?.data?.error || err.response?.data?.message || 'AI 분석에 실패했어요. 다시 시도해주세요.')
     } finally {
       setIsAnalyzing(false)
     }
@@ -53,11 +57,11 @@ export default function BrainDumpPage() {
           onChange={(e) => setText(e.target.value)}
           placeholder={PLACEHOLDER}
           rows={7}
-          maxLength={5000}
+          maxLength={3000}
           className="w-full resize-none bg-transparent font-semibold text-dark placeholder:text-dark/30 outline-none text-sm leading-relaxed"
         />
         <div className="flex items-center justify-between mt-4 pt-4 border-t-2 border-dark/10">
-          <span className="text-xs text-dark/40 font-medium">{text.length}자 입력됨</span>
+          <span className="text-xs text-dark/40 font-medium">{text.length} / 3000자 입력됨</span>
           <div className="flex gap-3">
             <button
               onClick={() => { setText(''); setResult(null); setError(null) }}
@@ -67,12 +71,15 @@ export default function BrainDumpPage() {
             </button>
             <button
               onClick={handleAnalyze}
-              disabled={!text.trim() || isAnalyzing}
+              disabled={!text.trim() || isAnalyzing || !aiUsage.hasEnough(5)}
               className="btn-kitschy bg-primary text-white text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isAnalyzing ? '분석 중...' : 'AI 분석하기'}
             </button>
           </div>
+        </div>
+        <div className="mt-3">
+          <AiUsageBadge usage={aiUsage.usage} cost={5} />
         </div>
       </div>
 

@@ -115,8 +115,8 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
         isLocked: true,
       })
       if (onTaskAdded) onTaskAdded()
-    } catch {
-      alert('태스크 추가에 실패했어요')
+    } catch (err) {
+      alert(err.response?.data?.error || '태스크 추가에 실패했어요')
     } finally {
       setAddingEventId(null)
     }

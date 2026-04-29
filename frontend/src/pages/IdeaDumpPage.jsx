@@ -266,7 +266,7 @@ export default function IdeaDumpPage() {
             value={quickForm.rawText}
             onChange={(e) => setQuickForm((prev) => ({ ...prev, rawText: e.target.value }))}
             rows={3}
-            maxLength={5000}
+            maxLength={3000}
             placeholder={'아이디어를 한 줄에 하나씩 적어보세요.\n여러 줄이면 각각 따로 저장됩니다.'}
             className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
           />
@@ -429,7 +429,7 @@ export default function IdeaDumpPage() {
               <textarea
                 value={detailForm.content}
                 onChange={(e) => setDetailForm((prev) => ({ ...prev, content: e.target.value }))}
-                maxLength={5000}
+                maxLength={3000}
                 rows={12}
                 placeholder="이 아이디어의 세부 메모를 적어두세요."
                 className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold leading-relaxed outline-none focus:border-primary"

@@ -2,8 +2,11 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../services/api'
 import { CATEGORIES } from '../constants/categories'
+import AiUsageBadge from './AiUsageBadge'
+import useAiUsage from '../hooks/useAiUsage'
 
 export default function AddTaskModal({ onClose, onCreated }) {
+  const aiUsage = useAiUsage()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [deadline, setDeadline] = useState('')
@@ -24,9 +27,10 @@ export default function AddTaskModal({ onClose, onCreated }) {
         estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes) : null,
         category: category || null,
       })
+      aiUsage.refresh()
       onCreated()
-    } catch {
-      alert('태스크 생성에 실패했어요. 다시 시도해주세요.')
+    } catch (err) {
+      alert(err.response?.data?.error || '태스크 생성에 실패했어요. 다시 시도해주세요.')
     } finally {
       setSaving(false)
     }
@@ -62,7 +66,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="추가 정보가 있다면..."
             rows={2}
-            maxLength={2000}
+            maxLength={1000}
             className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary resize-none"
           />
         </div>
@@ -127,6 +131,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
         <p className="text-xs text-dark/40 font-medium">
           AI가 자동으로 우선순위를 매기고, 나중에 직접 조정할 수 있어요.
         </p>
+        <AiUsageBadge usage={aiUsage.usage} cost={1} />
 
         <div className="flex gap-3 pt-2">
           <button
@@ -138,7 +143,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
           </button>
           <button
             type="submit"
-            disabled={!title.trim() || saving}
+            disabled={!title.trim() || saving || !aiUsage.hasEnough(1)}
             className="btn-kitschy flex-1 bg-primary text-white text-sm py-2 disabled:opacity-50"
           >
             {saving ? 'AI 분석 중...' : '추가하기'}

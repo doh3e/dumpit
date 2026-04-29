@@ -4,5 +4,5 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record DumpRequest(
-        @NotBlank @Size(max = 5000) String rawText
+        @NotBlank @Size(max = 3000) String rawText
 ) {}
