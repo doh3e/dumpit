@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import DeadlineNudgeMenu from '../DeadlineNudgeMenu'
 import useAiUsage from '../../hooks/useAiUsage'
+import remainAiToken from '../../assets/remain_ai_token.png'
+import coinImage from '../../assets/coin_image.png'
 
 const NAV_ITEMS = [
   { label: '대시보드', path: '/dashboard' },
@@ -54,7 +56,7 @@ export default function Header({ onOpenDrawer }) {
           {/* Hamburger button - only below lg */}
           <button
             onClick={onOpenDrawer}
-            className="lg:hidden w-9 h-9 rounded-lg border-2 border-white text-white flex flex-col items-center justify-center gap-1 hover:bg-white/10 transition-colors"
+            className="min-[1100px]:hidden w-9 h-9 rounded-lg border-2 border-white text-white flex flex-col items-center justify-center gap-1 hover:bg-white/10 transition-colors"
             aria-label="메뉴 열기"
           >
             <span className="block w-4 h-0.5 bg-white" />
@@ -69,7 +71,7 @@ export default function Header({ onOpenDrawer }) {
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden min-[1100px]:flex items-center gap-1">
           {NAV_ITEMS.map(({ label, path }) => (
             <Link
               key={path}
@@ -86,7 +88,9 @@ export default function Header({ onOpenDrawer }) {
         </nav>
 
         <div className="flex items-center gap-3">
-          <DeadlineNudgeMenu />
+          <div className="hidden sm:block">
+            <DeadlineNudgeMenu />
+          </div>
 
           {/* AI usage badge */}
           {usage && (
@@ -95,14 +99,14 @@ export default function Header({ onOpenDrawer }) {
               tabIndex={0}
               aria-label="AI 사용량 안내"
             >
-              <span className="text-xs text-white leading-none">⚡</span>
+              <img src={remainAiToken} alt="AI" className="w-4 h-4 object-contain" />
               <span className={`text-sm font-extrabold leading-none ${aiColor}`}>
                 {usage.remaining}
               </span>
 
               <div className="pointer-events-none absolute right-0 top-10 z-50 w-72 rounded-lg border-2 border-dark bg-white shadow-kitschy text-left opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
                 <div className="px-3 py-2.5 border-b border-dark/10">
-                  <p className="text-xs font-black text-dark">⚡ AI 사용량 (오늘)</p>
+                  <p className="text-xs font-black text-dark">AI 사용량 (오늘)</p>
                   <p className="text-[11px] font-bold text-dark/50 mt-0.5">
                     남은 사용량:{' '}
                     <span className={usage.remaining === 0 ? 'text-primary' : 'text-dark'}>
@@ -143,7 +147,7 @@ export default function Header({ onOpenDrawer }) {
             tabIndex={0}
             aria-label="보유 코인 안내"
           >
-            <span className="text-xs text-white leading-none">🪙</span>
+            <img src={coinImage} alt="coin" className="w-4 h-4 object-contain" />
             <span className="text-sm font-extrabold text-white leading-none">{user?.coins ?? 0}</span>
             <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg border-2 border-dark bg-white px-3 py-2 text-left text-xs font-bold text-dark/70 opacity-0 shadow-kitschy transition-opacity group-hover:opacity-100 group-focus:opacity-100">
               추후 열릴 코인샵에서 다양한 테마와 스티커 등을 교환할 수 있어요.
@@ -169,8 +173,35 @@ export default function Header({ onOpenDrawer }) {
             )}
 
             {menuOpen && (
-              <div className="absolute right-0 top-12 z-50">
-                <div className="card-kitschy py-2 min-w-[160px]">
+              <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1rem))] sm:w-auto">
+                <div className="card-kitschy py-2 sm:min-w-[160px]">
+                  <div className="sm:hidden px-3 pb-2 mb-2 border-b border-dark/10">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="rounded-lg border-2 border-dark/10 bg-accent px-2 py-2 text-center">
+                        <img src={coinImage} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
+                        <p className="text-[10px] font-black text-dark/50">코인</p>
+                        <p className="text-sm font-black text-dark">{user?.coins ?? 0}</p>
+                      </div>
+                      <div className="rounded-lg border-2 border-dark/10 bg-blue-50 px-2 py-2 text-center">
+                        <img src={remainAiToken} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
+                        <p className="text-[10px] font-black text-dark/50">AI</p>
+                        <p className={`text-sm font-black ${usage?.remaining === 0 ? 'text-primary' : 'text-dark'}`}>
+                          {usage ? usage.remaining : '-'}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border-2 border-dark/10 bg-yellow-50 px-2 py-2 text-center">
+                        <p className="mb-1 text-[10px] font-black text-dark/50">마감</p>
+                        <div className="flex justify-center">
+                          <DeadlineNudgeMenu />
+                        </div>
+                      </div>
+                    </div>
+                    {usage && (
+                      <p className="mt-2 text-[10px] font-semibold text-dark/40 text-right">
+                        AI {usage.remaining} / {usage.limit} · 자정 초기화
+                      </p>
+                    )}
+                  </div>
                   <p className="px-4 py-1 text-xs font-bold text-dark/50 truncate">{user?.email}</p>
                   <hr className="my-1 border-dark/10" />
                   <Link

@@ -345,7 +345,7 @@ export default function IdeaDumpPage() {
                       }}
                       disabled={childCount === 0}
                       aria-label={isExpanded ? '하위 아이디어 접기' : '하위 아이디어 펼치기'}
-                      className="mt-0.5 h-6 w-6 shrink-0 rounded border-2 border-dark/20 bg-accent text-[10px] font-black leading-none text-dark disabled:invisible"
+                      className="mt-0.5 h-6 w-6 shrink-0 text-[10px] font-black leading-none text-dark/50 hover:text-dark disabled:invisible"
                     >
                       {isExpanded ? '▼' : '▶'}
                     </button>

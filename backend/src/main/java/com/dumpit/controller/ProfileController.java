@@ -68,13 +68,28 @@ public class ProfileController {
             categoryBreakdown.put(cat.name(), count);
         }
 
-        int streak = calcStreak(user);
+        LocalDate heatmapStart = LocalDate.now().minusWeeks(28);
+        List<LocalDateTime> completedAts = taskRepository.findCompletedAtSince(user, heatmapStart.atStartOfDay());
+
+        Map<LocalDate, Long> completedCountByDate = completedAts.stream()
+                .map(LocalDateTime::toLocalDate)
+                .collect(Collectors.groupingBy(date -> date, LinkedHashMap::new, Collectors.counting()));
+
+        Set<LocalDate> doneDays = completedCountByDate.keySet();
+
+        int streak = calcStreak(doneDays);
+
+        Map<String, Integer> heatmap = new LinkedHashMap<>();
+        for (LocalDate d = heatmapStart; !d.isAfter(LocalDate.now()); d = d.plusDays(1)) {
+            heatmap.put(d.toString(), completedCountByDate.getOrDefault(d, 0L).intValue());
+        }
+
         long brainDumpCount = brainDumpRepository.countByUser(user);
         long ideaCount = ideaRepository.countByUser(user);
 
         return ResponseEntity.ok(new StatsResponse(
                 totalDone, totalTodo, totalInProgress,
-                categoryBreakdown, streak,
+                categoryBreakdown, streak, heatmap,
                 brainDumpCount, ideaCount,
                 user.getCoinBalance()
         ));
@@ -95,14 +110,7 @@ public class ProfileController {
         return ResponseEntity.ok(result);
     }
 
-    private int calcStreak(User user) {
-        LocalDateTime since = LocalDateTime.now().minusDays(365);
-        List<LocalDateTime> completedAts = taskRepository.findCompletedAtSince(user, since);
-
-        Set<LocalDate> doneDays = completedAts.stream()
-                .map(LocalDateTime::toLocalDate)
-                .collect(Collectors.toSet());
-
+    private int calcStreak(Set<LocalDate> doneDays) {
         int streak = 0;
         LocalDate day = LocalDate.now();
         while (doneDays.contains(day)) {
@@ -132,7 +140,7 @@ public class ProfileController {
     public record ProfileUpdateRequest(String bio, String nickname) {}
     public record StatsResponse(
             long totalDone, long totalTodo, long totalInProgress,
-            Map<String, Long> categoryBreakdown, int streak,
+            Map<String, Long> categoryBreakdown, int streak, Map<String, Integer> heatmap,
             long brainDumpCount, long ideaCount, int coinBalance) {}
     public record OverdueTaskResponse(
             UUID taskId, String title, String category,

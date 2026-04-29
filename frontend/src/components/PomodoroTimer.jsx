@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import settingImage from '../assets/setting_image.png'
 
 const DEFAULT_FOCUS_MIN = 25
 const DEFAULT_BREAK_MIN = 5
@@ -151,11 +152,11 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
         </div>
         <button
           onClick={() => setShowSettings(!showSettings)}
-          className="w-6 h-6 rounded-full border-2 border-dark text-dark text-[10px] font-black hover:bg-accent transition-colors"
+          className="w-6 h-6 flex items-center justify-center hover:opacity-70 transition-opacity"
           aria-label="타이머 설정"
           title="타이머 설정"
         >
-          ⚙
+          <img src={settingImage} alt="설정" className="w-5 h-5 object-contain" />
         </button>
       </div>
 
