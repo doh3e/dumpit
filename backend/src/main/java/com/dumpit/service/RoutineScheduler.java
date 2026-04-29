@@ -12,7 +12,7 @@ public class RoutineScheduler {
 
     private final RoutineService routineService;
 
-    @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 5 0 * * *", zone = "Asia/Seoul")
     public void generateDueRoutines() {
         int generated = routineService.generateDueRoutines();
         if (generated > 0) {
