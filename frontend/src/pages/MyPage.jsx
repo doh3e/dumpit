@@ -65,6 +65,7 @@ function HeatmapGrid({ heatmap }) {
     ...Array(startDow).fill(null),
     ...entries,
   ]
+  while (paddedEntries.length % 7 !== 0) paddedEntries.push(null)
 
   const weeks = []
   for (let i = 0; i < paddedEntries.length; i += 7) {
@@ -73,7 +74,7 @@ function HeatmapGrid({ heatmap }) {
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex gap-1 min-w-max">
+      <div className="flex gap-1 justify-center">
         {weeks.map((week, wi) => (
           <div key={wi} className="flex flex-col gap-1">
             {Array.from({ length: 7 }).map((_, di) => {
@@ -129,7 +130,7 @@ function PieChart({ data }) {
   }
 
   return (
-    <div className="flex items-center gap-4 flex-wrap">
+    <div className="flex items-center justify-center gap-4 flex-wrap">
       <svg viewBox="0 0 100 100" className="w-32 h-32 flex-shrink-0">
         {slices.map((s) => (
           <path key={s.label} d={arc(50, 50, 45, s.start, s.angle)} fill={s.color} stroke="white" strokeWidth="1" />
@@ -235,9 +236,13 @@ export default function MyPage() {
 
   const heatmap = stats?.heatmap ?? (() => {
     const m = {}
-    for (let i = 111; i >= 0; i--) {
-      const d = new Date()
-      d.setDate(d.getDate() - i)
+    const serviceStart = new Date('2026-04-25')
+    const sixteenWeeksAgo = new Date()
+    sixteenWeeksAgo.setDate(sixteenWeeksAgo.getDate() - 111)
+    const start = serviceStart > sixteenWeeksAgo ? serviceStart : sixteenWeeksAgo
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
       m[d.toISOString().slice(0, 10)] = 0
     }
     return m

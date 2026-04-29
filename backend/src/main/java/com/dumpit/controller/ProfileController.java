@@ -68,8 +68,13 @@ public class ProfileController {
             categoryBreakdown.put(cat.name(), count);
         }
 
-        LocalDateTime since16w = LocalDateTime.now().minusWeeks(16);
-        List<LocalDateTime> completedAts = taskRepository.findCompletedAtSince(user, since16w);
+        LocalDate serviceStart = LocalDate.of(2026, 4, 25);
+        LocalDate heatmapStart = serviceStart.isAfter(LocalDate.now().minusWeeks(16))
+                ? serviceStart
+                : LocalDate.now().minusWeeks(16);
+        LocalDateTime since = heatmapStart.atStartOfDay();
+
+        List<LocalDateTime> completedAts = taskRepository.findCompletedAtSince(user, since);
 
         Set<LocalDate> doneDays = completedAts.stream()
                 .map(LocalDateTime::toLocalDate)
@@ -78,8 +83,7 @@ public class ProfileController {
         int streak = calcStreak(doneDays);
 
         Map<String, Integer> heatmap = new LinkedHashMap<>();
-        for (int i = 111; i >= 0; i--) {
-            LocalDate d = LocalDate.now().minusDays(i);
+        for (LocalDate d = heatmapStart; !d.isAfter(LocalDate.now()); d = d.plusDays(1)) {
             heatmap.put(d.toString(), doneDays.contains(d) ? 1 : 0);
         }
 
