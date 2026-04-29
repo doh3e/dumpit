@@ -19,7 +19,7 @@ function formatDate(value) {
   return date.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-function buildTreeRows(ideas, query) {
+function buildTreeRows(ideas, query, expandedIds) {
   const keyword = query.trim().toLowerCase()
   const byParent = new Map()
   const byId = new Map()
@@ -44,12 +44,15 @@ function buildTreeRows(ideas, query) {
   const rows = []
   const visit = (idea, depth) => {
     if (!hasMatchingDescendant(idea)) return
+    const children = byParent.get(idea.ideaId) || []
+    const isExpanded = Boolean(keyword) || expandedIds.has(idea.ideaId)
     rows.push({
       idea,
       depth,
-      childCount: byParent.get(idea.ideaId)?.length || 0,
+      childCount: children.length,
+      isExpanded,
     })
-    ;(byParent.get(idea.ideaId) || []).forEach((child) => visit(child, depth + 1))
+    if (isExpanded) children.forEach((child) => visit(child, depth + 1))
   }
 
   ;(byParent.get('root') || []).forEach((idea) => visit(idea, 0))
@@ -63,6 +66,7 @@ function buildTreeRows(ideas, query) {
 export default function IdeaDumpPage() {
   const [ideas, setIdeas] = useState([])
   const [selectedId, setSelectedId] = useState(null)
+  const [expandedIds, setExpandedIds] = useState(() => new Set())
   const [quickForm, setQuickForm] = useState(EMPTY_QUICK)
   const [detailForm, setDetailForm] = useState(EMPTY_DETAIL)
   const [query, setQuery] = useState('')
@@ -75,7 +79,7 @@ export default function IdeaDumpPage() {
     [ideas, selectedId]
   )
 
-  const rows = useMemo(() => buildTreeRows(ideas, query), [ideas, query])
+  const rows = useMemo(() => buildTreeRows(ideas, query, expandedIds), [ideas, query, expandedIds])
   const childCounts = useMemo(() => {
     const counts = new Map()
     ideas.forEach((idea) => {
@@ -85,10 +89,24 @@ export default function IdeaDumpPage() {
     return counts
   }, [ideas])
 
+  const selectedChildren = useMemo(
+    () => ideas.filter((idea) => idea.parentIdeaId === selectedId),
+    [ideas, selectedId]
+  )
+
   const selectableParents = useMemo(
     () => ideas.filter((idea) => idea.ideaId !== selectedId),
     [ideas, selectedId]
   )
+
+  const toggleExpanded = (ideaId) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(ideaId)) next.delete(ideaId)
+      else next.add(ideaId)
+      return next
+    })
+  }
 
   const fetchIdeas = () => {
     api.get('/ideas')
@@ -189,6 +207,7 @@ export default function IdeaDumpPage() {
         category: selectedIdea.category || 'OTHER',
         parentIdeaId: selectedIdea.ideaId,
       })
+      setExpandedIds((prev) => new Set(prev).add(selectedIdea.ideaId))
       setSelectedId(res.data.ideaId)
       fetchIdeas()
     } catch (err) {
@@ -307,29 +326,45 @@ export default function IdeaDumpPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {rows.map(({ idea, depth, childCount }) => {
+              {rows.map(({ idea, depth, childCount, isExpanded }) => {
                 const category = getCategory(idea.category)
                 const isSelected = selectedId === idea.ideaId
                 return (
-                  <button
+                  <div
                     key={idea.ideaId}
-                    type="button"
-                    onClick={() => setSelectedId(idea.ideaId)}
-                    className={`w-full text-left rounded-lg border-2 p-3 transition-colors ${
+                    className={`flex items-start gap-2 rounded-lg border-2 bg-white p-3 transition-colors ${
                       isSelected ? 'border-dark bg-white shadow-kitschy' : 'border-dark/10 bg-white hover:border-dark/30'
                     }`}
                     style={{ paddingLeft: `${12 + depth * 18}px` }}
                   >
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
-                        {category.label}
-                      </span>
-                      {idea.pinned && <span className="text-[10px] font-black text-yellow-600">고정</span>}
-                      {idea.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
-                      {childCount > 0 && <span className="text-[10px] font-black text-dark/40">하위 {childCount}</span>}
-                    </div>
-                    <p className="mt-1 truncate text-sm font-black text-dark">{idea.title}</p>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        toggleExpanded(idea.ideaId)
+                      }}
+                      disabled={childCount === 0}
+                      aria-label={isExpanded ? '하위 아이디어 접기' : '하위 아이디어 펼치기'}
+                      className="mt-0.5 h-6 w-6 shrink-0 rounded border-2 border-dark/20 bg-accent text-xs font-black text-dark disabled:invisible"
+                    >
+                      {isExpanded ? '⌄' : '›'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(idea.ideaId)}
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
+                          {category.label}
+                        </span>
+                        {idea.pinned && <span className="text-[10px] font-black text-yellow-600">고정</span>}
+                        {idea.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
+                        {childCount > 0 && <span className="text-[10px] font-black text-dark/40">하위 {childCount}</span>}
+                      </div>
+                      <p className="mt-1 truncate text-sm font-black text-dark">{idea.title}</p>
+                    </button>
+                  </div>
                 )
               })}
             </div>
@@ -399,6 +434,38 @@ export default function IdeaDumpPage() {
                 placeholder="이 아이디어의 세부 메모를 적어두세요."
                 className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold leading-relaxed outline-none focus:border-primary"
               />
+
+              <div className="rounded-lg border-2 border-dark/20 bg-white p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h4 className="text-sm font-black text-dark">자녀 아이디어</h4>
+                  <span className="text-[10px] font-black text-dark/40">{selectedChildren.length}개</span>
+                </div>
+                {selectedChildren.length === 0 ? (
+                  <p className="mt-3 text-xs font-semibold text-dark/40">아직 연결된 하위 아이디어가 없어요.</p>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {selectedChildren.map((child) => {
+                      const category = getCategory(child.category)
+                      return (
+                        <button
+                          key={child.ideaId}
+                          type="button"
+                          onClick={() => setSelectedId(child.ideaId)}
+                          className="w-full rounded-lg border-2 border-dark/10 bg-accent/40 px-3 py-2 text-left hover:border-dark/30"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
+                              {category.label}
+                            </span>
+                            {child.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
+                          </div>
+                          <p className="mt-1 truncate text-sm font-black text-dark">{child.title}</p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
 
               <div className="flex flex-wrap gap-2">
                 <button

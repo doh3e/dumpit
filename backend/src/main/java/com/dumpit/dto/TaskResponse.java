@@ -3,6 +3,7 @@ package com.dumpit.dto;
 import com.dumpit.entity.Task;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 public record TaskResponse(
@@ -20,6 +21,8 @@ public record TaskResponse(
         LocalDateTime startTime,
         LocalDateTime endTime,
         Boolean isLocked,
+        UUID routineId,
+        LocalDate routineScheduledDate,
         String syncSource,
         LocalDateTime createdAt
 ) {
@@ -34,7 +37,10 @@ public record TaskResponse(
                 t.getEffectivePriority(),
                 t.getDeadline(), t.getEstimatedMinutes(),
                 t.getStartTime(), t.getEndTime(),
-                t.getIsLocked(), t.getSyncSource().name(),
+                t.getIsLocked(),
+                t.getRoutine() != null ? t.getRoutine().getRoutineId() : null,
+                t.getRoutineScheduledDate(),
+                t.getSyncSource().name(),
                 t.getCreatedAt()
         );
     }
