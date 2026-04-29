@@ -114,7 +114,7 @@ export default function DashboardPage() {
 
   const fetchTasks = () => {
     api.get('/tasks')
-      .then((res) => setTasks(res.data))
+      .then((res) => setTasks(Array.isArray(res.data) ? res.data : []))
       .catch(() => setTasks([]))
       .finally(() => setLoading(false))
   }
@@ -137,10 +137,12 @@ export default function DashboardPage() {
     } catch { /* ignore */ }
   }
 
+  const taskList = Array.isArray(tasks) ? tasks : []
+
   const activeTasks = groupByParent(
-    tasks.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED' && isVisibleToday(t))
+    taskList.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED' && isVisibleToday(t))
   )
-  const doneTasks = tasks.filter((t) => {
+  const doneTasks = taskList.filter((t) => {
     if (t.status !== 'DONE') return false
     if (!t.deadline) return true
     const deadline = parseDate(t.deadline)
@@ -186,7 +188,7 @@ export default function DashboardPage() {
 
           <div className="card-kitschy">
             <h3 className="font-extrabold text-dark mb-4">달력</h3>
-            <MiniCalendar tasks={tasks} onTaskAdded={fetchTasks} />
+            <MiniCalendar tasks={taskList} onTaskAdded={fetchTasks} />
           </div>
 
           <div className="card-kitschy">
@@ -197,7 +199,7 @@ export default function DashboardPage() {
             {activeTasks.length === 0 ? (
               <div className="text-center py-8">
                 <p className="font-extrabold text-dark text-base">
-                  {tasks.length === 0 ? '아직 할 일이 없어요!' : '모든 할 일 완료!'}
+                  {taskList.length === 0 ? '아직 할 일이 없어요!' : '모든 할 일 완료!'}
                 </p>
                 <p className="text-xs text-dark/50 mt-2">
                   브레인 덤프나 직접 추가를 통해 시작해보세요

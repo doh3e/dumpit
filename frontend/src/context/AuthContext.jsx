@@ -9,7 +9,10 @@ export function AuthProvider({ children }) {
 
   const fetchUser = () => {
     api.get('/auth/me')
-      .then((res) => setUser(res.data))
+      .then((res) => {
+        const nextUser = res.data
+        setUser(nextUser && typeof nextUser === 'object' && nextUser.email ? nextUser : null)
+      })
       .catch(() => setUser(null))
       .finally(() => setLoading(false))
   }
@@ -18,7 +21,10 @@ export function AuthProvider({ children }) {
 
   const refreshCoins = () => {
     api.get('/auth/me')
-      .then((res) => setUser(res.data))
+      .then((res) => {
+        const nextUser = res.data
+        setUser(nextUser && typeof nextUser === 'object' && nextUser.email ? nextUser : null)
+      })
       .catch(() => {})
   }
 

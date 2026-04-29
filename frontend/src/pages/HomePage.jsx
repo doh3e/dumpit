@@ -1,11 +1,12 @@
 import { useSearchParams } from 'react-router-dom'
+import { API_BASE_URL } from '../services/api'
 
 export default function HomePage() {
   const [searchParams] = useSearchParams()
   const loginError = searchParams.get('error')
 
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || '/api'}/oauth2/authorization/google`
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/google`
   }
 
   return (
