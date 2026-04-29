@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { label: '대시보드', path: '/dashboard' },
   { label: '브레인 덤프', path: '/brain-dump' },
   { label: '아이디어', path: '/ideas' },
-  { label: '코인샵', path: '/shop' },
+  { label: '루틴', path: '/routines' },
 ]
 
 export default function Header({ onOpenDrawer }) {
@@ -68,8 +68,15 @@ export default function Header({ onOpenDrawer }) {
         <div className="flex items-center gap-3">
           <DeadlineNudgeMenu />
 
-          <div className="hidden sm:flex items-center gap-1 bg-secondary border-2 border-dark rounded-full px-3 py-1 shadow-kitschy">
+          <div
+            className="group relative hidden sm:flex items-center gap-1 bg-secondary border-2 border-dark rounded-full px-3 py-1 shadow-kitschy"
+            tabIndex={0}
+            aria-label="보유 코인 안내"
+          >
             <span className="text-sm font-extrabold text-white">{user?.coins ?? 0} C</span>
+            <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg border-2 border-dark bg-white px-3 py-2 text-left text-xs font-bold text-dark/70 opacity-0 shadow-kitschy transition-opacity group-hover:opacity-100 group-focus:opacity-100">
+              추후 열릴 코인샵에서 다양한 테마와 스티커 등을 교환할 수 있어요.
+            </div>
           </div>
 
           <div className="relative" ref={menuRef}>
