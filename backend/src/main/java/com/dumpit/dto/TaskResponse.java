@@ -38,7 +38,7 @@ public record TaskResponse(
                 t.getDeadline(), t.getEstimatedMinutes(),
                 t.getStartTime(), t.getEndTime(),
                 t.getIsLocked(),
-                t.getRoutine() != null ? t.getRoutine().getRoutineId() : null,
+                t.getRoutineId(),
                 t.getRoutineScheduledDate(),
                 t.getSyncSource().name(),
                 t.getCreatedAt()

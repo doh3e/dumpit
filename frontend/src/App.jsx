@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import * as Sentry from '@sentry/react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/layout/Layout'
 import HomePage from './pages/HomePage'
@@ -66,7 +67,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <Sentry.ErrorBoundary fallback={<div className="min-h-screen bg-accent" />}>
+          <AppRoutes />
+        </Sentry.ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   )

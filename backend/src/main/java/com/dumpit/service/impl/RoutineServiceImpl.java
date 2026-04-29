@@ -85,7 +85,7 @@ public class RoutineServiceImpl implements RoutineService {
         LocalDate today = LocalDate.now();
         int generated = 0;
 
-        for (Routine routine : routineRepository.findByEnabledTrue()) {
+        for (Routine routine : routineRepository.findGenerationCandidates(today)) {
             if (generateRoutineTaskForDate(routine, today)) generated++;
         }
 
@@ -129,14 +129,15 @@ public class RoutineServiceImpl implements RoutineService {
             return false;
         }
 
+        LocalDateTime routineDateTime = LocalDateTime.of(date, routine.getCreateTime());
         Task task = Task.of(
                 routine.getUser(),
                 routine.getName(),
                 routine.getDescription(),
-                date.atTime(23, 59, 59),
+                routineDateTime,
                 null
         );
-        task.setStartTime(LocalDateTime.of(date, routine.getCreateTime()));
+        task.setStartTime(routineDateTime);
         task.setCategory(Task.Category.ROUTINE);
         task.setAiPriorityScore(0.5);
         task.setRoutine(routine);

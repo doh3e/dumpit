@@ -43,7 +43,7 @@ public class DeadlineNudgeServiceImpl implements DeadlineNudgeService {
         try {
             redisTemplate.opsForZSet().add(key(task.getUser()), task.getTaskId().toString(), toEpochMillis(task.getDeadline()));
         } catch (DataAccessException ex) {
-            log.debug("Skipping deadline nudge Redis index because Redis is unavailable", ex);
+            log.debug("Skipping deadline nudge Redis index because Redis is unavailable: {}", ex.getMessage());
         }
     }
 
@@ -52,7 +52,7 @@ public class DeadlineNudgeServiceImpl implements DeadlineNudgeService {
         try {
             redisTemplate.opsForZSet().remove(key(task.getUser()), task.getTaskId().toString());
         } catch (DataAccessException ex) {
-            log.debug("Skipping deadline nudge Redis removal because Redis is unavailable", ex);
+            log.debug("Skipping deadline nudge Redis removal because Redis is unavailable: {}", ex.getMessage());
         }
     }
 
@@ -104,7 +104,7 @@ public class DeadlineNudgeServiceImpl implements DeadlineNudgeService {
 
             return tasks;
         } catch (DataAccessException ex) {
-            log.debug("Falling back to database for deadline nudges because Redis is unavailable", ex);
+            log.debug("Falling back to database for deadline nudges because Redis is unavailable: {}", ex.getMessage());
             return List.of();
         }
     }
@@ -122,7 +122,7 @@ public class DeadlineNudgeServiceImpl implements DeadlineNudgeService {
             taskRepository.findDeadlineIndexCandidates(user).forEach(this::index);
             redisTemplate.opsForValue().set(markerKey, "1");
         } catch (DataAccessException ex) {
-            log.debug("Skipping initial deadline nudge Redis sync because Redis is unavailable", ex);
+            log.debug("Skipping initial deadline nudge Redis sync because Redis is unavailable: {}", ex.getMessage());
         }
     }
 

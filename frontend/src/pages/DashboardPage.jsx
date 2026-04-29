@@ -42,11 +42,15 @@ function isSameLocalDate(a, b) {
     && a.getDate() === b.getDate()
 }
 
+function startOfLocalDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
 function isVisibleToday(task) {
   if (!task.deadline) return true
   const deadline = parseDate(task.deadline)
   if (!deadline || Number.isNaN(deadline.getTime())) return true
-  return isSameLocalDate(deadline, new Date())
+  return startOfLocalDay(deadline) >= startOfLocalDay(new Date())
 }
 
 function getUrgencyInfo(deadline) {

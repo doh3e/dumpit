@@ -60,6 +60,12 @@ app:
   cors:
     allowed-origins: http://localhost:5173
 
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${SENTRY_ENVIRONMENT:${spring.profiles.active:local}}
+  traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.0}
+  send-default-pii: false
+
 logging:
   level:
     org.springframework.security: INFO

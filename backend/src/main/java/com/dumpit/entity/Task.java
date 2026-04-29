@@ -53,6 +53,9 @@ public class Task {
     @Setter
     private Routine routine;
 
+    @Column(name = "routine_id", insertable = false, updatable = false)
+    private UUID routineId;
+
     @Setter
     private LocalDate routineScheduledDate;
 
