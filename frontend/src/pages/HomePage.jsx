@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { API_BASE_URL } from '../services/api'
 
 export default function HomePage() {
@@ -71,8 +71,22 @@ export default function HomePage() {
         </div>
       </main>
 
-      <footer className="border-t-2 border-dark py-5 text-center">
-        <p className="text-sm font-bold text-dark/50">&copy; 2026 Dumpit</p>
+      <footer className="border-t-2 border-dark py-5 px-6 text-center">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-sm font-bold text-dark/50">
+          <span>&copy; 2026 Dumpit</span>
+          <span className="hidden sm:inline text-dark/20">|</span>
+          <Link to="/privacy" className="hover:text-primary transition-colors">
+            개인정보 처리방침
+          </Link>
+          <span className="hidden sm:inline text-dark/20">|</span>
+          <Link to="/terms" className="hover:text-primary transition-colors">
+            서비스 이용약관
+          </Link>
+          <span className="hidden sm:inline text-dark/20">|</span>
+          <a href="mailto:dumpitadmin@gmail.com" className="hover:text-primary transition-colors">
+            dumpitadmin@gmail.com
+          </a>
+        </div>
       </footer>
     </div>
   )
