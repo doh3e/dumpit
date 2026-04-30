@@ -12,15 +12,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(
-        name = "tasks",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_tasks_routine_scheduled_date",
-                        columnNames = {"routine_id", "routine_scheduled_date"}
-                )
-        }
-)
+@Table(name = "tasks")
 @Getter
 @NoArgsConstructor
 public class Task {
@@ -119,6 +111,9 @@ public class Task {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Setter
+    private LocalDateTime deletedAt;
 
     public Double getEffectivePriority() {
         return userPriorityScore != null ? userPriorityScore : aiPriorityScore;

@@ -128,6 +128,7 @@ public class DeadlineNudgeServiceImpl implements DeadlineNudgeService {
 
     private boolean shouldIndex(Task task) {
         return task.getDeadline() != null
+                && task.getDeletedAt() == null
                 && task.getStatus() != Task.Status.DONE
                 && task.getStatus() != Task.Status.CANCELLED;
     }

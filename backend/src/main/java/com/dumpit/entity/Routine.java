@@ -77,6 +77,8 @@ public class Routine {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    private LocalDateTime deletedAt;
+
     public static Routine of(User user, String name) {
         Routine routine = new Routine();
         routine.user = user;
@@ -100,5 +102,10 @@ public class Routine {
                 .filter((value) -> !value.isBlank())
                 .map(Integer::parseInt)
                 .collect(Collectors.toSet());
+    }
+
+    public void markDeleted() {
+        this.deletedAt = LocalDateTime.now();
+        this.enabled = false;
     }
 }

@@ -7,6 +7,7 @@ import com.dumpit.entity.User;
 import com.dumpit.repository.BrainDumpRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
+import com.dumpit.service.ActivityLogService;
 import com.dumpit.service.AiUsageService;
 import com.dumpit.service.BrainDumpService;
 import com.dumpit.service.DeadlineNudgeService;
@@ -17,7 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -31,6 +34,7 @@ public class BrainDumpServiceImpl implements BrainDumpService {
     private final OpenAiService openAiService;
     private final AiUsageService aiUsageService;
     private final DeadlineNudgeService deadlineNudgeService;
+    private final ActivityLogService activityLogService;
 
     @Override
     @Transactional
@@ -84,6 +88,7 @@ public class BrainDumpServiceImpl implements BrainDumpService {
 
             Task t = taskRepository.save(task);
             deadlineNudgeService.index(t);
+            activityLogService.record(user, "TASK_CREATED", "TASK", t.getTaskId(), null, taskSnapshot(t));
             saved.add(t);
         }
         return saved;
@@ -96,5 +101,20 @@ public class BrainDumpServiceImpl implements BrainDumpService {
         } catch (IllegalArgumentException e) {
             return Task.Category.OTHER;
         }
+    }
+
+    private Map<String, Object> taskSnapshot(Task task) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("taskId", task.getTaskId());
+        values.put("title", task.getTitle());
+        values.put("description", task.getDescription());
+        values.put("status", task.getStatus());
+        values.put("category", task.getCategory());
+        values.put("deadline", task.getDeadline());
+        values.put("estimatedMinutes", task.getEstimatedMinutes());
+        values.put("aiPriorityScore", task.getAiPriorityScore());
+        values.put("brainDumpId", task.getBrainDump() != null ? task.getBrainDump().getDumpId() : null);
+        values.put("deletedAt", task.getDeletedAt());
+        return values;
     }
 }

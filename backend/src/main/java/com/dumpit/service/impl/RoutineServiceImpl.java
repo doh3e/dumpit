@@ -7,6 +7,7 @@ import com.dumpit.entity.User;
 import com.dumpit.repository.RoutineRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
+import com.dumpit.service.ActivityLogService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.RoutineService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -31,11 +34,12 @@ public class RoutineServiceImpl implements RoutineService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final DeadlineNudgeService deadlineNudgeService;
+    private final ActivityLogService activityLogService;
 
     @Override
     @Transactional(readOnly = true)
     public List<Routine> getRoutines(String email) {
-        return routineRepository.findByUserOrderByEnabledDescCreatedAtDesc(findUser(email));
+        return routineRepository.findByUserAndDeletedAtIsNullOrderByEnabledDescCreatedAtDesc(findUser(email));
     }
 
     @Override
@@ -45,6 +49,7 @@ public class RoutineServiceImpl implements RoutineService {
         Routine routine = Routine.of(user, request.name().trim());
         apply(routine, request);
         Routine saved = routineRepository.save(routine);
+        activityLogService.record(user, "ROUTINE_CREATED", "ROUTINE", saved.getRoutineId(), null, snapshot(saved));
         generateRoutineTaskForDate(saved, LocalDate.now());
         return saved;
     }
@@ -53,8 +58,10 @@ public class RoutineServiceImpl implements RoutineService {
     @Transactional
     public Routine updateRoutine(String email, UUID routineId, RoutineRequest request) {
         Routine routine = findOwnedRoutine(email, routineId);
+        Map<String, Object> before = snapshot(routine);
         apply(routine, request);
         Routine saved = routineRepository.save(routine);
+        activityLogService.record(routine.getUser(), "ROUTINE_UPDATED", "ROUTINE", saved.getRoutineId(), before, snapshot(saved));
         generateRoutineTaskForDate(saved, LocalDate.now());
         return saved;
     }
@@ -63,8 +70,10 @@ public class RoutineServiceImpl implements RoutineService {
     @Transactional
     public Routine toggleRoutine(String email, UUID routineId, boolean enabled) {
         Routine routine = findOwnedRoutine(email, routineId);
+        Map<String, Object> before = snapshot(routine);
         routine.setEnabled(enabled);
         Routine saved = routineRepository.save(routine);
+        activityLogService.record(routine.getUser(), "ROUTINE_TOGGLED", "ROUTINE", saved.getRoutineId(), before, snapshot(saved));
         if (enabled) {
             generateRoutineTaskForDate(saved, LocalDate.now());
         }
@@ -75,8 +84,10 @@ public class RoutineServiceImpl implements RoutineService {
     @Transactional
     public void deleteRoutine(String email, UUID routineId) {
         Routine routine = findOwnedRoutine(email, routineId);
-        taskRepository.clearRoutineReference(routine.getRoutineId());
-        routineRepository.delete(routine);
+        Map<String, Object> before = snapshot(routine);
+        routine.markDeleted();
+        Routine saved = routineRepository.save(routine);
+        activityLogService.record(routine.getUser(), "ROUTINE_DELETED", "ROUTINE", saved.getRoutineId(), before, snapshot(saved));
     }
 
     @Override
@@ -95,6 +106,7 @@ public class RoutineServiceImpl implements RoutineService {
     @Override
     public boolean shouldGenerateOn(Routine routine, LocalDate date) {
         if (!Boolean.TRUE.equals(routine.getEnabled())) return false;
+        if (routine.getDeletedAt() != null) return false;
         if (date.isBefore(routine.getStartDate())) return false;
         if (routine.getEndDate() != null && date.isAfter(routine.getEndDate())) return false;
 
@@ -124,7 +136,7 @@ public class RoutineServiceImpl implements RoutineService {
     private boolean generateRoutineTaskForDate(Routine routine, LocalDate date) {
         if (!shouldGenerateOn(routine, date)) return false;
         if (date.equals(routine.getLastGeneratedDate())) return false;
-        if (taskRepository.existsByRoutineRoutineIdAndRoutineScheduledDate(routine.getRoutineId(), date)) {
+        if (taskRepository.existsByRoutineRoutineIdAndRoutineScheduledDateAndDeletedAtIsNull(routine.getRoutineId(), date)) {
             routine.setLastGeneratedDate(date);
             return false;
         }
@@ -146,6 +158,7 @@ public class RoutineServiceImpl implements RoutineService {
         try {
             Task saved = taskRepository.save(task);
             deadlineNudgeService.index(saved);
+            activityLogService.record(routine.getUser(), "TASK_CREATED", "TASK", saved.getTaskId(), null, taskSnapshot(saved));
             routine.setLastGeneratedDate(date);
             return true;
         } catch (DataIntegrityViolationException ignored) {
@@ -156,7 +169,7 @@ public class RoutineServiceImpl implements RoutineService {
 
     private void validateDateRange(LocalDate startDate, LocalDate endDate) {
         if (endDate != null && endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없어요.");
+            throw new IllegalArgumentException("End date cannot be before start date.");
         }
     }
 
@@ -164,14 +177,14 @@ public class RoutineServiceImpl implements RoutineService {
         if (request.repeatType() == Routine.RepeatType.WEEKLY) {
             Set<Integer> days = request.daysOfWeek() == null ? Set.of() : request.daysOfWeek();
             if (days.isEmpty() || days.stream().anyMatch((day) -> day < 1 || day > 7)) {
-                throw new IllegalArgumentException("요일 반복은 1~7 사이의 요일을 하나 이상 선택해야 해요.");
+                throw new IllegalArgumentException("Weekly routines need at least one day between 1 and 7.");
             }
         }
 
         if (request.repeatType() == Routine.RepeatType.MONTHLY) {
             Set<Integer> days = request.daysOfMonth() == null ? Set.of() : request.daysOfMonth();
             if (days.isEmpty() || days.stream().anyMatch((day) -> day < 1 || day > 31)) {
-                throw new IllegalArgumentException("날짜 반복은 1~31 사이의 날짜를 하나 이상 선택해야 해요.");
+                throw new IllegalArgumentException("Monthly routines need at least one day between 1 and 31.");
             }
         }
     }
@@ -185,21 +198,52 @@ public class RoutineServiceImpl implements RoutineService {
     }
 
     private Routine findOwnedRoutine(String email, UUID routineId) {
-        Routine routine = routineRepository.findById(routineId)
-                .orElseThrow(() -> new IllegalArgumentException("루틴을 찾을 수 없어요."));
+        Routine routine = routineRepository.findActiveById(routineId)
+                .orElseThrow(() -> new IllegalArgumentException("Routine not found"));
         if (!routine.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("권한이 없어요.");
+            throw new IllegalArgumentException("Unauthorized");
         }
         return routine;
     }
 
     private User findUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없어요."));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
     private String trimToNull(String value) {
         if (value == null || value.isBlank()) return null;
         return value.trim();
+    }
+
+    private Map<String, Object> snapshot(Routine routine) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("routineId", routine.getRoutineId());
+        values.put("name", routine.getName());
+        values.put("description", routine.getDescription());
+        values.put("enabled", routine.getEnabled());
+        values.put("repeatType", routine.getRepeatType());
+        values.put("daysOfWeek", routine.getDaysOfWeek());
+        values.put("daysOfMonth", routine.getDaysOfMonth());
+        values.put("createTime", routine.getCreateTime());
+        values.put("startDate", routine.getStartDate());
+        values.put("endDate", routine.getEndDate());
+        values.put("lastGeneratedDate", routine.getLastGeneratedDate());
+        values.put("deletedAt", routine.getDeletedAt());
+        return values;
+    }
+
+    private Map<String, Object> taskSnapshot(Task task) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("taskId", task.getTaskId());
+        values.put("title", task.getTitle());
+        values.put("description", task.getDescription());
+        values.put("status", task.getStatus());
+        values.put("category", task.getCategory());
+        values.put("deadline", task.getDeadline());
+        values.put("routineId", task.getRoutineId());
+        values.put("routineScheduledDate", task.getRoutineScheduledDate());
+        values.put("deletedAt", task.getDeletedAt());
+        return values;
     }
 }

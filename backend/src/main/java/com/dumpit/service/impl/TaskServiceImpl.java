@@ -4,6 +4,7 @@ import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
+import com.dumpit.service.ActivityLogService;
 import com.dumpit.service.AiUsageService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -25,6 +28,7 @@ public class TaskServiceImpl implements TaskService {
     private final OpenAiService openAiService;
     private final DeadlineNudgeService deadlineNudgeService;
     private final AiUsageService aiUsageService;
+    private final ActivityLogService activityLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -59,13 +63,14 @@ public class TaskServiceImpl implements TaskService {
 
         Task saved = taskRepository.save(task);
         deadlineNudgeService.index(saved);
+        activityLogService.record(user, "TASK_CREATED", "TASK", saved.getTaskId(), null, snapshot(saved));
         return saved;
     }
 
     @Override
     @Transactional
     public Task updateTask(String email, UUID taskId, TaskUpdateFields fields) {
-        Task task = taskRepository.findById(taskId)
+        Task task = taskRepository.findActiveById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!task.getUser().getEmail().equals(email)) {
@@ -73,6 +78,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         Task.Status prevStatus = task.getStatus();
+        Map<String, Object> before = snapshot(task);
 
         if (fields.title() != null) task.setTitle(fields.title());
         if (fields.description() != null) task.setDescription(fields.description());
@@ -101,19 +107,21 @@ public class TaskServiceImpl implements TaskService {
 
         Task saved = taskRepository.save(task);
         deadlineNudgeService.index(saved);
+        activityLogService.record(task.getUser(), "TASK_UPDATED", "TASK", saved.getTaskId(), before, snapshot(saved));
         return saved;
     }
 
     @Override
     @Transactional
     public Task reanalyzePriority(String email, UUID taskId) {
-        Task task = taskRepository.findById(taskId)
+        Task task = taskRepository.findActiveById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!task.getUser().getEmail().equals(email)) {
             throw new IllegalArgumentException("Unauthorized");
         }
 
+        Map<String, Object> before = snapshot(task);
         aiUsageService.consume(email, AiUsageService.UsageType.TASK_REANALYZE);
         OpenAiService.PriorityResult priority =
                 openAiService.scorePriority(task.getTitle(), task.getDescription(),
@@ -121,13 +129,15 @@ public class TaskServiceImpl implements TaskService {
         task.setAiPriorityScore(priority.score());
         task.setUserPriorityScore(null);
 
-        return taskRepository.save(task);
+        Task saved = taskRepository.save(task);
+        activityLogService.record(task.getUser(), "TASK_REANALYZED", "TASK", saved.getTaskId(), before, snapshot(saved));
+        return saved;
     }
 
     @Override
     @Transactional(readOnly = true)
     public OpenAiService.SubtaskResult proposeSubtasks(String email, UUID taskId) {
-        Task task = taskRepository.findById(taskId)
+        Task task = taskRepository.findActiveById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!task.getUser().getEmail().equals(email)) {
@@ -142,7 +152,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public List<Task> createSubtasks(String email, UUID parentTaskId, List<SubtaskInput> subtasks) {
-        Task parent = taskRepository.findById(parentTaskId)
+        Task parent = taskRepository.findActiveById(parentTaskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!parent.getUser().getEmail().equals(email)) {
@@ -163,6 +173,7 @@ public class TaskServiceImpl implements TaskService {
 
             Task saved = taskRepository.save(child);
             deadlineNudgeService.index(saved);
+            activityLogService.record(user, "TASK_CREATED", "TASK", saved.getTaskId(), null, snapshot(saved));
             created.add(saved);
         }
         return created;
@@ -171,15 +182,18 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public void deleteTask(String email, UUID taskId) {
-        Task task = taskRepository.findById(taskId)
+        Task task = taskRepository.findActiveById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
         if (!task.getUser().getEmail().equals(email)) {
             throw new IllegalArgumentException("Unauthorized");
         }
 
+        Map<String, Object> before = snapshot(task);
         deadlineNudgeService.remove(task);
-        taskRepository.delete(task);
+        task.setDeletedAt(LocalDateTime.now());
+        Task saved = taskRepository.save(task);
+        activityLogService.record(task.getUser(), "TASK_DELETED", "TASK", saved.getTaskId(), before, snapshot(saved));
     }
 
     private int calcCompletionCoins(Task task) {
@@ -203,5 +217,26 @@ public class TaskServiceImpl implements TaskService {
     private User findUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    private Map<String, Object> snapshot(Task task) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("taskId", task.getTaskId());
+        values.put("title", task.getTitle());
+        values.put("description", task.getDescription());
+        values.put("status", task.getStatus());
+        values.put("category", task.getCategory());
+        values.put("deadline", task.getDeadline());
+        values.put("estimatedMinutes", task.getEstimatedMinutes());
+        values.put("startTime", task.getStartTime());
+        values.put("endTime", task.getEndTime());
+        values.put("isLocked", task.getIsLocked());
+        values.put("aiPriorityScore", task.getAiPriorityScore());
+        values.put("userPriorityScore", task.getUserPriorityScore());
+        values.put("parentTaskId", task.getParentTask() != null ? task.getParentTask().getTaskId() : null);
+        values.put("routineId", task.getRoutineId());
+        values.put("routineScheduledDate", task.getRoutineScheduledDate());
+        values.put("deletedAt", task.getDeletedAt());
+        return values;
     }
 }

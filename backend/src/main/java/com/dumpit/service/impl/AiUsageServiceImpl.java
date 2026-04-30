@@ -3,6 +3,7 @@ package com.dumpit.service.impl;
 import com.dumpit.entity.User;
 import com.dumpit.repository.UserRepository;
 import com.dumpit.service.AiUsageLimitExceededException;
+import com.dumpit.service.AiUsageLogService;
 import com.dumpit.service.AiUsageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class AiUsageServiceImpl implements AiUsageService {
 
     private final StringRedisTemplate redisTemplate;
     private final UserRepository userRepository;
+    private final AiUsageLogService aiUsageLogService;
 
     @Override
     public AiUsageStatus getStatus(String email) {
@@ -46,14 +48,17 @@ public class AiUsageServiceImpl implements AiUsageService {
 
             if (used > DAILY_LIMIT) {
                 redisTemplate.opsForValue().decrement(key, usageType.cost());
+                recordUsage(user, usageType, DAILY_LIMIT, false, "LIMIT_EXCEEDED");
                 throw new AiUsageLimitExceededException();
             }
 
+            recordUsage(user, usageType, used.intValue(), true, null);
             return status(used.intValue());
         } catch (AiUsageLimitExceededException ex) {
             throw ex;
         } catch (DataAccessException ex) {
             log.warn("Allowing AI request because Redis usage limiter is unavailable: {}", ex.getMessage());
+            recordUsage(user, usageType, 0, true, "REDIS_UNAVAILABLE");
             return status(0);
         }
     }
@@ -90,6 +95,10 @@ public class AiUsageServiceImpl implements AiUsageService {
 
     private Duration ttlUntilReset() {
         return Duration.between(OffsetDateTime.now(ZONE), resetAt()).plusMinutes(5);
+    }
+
+    private void recordUsage(User user, UsageType usageType, int usedAfter, boolean allowed, String note) {
+        aiUsageLogService.record(user, usageType, usedAfter, allowed, note);
     }
 
     private User findUser(String email) {

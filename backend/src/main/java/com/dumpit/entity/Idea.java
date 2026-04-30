@@ -53,6 +53,8 @@ public class Idea {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    private LocalDateTime deletedAt;
+
     public static Idea of(User user, String title, String content) {
         Idea idea = new Idea();
         idea.user = user;
@@ -72,5 +74,9 @@ public class Idea {
     public void markConverted(Task task) {
         this.convertedTask = task;
         this.convertedAt = LocalDateTime.now();
+    }
+
+    public void markDeleted() {
+        this.deletedAt = LocalDateTime.now();
     }
 }

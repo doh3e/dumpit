@@ -56,9 +56,9 @@ public class ProfileController {
         User user = resolveUser(principal);
         if (user == null) return ResponseEntity.status(401).build();
 
-        long totalDone = taskRepository.countByUserAndStatus(user, Task.Status.DONE);
-        long totalTodo = taskRepository.countByUserAndStatus(user, Task.Status.TODO);
-        long totalInProgress = taskRepository.countByUserAndStatus(user, Task.Status.IN_PROGRESS);
+        long totalDone = taskRepository.countByUserAndStatusAndDeletedAtIsNull(user, Task.Status.DONE);
+        long totalTodo = taskRepository.countByUserAndStatusAndDeletedAtIsNull(user, Task.Status.TODO);
+        long totalInProgress = taskRepository.countByUserAndStatusAndDeletedAtIsNull(user, Task.Status.IN_PROGRESS);
 
         List<Object[]> categoryRows = taskRepository.countDoneByCategory(user);
         Map<String, Long> categoryBreakdown = new LinkedHashMap<>();
@@ -85,7 +85,7 @@ public class ProfileController {
         }
 
         long brainDumpCount = brainDumpRepository.countByUser(user);
-        long ideaCount = ideaRepository.countByUser(user);
+        long ideaCount = ideaRepository.countByUserAndDeletedAtIsNull(user);
 
         return ResponseEntity.ok(new StatsResponse(
                 totalDone, totalTodo, totalInProgress,

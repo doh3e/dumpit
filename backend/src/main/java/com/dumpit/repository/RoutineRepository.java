@@ -8,15 +8,24 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface RoutineRepository extends JpaRepository<Routine, UUID> {
 
-    List<Routine> findByUserOrderByEnabledDescCreatedAtDesc(User user);
+    List<Routine> findByUserAndDeletedAtIsNullOrderByEnabledDescCreatedAtDesc(User user);
+
+    @Query("""
+        SELECT r FROM Routine r
+        WHERE r.routineId = :routineId
+          AND r.deletedAt IS NULL
+    """)
+    Optional<Routine> findActiveById(@Param("routineId") UUID routineId);
 
     @Query("""
         SELECT r FROM Routine r
         WHERE r.enabled = true
+          AND r.deletedAt IS NULL
           AND r.startDate <= :date
           AND (r.endDate IS NULL OR r.endDate >= :date)
           AND (r.lastGeneratedDate IS NULL OR r.lastGeneratedDate < :date)

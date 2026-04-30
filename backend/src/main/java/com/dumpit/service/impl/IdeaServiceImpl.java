@@ -6,6 +6,7 @@ import com.dumpit.entity.User;
 import com.dumpit.repository.IdeaRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
+import com.dumpit.service.ActivityLogService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.IdeaService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -24,11 +27,12 @@ public class IdeaServiceImpl implements IdeaService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final DeadlineNudgeService deadlineNudgeService;
+    private final ActivityLogService activityLogService;
 
     @Override
     @Transactional(readOnly = true)
     public List<Idea> getIdeas(String email) {
-        return ideaRepository.findByUserOrderByPinnedDescUpdatedAtDesc(findUser(email));
+        return ideaRepository.findByUserAndDeletedAtIsNullOrderByPinnedDescUpdatedAtDesc(findUser(email));
     }
 
     @Override
@@ -39,7 +43,10 @@ public class IdeaServiceImpl implements IdeaService {
         Idea parent = findParentIdea(user, parentIdeaId);
         Idea idea = Idea.of(user, title.trim(), trimToNull(content));
         idea.update(null, null, pinned, categoryOrDefault(category), parent);
-        return ideaRepository.save(idea);
+
+        Idea saved = ideaRepository.save(idea);
+        activityLogService.record(user, "IDEA_CREATED", "IDEA", saved.getIdeaId(), null, snapshot(saved));
+        return saved;
     }
 
     @Override
@@ -55,7 +62,9 @@ public class IdeaServiceImpl implements IdeaService {
 
             Idea idea = Idea.of(user, title, null);
             idea.update(null, null, false, categoryOrDefault(category), parent);
-            created.add(ideaRepository.save(idea));
+            Idea saved = ideaRepository.save(idea);
+            activityLogService.record(user, "IDEA_CREATED", "IDEA", saved.getIdeaId(), null, snapshot(saved));
+            created.add(saved);
         }
 
         return created;
@@ -68,31 +77,39 @@ public class IdeaServiceImpl implements IdeaService {
         Idea idea = findOwnedIdea(email, ideaId);
         Idea parent = findParentIdea(idea.getUser(), parentIdeaId);
         if (parent != null && parent.getIdeaId().equals(idea.getIdeaId())) {
-            throw new IllegalArgumentException("아이디어를 자기 자신의 하위로 둘 수 없습니다");
+            throw new IllegalArgumentException("Idea cannot be its own parent.");
         }
         if (parent != null && isDescendant(parent, idea)) {
-            throw new IllegalArgumentException("하위 아이디어를 상위 아이디어로 지정할 수 없습니다");
+            throw new IllegalArgumentException("A child idea cannot become this idea's parent.");
         }
+
+        Map<String, Object> before = snapshot(idea);
         idea.update(trimToNull(title), content, pinned, category, parent);
-        return ideaRepository.save(idea);
+        Idea saved = ideaRepository.save(idea);
+        activityLogService.record(idea.getUser(), "IDEA_UPDATED", "IDEA", saved.getIdeaId(), before, snapshot(saved));
+        return saved;
     }
 
     @Override
     @Transactional
     public Task convertToTask(String email, UUID ideaId) {
         Idea idea = findOwnedIdea(email, ideaId);
-        if (idea.getConvertedTask() != null) {
+        if (idea.getConvertedTask() != null && idea.getConvertedTask().getDeletedAt() == null) {
             return idea.getConvertedTask();
         }
 
+        Map<String, Object> before = snapshot(idea);
         Task task = Task.of(idea.getUser(), idea.getTitle(), idea.getContent(), null, null);
         task.setCategory(idea.getCategory());
         task.setAiPriorityScore(0.5);
 
         Task saved = taskRepository.save(task);
         deadlineNudgeService.index(saved);
+        activityLogService.record(idea.getUser(), "TASK_CREATED", "TASK", saved.getTaskId(), null, taskSnapshot(saved));
+
         idea.markConverted(saved);
         ideaRepository.save(idea);
+        activityLogService.record(idea.getUser(), "IDEA_CONVERTED", "IDEA", idea.getIdeaId(), before, snapshot(idea));
         return saved;
     }
 
@@ -100,18 +117,22 @@ public class IdeaServiceImpl implements IdeaService {
     @Transactional
     public void deleteIdea(String email, UUID ideaId) {
         Idea idea = findOwnedIdea(email, ideaId);
-        if (ideaRepository.existsByParentIdea(idea)) {
-            throw new IllegalArgumentException("하위 아이디어가 있어 삭제할 수 없습니다");
+        if (ideaRepository.existsByParentIdeaAndDeletedAtIsNull(idea)) {
+            throw new IllegalArgumentException("Child ideas must be deleted first.");
         }
-        ideaRepository.delete(idea);
+
+        Map<String, Object> before = snapshot(idea);
+        idea.markDeleted();
+        Idea saved = ideaRepository.save(idea);
+        activityLogService.record(idea.getUser(), "IDEA_DELETED", "IDEA", saved.getIdeaId(), before, snapshot(saved));
     }
 
     private Idea findOwnedIdea(String email, UUID ideaId) {
-        Idea idea = ideaRepository.findById(ideaId)
-                .orElseThrow(() -> new IllegalArgumentException("아이디어를 찾을 수 없습니다"));
+        Idea idea = ideaRepository.findActiveById(ideaId)
+                .orElseThrow(() -> new IllegalArgumentException("Idea not found"));
 
         if (!idea.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("권한이 없습니다");
+            throw new IllegalArgumentException("Unauthorized");
         }
 
         return idea;
@@ -119,15 +140,15 @@ public class IdeaServiceImpl implements IdeaService {
 
     private User findUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
     private Idea findParentIdea(User user, UUID parentIdeaId) {
         if (parentIdeaId == null) return null;
-        Idea parent = ideaRepository.findById(parentIdeaId)
-                .orElseThrow(() -> new IllegalArgumentException("상위 아이디어를 찾을 수 없습니다"));
+        Idea parent = ideaRepository.findActiveById(parentIdeaId)
+                .orElseThrow(() -> new IllegalArgumentException("Parent idea not found"));
         if (!parent.getUser().getUserId().equals(user.getUserId())) {
-            throw new IllegalArgumentException("권한이 없습니다");
+            throw new IllegalArgumentException("Unauthorized");
         }
         return parent;
     }
@@ -159,5 +180,33 @@ public class IdeaServiceImpl implements IdeaService {
             cursor = cursor.getParentIdea();
         }
         return false;
+    }
+
+    private Map<String, Object> snapshot(Idea idea) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("ideaId", idea.getIdeaId());
+        values.put("title", idea.getTitle());
+        values.put("content", idea.getContent());
+        values.put("category", idea.getCategory());
+        values.put("pinned", idea.getPinned());
+        values.put("parentIdeaId", idea.getParentIdea() != null ? idea.getParentIdea().getIdeaId() : null);
+        values.put("convertedTaskId", idea.getConvertedTask() != null ? idea.getConvertedTask().getTaskId() : null);
+        values.put("convertedAt", idea.getConvertedAt());
+        values.put("deletedAt", idea.getDeletedAt());
+        return values;
+    }
+
+    private Map<String, Object> taskSnapshot(Task task) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("taskId", task.getTaskId());
+        values.put("title", task.getTitle());
+        values.put("description", task.getDescription());
+        values.put("status", task.getStatus());
+        values.put("category", task.getCategory());
+        values.put("deadline", task.getDeadline());
+        values.put("estimatedMinutes", task.getEstimatedMinutes());
+        values.put("aiPriorityScore", task.getAiPriorityScore());
+        values.put("deletedAt", task.getDeletedAt());
+        return values;
     }
 }
