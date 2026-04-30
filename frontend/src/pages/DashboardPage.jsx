@@ -6,6 +6,7 @@ import CircularTimetable from '../components/CircularTimetable/CircularTimetable
 import MiniCalendar from '../components/MiniCalendar'
 import AddTaskModal from '../components/AddTaskModal'
 import EditTaskModal from '../components/EditTaskModal'
+import TaskBoardModal from '../components/TaskBoardModal'
 import { getCategory } from '../constants/categories'
 
 const STATUS_LABEL = {
@@ -109,6 +110,7 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showTaskBoard, setShowTaskBoard] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [coinToast, setCoinToast] = useState(null)
 
@@ -196,6 +198,14 @@ export default function DashboardPage() {
               해야 할 일 ({activeTasks.length})
             </h3>
 
+            <button
+              type="button"
+              onClick={() => setShowTaskBoard(true)}
+              className="mb-4 rounded-lg border-2 border-dark bg-accent px-3 py-1.5 text-xs font-black text-dark shadow-kitschy"
+            >
+              크게 보기
+            </button>
+
             {activeTasks.length === 0 ? (
               <div className="text-center py-8">
                 <p className="font-extrabold text-dark text-base">
@@ -279,6 +289,14 @@ export default function DashboardPage() {
               완료한 일 ({doneTasks.length})
             </h3>
 
+            <button
+              type="button"
+              onClick={() => setShowTaskBoard(true)}
+              className="mb-4 rounded-lg border-2 border-dark bg-accent px-3 py-1.5 text-xs font-black text-dark shadow-kitschy"
+            >
+              크게 보기
+            </button>
+
             {doneTasks.length === 0 ? (
               <div className="text-center py-8">
                 <p className="font-bold text-dark/40 text-sm">
@@ -326,6 +344,18 @@ export default function DashboardPage() {
         <AddTaskModal
           onClose={() => setShowAddModal(false)}
           onCreated={() => { setShowAddModal(false); fetchTasks() }}
+        />
+      )}
+
+      {showTaskBoard && (
+        <TaskBoardModal
+          tasks={taskList}
+          onClose={() => setShowTaskBoard(false)}
+          onEditTask={(task) => {
+            setShowTaskBoard(false)
+            setEditingTask(task)
+          }}
+          onToggleTask={toggleStatus}
         />
       )}
 
