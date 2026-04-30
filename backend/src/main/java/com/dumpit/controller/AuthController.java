@@ -25,13 +25,16 @@ public class AuthController {
 
         String email = principal.getAttribute("email");
         User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null || !user.isActive()) {
+            return ResponseEntity.status(403).build();
+        }
         int coins = user != null ? user.getCoinBalance() : 0;
-        boolean isAdmin = user != null && Boolean.TRUE.equals(user.getIsAdmin());
+        boolean isAdmin = Boolean.TRUE.equals(user.getIsAdmin());
 
         return ResponseEntity.ok(new UserMeResponse(
-            email,
-            principal.getAttribute("name"),
-            principal.getAttribute("picture"),
+            user.getEmail(),
+            user.getNickname(),
+            user.getPicture(),
             coins,
             isAdmin
         ));

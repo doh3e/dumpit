@@ -54,6 +54,7 @@ public class AdminInquiryController {
     private void requireAdmin(OAuth2User principal) {
         String email = principal.getAttribute("email");
         boolean admin = userRepository.findByEmail(email)
+                .filter(User::isActive)
                 .map(User::getIsAdmin)
                 .orElse(false);
         if (!admin) {

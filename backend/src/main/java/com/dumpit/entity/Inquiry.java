@@ -62,4 +62,9 @@ public class Inquiry {
         inquiry.message = message;
         return inquiry;
     }
+
+    public void anonymizeUser() {
+        this.user = null;
+        this.userEmail = "withdrawn@deleted.dumpit.local";
+    }
 }
