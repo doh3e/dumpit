@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import MarkdownRenderer from './MarkdownRenderer'
 
 function formatDate(value) {
   if (!value) return ''
@@ -35,9 +36,7 @@ export default function NoticeModal({ notice, onClose }) {
         </div>
 
         <div className="rounded-lg border-2 border-dark/10 bg-white p-4">
-          <p className="whitespace-pre-wrap text-sm font-semibold leading-relaxed text-dark/80">
-            {notice.content}
-          </p>
+          <MarkdownRenderer content={notice.content} />
         </div>
 
         <div className="mt-4 flex gap-3">

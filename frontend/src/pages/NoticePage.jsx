@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
+import MarkdownRenderer from '../components/MarkdownRenderer'
 
 function formatDate(value) {
   if (!value) return ''
@@ -44,9 +45,7 @@ export default function NoticePage() {
                 <h2 className="text-lg font-black leading-tight text-dark">{notice.title}</h2>
                 <time className="text-xs font-bold text-dark/40">{formatDate(notice.publishAt)}</time>
               </div>
-              <p className="whitespace-pre-wrap text-sm font-semibold leading-relaxed text-dark/70">
-                {notice.content}
-              </p>
+              <MarkdownRenderer content={notice.content} />
             </article>
           ))}
         </div>

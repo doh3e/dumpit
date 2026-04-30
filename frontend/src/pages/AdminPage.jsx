@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import api from '../services/api'
+import MarkdownRenderer from '../components/MarkdownRenderer'
 
 const STATUS_LABEL = {
   PENDING: { label: '대기 중', color: 'bg-yellow-100 text-yellow-700 border-yellow-400' },
@@ -12,6 +13,16 @@ const USER_STATUS = {
   BANNED: { label: '밴', color: 'bg-red-100 text-red-700 border-red-400' },
   WITHDRAWN: { label: '탈퇴', color: 'bg-gray-100 text-gray-600 border-gray-400' },
 }
+
+const MARKDOWN_TOOLS = [
+  { label: 'H2', before: '## ', after: '', fallback: '제목' },
+  { label: 'B', before: '**', after: '**', fallback: '굵은 글씨' },
+  { label: 'I', before: '*', after: '*', fallback: '기울임' },
+  { label: '•', before: '- ', after: '', fallback: '목록 항목' },
+  { label: '>', before: '> ', after: '', fallback: '인용문' },
+  { label: '`', before: '`', after: '`', fallback: '코드' },
+  { label: 'Link', before: '[', after: '](https://)', fallback: '링크 텍스트' },
+]
 
 function toLocalInputValue(value) {
   const date = value
@@ -65,6 +76,7 @@ export default function AdminPage() {
     publishAt: toLocalInputValue(),
     status: 'PUBLISHED',
   })
+  const noticeEditorRef = useRef(null)
 
   const fetchInquiries = () => {
     setLoadingInquiries(true)
@@ -212,6 +224,21 @@ export default function AdminPage() {
     } catch {
       alert('공지 보관에 실패했어요.')
     }
+  }
+
+  const insertMarkdown = ({ before, after, fallback }) => {
+    const editor = noticeEditorRef.current
+    const value = noticeForm.content
+    const start = editor?.selectionStart ?? value.length
+    const end = editor?.selectionEnd ?? value.length
+    const selected = value.slice(start, end) || fallback
+    const next = `${value.slice(0, start)}${before}${selected}${after}${value.slice(end)}`
+    const cursor = start + before.length + selected.length + after.length
+    setNoticeForm((prev) => ({ ...prev, content: next }))
+    window.requestAnimationFrame(() => {
+      noticeEditorRef.current?.focus()
+      noticeEditorRef.current?.setSelectionRange(cursor, cursor)
+    })
   }
 
   const pendingCount = inquiries.filter((inquiry) => inquiry.status === 'PENDING').length
@@ -466,15 +493,40 @@ export default function AdminPage() {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-bold text-dark/60">내용</label>
-                <textarea
-                  value={noticeForm.content}
-                  onChange={(e) => setNoticeForm((prev) => ({ ...prev, content: e.target.value }))}
-                  rows={10}
-                  maxLength={5000}
-                  className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
-                  placeholder="패치내역, 점검 안내, 새 기능 안내 등을 적어주세요."
-                />
+                <div className="overflow-hidden rounded-lg border-2 border-dark bg-white">
+                  <div className="flex flex-wrap gap-1 border-b-2 border-dark/10 bg-accent px-2 py-2">
+                    {MARKDOWN_TOOLS.map((tool) => (
+                      <button
+                        key={tool.label}
+                        type="button"
+                        onClick={() => insertMarkdown(tool)}
+                        className="rounded-md border-2 border-dark/20 bg-white px-2 py-1 text-[10px] font-black text-dark hover:border-dark"
+                      >
+                        {tool.label}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    ref={noticeEditorRef}
+                    value={noticeForm.content}
+                    onChange={(e) => setNoticeForm((prev) => ({ ...prev, content: e.target.value }))}
+                    rows={10}
+                    maxLength={5000}
+                    className="w-full resize-none bg-white px-3 py-2 text-sm font-semibold outline-none"
+                    placeholder="## 업데이트 안내&#10;- 새 기능&#10;- 수정 사항&#10;&#10;**중요한 내용**을 강조할 수 있어요."
+                  />
+                </div>
                 <p className="mt-1 text-right text-[10px] font-bold text-dark/40">{noticeForm.content.length} / 5000</p>
+              </div>
+              <div>
+                <p className="mb-1 block text-xs font-bold text-dark/60">미리보기</p>
+                <div className="min-h-28 rounded-lg border-2 border-dark/10 bg-white p-3">
+                  {noticeForm.content.trim() ? (
+                    <MarkdownRenderer content={noticeForm.content} />
+                  ) : (
+                    <p className="text-xs font-bold text-dark/30">작성한 내용이 여기에 표시됩니다.</p>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
