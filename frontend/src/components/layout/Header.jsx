@@ -5,6 +5,7 @@ import DeadlineNudgeMenu from '../DeadlineNudgeMenu'
 import useAiUsage from '../../hooks/useAiUsage'
 import remainAiToken from '../../assets/remain_ai_token.png'
 import coinImage from '../../assets/coin_image.png'
+import menuImage from '../../assets/menu.png'
 
 const NAV_ITEMS = [
   { label: '대시보드', path: '/dashboard' },
@@ -56,12 +57,10 @@ export default function Header({ onOpenDrawer }) {
           {/* Hamburger button - only below lg */}
           <button
             onClick={onOpenDrawer}
-            className="min-[1100px]:hidden w-9 h-9 rounded-lg border-2 border-white text-white flex flex-col items-center justify-center gap-1 hover:bg-white/10 transition-colors"
+            className="min-[1100px]:hidden w-9 h-9 rounded-lg border-2 border-white flex items-center justify-center hover:bg-white/10 transition-colors"
             aria-label="메뉴 열기"
           >
-            <span className="block w-4 h-0.5 bg-white" />
-            <span className="block w-4 h-0.5 bg-white" />
-            <span className="block w-4 h-0.5 bg-white" />
+            <img src={menuImage} alt="" className="h-5 w-5 object-contain" />
           </button>
           <Link to="/dashboard" className="flex items-center gap-2">
             <img src="/text_logo.png" alt="DumpIt" className="h-24 w-auto" />
