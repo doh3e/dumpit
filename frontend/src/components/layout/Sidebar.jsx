@@ -1,6 +1,7 @@
 import { NavLink, Link } from 'react-router-dom'
 import PomodoroTimer from '../PomodoroTimer'
 import { useAuth } from '../../context/AuthContext'
+import settingImage from '../../assets/setting_image.png'
 
 const MENU = [
   { label: '대시보드', path: '/dashboard' },
@@ -55,7 +56,8 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, isDrawerOpe
             }`
           }
         >
-          ⚙️ 문의 관리
+          <img src={settingImage} alt="" className="mr-2 h-5 w-5 flex-shrink-0 object-contain" />
+          관리자 페이지
         </NavLink>
       )}
 
