@@ -55,6 +55,8 @@ export default function AdminPage() {
   const [reply, setReply] = useState('')
   const [sending, setSending] = useState(false)
   const [workingUserId, setWorkingUserId] = useState(null)
+  const [managingUser, setManagingUser] = useState(null)
+  const [banReasonInput, setBanReasonInput] = useState('')
   const [savingNotice, setSavingNotice] = useState(false)
   const [editingNoticeId, setEditingNoticeId] = useState(null)
   const [noticeForm, setNoticeForm] = useState({
@@ -128,12 +130,19 @@ export default function AdminPage() {
     }
   }
 
-  const handleBan = async (user) => {
-    const reason = window.prompt(`${user.email} 사용자를 밴할까요? 사유를 입력해주세요.`, user.banReason || '')
-    if (reason === null) return
+  const openUserManage = (user) => {
+    setManagingUser(user)
+    setBanReasonInput(user.banReason || '')
+  }
+
+  const handleBan = async () => {
+    if (!managingUser) return
+    if (!window.confirm(`${managingUser.email} 사용자를 밴할까요?`)) return
+    const user = managingUser
     setWorkingUserId(user.userId)
     try {
-      await api.patch(`/admin/users/${user.userId}/ban`, { reason: reason.trim() })
+      await api.patch(`/admin/users/${user.userId}/ban`, { reason: banReasonInput.trim() })
+      setManagingUser(null)
       fetchUsers()
     } catch {
       alert('밴 처리에 실패했어요.')
@@ -142,11 +151,14 @@ export default function AdminPage() {
     }
   }
 
-  const handleUnban = async (user) => {
-    if (!window.confirm(`${user.email} 사용자의 밴을 해제할까요?`)) return
+  const handleUnban = async () => {
+    if (!managingUser) return
+    if (!window.confirm(`${managingUser.email} 사용자의 밴을 해제할까요?`)) return
+    const user = managingUser
     setWorkingUserId(user.userId)
     try {
       await api.patch(`/admin/users/${user.userId}/unban`)
+      setManagingUser(null)
       fetchUsers()
     } catch {
       alert('밴 해제에 실패했어요.')
@@ -415,25 +427,14 @@ export default function AdminPage() {
                             <span className="line-clamp-2">{user.banReason || '-'}</span>
                           </td>
                           <td className="px-4 py-3 text-right">
-                            {user.status === 'BANNED' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleUnban(user)}
-                                disabled={disabled}
-                                className="rounded-lg border-2 border-secondary bg-white px-3 py-1.5 text-xs font-black text-secondary shadow-kitschy disabled:opacity-40"
-                              >
-                                해제
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleBan(user)}
-                                disabled={disabled}
-                                className="rounded-lg border-2 border-red-500 bg-white px-3 py-1.5 text-xs font-black text-red-600 shadow-kitschy disabled:opacity-40"
-                              >
-                                밴
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => openUserManage(user)}
+                              disabled={disabled}
+                              className="rounded-lg border-2 border-dark bg-white px-3 py-1.5 text-xs font-black text-dark shadow-kitschy disabled:opacity-40"
+                            >
+                              관리
+                            </button>
                           </td>
                         </tr>
                       )
@@ -561,6 +562,86 @@ export default function AdminPage() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {managingUser && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-dark/40 px-4" onClick={() => setManagingUser(null)}>
+          <div className="card-kitschy w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="heading-kitschy text-xl">회원 관리</h3>
+                <p className="mt-2 truncate text-xs font-semibold text-dark/50">{managingUser.email}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setManagingUser(null)}
+                className="h-8 w-8 rounded-lg border-2 border-dark text-sm font-black text-dark hover:bg-primary hover:text-white"
+              >
+                X
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
+                <p className="text-xs font-black text-dark/40">현재 상태</p>
+                <p className="mt-1 text-sm font-black text-dark">
+                  {managingUser.isAdmin ? '관리자' : USER_STATUS[managingUser.status]?.label || managingUser.status}
+                </p>
+              </div>
+
+              {managingUser.status !== 'BANNED' && (
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-dark/60">밴 사유</label>
+                  <textarea
+                    value={banReasonInput}
+                    onChange={(e) => setBanReasonInput(e.target.value)}
+                    rows={4}
+                    maxLength={500}
+                    placeholder="운영 메모로 남길 사유를 입력해주세요."
+                    className="w-full resize-none rounded-lg border-2 border-dark bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                  />
+                </div>
+              )}
+
+              {managingUser.status === 'BANNED' && managingUser.banReason && (
+                <div className="rounded-lg border-2 border-red-200 bg-red-50 px-4 py-3">
+                  <p className="text-xs font-black text-red-600">밴 사유</p>
+                  <p className="mt-1 whitespace-pre-wrap text-xs font-semibold text-red-500/80">{managingUser.banReason}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setManagingUser(null)}
+                disabled={workingUserId === managingUser.userId}
+                className="btn-kitschy flex-1 bg-accent py-2 text-sm text-dark disabled:opacity-50"
+              >
+                닫기
+              </button>
+              {managingUser.status === 'BANNED' ? (
+                <button
+                  type="button"
+                  onClick={handleUnban}
+                  disabled={workingUserId === managingUser.userId}
+                  className="btn-kitschy flex-1 bg-secondary py-2 text-sm text-white disabled:opacity-50"
+                >
+                  {workingUserId === managingUser.userId ? '처리 중...' : '밴 해제'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleBan}
+                  disabled={workingUserId === managingUser.userId || managingUser.isAdmin || managingUser.status === 'WITHDRAWN'}
+                  className="btn-kitschy flex-1 bg-primary py-2 text-sm text-white disabled:opacity-50"
+                >
+                  {workingUserId === managingUser.userId ? '처리 중...' : '밴 적용'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
