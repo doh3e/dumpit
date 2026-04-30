@@ -183,21 +183,21 @@ export default function TaskBoardModal({ tasks, onClose, onEditTask, onToggleTas
         </div>
 
         <div className="max-h-[calc(90vh-78px)] overflow-y-auto p-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid auto-rows-[17rem] grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {sections.map((section) => (
-              <section key={section.id} className={`rounded-lg border-2 p-3 ${section.tone}`}>
-                <div className="mb-3 flex items-center justify-between gap-2">
+              <section key={section.id} className={`flex min-h-0 flex-col rounded-lg border-2 p-3 ${section.tone}`}>
+                <div className="mb-3 flex flex-shrink-0 items-center justify-between gap-2">
                   <h3 className="text-sm font-black text-dark">{section.title}</h3>
                   <span className="rounded-full border border-dark/10 bg-white px-2 py-0.5 text-[10px] font-black text-dark/50">
                     {section.tasks.length}
                   </span>
                 </div>
                 {section.tasks.length === 0 ? (
-                  <div className="rounded-lg border-2 border-dashed border-dark/10 bg-white/70 px-3 py-6 text-center">
+                  <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-dark/10 bg-white/70 px-3 py-6 text-center">
                     <p className="text-xs font-bold text-dark/35">비어 있어요.</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                     {section.tasks.map((task) => (
                       <TaskRow
                         key={task.taskId}
