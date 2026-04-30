@@ -71,6 +71,13 @@ function getUrgencyInfo(deadline) {
   return null
 }
 
+function calcCompletionCoins(task) {
+  const deadline = parseDate(task.deadline)
+  if (deadline && deadline < new Date()) return 5
+  const priority = task.effectivePriority ?? 0.5
+  return Math.floor(10 + priority * 40)
+}
+
 function groupByParent(list) {
   const byId = new Map(list.map((t) => [t.taskId, t]))
   const childrenOf = new Map()
@@ -131,9 +138,7 @@ export default function DashboardPage() {
       refreshCoins()
 
       if (next === 'DONE') {
-        const priority = task.effectivePriority ?? 0.5
-        const coins = Math.floor(10 + priority * 40)
-        setCoinToast({ coins, taskTitle: task.title })
+        setCoinToast({ coins: calcCompletionCoins(task), taskTitle: task.title })
         setTimeout(() => setCoinToast(null), 2500)
       }
     } catch { /* ignore */ }
