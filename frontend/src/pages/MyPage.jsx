@@ -170,6 +170,7 @@ export default function MyPage() {
   const [bioInput, setBioInput] = useState('')
   const [savingBio, setSavingBio] = useState(false)
   const [completingTask, setCompletingTask] = useState(null)
+  const [withdrawing, setWithdrawing] = useState(false)
   const bioRef = useRef(null)
   const sliderDrag = useDragScroll()
 
@@ -214,6 +215,22 @@ export default function MyPage() {
       alert('완료 처리에 실패했어요.')
     } finally {
       setCompletingTask(null)
+    }
+  }
+
+  const handleWithdraw = async () => {
+    const first = window.confirm('회원 탈퇴 시 작성한 할 일, 루틴, 아이디어, 브레인덤프 원문이 삭제되고 계정 정보가 비식별 처리됩니다. 계속할까요?')
+    if (!first) return
+    const second = window.confirm('정말 탈퇴할까요? 이 작업은 되돌릴 수 없습니다.')
+    if (!second) return
+
+    setWithdrawing(true)
+    try {
+      await api.delete('/me/account')
+      window.location.href = '/'
+    } catch {
+      alert('회원 탈퇴 처리에 실패했어요. 잠시 후 다시 시도해주세요.')
+      setWithdrawing(false)
     }
   }
 
@@ -409,6 +426,23 @@ export default function MyPage() {
           <p className="mt-1 text-xs font-semibold text-dark/50">훌륭해요! 모든 일정을 잘 지키고 있어요.</p>
         </div>
       )}
+
+      <section className="border-t-2 border-dark/10 pt-6">
+        <div className="rounded-lg border-2 border-red-200 bg-red-50 px-4 py-4">
+          <p className="text-sm font-black text-red-600">회원 탈퇴</p>
+          <p className="mt-1 text-xs font-semibold leading-relaxed text-red-500/80">
+            탈퇴하면 계정 개인정보는 비식별 처리되고 작성한 개인 데이터는 삭제됩니다.
+          </p>
+          <button
+            type="button"
+            onClick={handleWithdraw}
+            disabled={withdrawing}
+            className="mt-3 rounded-lg border-2 border-red-500 bg-white px-3 py-2 text-xs font-black text-red-600 shadow-kitschy transition-transform active:translate-y-0.5 disabled:opacity-50"
+          >
+            {withdrawing ? '처리 중...' : '회원 탈퇴'}
+          </button>
+        </div>
+      </section>
     </div>
   )
 }
