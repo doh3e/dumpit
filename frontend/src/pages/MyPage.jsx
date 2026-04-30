@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import api from '../services/api'
 import coinImage from '../assets/coin_image.png'
 
@@ -171,6 +172,7 @@ export default function MyPage() {
   const [savingBio, setSavingBio] = useState(false)
   const [completingTask, setCompletingTask] = useState(null)
   const [withdrawing, setWithdrawing] = useState(false)
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const bioRef = useRef(null)
   const sliderDrag = useDragScroll()
 
@@ -219,11 +221,6 @@ export default function MyPage() {
   }
 
   const handleWithdraw = async () => {
-    const first = window.confirm('회원 탈퇴 시 작성한 할 일, 루틴, 아이디어, 브레인덤프 원문이 삭제되고 계정 정보가 비식별 처리됩니다. 계속할까요?')
-    if (!first) return
-    const second = window.confirm('정말 탈퇴할까요? 이 작업은 되돌릴 수 없습니다.')
-    if (!second) return
-
     setWithdrawing(true)
     try {
       await api.delete('/me/account')
@@ -427,22 +424,51 @@ export default function MyPage() {
         </div>
       )}
 
-      <section className="border-t-2 border-dark/10 pt-6">
-        <div className="rounded-lg border-2 border-red-200 bg-red-50 px-4 py-4">
-          <p className="text-sm font-black text-red-600">회원 탈퇴</p>
-          <p className="mt-1 text-xs font-semibold leading-relaxed text-red-500/80">
-            탈퇴하면 계정 개인정보는 비식별 처리되고 작성한 개인 데이터는 삭제됩니다.
-          </p>
-          <button
-            type="button"
-            onClick={handleWithdraw}
-            disabled={withdrawing}
-            className="mt-3 rounded-lg border-2 border-red-500 bg-white px-3 py-2 text-xs font-black text-red-600 shadow-kitschy transition-transform active:translate-y-0.5 disabled:opacity-50"
+      <div className="flex justify-end border-t border-dark/10 pt-4">
+        <button
+          type="button"
+          onClick={() => setShowWithdrawModal(true)}
+          className="text-[11px] font-bold text-dark/35 underline underline-offset-2 hover:text-red-600"
+        >
+          회원 탈퇴
+        </button>
+      </div>
+
+      {showWithdrawModal && createPortal(
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-dark/40 px-4" onClick={() => !withdrawing && setShowWithdrawModal(false)}>
+          <div
+            className="card-kitschy w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
           >
-            {withdrawing ? '처리 중...' : '회원 탈퇴'}
-          </button>
-        </div>
-      </section>
+            <h2 className="heading-kitschy text-xl">회원 탈퇴</h2>
+            <div className="mt-4 rounded-lg border-2 border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-sm font-black text-red-600">탈퇴 전 확인해주세요.</p>
+              <p className="mt-2 text-xs font-semibold leading-relaxed text-red-500/80">
+                탈퇴하면 계정 개인정보는 비식별 처리되고, 작성한 할 일, 루틴, 아이디어, 브레인덤프 원문은 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+              </p>
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowWithdrawModal(false)}
+                disabled={withdrawing}
+                className="btn-kitschy flex-1 bg-accent py-2 text-sm text-dark disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleWithdraw}
+                disabled={withdrawing}
+                className="btn-kitschy flex-1 bg-primary py-2 text-sm text-white disabled:opacity-50"
+              >
+                {withdrawing ? '처리 중...' : '탈퇴'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

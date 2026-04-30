@@ -163,6 +163,12 @@ export default function DashboardPage() {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => setShowTaskBoard(true)}
+            className="btn-kitschy bg-accent text-dark text-sm"
+          >
+            할 일 크게 보기
+          </button>
+          <button
             onClick={() => setShowAddModal(true)}
             className="btn-kitschy bg-secondary text-white text-sm"
           >
@@ -197,14 +203,6 @@ export default function DashboardPage() {
             <h3 className="font-extrabold text-dark mb-4">
               해야 할 일 ({activeTasks.length})
             </h3>
-
-            <button
-              type="button"
-              onClick={() => setShowTaskBoard(true)}
-              className="mb-4 rounded-lg border-2 border-dark bg-accent px-3 py-1.5 text-xs font-black text-dark shadow-kitschy"
-            >
-              크게 보기
-            </button>
 
             {activeTasks.length === 0 ? (
               <div className="text-center py-8">
@@ -289,14 +287,6 @@ export default function DashboardPage() {
               완료한 일 ({doneTasks.length})
             </h3>
 
-            <button
-              type="button"
-              onClick={() => setShowTaskBoard(true)}
-              className="mb-4 rounded-lg border-2 border-dark bg-accent px-3 py-1.5 text-xs font-black text-dark shadow-kitschy"
-            >
-              크게 보기
-            </button>
-
             {doneTasks.length === 0 ? (
               <div className="text-center py-8">
                 <p className="font-bold text-dark/40 text-sm">
@@ -368,7 +358,7 @@ export default function DashboardPage() {
       )}
 
       {coinToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] animate-bounce">
           <div className="card-kitschy !py-3 !px-5 bg-secondary border-dark flex items-center gap-3">
             <span className="text-2xl font-black text-white">+{coinToast.coins} C</span>
             <div>
