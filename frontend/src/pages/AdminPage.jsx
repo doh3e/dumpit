@@ -13,6 +13,17 @@ const USER_STATUS = {
   WITHDRAWN: { label: '탈퇴', color: 'bg-gray-100 text-gray-600 border-gray-400' },
 }
 
+function toLocalInputValue(value) {
+  const date = value
+    ? Array.isArray(value)
+      ? new Date(value[0], (value[1] || 1) - 1, value[2] || 1, value[3] || 0, value[4] || 0)
+      : new Date(value)
+    : new Date()
+  if (Number.isNaN(date.getTime())) return ''
+  const offset = date.getTimezoneOffset() * 60000
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
+}
+
 function formatDate(value) {
   if (!value) return '-'
   const date = Array.isArray(value)
@@ -36,12 +47,22 @@ export default function AdminPage() {
   const [inquiries, setInquiries] = useState([])
   const [users, setUsers] = useState([])
   const [todayStats, setTodayStats] = useState(null)
+  const [notices, setNotices] = useState([])
   const [loadingInquiries, setLoadingInquiries] = useState(true)
   const [loadingUsers, setLoadingUsers] = useState(true)
+  const [loadingNotices, setLoadingNotices] = useState(true)
   const [selected, setSelected] = useState(null)
   const [reply, setReply] = useState('')
   const [sending, setSending] = useState(false)
   const [workingUserId, setWorkingUserId] = useState(null)
+  const [savingNotice, setSavingNotice] = useState(false)
+  const [editingNoticeId, setEditingNoticeId] = useState(null)
+  const [noticeForm, setNoticeForm] = useState({
+    title: '',
+    content: '',
+    publishAt: toLocalInputValue(),
+    status: 'PUBLISHED',
+  })
 
   const fetchInquiries = () => {
     setLoadingInquiries(true)
@@ -65,10 +86,19 @@ export default function AdminPage() {
       .catch(() => setTodayStats(null))
   }
 
+  const fetchNotices = () => {
+    setLoadingNotices(true)
+    api.get('/admin/notices')
+      .then((res) => setNotices(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setNotices([]))
+      .finally(() => setLoadingNotices(false))
+  }
+
   useEffect(() => {
     fetchInquiries()
     fetchUsers()
     fetchTodayStats()
+    fetchNotices()
   }, [])
 
   const userStats = useMemo(() => ({
@@ -125,6 +155,53 @@ export default function AdminPage() {
     }
   }
 
+  const resetNoticeForm = () => {
+    setEditingNoticeId(null)
+    setNoticeForm({ title: '', content: '', publishAt: toLocalInputValue(), status: 'PUBLISHED' })
+  }
+
+  const editNotice = (notice) => {
+    setEditingNoticeId(notice.noticeId)
+    setNoticeForm({
+      title: notice.title || '',
+      content: notice.content || '',
+      publishAt: toLocalInputValue(notice.publishAt),
+      status: notice.status || 'PUBLISHED',
+    })
+  }
+
+  const saveNotice = async () => {
+    if (!noticeForm.title.trim() || !noticeForm.content.trim()) return
+    setSavingNotice(true)
+    const payload = {
+      title: noticeForm.title.trim(),
+      content: noticeForm.content.trim(),
+      publishAt: noticeForm.publishAt ? new Date(noticeForm.publishAt).toISOString().slice(0, 19) : null,
+      status: noticeForm.status,
+    }
+    try {
+      if (editingNoticeId) await api.patch(`/admin/notices/${editingNoticeId}`, payload)
+      else await api.post('/admin/notices', payload)
+      resetNoticeForm()
+      fetchNotices()
+    } catch {
+      alert('공지 저장에 실패했어요.')
+    } finally {
+      setSavingNotice(false)
+    }
+  }
+
+  const archiveNotice = async (notice) => {
+    if (!window.confirm(`"${notice.title}" 공지를 보관할까요?`)) return
+    try {
+      await api.delete(`/admin/notices/${notice.noticeId}`)
+      if (editingNoticeId === notice.noticeId) resetNoticeForm()
+      fetchNotices()
+    } catch {
+      alert('공지 보관에 실패했어요.')
+    }
+  }
+
   const pendingCount = inquiries.filter((inquiry) => inquiry.status === 'PENDING').length
 
   return (
@@ -140,6 +217,7 @@ export default function AdminPage() {
           {[
             ['inquiries', '문의'],
             ['users', '회원'],
+            ['notices', '공지'],
           ].map(([value, label]) => (
             <button
               key={value}
@@ -362,6 +440,125 @@ export default function AdminPage() {
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === 'notices' && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="card-kitschy">
+            <h3 className="mb-4 font-extrabold text-dark">
+              {editingNoticeId ? '공지 수정' : '공지 작성'}
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-bold text-dark/60">제목</label>
+                <input
+                  value={noticeForm.title}
+                  onChange={(e) => setNoticeForm((prev) => ({ ...prev, title: e.target.value }))}
+                  maxLength={200}
+                  className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  placeholder="공지 제목"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold text-dark/60">내용</label>
+                <textarea
+                  value={noticeForm.content}
+                  onChange={(e) => setNoticeForm((prev) => ({ ...prev, content: e.target.value }))}
+                  rows={10}
+                  maxLength={5000}
+                  className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                  placeholder="패치내역, 점검 안내, 새 기능 안내 등을 적어주세요."
+                />
+                <p className="mt-1 text-right text-[10px] font-bold text-dark/40">{noticeForm.content.length} / 5000</p>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-dark/60">게시 시간</label>
+                  <input
+                    type="datetime-local"
+                    value={noticeForm.publishAt}
+                    onChange={(e) => setNoticeForm((prev) => ({ ...prev, publishAt: e.target.value }))}
+                    className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-dark/60">상태</label>
+                  <select
+                    value={noticeForm.status}
+                    onChange={(e) => setNoticeForm((prev) => ({ ...prev, status: e.target.value }))}
+                    className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  >
+                    <option value="PUBLISHED">게시</option>
+                    <option value="DRAFT">초안</option>
+                    <option value="ARCHIVED">보관</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                {editingNoticeId && (
+                  <button type="button" onClick={resetNoticeForm} className="btn-kitschy flex-1 bg-accent py-2 text-sm text-dark">
+                    새 공지
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={saveNotice}
+                  disabled={savingNotice || !noticeForm.title.trim() || !noticeForm.content.trim()}
+                  className="btn-kitschy flex-1 bg-primary py-2 text-sm text-white disabled:opacity-50"
+                >
+                  {savingNotice ? '저장 중...' : editingNoticeId ? '수정 저장' : '공지 저장'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="card-kitschy">
+            <h3 className="mb-4 font-extrabold text-dark">공지 목록</h3>
+            {loadingNotices ? (
+              <div className="py-12 text-center">
+                <p className="font-bold text-dark/50">불러오는 중...</p>
+              </div>
+            ) : notices.length === 0 ? (
+              <div className="py-12 text-center">
+                <p className="font-bold text-dark/50">등록된 공지가 없어요.</p>
+              </div>
+            ) : (
+              <div className="max-h-[680px] space-y-3 overflow-y-auto pr-1">
+                {notices.map((notice) => (
+                  <article key={notice.noticeId} className="rounded-lg border-2 border-dark/10 bg-white p-3">
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black text-dark">{notice.title}</p>
+                        <p className="mt-1 text-[10px] font-bold text-dark/40">
+                          {notice.status} · {formatDate(notice.publishAt)}
+                        </p>
+                      </div>
+                      <div className="flex flex-shrink-0 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => editNotice(notice)}
+                          className="rounded-lg border-2 border-dark bg-accent px-2 py-1 text-[10px] font-black text-dark"
+                        >
+                          수정
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => archiveNotice(notice)}
+                          className="rounded-lg border-2 border-red-500 bg-white px-2 py-1 text-[10px] font-black text-red-600"
+                        >
+                          보관
+                        </button>
+                      </div>
+                    </div>
+                    <p className="line-clamp-3 whitespace-pre-wrap text-xs font-semibold leading-relaxed text-dark/60">
+                      {notice.content}
+                    </p>
+                  </article>
+                ))}
               </div>
             )}
           </div>
