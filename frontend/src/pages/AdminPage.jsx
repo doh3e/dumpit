@@ -35,6 +35,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState('inquiries')
   const [inquiries, setInquiries] = useState([])
   const [users, setUsers] = useState([])
+  const [todayStats, setTodayStats] = useState(null)
   const [loadingInquiries, setLoadingInquiries] = useState(true)
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [selected, setSelected] = useState(null)
@@ -58,9 +59,16 @@ export default function AdminPage() {
       .finally(() => setLoadingUsers(false))
   }
 
+  const fetchTodayStats = () => {
+    api.get('/admin/stats/today')
+      .then((res) => setTodayStats(res.data))
+      .catch(() => setTodayStats(null))
+  }
+
   useEffect(() => {
     fetchInquiries()
     fetchUsers()
+    fetchTodayStats()
   }, [])
 
   const userStats = useMemo(() => ({
@@ -145,6 +153,15 @@ export default function AdminPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <StatPill label="오늘 가입" value={todayStats?.joinedUsers ?? '-'} />
+        <StatPill label="오늘 할 일" value={todayStats?.createdTasks ?? '-'} />
+        <StatPill label="오늘 루틴" value={todayStats?.createdRoutines ?? '-'} />
+        <StatPill label="브레인덤프" value={todayStats?.brainDumps ?? '-'} />
+        <StatPill label="AI 호출 로그" value={todayStats?.aiUsageLogs ?? '-'} />
+        <StatPill label="AI 사용량" value={todayStats?.aiUsed ?? '-'} />
       </div>
 
       {tab === 'inquiries' && (

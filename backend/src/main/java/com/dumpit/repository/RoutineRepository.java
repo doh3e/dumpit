@@ -17,6 +17,8 @@ public interface RoutineRepository extends JpaRepository<Routine, UUID> {
 
     List<Routine> findByUserAndDeletedAtIsNullOrderByEnabledDescCreatedAtDesc(User user);
 
+    long countByCreatedAtGreaterThanEqual(LocalDateTime since);
+
     @Query("""
         SELECT r FROM Routine r
         WHERE r.routineId = :routineId
