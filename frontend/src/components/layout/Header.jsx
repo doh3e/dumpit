@@ -11,7 +11,6 @@ const NAV_ITEMS = [
   { label: '브레인 덤프', path: '/brain-dump' },
   { label: '아이디어 덤프', path: '/ideas' },
   { label: '루틴', path: '/routines' },
-  { label: '공지사항', path: '/notices' },
   { label: '마이페이지', path: '/mypage' },
 ]
 

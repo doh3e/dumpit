@@ -7,7 +7,6 @@ const MENU = [
   { label: '브레인 덤프', path: '/brain-dump' },
   { label: '아이디어 덤프', path: '/ideas' },
   { label: '루틴', path: '/routines' },
-  { label: '공지사항', path: '/notices' },
   { label: '마이페이지', path: '/mypage' },
 ]
 
@@ -68,16 +67,29 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, isDrawerOpe
       </div>
 
       <div className="mt-auto pt-4 border-t-2 border-dark/20 flex flex-col gap-1">
+        <NavLink
+          to="/notices"
+          onClick={handleNavClick}
+          className={({ isActive }) =>
+            `w-full flex items-center px-4 py-2.5 rounded-lg font-bold text-xs border-2 transition-all ${
+              isActive
+                ? 'bg-accent text-dark border-dark shadow-kitschy'
+                : 'text-dark/70 border-transparent hover:bg-accent hover:border-dark'
+            }`
+          }
+        >
+          공지사항
+        </NavLink>
         <button
           onClick={() => { handleNavClick(); onOpenHelp?.() }}
-          className="w-full flex items-center gap-2 px-4 py-3 rounded-lg font-bold text-sm text-dark border-2 border-transparent hover:bg-accent hover:border-dark transition-all"
+          className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-xs text-dark/70 border-2 border-transparent hover:bg-accent hover:border-dark transition-all"
         >
           <span className="w-5 h-5 rounded-full border-2 border-dark text-xs font-black flex items-center justify-center flex-shrink-0">?</span>
           도움말
         </button>
         <button
           onClick={() => { handleNavClick(); onOpenSettings() }}
-          className="w-full flex items-center px-4 py-3 rounded-lg font-bold text-sm text-dark border-2 border-transparent hover:bg-accent hover:border-dark transition-all"
+          className="w-full flex items-center px-4 py-2.5 rounded-lg font-bold text-xs text-dark/70 border-2 border-transparent hover:bg-accent hover:border-dark transition-all"
         >
           설정
         </button>
