@@ -11,4 +11,6 @@ public interface InquiryRepository extends JpaRepository<Inquiry, UUID> {
     List<Inquiry> findAllByOrderByCreatedAtDesc();
 
     List<Inquiry> findByUserOrderByCreatedAtDesc(User user);
+
+    List<Inquiry> findByUser(User user);
 }

@@ -10,6 +10,7 @@ import RoutinePage from './pages/RoutinePage'
 import ShopPage from './pages/ShopPage'
 import AdminPage from './pages/AdminPage'
 import MyPage from './pages/MyPage'
+import NoticePage from './pages/NoticePage'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 
@@ -58,6 +59,9 @@ function AppRoutes() {
         } />
         <Route path="/mypage" element={
           <PrivateRoute><MyPage /></PrivateRoute>
+        } />
+        <Route path="/notices" element={
+          <PrivateRoute><NoticePage /></PrivateRoute>
         } />
         <Route path="/admin" element={
           <AdminRoute><AdminPage /></AdminRoute>

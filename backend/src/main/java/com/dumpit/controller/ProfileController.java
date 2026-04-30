@@ -6,6 +6,8 @@ import com.dumpit.repository.BrainDumpRepository;
 import com.dumpit.repository.IdeaRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
+import com.dumpit.service.AccountService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +28,7 @@ public class ProfileController {
     private final TaskRepository taskRepository;
     private final BrainDumpRepository brainDumpRepository;
     private final IdeaRepository ideaRepository;
+    private final AccountService accountService;
 
     @GetMapping("/me/profile")
     public ResponseEntity<ProfileResponse> getProfile(@AuthenticationPrincipal OAuth2User principal) {
@@ -49,6 +52,20 @@ public class ProfileController {
         }
         userRepository.save(user);
         return ResponseEntity.ok(toProfileResponse(user));
+    }
+
+    @DeleteMapping("/me/account")
+    public ResponseEntity<Void> withdraw(
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest request) {
+        User user = resolveUser(principal);
+        if (user == null) return ResponseEntity.status(401).build();
+
+        accountService.withdraw(user.getEmail());
+        if (request.getSession(false) != null) {
+            request.getSession(false).invalidate();
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me/stats")
@@ -84,7 +101,7 @@ public class ProfileController {
             heatmap.put(d.toString(), completedCountByDate.getOrDefault(d, 0L).intValue());
         }
 
-        long brainDumpCount = brainDumpRepository.countByUser(user);
+        long brainDumpCount = brainDumpRepository.countByUserAndDeletedAtIsNull(user);
         long ideaCount = ideaRepository.countByUserAndDeletedAtIsNull(user);
 
         return ResponseEntity.ok(new StatsResponse(
@@ -123,7 +140,9 @@ public class ProfileController {
     private User resolveUser(OAuth2User principal) {
         if (principal == null) return null;
         String email = principal.getAttribute("email");
-        return userRepository.findByEmail(email).orElse(null);
+        return userRepository.findByEmail(email)
+                .filter(User::isActive)
+                .orElse(null);
     }
 
     private ProfileResponse toProfileResponse(User user) {

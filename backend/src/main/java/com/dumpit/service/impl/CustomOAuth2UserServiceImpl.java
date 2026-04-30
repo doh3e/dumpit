@@ -38,6 +38,11 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
         userRepository.findByProviderAndProviderId(provider, providerId)
                 .ifPresentOrElse(
                         existing -> {
+                            if (!existing.isActive()) {
+                                throw new OAuth2AuthenticationException(
+                                        new OAuth2Error("account_inactive"), "This account is not active."
+                                );
+                            }
                             existing.updatePicture(picture);
                             userRepository.save(existing);
                         },

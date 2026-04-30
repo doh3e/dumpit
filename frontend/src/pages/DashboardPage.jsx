@@ -6,6 +6,7 @@ import CircularTimetable from '../components/CircularTimetable/CircularTimetable
 import MiniCalendar from '../components/MiniCalendar'
 import AddTaskModal from '../components/AddTaskModal'
 import EditTaskModal from '../components/EditTaskModal'
+import TaskBoardModal from '../components/TaskBoardModal'
 import { getCategory } from '../constants/categories'
 
 const STATUS_LABEL = {
@@ -70,6 +71,13 @@ function getUrgencyInfo(deadline) {
   return null
 }
 
+function calcCompletionCoins(task) {
+  const deadline = parseDate(task.deadline)
+  if (deadline && deadline < new Date()) return 5
+  const priority = task.effectivePriority ?? 0.5
+  return Math.floor(10 + priority * 40)
+}
+
 function groupByParent(list) {
   const byId = new Map(list.map((t) => [t.taskId, t]))
   const childrenOf = new Map()
@@ -109,6 +117,7 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showTaskBoard, setShowTaskBoard] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [coinToast, setCoinToast] = useState(null)
 
@@ -129,9 +138,7 @@ export default function DashboardPage() {
       refreshCoins()
 
       if (next === 'DONE') {
-        const priority = task.effectivePriority ?? 0.5
-        const coins = Math.floor(10 + priority * 40)
-        setCoinToast({ coins, taskTitle: task.title })
+        setCoinToast({ coins: calcCompletionCoins(task), taskTitle: task.title })
         setTimeout(() => setCoinToast(null), 2500)
       }
     } catch { /* ignore */ }
@@ -160,6 +167,12 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowTaskBoard(true)}
+            className="btn-kitschy bg-accent text-dark text-sm"
+          >
+            할 일 크게 보기
+          </button>
           <button
             onClick={() => setShowAddModal(true)}
             className="btn-kitschy bg-secondary text-white text-sm"
@@ -329,6 +342,18 @@ export default function DashboardPage() {
         />
       )}
 
+      {showTaskBoard && (
+        <TaskBoardModal
+          tasks={taskList}
+          onClose={() => setShowTaskBoard(false)}
+          onEditTask={(task) => {
+            setShowTaskBoard(false)
+            setEditingTask(task)
+          }}
+          onToggleTask={toggleStatus}
+        />
+      )}
+
       {editingTask && (
         <EditTaskModal
           task={editingTask}
@@ -338,7 +363,7 @@ export default function DashboardPage() {
       )}
 
       {coinToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] animate-bounce">
           <div className="card-kitschy !py-3 !px-5 bg-secondary border-dark flex items-center gap-3">
             <span className="text-2xl font-black text-white">+{coinToast.coins} C</span>
             <div>

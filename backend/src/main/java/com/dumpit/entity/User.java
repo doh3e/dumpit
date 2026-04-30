@@ -15,6 +15,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class User {
 
+    public enum Status { ACTIVE, BANNED, WITHDRAWN }
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id")
@@ -41,6 +43,17 @@ public class User {
 
     @Column(nullable = false)
     private Boolean isAdmin = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Status status = Status.ACTIVE;
+
+    private LocalDateTime bannedAt;
+
+    @Column(length = 500)
+    private String banReason;
+
+    private LocalDateTime withdrawnAt;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -77,5 +90,50 @@ public class User {
         if (this.coinBalance < coins) return false;
         this.coinBalance -= coins;
         return true;
+    }
+
+    public boolean isActive() {
+        return status == Status.ACTIVE;
+    }
+
+    public void ban(String reason) {
+        if (Boolean.TRUE.equals(this.isAdmin)) {
+            throw new IllegalStateException("Admin users cannot be banned.");
+        }
+        this.status = Status.BANNED;
+        this.bannedAt = LocalDateTime.now();
+        this.banReason = normalizeReason(reason);
+    }
+
+    public void unban() {
+        if (this.status == Status.BANNED) {
+            this.status = Status.ACTIVE;
+            this.bannedAt = null;
+            this.banReason = null;
+        }
+    }
+
+    public void withdraw() {
+        if (Boolean.TRUE.equals(this.isAdmin)) {
+            throw new IllegalStateException("Admin users cannot withdraw through this flow.");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        String suffix = this.userId != null ? this.userId.toString() : UUID.randomUUID().toString();
+        this.status = Status.WITHDRAWN;
+        this.withdrawnAt = now;
+        this.email = "withdrawn+" + suffix + "@deleted.dumpit.local";
+        this.nickname = "탈퇴한 사용자";
+        this.picture = null;
+        this.bio = null;
+        this.providerId = "withdrawn:" + suffix;
+        this.coinBalance = 0;
+        this.bannedAt = null;
+        this.banReason = null;
+    }
+
+    private String normalizeReason(String reason) {
+        if (reason == null || reason.isBlank()) return null;
+        String trimmed = reason.trim();
+        return trimmed.length() > 500 ? trimmed.substring(0, 500) : trimmed;
     }
 }

@@ -70,6 +70,8 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
 
     long countByUserAndStatusAndDeletedAtIsNull(User user, Task.Status status);
 
+    long countByCreatedAtGreaterThanEqual(LocalDateTime since);
+
     @Query("""
         SELECT t FROM Task t
         WHERE t.user = :user
@@ -99,4 +101,13 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
         ORDER BY t.completedAt DESC
     """)
     List<LocalDateTime> findCompletedAtSince(@Param("user") User user, @Param("since") LocalDateTime since);
+
+    @Modifying
+    @Query("""
+        UPDATE Task t
+        SET t.deletedAt = :deletedAt
+        WHERE t.user = :user
+          AND t.deletedAt IS NULL
+    """)
+    int softDeleteByUser(@Param("user") User user, @Param("deletedAt") LocalDateTime deletedAt);
 }

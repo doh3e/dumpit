@@ -1,6 +1,7 @@
 import { NavLink, Link } from 'react-router-dom'
 import PomodoroTimer from '../PomodoroTimer'
 import { useAuth } from '../../context/AuthContext'
+import settingImage from '../../assets/setting_image.png'
 
 const MENU = [
   { label: '대시보드', path: '/dashboard' },
@@ -55,7 +56,8 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, isDrawerOpe
             }`
           }
         >
-          ⚙️ 문의 관리
+          <img src={settingImage} alt="" className="mr-2 h-5 w-5 flex-shrink-0 object-contain" />
+          관리자 페이지
         </NavLink>
       )}
 
@@ -67,16 +69,29 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, isDrawerOpe
       </div>
 
       <div className="mt-auto pt-4 border-t-2 border-dark/20 flex flex-col gap-1">
+        <NavLink
+          to="/notices"
+          onClick={handleNavClick}
+          className={({ isActive }) =>
+            `w-full flex items-center px-4 py-2.5 rounded-lg font-bold text-xs border-2 transition-all ${
+              isActive
+                ? 'bg-accent text-dark border-dark shadow-kitschy'
+                : 'text-dark/70 border-transparent hover:bg-accent hover:border-dark'
+            }`
+          }
+        >
+          공지사항
+        </NavLink>
         <button
           onClick={() => { handleNavClick(); onOpenHelp?.() }}
-          className="w-full flex items-center gap-2 px-4 py-3 rounded-lg font-bold text-sm text-dark border-2 border-transparent hover:bg-accent hover:border-dark transition-all"
+          className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-xs text-dark/70 border-2 border-transparent hover:bg-accent hover:border-dark transition-all"
         >
           <span className="w-5 h-5 rounded-full border-2 border-dark text-xs font-black flex items-center justify-center flex-shrink-0">?</span>
           도움말
         </button>
         <button
           onClick={() => { handleNavClick(); onOpenSettings() }}
-          className="w-full flex items-center px-4 py-3 rounded-lg font-bold text-sm text-dark border-2 border-transparent hover:bg-accent hover:border-dark transition-all"
+          className="w-full flex items-center px-4 py-2.5 rounded-lg font-bold text-xs text-dark/70 border-2 border-transparent hover:bg-accent hover:border-dark transition-all"
         >
           설정
         </button>

@@ -3,9 +3,11 @@ package com.dumpit.repository;
 import com.dumpit.entity.Idea;
 import com.dumpit.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,4 +26,13 @@ public interface IdeaRepository extends JpaRepository<Idea, UUID> {
           AND i.deletedAt IS NULL
     """)
     Optional<Idea> findActiveById(@Param("ideaId") UUID ideaId);
+
+    @Modifying
+    @Query("""
+        UPDATE Idea i
+        SET i.deletedAt = :deletedAt
+        WHERE i.user = :user
+          AND i.deletedAt IS NULL
+    """)
+    int softDeleteByUser(@Param("user") User user, @Param("deletedAt") LocalDateTime deletedAt);
 }

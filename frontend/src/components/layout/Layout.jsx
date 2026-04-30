@@ -6,6 +6,7 @@ import Sidebar from './Sidebar'
 import Footer from './Footer'
 import SettingsModal from '../SettingsModal'
 import HelpModal from '../HelpModal'
+import NoticeModal from '../NoticeModal'
 import PomodoroTimer from '../PomodoroTimer'
 import api from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
@@ -19,6 +20,7 @@ export default function Layout() {
   const [showMobileTimer, setShowMobileTimer] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [tasks, setTasks] = useState([])
+  const [unreadNotices, setUnreadNotices] = useState([])
 
   const fetchTasks = useCallback(() => {
     if (!user) {
@@ -33,10 +35,14 @@ export default function Layout() {
   useEffect(() => {
     if (!user) {
       setTasks([])
+      setUnreadNotices([])
       return
     }
 
     fetchTasks()
+    api.get('/notices/unread')
+      .then((res) => setUnreadNotices(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setUnreadNotices([]))
 
     const interval = window.setInterval(fetchTasks, 60000)
     window.addEventListener('focus', fetchTasks)
@@ -56,6 +62,15 @@ export default function Layout() {
   const handleCloseHelp = () => {
     localStorage.setItem(HELP_SEEN_KEY, '1')
     setShowHelp(false)
+  }
+
+  const handleCloseNotice = async () => {
+    const current = unreadNotices[0]
+    if (!current) return
+    setUnreadNotices((prev) => prev.slice(1))
+    try {
+      await api.post(`/notices/${current.noticeId}/read`)
+    } catch {}
   }
 
   return (
@@ -112,6 +127,7 @@ export default function Layout() {
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {showHelp && <HelpModal onClose={handleCloseHelp} />}
+      {unreadNotices[0] && <NoticeModal notice={unreadNotices[0]} onClose={handleCloseNotice} />}
     </div>
   )
 }

@@ -35,6 +35,8 @@ public class BrainDump {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    private LocalDateTime deletedAt;
+
     public static BrainDump of(User user, String rawText) {
         BrainDump dump = new BrainDump();
         dump.user = user;
@@ -48,5 +50,10 @@ public class BrainDump {
 
     public void markFailed() {
         this.status = Status.FAILED;
+    }
+
+    public void anonymizeAndDelete() {
+        this.rawText = "";
+        this.deletedAt = LocalDateTime.now();
     }
 }

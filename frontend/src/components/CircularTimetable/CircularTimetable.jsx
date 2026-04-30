@@ -71,12 +71,19 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
   const nowMin = Math.ceil((nowH * 60) / 15) * 15
   const todayStr = now.toDateString()
   const routineEndMin = routineEnd * 60
+  const dayStart = new Date(now)
+  dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date(dayStart)
+  dayEnd.setDate(dayEnd.getDate() + 1)
 
   const toDate = (v) => {
     if (!v) return null
     if (Array.isArray(v)) return new Date(v[0], (v[1] || 1) - 1, v[2] || 1, v[3] || 0, v[4] || 0, v[5] || 0)
     return new Date(v)
   }
+  const minutesFromDayStart = (date) => Math.floor((date.getTime() - dayStart.getTime()) / 60000)
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
+  const overlapsToday = (start, end) => start < dayEnd && end > dayStart
 
   // 1) 완료/취소 제외, 마감 지난 태스크 제외
   const active = tasks.filter((t) => {
@@ -95,19 +102,25 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
     if (t.startTime && t.endTime && t.isLocked) {
       const s = toDate(t.startTime)
       const e = toDate(t.endTime)
-      if (s && e) {
+      if (s && e && e > s && overlapsToday(s, e)) {
+        const startMin = clamp(minutesFromDayStart(s), nowMin, 1440)
+        const endMin = clamp(minutesFromDayStart(e), 0, 1440)
+        if (endMin <= startMin) return
         fixedBlocks.push({
           id: t.taskId,
           title: t.title,
-          startH: s.getHours() + s.getMinutes() / 60,
-          endH: e.getHours() + e.getMinutes() / 60,
+          startH: startMin / 60,
+          endH: endMin / 60,
           color: PRIORITY_COLORS[i % PRIORITY_COLORS.length],
           priority: t.effectivePriority ?? 0.5,
           isLocked: true,
         })
       }
     } else {
-      floatingTasks.push({ ...t, _idx: i })
+      const dl = toDate(t.deadline)
+      if (!dl || dl.toDateString() === todayStr) {
+        floatingTasks.push({ ...t, _idx: i })
+      }
     }
   })
 
@@ -149,7 +162,7 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
   const autoBlocks = []
 
   floatingTasks.forEach((t) => {
-    const duration = t.estimatedMinutes || 60
+    const duration = Math.max(15, t.estimatedMinutes || 60)
     const dl = toDate(t.deadline)
 
     // 3) 종료 시점 결정: 오늘 마감이면 마감시간, 아니면 일과 종료
@@ -168,13 +181,12 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
     if (effectiveEnd <= nowMin) return
 
     // 현재~종료 사이에서 실제 채울 수 있는 시간
-    const effectiveDuration = Math.min(duration, effectiveEnd - nowMin)
-    if (effectiveDuration <= 0) return
+    if (duration > effectiveEnd - nowMin) return
 
     // 현재 시간부터 빈 슬롯 찾기 (겹침 방지)
-    for (let cursor = nowMin; cursor + effectiveDuration <= effectiveEnd; cursor += 15) {
+    for (let cursor = nowMin; cursor + duration <= effectiveEnd; cursor += 15) {
       let fits = true
-      for (let m = cursor; m < cursor + effectiveDuration; m++) {
+      for (let m = cursor; m < cursor + duration; m++) {
         if (occupied.has(m)) { fits = false; break }
       }
       if (fits) {
@@ -182,12 +194,12 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
           id: t.taskId,
           title: t.title,
           startH: cursor / 60,
-          endH: (cursor + effectiveDuration) / 60,
+          endH: (cursor + duration) / 60,
           color: PRIORITY_COLORS[t._idx % PRIORITY_COLORS.length],
           priority: t.effectivePriority ?? 0.5,
           isLocked: false,
         })
-        for (let m = cursor; m < cursor + effectiveDuration; m++) occupied.add(m)
+        for (let m = cursor; m < cursor + duration; m++) occupied.add(m)
         return
       }
     }
