@@ -7,10 +7,16 @@ import com.dumpit.repository.IdeaRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
 import com.dumpit.service.AccountService;
+import com.dumpit.service.OAuthRevocationService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +35,8 @@ public class ProfileController {
     private final BrainDumpRepository brainDumpRepository;
     private final IdeaRepository ideaRepository;
     private final AccountService accountService;
+    private final OAuth2AuthorizedClientRepository authorizedClientRepository;
+    private final OAuthRevocationService oAuthRevocationService;
 
     @GetMapping("/me/profile")
     public ResponseEntity<ProfileResponse> getProfile(@AuthenticationPrincipal OAuth2User principal) {
@@ -57,9 +65,16 @@ public class ProfileController {
     @DeleteMapping("/me/account")
     public ResponseEntity<Void> withdraw(
             @AuthenticationPrincipal OAuth2User principal,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            HttpServletResponse response) {
         User user = resolveUser(principal);
         if (user == null) return ResponseEntity.status(401).build();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        OAuth2AuthorizedClient client = authorizedClientRepository
+                .loadAuthorizedClient("google", authentication, request);
+        oAuthRevocationService.revokeGoogle(client);
+        authorizedClientRepository.removeAuthorizedClient("google", authentication, request, response);
 
         accountService.withdraw(user.getEmail());
         if (request.getSession(false) != null) {

@@ -11,7 +11,10 @@ const SECTIONS = [
           <li>회원 식별자 (Google sub ID)</li>
           <li>이용자가 등록한 태스크 정보 (제목, 설명, 마감일, 카테고리, 우선순위 등)</li>
           <li>이용자가 작성한 브레인덤프 원문 텍스트</li>
-          <li>활동 코인 잔액 및 구매 이력</li>
+          <li>이용자가 작성한 아이디어 및 루틴 정보</li>
+          <li>활동 코인 잔액 및 변동 이력</li>
+          <li>AI 기능 사용 이력 (사용 일시, 기능 유형, 차감 점수)</li>
+          <li>서비스 내 활동 기록 (태스크·아이디어·루틴 생성·수정·삭제 이력 및 변경 전후 내용 일부)</li>
           <li>접속 로그, IP 주소, 쿠키, 서비스 이용 기록 (자동 수집)</li>
         </ul>
         <p className="mt-2 text-dark/70">
@@ -29,6 +32,7 @@ const SECTIONS = [
         <li>AI 기반 우선순위 분석 및 태스크 추출</li>
         <li>활동 코인 적립/사용 및 게임화 기능 제공</li>
         <li>고객 문의 응대 및 서비스 개선</li>
+        <li>AI 사용량 한도 관리 및 분쟁 대응</li>
         <li>부정 이용 방지 및 보안 점검</li>
       </ul>
     ),
@@ -38,11 +42,16 @@ const SECTIONS = [
     body: (
       <>
         <p className="mb-2">
-          이용자의 개인정보는 회원 탈퇴 시 지체 없이 파기됩니다. 단, 관계 법령에 따라 보존이 필요한 경우 해당 법령에서 정한 기간 동안 보관합니다.
+          이용자의 개인정보는 회원 탈퇴 시 지체 없이 파기됩니다. 단, 관계 법령에 따라 보존이 필요한 경우 해당 법령에서 정한 기간 동안 보관하며, 서비스 운영상 필요한 로그는 회원 유지 기간 동안 보관할 수 있습니다. 회원 탈퇴 후에는 아래 기간 동안 보관 후 파기합니다.
         </p>
         <ul className="list-disc pl-5 space-y-1">
           <li>접속 로그: 통신비밀보호법에 따라 3개월</li>
+          <li>AI 기능 사용 로그 (사용 일시·기능 유형·차감 점수): 180일</li>
+          <li>서비스 활동 로그 (태스크 생성·수정·삭제 이력): 90일</li>
         </ul>
+        <p className="mt-2 text-dark/70">
+          AI 사용 로그 및 활동 로그는 문의 대응·분쟁 해결·부정 이용 방지 목적으로만 활용되며, 보존 기간 종료 후 즉시 파기됩니다.
+        </p>
       </>
     ),
   },
@@ -63,6 +72,12 @@ const SECTIONS = [
             <p className="text-xs text-dark/70 mt-1">제공 항목: 이메일, 이름, 프로필 이미지, 캘린더 조회 권한</p>
             <p className="text-xs text-dark/70">이용 목적: OAuth 인증, Google Calendar 조회</p>
             <p className="text-xs text-dark/70">보유 기간: Google의 자체 정책에 따름</p>
+          </div>
+          <div className="p-3 bg-accent rounded-lg border border-dark/10">
+            <p className="font-bold text-dark text-sm">Sentry (미국, Functional Software, Inc.)</p>
+            <p className="text-xs text-dark/70 mt-1">제공 항목: 오류 발생 시 접속 환경 정보 (브라우저, OS 등)</p>
+            <p className="text-xs text-dark/70">이용 목적: 서비스 오류 모니터링 및 안정성 개선</p>
+            <p className="text-xs text-dark/70">보유 기간: Sentry의 자체 정책에 따름 (최대 90일)</p>
           </div>
         </div>
       </>

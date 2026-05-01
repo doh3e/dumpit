@@ -2,6 +2,7 @@ package com.dumpit.repository;
 
 import com.dumpit.entity.AiUsageLog;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -11,6 +12,10 @@ import java.util.UUID;
 public interface AiUsageLogRepository extends JpaRepository<AiUsageLog, UUID> {
 
     long countByCreatedAtGreaterThanEqual(LocalDateTime since);
+
+    @Modifying
+    @Query("DELETE FROM AiUsageLog l WHERE l.user.withdrawnAt < :cutoff")
+    long deleteWithdrawnUserLogsBefore(@Param("cutoff") LocalDateTime cutoff);
 
     @Query("""
         SELECT COALESCE(SUM(l.cost), 0) FROM AiUsageLog l

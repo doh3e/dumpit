@@ -59,9 +59,13 @@ app:
   frontend-url: http://localhost:5173
   cors:
     allowed-origins: http://localhost:5173
+  retention:
+    withdrawn-activity-log-days: ${WITHDRAWN_ACTIVITY_LOG_RETENTION_DAYS:90}
+    withdrawn-ai-usage-log-days: ${WITHDRAWN_AI_USAGE_LOG_RETENTION_DAYS:180}
+    cleanup-cron: ${LOG_RETENTION_CLEANUP_CRON:0 30 3 * * *}
 
 sentry:
-  dsn: ${SENTRY_DSN:}
+  dsn: ${SENTRY_DSN}
   environment: ${SENTRY_ENVIRONMENT:${spring.profiles.active:local}}
   traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.0}
   send-default-pii: false
