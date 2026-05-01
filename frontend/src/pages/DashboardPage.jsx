@@ -8,6 +8,7 @@ import AddTaskModal from '../components/AddTaskModal'
 import EditTaskModal from '../components/EditTaskModal'
 import TaskBoardModal from '../components/TaskBoardModal'
 import { getCategory } from '../constants/categories'
+import { calcCompletionCoins } from '../utils/taskRewards'
 
 const STATUS_LABEL = {
   TODO: { label: '할 예정', color: 'bg-accent border-dark text-dark' },
@@ -71,13 +72,6 @@ function getUrgencyInfo(deadline) {
   return null
 }
 
-function calcCompletionCoins(task) {
-  const deadline = parseDate(task.deadline)
-  if (deadline && deadline < new Date()) return 5
-  const priority = task.effectivePriority ?? 0.5
-  return Math.floor(10 + priority * 40)
-}
-
 function groupByParent(list) {
   const byId = new Map(list.map((t) => [t.taskId, t]))
   const childrenOf = new Map()
@@ -138,8 +132,11 @@ export default function DashboardPage() {
       refreshCoins()
 
       if (next === 'DONE') {
-        setCoinToast({ coins: calcCompletionCoins(task), taskTitle: task.title })
-        setTimeout(() => setCoinToast(null), 2500)
+        const coins = calcCompletionCoins(task)
+        if (coins > 0) {
+          setCoinToast({ coins, taskTitle: task.title })
+          setTimeout(() => setCoinToast(null), 2500)
+        }
       }
     } catch { /* ignore */ }
   }

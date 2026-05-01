@@ -199,6 +199,9 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private int calcCompletionCoins(Task task) {
+        if (task.getParentTask() != null) {
+            return 0;
+        }
         LocalDateTime deadline = task.getDeadline();
         if (deadline != null && deadline.isBefore(LocalDateTime.now())) {
             return 5;

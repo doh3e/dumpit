@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import coinImage from '../assets/coin_image.png'
+import { useAuth } from '../context/AuthContext'
 
 function useDragScroll() {
   const ref = useRef(null)
@@ -176,6 +177,7 @@ function formatDeadline(value) {
 }
 
 export default function MyPage() {
+  const { refreshCoins } = useAuth()
   const [profile, setProfile] = useState(null)
   const [stats, setStats] = useState(null)
   const [overdue, setOverdue] = useState([])
@@ -226,6 +228,7 @@ export default function MyPage() {
       setOverdue((prev) => prev.filter((t) => t.taskId !== taskId))
       const res = await api.get('/me/stats')
       setStats(res.data)
+      refreshCoins()
     } catch (err) {
       alert(getApiErrorMessage(err, '완료 처리에 실패했어요.'))
     } finally {
