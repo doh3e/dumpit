@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES } from '../constants/categories'
 import SubtaskProposalModal from './SubtaskProposalModal'
 import AiUsageBadge from './AiUsageBadge'
@@ -40,8 +40,8 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         category,
       })
       onUpdated()
-    } catch {
-      alert('수정에 실패했어요. 다시 시도해주세요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '수정에 실패했어요. 다시 시도해주세요.'))
     } finally {
       setSaving(false)
     }
@@ -52,8 +52,8 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
     try {
       await api.delete(`/tasks/${task.taskId}`)
       onUpdated()
-    } catch {
-      alert('삭제에 실패했어요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '삭제에 실패했어요.'))
     }
   }
 
@@ -171,7 +171,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
                 setPriorityScore(res.data.aiPriorityScore ?? 0.5)
                 dispatchAiUsed()
               } catch (err) {
-                alert(err.response?.data?.error || 'AI 재분석에 실패했어요.')
+                alert(getApiErrorMessage(err, 'AI 재분석에 실패했어요.'))
               } finally {
                 setReanalyzing(false)
               }

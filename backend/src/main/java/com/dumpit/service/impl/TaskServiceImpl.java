@@ -2,6 +2,8 @@ package com.dumpit.service.impl;
 
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
+import com.dumpit.exception.ForbiddenException;
+import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
 import com.dumpit.service.ActivityLogService;
@@ -71,10 +73,10 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public Task updateTask(String email, UUID taskId, TaskUpdateFields fields) {
         Task task = taskRepository.findActiveById(taskId)
-                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+                .orElseThrow(() -> new NotFoundException("태스크를 찾을 수 없습니다."));
 
         if (!task.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new ForbiddenException("이 태스크에 접근할 권한이 없습니다.");
         }
 
         Task.Status prevStatus = task.getStatus();
@@ -115,10 +117,10 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public Task reanalyzePriority(String email, UUID taskId) {
         Task task = taskRepository.findActiveById(taskId)
-                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+                .orElseThrow(() -> new NotFoundException("태스크를 찾을 수 없습니다."));
 
         if (!task.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new ForbiddenException("이 태스크에 접근할 권한이 없습니다.");
         }
 
         Map<String, Object> before = snapshot(task);
@@ -138,10 +140,10 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(readOnly = true)
     public OpenAiService.SubtaskResult proposeSubtasks(String email, UUID taskId) {
         Task task = taskRepository.findActiveById(taskId)
-                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+                .orElseThrow(() -> new NotFoundException("태스크를 찾을 수 없습니다."));
 
         if (!task.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new ForbiddenException("이 태스크에 접근할 권한이 없습니다.");
         }
 
         aiUsageService.consume(email, AiUsageService.UsageType.SUBTASK_PROPOSAL);
@@ -153,10 +155,10 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public List<Task> createSubtasks(String email, UUID parentTaskId, List<SubtaskInput> subtasks) {
         Task parent = taskRepository.findActiveById(parentTaskId)
-                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+                .orElseThrow(() -> new NotFoundException("태스크를 찾을 수 없습니다."));
 
         if (!parent.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new ForbiddenException("이 태스크에 접근할 권한이 없습니다.");
         }
 
         User user = parent.getUser();
@@ -183,10 +185,10 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public void deleteTask(String email, UUID taskId) {
         Task task = taskRepository.findActiveById(taskId)
-                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+                .orElseThrow(() -> new NotFoundException("태스크를 찾을 수 없습니다."));
 
         if (!task.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new ForbiddenException("이 태스크에 접근할 권한이 없습니다.");
         }
 
         Map<String, Object> before = snapshot(task);
@@ -216,7 +218,7 @@ public class TaskServiceImpl implements TaskService {
 
     private User findUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
     }
 
     private Map<String, Object> snapshot(Task task) {

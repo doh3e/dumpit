@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -42,7 +43,7 @@ public class TaskController {
                 req.startTime(), req.endTime(), req.isLocked(),
                 req.category()
         );
-        return ResponseEntity.ok(TaskResponse.from(task));
+        return ResponseEntity.status(HttpStatus.CREATED).body(TaskResponse.from(task));
     }
 
     @PatchMapping("/{taskId}")
@@ -92,7 +93,7 @@ public class TaskController {
                 .toList();
         List<Task> children = taskService.createSubtasks(
                 principal.getAttribute("email"), taskId, subtasks);
-        return ResponseEntity.ok(children.stream().map(TaskResponse::from).toList());
+        return ResponseEntity.status(HttpStatus.CREATED).body(children.stream().map(TaskResponse::from).toList());
     }
 
     public record SplitRequest(List<@Valid SubtaskRequest> subtasks) {}

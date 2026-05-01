@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES } from '../constants/categories'
 import AiUsageBadge from './AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
@@ -37,7 +37,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
       dispatchAiUsed()
       onCreated()
     } catch (err) {
-      alert(err.response?.data?.error || '태스크 생성에 실패했어요. 다시 시도해주세요.')
+      alert(getApiErrorMessage(err, '태스크 생성에 실패했어요. 다시 시도해주세요.'))
     } finally {
       setSaving(false)
     }

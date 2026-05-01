@@ -1,6 +1,7 @@
 package com.dumpit.controller;
 
 import com.dumpit.entity.User;
+import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,7 @@ public class PomodoroController {
 
         String email = principal.getAttribute("email");
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다"));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         user.addCoins(coins);
         userRepository.save(user);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
 import MarkdownRenderer from '../components/MarkdownRenderer'
 
 const STATUS_LABEL = {
@@ -135,8 +135,8 @@ export default function AdminPage() {
       fetchInquiries()
       setSelected(null)
       setReply('')
-    } catch {
-      alert('답변 전송에 실패했어요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '답변 전송에 실패했어요.'))
     } finally {
       setSending(false)
     }
@@ -156,8 +156,8 @@ export default function AdminPage() {
       await api.patch(`/admin/users/${user.userId}/ban`, { reason: banReasonInput.trim() })
       setManagingUser(null)
       fetchUsers()
-    } catch {
-      alert('밴 처리에 실패했어요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '밴 처리에 실패했어요.'))
     } finally {
       setWorkingUserId(null)
     }
@@ -172,8 +172,8 @@ export default function AdminPage() {
       await api.patch(`/admin/users/${user.userId}/unban`)
       setManagingUser(null)
       fetchUsers()
-    } catch {
-      alert('밴 해제에 실패했어요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '밴 해제에 실패했어요.'))
     } finally {
       setWorkingUserId(null)
     }
@@ -208,8 +208,8 @@ export default function AdminPage() {
       else await api.post('/admin/notices', payload)
       resetNoticeForm()
       fetchNotices()
-    } catch {
-      alert('공지 저장에 실패했어요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '공지 저장에 실패했어요.'))
     } finally {
       setSavingNotice(false)
     }
@@ -221,8 +221,8 @@ export default function AdminPage() {
       await api.delete(`/admin/notices/${notice.noticeId}`)
       if (editingNoticeId === notice.noticeId) resetNoticeForm()
       fetchNotices()
-    } catch {
-      alert('공지 보관에 실패했어요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '공지 보관에 실패했어요.'))
     }
   }
 

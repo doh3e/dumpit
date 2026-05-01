@@ -3,6 +3,7 @@ package com.dumpit.service.impl;
 import com.dumpit.entity.BrainDump;
 import com.dumpit.entity.Inquiry;
 import com.dumpit.entity.User;
+import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.BrainDumpRepository;
 import com.dumpit.repository.IdeaRepository;
 import com.dumpit.repository.InquiryRepository;
@@ -37,7 +38,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public User withdraw(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
         if (!user.isActive()) {
             return user;
         }
@@ -80,7 +81,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public User banUser(UUID userId, String reason) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
         Map<String, Object> before = snapshot(user);
         user.ban(reason);
         User saved = userRepository.save(user);
@@ -92,7 +93,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public User unbanUser(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
         Map<String, Object> before = snapshot(user);
         user.unban();
         User saved = userRepository.save(user);

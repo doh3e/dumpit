@@ -1,6 +1,7 @@
 package com.dumpit.service.impl;
 
 import com.dumpit.entity.User;
+import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.UserRepository;
 import com.dumpit.service.AiUsageLimitExceededException;
 import com.dumpit.service.AiUsageLogService;
@@ -103,6 +104,6 @@ public class AiUsageServiceImpl implements AiUsageService {
 
     private User findUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없어요."));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
     }
 }

@@ -8,6 +8,7 @@ import com.dumpit.entity.Task;
 import com.dumpit.service.BrainDumpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -34,18 +35,18 @@ public class BrainDumpController {
         List<DumpTaskItem> tasks = result.tasks().stream()
                 .map(DumpTaskItem::fromProposal)
                 .toList();
-        return ResponseEntity.ok(new DumpResponse(result.dumpId(), tasks));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new DumpResponse(result.dumpId(), tasks));
     }
 
     @PostMapping("/{dumpId}/confirm")
     public ResponseEntity<List<DumpTaskItem>> confirmDump(
             @AuthenticationPrincipal OAuth2User principal,
             @PathVariable UUID dumpId,
-            @RequestBody DumpConfirmRequest req) {
+            @Valid @RequestBody DumpConfirmRequest req) {
 
         List<Task> saved = brainDumpService.confirm(
                 principal.getAttribute("email"), dumpId, req.tasks());
         List<DumpTaskItem> items = saved.stream().map(DumpTaskItem::from).toList();
-        return ResponseEntity.ok(items);
+        return ResponseEntity.status(HttpStatus.CREATED).body(items);
     }
 }

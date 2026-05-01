@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
 import AiUsageBadge from '../components/AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
@@ -31,8 +31,8 @@ export default function BrainDumpPage() {
   const aiUsage = useAiUsage()
   const [text, setText] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [result, setResult] = useState(null)   // { dumpId, tasks: [...] }
-  const [selected, setSelected] = useState([]) // boolean[]
+  const [result, setResult] = useState(null)
+  const [selected, setSelected] = useState([])
   const [error, setError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
   const navigate = useNavigate()
@@ -48,7 +48,7 @@ export default function BrainDumpPage() {
       setSelected(res.data.tasks.map(() => true))
       dispatchAiUsed()
     } catch (err) {
-      setError(err.response?.data?.error || err.response?.data?.message || 'AI 분석에 실패했어요. 다시 시도해주세요.')
+      setError(getApiErrorMessage(err, 'AI 분석에 실패했어요. 다시 시도해주세요.'))
     } finally {
       setIsAnalyzing(false)
     }
@@ -77,8 +77,8 @@ export default function BrainDumpPage() {
     try {
       await api.post(`/brain-dump/${result.dumpId}/confirm`, { tasks })
       navigate('/dashboard')
-    } catch {
-      alert('태스크 등록에 실패했어요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '태스크 등록에 실패했어요.'))
     } finally {
       setIsSaving(false)
     }
@@ -138,17 +138,11 @@ export default function BrainDumpPage() {
           <div className="flex items-center justify-between">
             <h3 className="heading-kitschy text-lg">AI 분석 결과</h3>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => toggleAll(true)}
-                className="text-xs font-black text-dark/50 hover:text-primary"
-              >
+              <button onClick={() => toggleAll(true)} className="text-xs font-black text-dark/50 hover:text-primary">
                 전체 선택
               </button>
               <span className="text-dark/20">|</span>
-              <button
-                onClick={() => toggleAll(false)}
-                className="text-xs font-black text-dark/50 hover:text-primary"
-              >
+              <button onClick={() => toggleAll(false)} className="text-xs font-black text-dark/50 hover:text-primary">
                 전체 해제
               </button>
             </div>
@@ -162,16 +156,12 @@ export default function BrainDumpPage() {
             return (
               <label
                 key={i}
-                className={`flex items-start gap-3 card-kitschy cursor-pointer transition-opacity ${
-                  isChecked ? '' : 'opacity-40'
-                }`}
+                className={`flex items-start gap-3 card-kitschy cursor-pointer transition-opacity ${isChecked ? '' : 'opacity-40'}`}
               >
                 <input
                   type="checkbox"
                   checked={isChecked}
-                  onChange={(e) =>
-                    setSelected((prev) => prev.map((v, idx) => idx === i ? e.target.checked : v))
-                  }
+                  onChange={(e) => setSelected((prev) => prev.map((v, idx) => idx === i ? e.target.checked : v))}
                   className="mt-1 w-4 h-4 accent-primary flex-shrink-0"
                 />
                 <span className="text-xl font-black text-primary font-display leading-none mt-0.5">
@@ -195,10 +185,7 @@ export default function BrainDumpPage() {
           })}
 
           <div className="flex gap-3 mt-4">
-            <button
-              onClick={() => { setText(''); setResult(null); setSelected([]) }}
-              className="btn-kitschy bg-accent text-dark font-extrabold text-sm"
-            >
+            <button onClick={() => { setText(''); setResult(null); setSelected([]) }} className="btn-kitschy bg-accent text-dark font-extrabold text-sm">
               새로 작성
             </button>
             <button

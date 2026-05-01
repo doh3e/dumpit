@@ -3,6 +3,9 @@ package com.dumpit.service.impl;
 import com.dumpit.entity.Idea;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
+import com.dumpit.exception.BadRequestException;
+import com.dumpit.exception.ForbiddenException;
+import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.IdeaRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
@@ -77,10 +80,10 @@ public class IdeaServiceImpl implements IdeaService {
         Idea idea = findOwnedIdea(email, ideaId);
         Idea parent = findParentIdea(idea.getUser(), parentIdeaId);
         if (parent != null && parent.getIdeaId().equals(idea.getIdeaId())) {
-            throw new IllegalArgumentException("Idea cannot be its own parent.");
+            throw new BadRequestException("아이디어는 자기 자신을 상위 아이디어로 둘 수 없습니다.");
         }
         if (parent != null && isDescendant(parent, idea)) {
-            throw new IllegalArgumentException("A child idea cannot become this idea's parent.");
+            throw new BadRequestException("하위 아이디어를 상위 아이디어로 지정할 수 없습니다.");
         }
 
         Map<String, Object> before = snapshot(idea);
@@ -118,7 +121,7 @@ public class IdeaServiceImpl implements IdeaService {
     public void deleteIdea(String email, UUID ideaId) {
         Idea idea = findOwnedIdea(email, ideaId);
         if (ideaRepository.existsByParentIdeaAndDeletedAtIsNull(idea)) {
-            throw new IllegalArgumentException("Child ideas must be deleted first.");
+            throw new BadRequestException("하위 아이디어를 먼저 삭제해주세요.");
         }
 
         Map<String, Object> before = snapshot(idea);
@@ -129,10 +132,10 @@ public class IdeaServiceImpl implements IdeaService {
 
     private Idea findOwnedIdea(String email, UUID ideaId) {
         Idea idea = ideaRepository.findActiveById(ideaId)
-                .orElseThrow(() -> new IllegalArgumentException("Idea not found"));
+                .orElseThrow(() -> new NotFoundException("아이디어를 찾을 수 없습니다."));
 
         if (!idea.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new ForbiddenException("이 아이디어에 접근할 권한이 없습니다.");
         }
 
         return idea;
@@ -140,15 +143,15 @@ public class IdeaServiceImpl implements IdeaService {
 
     private User findUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
     }
 
     private Idea findParentIdea(User user, UUID parentIdeaId) {
         if (parentIdeaId == null) return null;
         Idea parent = ideaRepository.findActiveById(parentIdeaId)
-                .orElseThrow(() -> new IllegalArgumentException("Parent idea not found"));
+                .orElseThrow(() -> new NotFoundException("상위 아이디어를 찾을 수 없습니다."));
         if (!parent.getUser().getUserId().equals(user.getUserId())) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new ForbiddenException("이 아이디어에 접근할 권한이 없습니다.");
         }
         return parent;
     }

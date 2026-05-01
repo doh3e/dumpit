@@ -9,6 +9,7 @@ import com.dumpit.entity.Task;
 import com.dumpit.service.IdeaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -42,7 +43,7 @@ public class IdeaController {
                 request.category(),
                 request.parentIdeaId()
         );
-        return ResponseEntity.ok(IdeaResponse.from(idea));
+        return ResponseEntity.status(HttpStatus.CREATED).body(IdeaResponse.from(idea));
     }
 
     @PostMapping("/bulk")
@@ -55,7 +56,7 @@ public class IdeaController {
                 request.category(),
                 request.parentIdeaId()
         );
-        return ResponseEntity.ok(ideas.stream().map(IdeaResponse::from).toList());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ideas.stream().map(IdeaResponse::from).toList());
     }
 
     @PatchMapping("/{ideaId}")
@@ -80,7 +81,7 @@ public class IdeaController {
             @AuthenticationPrincipal OAuth2User principal,
             @PathVariable UUID ideaId) {
         Task task = ideaService.convertToTask(principal.getAttribute("email"), ideaId);
-        return ResponseEntity.ok(com.dumpit.dto.TaskResponse.from(task));
+        return ResponseEntity.status(HttpStatus.CREATED).body(com.dumpit.dto.TaskResponse.from(task));
     }
 
     @DeleteMapping("/{ideaId}")

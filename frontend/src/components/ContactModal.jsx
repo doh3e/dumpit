@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
 export default function ContactModal({ onClose }) {
@@ -24,12 +24,7 @@ export default function ContactModal({ onClose }) {
       })
       setSubmitted(true)
     } catch (err) {
-      const status = err?.response?.status
-      if (status === 401) {
-        setError('로그인이 필요합니다. 먼저 로그인해주세요.')
-      } else {
-        setError('문의 접수에 실패했어요. 잠시 후 다시 시도해주세요.')
-      }
+      setError(getApiErrorMessage(err, '문의 접수에 실패했어요. 잠시 후 다시 시도해주세요.'))
     } finally {
       setSubmitting(false)
     }
@@ -58,11 +53,7 @@ export default function ContactModal({ onClose }) {
               <br />
               영업일 기준 1~3일 내에 답변드리겠습니다.
             </p>
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-kitschy bg-secondary text-white text-sm py-2 px-6 mt-2"
-            >
+            <button type="button" onClick={onClose} className="btn-kitschy bg-secondary text-white text-sm py-2 px-6 mt-2">
               닫기
             </button>
           </div>
@@ -107,16 +98,10 @@ export default function ContactModal({ onClose }) {
               </p>
             </div>
 
-            {error && (
-              <p className="text-xs font-bold text-primary">{error}</p>
-            )}
+            {error && <p className="text-xs font-bold text-primary">{error}</p>}
 
             <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="btn-kitschy flex-1 bg-accent text-dark text-sm py-2"
-              >
+              <button type="button" onClick={onClose} className="btn-kitschy flex-1 bg-accent text-dark text-sm py-2">
                 취소
               </button>
               <button

@@ -171,19 +171,19 @@ export default function DashboardPage() {
             onClick={() => setShowTaskBoard(true)}
             className="btn-kitschy bg-accent text-dark text-sm"
           >
-            할 일 크게 보기
+            태스크 전체 보기
           </button>
           <button
             onClick={() => setShowAddModal(true)}
             className="btn-kitschy bg-secondary text-white text-sm"
           >
-            + 태스크 추가
+            태스크 추가
           </button>
           <Link
             to="/brain-dump"
             className="btn-kitschy bg-primary text-white text-sm"
           >
-            + 브레인 덤프
+            브레인 덤프
           </Link>
         </div>
       </div>

@@ -66,12 +66,12 @@ public class SecurityConfig {
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"error\":\"Unauthorized\"}");
+                    response.getWriter().write("{\"status\":401,\"code\":\"UNAUTHORIZED\",\"error\":\"로그인이 필요합니다.\"}");
                 })
                 .accessDeniedHandler((request, response, denied) -> {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"error\":\"Forbidden\"}");
+                    response.getWriter().write("{\"status\":403,\"code\":\"FORBIDDEN\",\"error\":\"접근 권한이 없습니다.\"}");
                 })
             )
 

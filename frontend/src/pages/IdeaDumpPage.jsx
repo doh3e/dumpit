@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES, getCategory } from '../constants/categories'
 
 const EMPTY_QUICK = { rawText: '', category: 'OTHER', parentIdeaId: '' }
@@ -165,7 +165,7 @@ export default function IdeaDumpPage() {
       setQuickForm(EMPTY_QUICK)
       fetchIdeas()
     } catch (err) {
-      setError(err.response?.data?.error || '아이디어를 저장하지 못했어요.')
+      setError(getApiErrorMessage(err, '아이디어를 저장하지 못했어요.'))
     } finally {
       setSaving(false)
     }
@@ -188,7 +188,7 @@ export default function IdeaDumpPage() {
       setSelectedId(res.data.ideaId)
       fetchIdeas()
     } catch (err) {
-      setError(err.response?.data?.error || '아이디어를 수정하지 못했어요.')
+      setError(getApiErrorMessage(err, '아이디어를 수정하지 못했어요.'))
     } finally {
       setSaving(false)
     }
@@ -211,7 +211,7 @@ export default function IdeaDumpPage() {
       setSelectedId(res.data.ideaId)
       fetchIdeas()
     } catch (err) {
-      setError(err.response?.data?.error || '하위 아이디어를 만들지 못했어요.')
+      setError(getApiErrorMessage(err, '하위 아이디어를 만들지 못했어요.'))
     } finally {
       setSaving(false)
     }
@@ -227,7 +227,7 @@ export default function IdeaDumpPage() {
       await api.post(`/ideas/${selectedIdea.ideaId}/convert-to-task`)
       fetchIdeas()
     } catch (err) {
-      setError(err.response?.data?.error || '태스크로 전환하지 못했어요.')
+      setError(getApiErrorMessage(err, '태스크로 전환하지 못했어요.'))
     } finally {
       setSaving(false)
     }
@@ -241,7 +241,7 @@ export default function IdeaDumpPage() {
       setSelectedId(null)
       fetchIdeas()
     } catch (err) {
-      setError(err.response?.data?.error || '아이디어를 삭제하지 못했어요.')
+      setError(getApiErrorMessage(err, '아이디어를 삭제하지 못했어요.'))
     }
   }
 

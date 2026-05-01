@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -116,7 +116,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
       })
       if (onTaskAdded) onTaskAdded()
     } catch (err) {
-      alert(err.response?.data?.error || '태스크 추가에 실패했어요')
+      alert(getApiErrorMessage(err, '태스크 추가에 실패했어요'))
     } finally {
       setAddingEventId(null)
     }

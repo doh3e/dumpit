@@ -1,9 +1,12 @@
 package com.dumpit.dto;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record DumpConfirmRequest(List<TaskInput> tasks) {
+public record DumpConfirmRequest(@NotEmpty List<@Valid TaskInput> tasks) {
 
     public record TaskInput(
             String title,

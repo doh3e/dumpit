@@ -85,7 +85,7 @@ public class ProfileController {
             categoryBreakdown.put(cat.name(), count);
         }
 
-        LocalDate heatmapStart = LocalDate.now().minusWeeks(28);
+        LocalDate heatmapStart = LocalDate.now().minusDays(28 * 7L - 1);
         List<LocalDateTime> completedAts = taskRepository.findCompletedAtSince(user, heatmapStart.atStartOfDay());
 
         Map<LocalDate, Long> completedCountByDate = completedAts.stream()

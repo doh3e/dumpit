@@ -4,6 +4,9 @@ import com.dumpit.dto.RoutineRequest;
 import com.dumpit.entity.Routine;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
+import com.dumpit.exception.BadRequestException;
+import com.dumpit.exception.ForbiddenException;
+import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.RoutineRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
@@ -169,7 +172,7 @@ public class RoutineServiceImpl implements RoutineService {
 
     private void validateDateRange(LocalDate startDate, LocalDate endDate) {
         if (endDate != null && endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("End date cannot be before start date.");
+            throw new BadRequestException("종료일은 시작일보다 빠를 수 없습니다.");
         }
     }
 
@@ -177,14 +180,14 @@ public class RoutineServiceImpl implements RoutineService {
         if (request.repeatType() == Routine.RepeatType.WEEKLY) {
             Set<Integer> days = request.daysOfWeek() == null ? Set.of() : request.daysOfWeek();
             if (days.isEmpty() || days.stream().anyMatch((day) -> day < 1 || day > 7)) {
-                throw new IllegalArgumentException("Weekly routines need at least one day between 1 and 7.");
+                throw new BadRequestException("주간 루틴은 1~7 사이의 요일을 하나 이상 선택해야 합니다.");
             }
         }
 
         if (request.repeatType() == Routine.RepeatType.MONTHLY) {
             Set<Integer> days = request.daysOfMonth() == null ? Set.of() : request.daysOfMonth();
             if (days.isEmpty() || days.stream().anyMatch((day) -> day < 1 || day > 31)) {
-                throw new IllegalArgumentException("Monthly routines need at least one day between 1 and 31.");
+                throw new BadRequestException("월간 루틴은 1~31 사이의 날짜를 하나 이상 선택해야 합니다.");
             }
         }
     }
@@ -199,16 +202,16 @@ public class RoutineServiceImpl implements RoutineService {
 
     private Routine findOwnedRoutine(String email, UUID routineId) {
         Routine routine = routineRepository.findActiveById(routineId)
-                .orElseThrow(() -> new IllegalArgumentException("Routine not found"));
+                .orElseThrow(() -> new NotFoundException("루틴을 찾을 수 없습니다."));
         if (!routine.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new ForbiddenException("이 루틴에 접근할 권한이 없습니다.");
         }
         return routine;
     }
 
     private User findUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
     }
 
     private String trimToNull(String value) {

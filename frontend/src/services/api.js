@@ -8,9 +8,23 @@ const api = axios.create({
   withCredentials: true,
 })
 
+export function getApiErrorMessage(error, fallback = '요청을 처리하지 못했어요. 잠시 후 다시 시도해주세요.') {
+  const data = error?.response?.data
+  if (typeof data?.error === 'string' && data.error.trim()) return data.error
+  if (typeof data?.message === 'string' && data.message.trim()) return data.message
+
+  if (error?.response?.status === 401) return '로그인이 필요합니다.'
+  if (error?.response?.status === 403) return '접근 권한이 없습니다.'
+  if (error?.response?.status === 404) return '요청한 대상을 찾을 수 없습니다.'
+  if (error?.response?.status === 429) return '사용 가능 횟수를 모두 사용했어요.'
+  if (error?.response?.status >= 500) return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+  return fallback
+}
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    error.userMessage = getApiErrorMessage(error)
     if (error.response?.status === 401) {
       if (!error.config.url.includes('/auth/me')) {
         window.location.href = '/'

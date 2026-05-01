@@ -6,6 +6,7 @@ import com.dumpit.entity.Routine;
 import com.dumpit.service.RoutineService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -32,7 +33,7 @@ public class RoutineController {
             @AuthenticationPrincipal OAuth2User principal,
             @Valid @RequestBody RoutineRequest request) {
         Routine routine = routineService.createRoutine(principal.getAttribute("email"), request);
-        return ResponseEntity.ok(RoutineResponse.from(routine));
+        return ResponseEntity.status(HttpStatus.CREATED).body(RoutineResponse.from(routine));
     }
 
     @PatchMapping("/{routineId}")

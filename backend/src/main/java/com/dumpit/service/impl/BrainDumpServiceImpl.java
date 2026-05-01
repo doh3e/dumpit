@@ -4,6 +4,8 @@ import com.dumpit.dto.DumpConfirmRequest;
 import com.dumpit.entity.BrainDump;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
+import com.dumpit.exception.ForbiddenException;
+import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.BrainDumpRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
@@ -40,7 +42,7 @@ public class BrainDumpServiceImpl implements BrainDumpService {
     @Transactional
     public BrainDumpResult analyze(String email, String rawText) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         BrainDump dump = BrainDump.of(user, rawText);
         brainDumpRepository.save(dump);
@@ -66,13 +68,13 @@ public class BrainDumpServiceImpl implements BrainDumpService {
     @Transactional
     public List<Task> confirm(String email, UUID dumpId, List<DumpConfirmRequest.TaskInput> inputs) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         BrainDump dump = brainDumpRepository.findById(dumpId)
-                .orElseThrow(() -> new IllegalArgumentException("BrainDump not found"));
+                .orElseThrow(() -> new NotFoundException("브레인덤프를 찾을 수 없습니다."));
 
         if (!dump.getUser().getEmail().equals(email)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new ForbiddenException("이 브레인덤프에 접근할 권한이 없습니다.");
         }
 
         List<Task> saved = new ArrayList<>();

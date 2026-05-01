@@ -52,6 +52,9 @@ public class AdminInquiryController {
     }
 
     private void requireAdmin(OAuth2User principal) {
+        if (principal == null) {
+            throw new AccessDeniedException("관리자 권한이 필요합니다");
+        }
         String email = principal.getAttribute("email");
         boolean admin = userRepository.findByEmail(email)
                 .filter(User::isActive)

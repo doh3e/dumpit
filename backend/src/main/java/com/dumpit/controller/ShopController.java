@@ -2,6 +2,7 @@ package com.dumpit.controller;
 
 import com.dumpit.entity.User;
 import com.dumpit.entity.UserPurchase;
+import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.PurchaseRepository;
 import com.dumpit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -92,7 +93,7 @@ public class ShopController {
     private User findUser(OAuth2User principal) {
         String email = principal.getAttribute("email");
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다"));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
     }
 
     private record ShopItemInfo(int id, String name, String category, int price, String color) {}

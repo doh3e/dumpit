@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
 
 const WEEK_DAYS = [
   { value: 1, label: '월' },
@@ -124,7 +124,7 @@ export default function RoutinePage() {
       resetForm()
       fetchRoutines()
     } catch (err) {
-      setError(err.response?.data?.error || '루틴을 저장하지 못했어요.')
+      setError(getApiErrorMessage(err, '루틴을 저장하지 못했어요.'))
     } finally {
       setSaving(false)
     }
@@ -134,8 +134,8 @@ export default function RoutinePage() {
     try {
       await api.patch(`/routines/${routine.routineId}/enabled`, { enabled: !routine.enabled })
       fetchRoutines()
-    } catch {
-      setError('루틴 상태를 바꾸지 못했어요.')
+    } catch (err) {
+      setError(getApiErrorMessage(err, '루틴 상태를 바꾸지 못했어요.'))
     }
   }
 
@@ -145,8 +145,8 @@ export default function RoutinePage() {
       await api.delete(`/routines/${routine.routineId}`)
       if (editingId === routine.routineId) resetForm()
       fetchRoutines()
-    } catch {
-      setError('루틴을 삭제하지 못했어요.')
+    } catch (err) {
+      setError(getApiErrorMessage(err, '루틴을 삭제하지 못했어요.'))
     }
   }
 

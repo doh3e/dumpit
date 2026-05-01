@@ -4,10 +4,12 @@ import com.dumpit.dto.NoticeRequest;
 import com.dumpit.dto.NoticeResponse;
 import com.dumpit.entity.Notice;
 import com.dumpit.entity.User;
+import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.NoticeRepository;
 import com.dumpit.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -48,7 +50,7 @@ public class AdminNoticeController {
                 request.publishAt() != null ? request.publishAt() : LocalDateTime.now(),
                 parseStatus(request.status())
         );
-        return ResponseEntity.ok(NoticeResponse.from(noticeRepository.save(notice)));
+        return ResponseEntity.status(HttpStatus.CREATED).body(NoticeResponse.from(noticeRepository.save(notice)));
     }
 
     @PatchMapping("/{noticeId}")
@@ -59,7 +61,7 @@ public class AdminNoticeController {
             @Valid @RequestBody NoticeRequest request) {
         requireAdmin(principal);
         Notice notice = noticeRepository.findById(noticeId)
-                .orElseThrow(() -> new IllegalArgumentException("Notice not found"));
+                .orElseThrow(() -> new NotFoundException("공지를 찾을 수 없습니다."));
         notice.setTitle(normalizeTitle(request.title()));
         notice.setContent(request.content().trim());
         notice.setPublishAt(request.publishAt() != null ? request.publishAt() : notice.getPublishAt());
@@ -74,7 +76,7 @@ public class AdminNoticeController {
             @PathVariable UUID noticeId) {
         requireAdmin(principal);
         Notice notice = noticeRepository.findById(noticeId)
-                .orElseThrow(() -> new IllegalArgumentException("Notice not found"));
+                .orElseThrow(() -> new NotFoundException("공지를 찾을 수 없습니다."));
         notice.archive();
         noticeRepository.save(notice);
         return ResponseEntity.noContent().build();

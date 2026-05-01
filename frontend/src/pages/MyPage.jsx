@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
 import coinImage from '../assets/coin_image.png'
 
 function useDragScroll() {
@@ -61,27 +61,40 @@ const heatmapColorClass = (count) => {
   return 'bg-dark/10 border-transparent'
 }
 
+const heatmapBgClass = (count) => {
+  if (count >= 3) return 'bg-primary'
+  if (count === 2) return 'bg-primary/60'
+  if (count === 1) return 'bg-primary/25'
+  return 'bg-dark/10'
+}
+
+function formatLocalDateKey(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function HeatmapGrid({ heatmap }) {
+  const scrollRef = useRef(null)
   const entries = Object.entries(heatmap)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-
-  const startDate = new Date(entries[0]?.[0])
-  const startDow = startDate.getDay()
-
-  const paddedEntries = [
-    ...Array(startDow).fill(null),
-    ...entries,
-  ]
-  while (paddedEntries.length % 7 !== 0) paddedEntries.push(null)
+  const todayKey = formatLocalDateKey(today)
 
   const weeks = []
-  for (let i = 0; i < paddedEntries.length; i += 7) {
-    weeks.push(paddedEntries.slice(i, i + 7))
+  for (let i = 0; i < entries.length; i += 7) {
+    weeks.push(entries.slice(i, i + 7))
   }
 
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollLeft = el.scrollWidth
+  }, [heatmap])
+
   return (
-    <div className="overflow-x-auto">
+    <div ref={scrollRef} className="overflow-x-auto">
       <div className="flex gap-1 justify-center">
         {weeks.map((week, wi) => (
           <div key={wi} className="flex flex-col gap-1">
@@ -89,12 +102,12 @@ function HeatmapGrid({ heatmap }) {
               const entry = week[di]
               if (!entry) return <div key={di} className="w-3 h-3" />
               const [dateStr, count] = entry
-              const isToday = dateStr === today.toISOString().slice(0, 10)
+              const isToday = dateStr === todayKey
               return (
                 <div
                   key={di}
                   title={`${dateStr} · ${count}개 완료`}
-                  className={`w-3 h-3 rounded-sm border ${heatmapColorClass(count)} ${isToday ? 'ring-1 ring-dark' : ''}`}
+                  className={`w-3 h-3 rounded-sm ${isToday ? `border-2 border-dark ${heatmapBgClass(count)}` : `border ${heatmapColorClass(count)}`}`}
                 />
               )
             })}
@@ -199,8 +212,8 @@ export default function MyPage() {
       const res = await api.patch('/me/profile', { bio: bioInput })
       setProfile(res.data)
       setEditingBio(false)
-    } catch {
-      alert('저장에 실패했어요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '저장에 실패했어요.'))
     } finally {
       setSavingBio(false)
     }
@@ -213,8 +226,8 @@ export default function MyPage() {
       setOverdue((prev) => prev.filter((t) => t.taskId !== taskId))
       const res = await api.get('/me/stats')
       setStats(res.data)
-    } catch {
-      alert('완료 처리에 실패했어요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '완료 처리에 실패했어요.'))
     } finally {
       setCompletingTask(null)
     }
@@ -225,8 +238,8 @@ export default function MyPage() {
     try {
       await api.delete('/me/account')
       window.location.href = '/'
-    } catch {
-      alert('회원 탈퇴 처리에 실패했어요. 잠시 후 다시 시도해주세요.')
+    } catch (err) {
+      alert(getApiErrorMessage(err, '회원 탈퇴 처리에 실패했어요. 잠시 후 다시 시도해주세요.'))
       setWithdrawing(false)
     }
   }
@@ -256,9 +269,9 @@ export default function MyPage() {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const start = new Date(today)
-    start.setDate(start.getDate() - 28 * 7)
+    start.setDate(start.getDate() - (28 * 7 - 1))
     for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
-      m[d.toISOString().slice(0, 10)] = 0
+      m[formatLocalDateKey(d)] = 0
     }
     return m
   })()

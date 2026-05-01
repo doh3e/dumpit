@@ -4,6 +4,7 @@ import com.dumpit.dto.NoticeResponse;
 import com.dumpit.entity.Notice;
 import com.dumpit.entity.NoticeRead;
 import com.dumpit.entity.User;
+import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.NoticeReadRepository;
 import com.dumpit.repository.NoticeRepository;
 import com.dumpit.repository.UserRepository;
@@ -53,7 +54,7 @@ public class NoticeController {
         User user = resolveUser(principal);
         if (user == null) return ResponseEntity.status(401).build();
         Notice notice = noticeRepository.findById(noticeId)
-                .orElseThrow(() -> new IllegalArgumentException("Notice not found"));
+                .orElseThrow(() -> new NotFoundException("공지를 찾을 수 없습니다."));
         if (!noticeReadRepository.existsByNoticeAndUser(notice, user)) {
             noticeReadRepository.save(NoticeRead.of(notice, user));
         }
