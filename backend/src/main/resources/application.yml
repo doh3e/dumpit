@@ -65,10 +65,12 @@ app:
     cleanup-cron: ${LOG_RETENTION_CLEANUP_CRON:0 30 3 * * *}
 
 sentry:
-  dsn: ${SENTRY_DSN}
+  dsn: ${SENTRY_DSN:}
   environment: ${SENTRY_ENVIRONMENT:${spring.profiles.active:local}}
+  exception-resolver-order: ${SENTRY_EXCEPTION_RESOLVER_ORDER:-2147483647}
+  max-request-body-size: ${SENTRY_MAX_REQUEST_BODY_SIZE:small}
   traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.0}
-  send-default-pii: false
+  send-default-pii: ${SENTRY_SEND_DEFAULT_PII:false}
 
 logging:
   level:
