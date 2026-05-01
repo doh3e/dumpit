@@ -14,6 +14,22 @@ const USER_STATUS = {
   WITHDRAWN: { label: '탈퇴', color: 'bg-gray-100 text-gray-600 border-gray-400' },
 }
 
+const USER_STATUS_FILTERS = [
+  ['ALL', '전체'],
+  ['ACTIVE', '활성'],
+  ['BANNED', '밴'],
+  ['WITHDRAWN', '탈퇴'],
+  ['ADMIN', '관리자'],
+]
+
+const USER_SORT_OPTIONS = [
+  ['createdAtDesc', '최근 가입순'],
+  ['createdAtAsc', '오래된 가입순'],
+  ['emailAsc', '이메일순'],
+  ['coinDesc', '코인 많은순'],
+  ['aiRemainingAsc', 'AI 잔여 적은순'],
+]
+
 const MARKDOWN_TOOLS = [
   { label: 'H2', before: '## ', after: '', fallback: '제목' },
   { label: 'B', before: '**', after: '**', fallback: '굵은 글씨' },
@@ -44,6 +60,14 @@ function formatDate(value) {
   return date.toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' })
 }
 
+function toTimestamp(value) {
+  if (!value) return 0
+  const date = Array.isArray(value)
+    ? new Date(value[0], (value[1] || 1) - 1, value[2] || 1, value[3] || 0, value[4] || 0, value[5] || 0)
+    : new Date(value)
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime()
+}
+
 function StatPill({ label, value }) {
   return (
     <div className="rounded-lg border-2 border-dark/10 bg-white px-3 py-2">
@@ -67,6 +91,9 @@ export default function AdminPage() {
   const [sending, setSending] = useState(false)
   const [workingUserId, setWorkingUserId] = useState(null)
   const [managingUser, setManagingUser] = useState(null)
+  const [userSearch, setUserSearch] = useState('')
+  const [userStatusFilter, setUserStatusFilter] = useState('ALL')
+  const [userSort, setUserSort] = useState('createdAtDesc')
   const [banReasonInput, setBanReasonInput] = useState('')
   const [savingNotice, setSavingNotice] = useState(false)
   const [editingNoticeId, setEditingNoticeId] = useState(null)
@@ -121,6 +148,25 @@ export default function AdminPage() {
     banned: users.filter((user) => user.status === 'BANNED').length,
     withdrawn: users.filter((user) => user.status === 'WITHDRAWN').length,
   }), [users])
+
+  const visibleUsers = useMemo(() => {
+    const keyword = userSearch.trim().toLowerCase()
+    return users
+      .filter((user) => {
+        const matchesStatus = userStatusFilter === 'ALL'
+          || (userStatusFilter === 'ADMIN' ? user.isAdmin : user.status === userStatusFilter)
+        const matchesKeyword = !keyword
+          || [user.email, user.nickname, user.banReason].some((value) => (value || '').toLowerCase().includes(keyword))
+        return matchesStatus && matchesKeyword
+      })
+      .sort((a, b) => {
+        if (userSort === 'createdAtAsc') return toTimestamp(a.createdAt) - toTimestamp(b.createdAt)
+        if (userSort === 'emailAsc') return (a.email || '').localeCompare(b.email || '')
+        if (userSort === 'coinDesc') return (b.coinBalance || 0) - (a.coinBalance || 0)
+        if (userSort === 'aiRemainingAsc') return (a.aiUsage?.remaining ?? 0) - (b.aiUsage?.remaining ?? 0)
+        return toTimestamp(b.createdAt) - toTimestamp(a.createdAt)
+      })
+  }, [users, userSearch, userStatusFilter, userSort])
 
   const openInquiry = (inquiry) => {
     setSelected(inquiry)
@@ -402,6 +448,47 @@ export default function AdminPage() {
             <StatPill label="탈퇴" value={userStats.withdrawn} />
           </div>
 
+          <div className="rounded-lg border-2 border-dark bg-white p-3">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_160px_180px]">
+              <div>
+                <label className="mb-1 block text-[10px] font-black text-dark/40">검색</label>
+                <input
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="이메일, 닉네임, 밴 사유"
+                  className="w-full rounded-lg border-2 border-dark/20 bg-accent px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-black text-dark/40">상태</label>
+                <select
+                  value={userStatusFilter}
+                  onChange={(e) => setUserStatusFilter(e.target.value)}
+                  className="w-full rounded-lg border-2 border-dark/20 bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                >
+                  {USER_STATUS_FILTERS.map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-black text-dark/40">정렬</label>
+                <select
+                  value={userSort}
+                  onChange={(e) => setUserSort(e.target.value)}
+                  className="w-full rounded-lg border-2 border-dark/20 bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                >
+                  {USER_SORT_OPTIONS.map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="mt-2 text-right text-[10px] font-black text-dark/40">
+              {visibleUsers.length}명 표시
+            </p>
+          </div>
+
           <div className="card-kitschy overflow-hidden !p-0">
             {loadingUsers ? (
               <div className="py-12 text-center">
@@ -411,22 +498,31 @@ export default function AdminPage() {
               <div className="py-12 text-center">
                 <p className="font-bold text-dark/50">회원이 없어요.</p>
               </div>
+            ) : visibleUsers.length === 0 ? (
+              <div className="py-12 text-center">
+                <p className="font-bold text-dark/50">조건에 맞는 회원이 없어요.</p>
+              </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] border-collapse text-left">
+                <table className="w-full min-w-[980px] border-collapse text-left">
                   <thead className="bg-accent">
                     <tr className="border-b-2 border-dark/10 text-xs font-black text-dark/50">
                       <th className="px-4 py-3">회원</th>
                       <th className="px-4 py-3">상태</th>
+                      <th className="px-4 py-3">코인</th>
+                      <th className="px-4 py-3">AI 잔여</th>
+                      <th className="px-4 py-3">작성 요약</th>
                       <th className="px-4 py-3">가입일</th>
                       <th className="px-4 py-3">사유</th>
                       <th className="px-4 py-3 text-right">관리</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => {
+                    {visibleUsers.map((user) => {
                       const status = USER_STATUS[user.status] ?? USER_STATUS.ACTIVE
-                      const disabled = user.isAdmin || user.status === 'WITHDRAWN' || workingUserId === user.userId
+                      const disabled = workingUserId === user.userId
+                      const aiUsage = user.aiUsage
+                      const activity = user.activity || {}
                       return (
                         <tr key={user.userId} className="border-b border-dark/10 last:border-0">
                           <td className="px-4 py-3">
@@ -448,6 +544,13 @@ export default function AdminPage() {
                             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${status.color}`}>
                               {user.isAdmin ? '관리자' : status.label}
                             </span>
+                          </td>
+                          <td className="px-4 py-3 text-xs font-black text-dark">{user.coinBalance ?? 0}</td>
+                          <td className="px-4 py-3 text-xs font-semibold text-dark/60">
+                            {aiUsage ? `${aiUsage.remaining} / ${aiUsage.limit}` : '-'}
+                          </td>
+                          <td className="px-4 py-3 text-xs font-semibold text-dark/60">
+                            할 일 {activity.taskCount ?? 0} · 루틴 {activity.routineCount ?? 0} · 아이디어 {activity.ideaCount ?? 0}
                           </td>
                           <td className="px-4 py-3 text-xs font-semibold text-dark/60">{formatDate(user.createdAt)}</td>
                           <td className="max-w-[220px] px-4 py-3 text-xs font-semibold text-dark/60">
@@ -620,7 +723,7 @@ export default function AdminPage() {
 
       {managingUser && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-dark/40 px-4" onClick={() => setManagingUser(null)}>
-          <div className="card-kitschy w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+          <div className="card-kitschy w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="heading-kitschy text-xl">회원 관리</h3>
@@ -636,6 +739,33 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
+                  <p className="text-xs font-black text-dark/40">보유 코인</p>
+                  <p className="mt-1 text-sm font-black text-dark">{managingUser.coinBalance ?? 0}</p>
+                </div>
+                <div className="rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
+                  <p className="text-xs font-black text-dark/40">오늘 AI 잔여</p>
+                  <p className="mt-1 text-sm font-black text-dark">
+                    {managingUser.aiUsage ? `${managingUser.aiUsage.remaining} / ${managingUser.aiUsage.limit}` : '-'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  ['할 일', managingUser.activity?.taskCount ?? 0],
+                  ['루틴', managingUser.activity?.routineCount ?? 0],
+                  ['아이디어', managingUser.activity?.ideaCount ?? 0],
+                  ['브레인덤프', managingUser.activity?.brainDumpCount ?? 0],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg border-2 border-dark/10 bg-accent px-3 py-2">
+                    <p className="text-[10px] font-black text-dark/40">{label}</p>
+                    <p className="mt-1 text-sm font-black text-dark">{value}</p>
+                  </div>
+                ))}
+              </div>
+
               <div className="rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
                 <p className="text-xs font-black text-dark/40">현재 상태</p>
                 <p className="mt-1 text-sm font-black text-dark">

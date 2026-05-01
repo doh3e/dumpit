@@ -1,8 +1,13 @@
 package com.dumpit.controller;
 
 import com.dumpit.entity.User;
+import com.dumpit.repository.BrainDumpRepository;
+import com.dumpit.repository.IdeaRepository;
+import com.dumpit.repository.RoutineRepository;
+import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
 import com.dumpit.service.AccountService;
+import com.dumpit.service.AiUsageService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +33,17 @@ public class AdminUserController {
 
     private final AccountService accountService;
     private final UserRepository userRepository;
+    private final TaskRepository taskRepository;
+    private final RoutineRepository routineRepository;
+    private final IdeaRepository ideaRepository;
+    private final BrainDumpRepository brainDumpRepository;
+    private final AiUsageService aiUsageService;
 
     @GetMapping
     public ResponseEntity<List<AdminUserResponse>> list(@AuthenticationPrincipal OAuth2User principal) {
         requireAdmin(principal);
         return ResponseEntity.ok(accountService.getUsersForAdmin().stream()
-                .map(AdminUserResponse::from)
+                .map(this::toResponse)
                 .toList());
     }
 
@@ -43,7 +53,7 @@ public class AdminUserController {
             @PathVariable UUID userId,
             @Valid @RequestBody BanRequest request) {
         requireAdmin(principal);
-        return ResponseEntity.ok(AdminUserResponse.from(accountService.banUser(userId, request.reason())));
+        return ResponseEntity.ok(toResponse(accountService.banUser(userId, request.reason())));
     }
 
     @PatchMapping("/{userId}/unban")
@@ -51,7 +61,21 @@ public class AdminUserController {
             @AuthenticationPrincipal OAuth2User principal,
             @PathVariable UUID userId) {
         requireAdmin(principal);
-        return ResponseEntity.ok(AdminUserResponse.from(accountService.unbanUser(userId)));
+        return ResponseEntity.ok(toResponse(accountService.unbanUser(userId)));
+    }
+
+    private AdminUserResponse toResponse(User user) {
+        AiUsageService.AiUsageStatus aiUsage = aiUsageService.getStatusForUser(user);
+        return AdminUserResponse.from(
+                user,
+                new AdminUserActivitySummary(
+                        taskRepository.countByUserAndDeletedAtIsNull(user),
+                        routineRepository.countByUserAndDeletedAtIsNull(user),
+                        ideaRepository.countByUserAndDeletedAtIsNull(user),
+                        brainDumpRepository.countByUserAndDeletedAtIsNull(user)
+                ),
+                new AdminAiUsageSummary(aiUsage.used(), aiUsage.limit(), aiUsage.remaining())
+        );
     }
 
     private void requireAdmin(OAuth2User principal) {
@@ -75,6 +99,9 @@ public class AdminUserController {
             String email,
             String nickname,
             String picture,
+            int coinBalance,
+            AdminAiUsageSummary aiUsage,
+            AdminUserActivitySummary activity,
             boolean isAdmin,
             String status,
             String banReason,
@@ -83,12 +110,15 @@ public class AdminUserController {
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
-        public static AdminUserResponse from(User user) {
+        public static AdminUserResponse from(User user, AdminUserActivitySummary activity, AdminAiUsageSummary aiUsage) {
             return new AdminUserResponse(
                     user.getUserId(),
                     user.getEmail(),
                     user.getNickname(),
                     user.getPicture(),
+                    user.getCoinBalance(),
+                    aiUsage,
+                    activity,
                     Boolean.TRUE.equals(user.getIsAdmin()),
                     user.getStatus().name(),
                     user.getBanReason(),
@@ -99,4 +129,13 @@ public class AdminUserController {
             );
         }
     }
+
+    public record AdminAiUsageSummary(int used, int limit, int remaining) {}
+
+    public record AdminUserActivitySummary(
+            long taskCount,
+            long routineCount,
+            long ideaCount,
+            long brainDumpCount
+    ) {}
 }

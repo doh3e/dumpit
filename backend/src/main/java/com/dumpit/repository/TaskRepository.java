@@ -70,6 +70,8 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
 
     long countByUserAndStatusAndDeletedAtIsNull(User user, Task.Status status);
 
+    long countByUserAndDeletedAtIsNull(User user);
+
     long countByCreatedAtGreaterThanEqual(LocalDateTime since);
 
     @Query("""

@@ -2,6 +2,8 @@ package com.dumpit.service;
 
 import java.time.OffsetDateTime;
 
+import com.dumpit.entity.User;
+
 public interface AiUsageService {
 
     int DAILY_LIMIT = 100;
@@ -24,6 +26,8 @@ public interface AiUsageService {
     }
 
     AiUsageStatus getStatus(String email);
+
+    AiUsageStatus getStatusForUser(User user);
 
     AiUsageStatus consume(String email, UsageType usageType);
 

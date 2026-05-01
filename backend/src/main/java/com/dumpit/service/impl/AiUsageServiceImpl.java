@@ -33,6 +33,11 @@ public class AiUsageServiceImpl implements AiUsageService {
     @Override
     public AiUsageStatus getStatus(String email) {
         User user = findUser(email);
+        return getStatusForUser(user);
+    }
+
+    @Override
+    public AiUsageStatus getStatusForUser(User user) {
         int used = readUsed(key(user));
         return status(used);
     }
