@@ -66,6 +66,7 @@ app:
 
 sentry:
   dsn: ${SENTRY_DSN:}
+  debug: ${SENTRY_DEBUG:false}
   environment: ${SENTRY_ENVIRONMENT:${spring.profiles.active:local}}
   exception-resolver-order: ${SENTRY_EXCEPTION_RESOLVER_ORDER:-2147483647}
   max-request-body-size: ${SENTRY_MAX_REQUEST_BODY_SIZE:small}
