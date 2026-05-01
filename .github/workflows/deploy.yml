@@ -22,6 +22,8 @@ jobs:
 
       - name: Build backend jar
         working-directory: backend
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: chmod +x gradlew && ./gradlew bootJar -x test --no-daemon
 
       - name: Prepare EC2 workspace
