@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(fe -> fe.getField() + ": " + translateValidationMessage(fe.getDefaultMessage()))
+                .map(fe -> friendlyValidationMessage(fe.getField(), fe.getDefaultMessage()))
                 .reduce((a, b) -> a + ", " + b)
                 .orElse("입력값이 올바르지 않습니다.");
         return error(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", message);
@@ -94,10 +94,39 @@ public class GlobalExceptionHandler {
     private String translateValidationMessage(String message) {
         if (message == null) return "입력값이 올바르지 않습니다.";
         return switch (message) {
-            case "must not be blank" -> "비워둘 수 없습니다.";
+            case "must not be blank" -> "입력해주세요.";
             case "must not be null" -> "필수값입니다.";
             case "must not be empty" -> "하나 이상 입력해야 합니다.";
             default -> message;
+        };
+    }
+
+    private String friendlyValidationMessage(String field, String message) {
+        String label = fieldLabel(field);
+        String translated = translateValidationMessage(message);
+        if ("필수값입니다.".equals(translated)) return label + "을(를) 선택해주세요.";
+        if ("입력해주세요.".equals(translated)) return label + "을(를) 입력해주세요.";
+        return label + ": " + translated;
+    }
+
+    private String fieldLabel(String field) {
+        if (field == null || field.isBlank()) return "입력값";
+        return switch (field) {
+            case "name" -> "이름";
+            case "title" -> "제목";
+            case "content" -> "내용";
+            case "subject" -> "제목";
+            case "message" -> "내용";
+            case "reply" -> "답변";
+            case "repeatType" -> "반복 방식";
+            case "startDate" -> "시작일";
+            case "endDate" -> "종료일";
+            case "createTime" -> "실행 시간";
+            case "daysOfWeek" -> "요일";
+            case "daysOfMonth" -> "날짜";
+            case "email" -> "이메일";
+            case "reason" -> "사유";
+            default -> "입력값";
         };
     }
 }

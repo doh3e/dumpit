@@ -25,8 +25,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     error.userMessage = getApiErrorMessage(error)
-    if (error.response?.status === 401) {
-      if (!error.config.url.includes('/auth/me')) {
+    const status = error.response?.status
+    const url = error.config?.url || ''
+    if (typeof window !== 'undefined' && !url.includes('/auth/me') && (status === 403 || status >= 500)) {
+      window.dispatchEvent(new CustomEvent('dumpit:toast', {
+        detail: { message: error.userMessage, type: 'error' },
+      }))
+    }
+    if (status === 401) {
+      if (!url.includes('/auth/me')) {
         window.location.href = '/'
       }
     }
