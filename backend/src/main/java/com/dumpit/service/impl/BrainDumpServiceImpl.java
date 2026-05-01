@@ -4,6 +4,7 @@ import com.dumpit.dto.DumpConfirmRequest;
 import com.dumpit.entity.BrainDump;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
+import com.dumpit.exception.BadRequestException;
 import com.dumpit.exception.ForbiddenException;
 import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.BrainDumpRepository;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -80,6 +82,7 @@ public class BrainDumpServiceImpl implements BrainDumpService {
         List<Task> saved = new ArrayList<>();
         for (DumpConfirmRequest.TaskInput input : inputs) {
             if (input.title() == null || input.title().isBlank()) continue;
+            validateFutureDeadline(input.deadline());
 
             Task task = Task.of(user, input.title().trim(),
                     input.description() != null ? input.description().trim() : null,
@@ -94,6 +97,12 @@ public class BrainDumpServiceImpl implements BrainDumpService {
             saved.add(t);
         }
         return saved;
+    }
+
+    private void validateFutureDeadline(LocalDateTime deadline) {
+        if (deadline != null && !deadline.isAfter(LocalDateTime.now())) {
+            throw new BadRequestException("마감일시는 현재 시간 이후로 설정해야 합니다.");
+        }
     }
 
     private Task.Category parseCategory(String raw) {

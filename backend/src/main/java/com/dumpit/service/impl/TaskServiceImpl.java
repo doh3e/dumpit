@@ -2,6 +2,7 @@ package com.dumpit.service.impl;
 
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
+import com.dumpit.exception.BadRequestException;
 import com.dumpit.exception.ForbiddenException;
 import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.TaskRepository;
@@ -46,6 +47,7 @@ public class TaskServiceImpl implements TaskService {
                            LocalDateTime startTime, LocalDateTime endTime,
                            Boolean isLocked, Task.Category category) {
         User user = findUser(email);
+        validateFutureDeadline(deadline);
         Task task = Task.of(user, title, description, deadline, estimatedMinutes);
 
         if (startTime != null) task.setStartTime(startTime);
@@ -208,6 +210,12 @@ public class TaskServiceImpl implements TaskService {
         }
         double priority = task.getEffectivePriority() != null ? task.getEffectivePriority() : 0.5;
         return (int) (10 + priority * 40);
+    }
+
+    private void validateFutureDeadline(LocalDateTime deadline) {
+        if (deadline != null && !deadline.isAfter(LocalDateTime.now())) {
+            throw new BadRequestException("마감일시는 현재 시간 이후로 설정해야 합니다.");
+        }
     }
 
     private Task.Category parseCategory(String raw) {

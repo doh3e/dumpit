@@ -8,6 +8,14 @@ import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 function getTodayDefaultDeadline() {
   const d = new Date()
   d.setHours(23, 59, 0, 0)
+  return formatDateTimeInput(d)
+}
+
+function getMinDeadlineInput() {
+  return formatDateTimeInput(new Date())
+}
+
+function formatDateTimeInput(d) {
   const pad = (value) => String(value).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
@@ -24,6 +32,10 @@ export default function AddTaskModal({ onClose, onCreated }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!title.trim()) return
+    if (deadline && new Date(deadline) <= new Date()) {
+      alert('마감일시는 현재 시간 이후로 설정해야 합니다.')
+      return
+    }
 
     setSaving(true)
     try {
@@ -84,6 +96,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
             <input
               type="datetime-local"
               value={deadline}
+              min={getMinDeadlineInput()}
               onChange={(e) => setDeadline(e.target.value)}
               className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
             />

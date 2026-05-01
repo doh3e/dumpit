@@ -6,14 +6,22 @@ import SubtaskProposalModal from './SubtaskProposalModal'
 import AiUsageBadge from './AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
+function formatDateTimeInput(d) {
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function getMinDeadlineInput() {
+  return formatDateTimeInput(new Date())
+}
+
 export default function EditTaskModal({ task, onClose, onUpdated }) {
   const aiUsage = useAiUsage()
   const [showSplit, setShowSplit] = useState(false)
+  const initialDeadline = task.deadline ? task.deadline.slice(0, 16) : ''
   const [title, setTitle] = useState(task.title || '')
   const [description, setDescription] = useState(task.description || '')
-  const [deadline, setDeadline] = useState(
-    task.deadline ? task.deadline.slice(0, 16) : ''
-  )
+  const [deadline, setDeadline] = useState(initialDeadline)
   const [estimatedMinutes, setEstimatedMinutes] = useState(
     task.estimatedMinutes ?? ''
   )
@@ -28,6 +36,10 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!title.trim()) return
+    if (deadline && deadline !== initialDeadline && new Date(deadline) <= new Date()) {
+      alert('마감일시는 현재 시간 이후로 설정해야 합니다.')
+      return
+    }
 
     setSaving(true)
     try {
@@ -96,6 +108,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             <input
               type="datetime-local"
               value={deadline}
+              min={!deadline || new Date(deadline) > new Date() ? getMinDeadlineInput() : undefined}
               onChange={(e) => setDeadline(e.target.value)}
               className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
             />
