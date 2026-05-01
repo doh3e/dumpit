@@ -504,17 +504,23 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[980px] border-collapse text-left">
+                <table className="w-full min-w-[900px] table-fixed border-collapse text-left">
+                  <colgroup>
+                    <col className="w-[32%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[25%]" />
+                    <col className="w-[13%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[8%]" />
+                  </colgroup>
                   <thead className="bg-accent">
                     <tr className="border-b-2 border-dark/10 text-xs font-black text-dark/50">
                       <th className="px-4 py-3">회원</th>
-                      <th className="px-4 py-3">상태</th>
-                      <th className="px-4 py-3">코인</th>
-                      <th className="px-4 py-3">AI 잔여</th>
-                      <th className="px-4 py-3">작성 요약</th>
-                      <th className="px-4 py-3">가입일</th>
+                      <th className="px-3 py-3">상태</th>
+                      <th className="px-3 py-3">활동</th>
+                      <th className="px-3 py-3">가입일</th>
                       <th className="px-4 py-3">사유</th>
-                      <th className="px-4 py-3 text-right">관리</th>
+                      <th className="px-3 py-3 text-right">관리</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -528,9 +534,9 @@ export default function AdminPage() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               {user.picture ? (
-                                <img src={user.picture} alt="" className="h-9 w-9 rounded-full border-2 border-dark object-cover" />
+                                <img src={user.picture} alt="" className="h-9 w-9 flex-shrink-0 rounded-full border-2 border-dark object-cover" />
                               ) : (
-                                <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-dark bg-accent text-sm font-black text-dark">
+                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-dark bg-accent text-sm font-black text-dark">
                                   {(user.nickname || '?')[0]}
                                 </div>
                               )}
@@ -540,28 +546,40 @@ export default function AdminPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3">
-                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${status.color}`}>
+                          <td className="px-3 py-3">
+                            <span className={`inline-flex whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-black ${status.color}`}>
                               {user.isAdmin ? '관리자' : status.label}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-xs font-black text-dark">{user.coinBalance ?? 0}</td>
-                          <td className="px-4 py-3 text-xs font-semibold text-dark/60">
-                            {aiUsage ? `${aiUsage.remaining} / ${aiUsage.limit}` : '-'}
+                          <td className="px-3 py-3">
+                            <div className="flex flex-wrap gap-1.5 text-[10px] font-black">
+                              <span className="whitespace-nowrap rounded-full border border-dark/10 bg-white px-2 py-0.5 text-dark">
+                                코인 {user.coinBalance ?? 0}
+                              </span>
+                              <span className="whitespace-nowrap rounded-full border border-dark/10 bg-white px-2 py-0.5 text-dark/60">
+                                AI {aiUsage ? `${aiUsage.remaining}/${aiUsage.limit}` : '-'}
+                              </span>
+                              <span className="whitespace-nowrap rounded-full border border-dark/10 bg-accent px-2 py-0.5 text-dark/60">
+                                할 일 {activity.taskCount ?? 0}
+                              </span>
+                              <span className="whitespace-nowrap rounded-full border border-dark/10 bg-accent px-2 py-0.5 text-dark/60">
+                                루틴 {activity.routineCount ?? 0}
+                              </span>
+                              <span className="whitespace-nowrap rounded-full border border-dark/10 bg-accent px-2 py-0.5 text-dark/60">
+                                아이디어 {activity.ideaCount ?? 0}
+                              </span>
+                            </div>
                           </td>
-                          <td className="px-4 py-3 text-xs font-semibold text-dark/60">
-                            할 일 {activity.taskCount ?? 0} · 루틴 {activity.routineCount ?? 0} · 아이디어 {activity.ideaCount ?? 0}
-                          </td>
-                          <td className="px-4 py-3 text-xs font-semibold text-dark/60">{formatDate(user.createdAt)}</td>
+                          <td className="px-3 py-3 text-xs font-semibold leading-relaxed text-dark/60">{formatDate(user.createdAt)}</td>
                           <td className="max-w-[220px] px-4 py-3 text-xs font-semibold text-dark/60">
                             <span className="line-clamp-2">{user.banReason || '-'}</span>
                           </td>
-                          <td className="px-4 py-3 text-right">
+                          <td className="px-3 py-3 text-right">
                             <button
                               type="button"
                               onClick={() => openUserManage(user)}
                               disabled={disabled}
-                              className="rounded-lg border-2 border-dark bg-white px-3 py-1.5 text-xs font-black text-dark shadow-kitschy disabled:opacity-40"
+                              className="whitespace-nowrap rounded-lg border-2 border-dark bg-white px-3 py-1.5 text-xs font-black text-dark shadow-kitschy disabled:opacity-40"
                             >
                               관리
                             </button>
