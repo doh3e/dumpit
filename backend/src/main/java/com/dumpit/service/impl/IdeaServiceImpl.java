@@ -10,8 +10,10 @@ import com.dumpit.repository.IdeaRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
 import com.dumpit.service.ActivityLogService;
+import com.dumpit.service.AiUsageService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.IdeaService;
+import com.dumpit.service.OpenAiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,8 @@ public class IdeaServiceImpl implements IdeaService {
     private final UserRepository userRepository;
     private final DeadlineNudgeService deadlineNudgeService;
     private final ActivityLogService activityLogService;
+    private final AiUsageService aiUsageService;
+    private final OpenAiService openAiService;
 
     @Override
     @Transactional(readOnly = true)
@@ -103,8 +107,13 @@ public class IdeaServiceImpl implements IdeaService {
 
         Map<String, Object> before = snapshot(idea);
         Task task = Task.of(idea.getUser(), idea.getTitle(), idea.getContent(), null, null);
-        task.setCategory(idea.getCategory());
-        task.setAiPriorityScore(0.5);
+        aiUsageService.consume(email, AiUsageService.UsageType.TASK_PRIORITY);
+        OpenAiService.PriorityResult priority =
+                openAiService.scorePriority(idea.getTitle(), idea.getContent(), null, null);
+        task.setAiPriorityScore(priority.score());
+        task.setCategory(idea.getCategory() != Task.Category.OTHER
+                ? idea.getCategory()
+                : parseCategory(priority.category()));
 
         Task saved = taskRepository.save(task);
         deadlineNudgeService.index(saved);
@@ -164,6 +173,15 @@ public class IdeaServiceImpl implements IdeaService {
 
     private Task.Category categoryOrDefault(Task.Category category) {
         return category != null ? category : Task.Category.OTHER;
+    }
+
+    private Task.Category parseCategory(String raw) {
+        if (raw == null || raw.isBlank()) return Task.Category.OTHER;
+        try {
+            return Task.Category.valueOf(raw.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Task.Category.OTHER;
+        }
     }
 
     private String normalizeLineTitle(String value) {
