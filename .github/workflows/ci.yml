@@ -59,3 +59,7 @@ jobs:
       - run: npm run build
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          VITE_SENTRY_ENVIRONMENT: ${{ secrets.VITE_SENTRY_ENVIRONMENT }}
+          VITE_SENTRY_TRACES_SAMPLE_RATE: ${{ secrets.VITE_SENTRY_TRACES_SAMPLE_RATE }}
+          VITE_SENTRY_SEND_DEFAULT_PII: ${{ secrets.VITE_SENTRY_SEND_DEFAULT_PII }}
