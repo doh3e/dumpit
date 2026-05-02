@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
+import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
 
 const NOTIFIED_KEY = 'dumpit.deadlineNudges.notified'
 const THRESHOLDS_KEY = 'dumpit_notification_thresholds'
@@ -23,11 +24,6 @@ function getSelectedThresholds() {
     if (saved) return JSON.parse(saved)
   } catch {}
   return DEFAULT_THRESHOLDS
-}
-
-function getNotificationPermission() {
-  if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported'
-  return window.Notification.permission
 }
 
 function parseDate(value) {
@@ -134,12 +130,11 @@ export default function DeadlineNudgeMenu() {
     const notifiedSet = new Set(notified)
 
     const fire = (body, tag) => {
-      const n = new window.Notification('Dumpit! 마감 알림', {
+      void showBrowserNotification('Dumpit! 마감 알림', {
         body,
         icon: '/favicon-48x48.png',
         tag,
-      })
-      n.onclick = () => { window.focus(); window.location.assign('/dashboard'); n.close() }
+      }, '/dashboard')
     }
 
     let count = 0

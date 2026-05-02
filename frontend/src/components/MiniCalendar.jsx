@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import api, { getApiErrorMessage } from '../services/api'
+import api, { API_BASE_URL, getApiErrorMessage } from '../services/api'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -15,6 +15,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
   const [googleEvents, setGoogleEvents] = useState([])
+  const [calendarPermissionRequired, setCalendarPermissionRequired] = useState(false)
   const [hoveredDay, setHoveredDay] = useState(null)
   const [addingEventId, setAddingEventId] = useState(null)
   const tooltipTimeout = useRef(null)
@@ -30,9 +31,19 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
 
   useEffect(() => {
     api.get('/calendar/events')
-      .then((res) => setGoogleEvents(res.data))
-      .catch(() => setGoogleEvents([]))
+      .then((res) => {
+        setGoogleEvents(res.data)
+        setCalendarPermissionRequired(false)
+      })
+      .catch((error) => {
+        setGoogleEvents([])
+        setCalendarPermissionRequired(error.response?.data?.code === 'CALENDAR_PERMISSION_REQUIRED')
+      })
   }, [])
+
+  const requestCalendarPermission = () => {
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/google?calendar_consent=1`
+  }
 
   const calendarDays = useMemo(() => {
     const firstDay = new Date(year, month, 1).getDay()
@@ -237,6 +248,21 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
           )
         })}
       </div>
+
+      {calendarPermissionRequired && (
+        <div className="mt-3 rounded-lg border-2 border-blue-200 bg-blue-50 px-3 py-2">
+          <p className="text-[11px] font-bold text-blue-900">
+            Google Calendar 일정을 보려면 캘린더 읽기 권한이 필요해요.
+          </p>
+          <button
+            type="button"
+            onClick={requestCalendarPermission}
+            className="mt-2 rounded border-2 border-blue-500 bg-white px-2.5 py-1 text-[10px] font-black text-blue-600 hover:bg-blue-100 transition-colors"
+          >
+            권한 허용하기
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center gap-4 mt-3 justify-center">
         <div className="flex items-center gap-1">

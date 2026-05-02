@@ -13,5 +13,5 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, UUID> 
 
     @Modifying
     @Query("DELETE FROM ActivityLog l WHERE l.user.withdrawnAt < :cutoff")
-    long deleteWithdrawnUserLogsBefore(@Param("cutoff") LocalDateTime cutoff);
+    int deleteWithdrawnUserLogsBefore(@Param("cutoff") LocalDateTime cutoff);
 }

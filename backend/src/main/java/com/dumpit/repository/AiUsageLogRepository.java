@@ -15,7 +15,7 @@ public interface AiUsageLogRepository extends JpaRepository<AiUsageLog, UUID> {
 
     @Modifying
     @Query("DELETE FROM AiUsageLog l WHERE l.user.withdrawnAt < :cutoff")
-    long deleteWithdrawnUserLogsBefore(@Param("cutoff") LocalDateTime cutoff);
+    int deleteWithdrawnUserLogsBefore(@Param("cutoff") LocalDateTime cutoff);
 
     @Query("""
         SELECT COALESCE(SUM(l.cost), 0) FROM AiUsageLog l
