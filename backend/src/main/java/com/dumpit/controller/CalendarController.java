@@ -22,11 +22,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CalendarController {
 
+    private static final String CALENDAR_READONLY_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
+
     private final GoogleCalendarService googleCalendarService;
     private final OAuth2AuthorizedClientRepository authorizedClientRepository;
 
     @GetMapping("/events")
-    public ResponseEntity<List<CalendarEvent>> getEvents(HttpServletRequest request) {
+    public ResponseEntity<?> getEvents(HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         OAuth2AuthorizedClient client = authorizedClientRepository
@@ -37,7 +39,16 @@ public class CalendarController {
         }
 
         OAuth2AccessToken accessToken = client.getAccessToken();
+        if (!accessToken.getScopes().contains(CALENDAR_READONLY_SCOPE)) {
+            return ResponseEntity.status(403).body(new CalendarPermissionRequiredResponse(
+                    "CALENDAR_PERMISSION_REQUIRED",
+                    "Google Calendar 일정을 불러오려면 캘린더 읽기 권한이 필요합니다."
+            ));
+        }
+
         List<CalendarEvent> events = googleCalendarService.getUpcomingEvents(accessToken.getTokenValue());
         return ResponseEntity.ok(events);
     }
+
+    record CalendarPermissionRequiredResponse(String code, String message) {}
 }

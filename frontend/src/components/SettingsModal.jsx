@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../services/api'
+import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
 
 const DEFAULT_START = 9
 const DEFAULT_END = 22
@@ -16,11 +17,6 @@ const THRESHOLDS = [
 const THRESHOLDS_KEY = 'dumpit_notification_thresholds'
 const NOTIFICATIONS_ENABLED_KEY = 'dumpit_notifications_enabled'
 const DEFAULT_THRESHOLDS = [60]
-
-function getNotificationPermission() {
-  if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported'
-  return window.Notification.permission
-}
 
 function isIOSDevice() {
   if (typeof navigator === 'undefined') return false
@@ -103,11 +99,11 @@ export default function SettingsModal({ onClose }) {
 
     localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, '1')
     setNotificationsEnabled(true)
-    new window.Notification('Dumpit! 테스트 알림', {
+    void showBrowserNotification('Dumpit! 테스트 알림', {
       body: '알림 설정이 정상이에요.',
       icon: '/favicon-48x48.png',
       tag: 'dumpit-test-notification',
-    })
+    }, '/dashboard')
     setTestSent(true)
     window.setTimeout(() => setTestSent(false), 2500)
   }

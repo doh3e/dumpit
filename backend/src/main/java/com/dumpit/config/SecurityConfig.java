@@ -112,18 +112,23 @@ public class SecurityConfig {
         return new OAuth2AuthorizationRequestResolver() {
             @Override
             public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
-                return addGoogleParams(defaultResolver.resolve(request));
+                return addGoogleParams(defaultResolver.resolve(request), request);
             }
 
             @Override
             public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
-                return addGoogleParams(defaultResolver.resolve(request, clientRegistrationId));
+                return addGoogleParams(defaultResolver.resolve(request, clientRegistrationId), request);
             }
 
-            private OAuth2AuthorizationRequest addGoogleParams(OAuth2AuthorizationRequest authRequest) {
+            private OAuth2AuthorizationRequest addGoogleParams(OAuth2AuthorizationRequest authRequest,
+                                                               HttpServletRequest request) {
                 if (authRequest == null) return null;
                 Map<String, Object> params = new HashMap<>(authRequest.getAdditionalParameters());
                 params.put("access_type", "offline");
+                params.put("include_granted_scopes", "true");
+                if ("1".equals(request.getParameter("calendar_consent"))) {
+                    params.put("prompt", "consent");
+                }
                 return OAuth2AuthorizationRequest.from(authRequest)
                         .additionalParameters(params)
                         .build();
