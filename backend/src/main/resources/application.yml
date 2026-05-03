@@ -40,6 +40,7 @@ server:
   servlet:
     context-path: /api
     session:
+      timeout: 24h
       cookie:
         http-only: true
         same-site: lax
