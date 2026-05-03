@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import api, { API_BASE_URL, getApiErrorMessage } from '../services/api'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
+const CALENDAR_REFRESH_MS = 10 * 60 * 1000
 
 function formatTime(dateStr) {
   if (!dateStr) return ''
@@ -15,7 +16,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
   const [googleEvents, setGoogleEvents] = useState([])
-  const [calendarPermissionRequired, setCalendarPermissionRequired] = useState(false)
+  const [calendarActionRequired, setCalendarActionRequired] = useState(null)
   const [hoveredDay, setHoveredDay] = useState(null)
   const [addingEventId, setAddingEventId] = useState(null)
   const tooltipTimeout = useRef(null)
@@ -29,17 +30,33 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
     else setMonth(month + 1)
   }
 
-  useEffect(() => {
+  const fetchGoogleEvents = useCallback(() => {
     api.get('/calendar/events')
       .then((res) => {
         setGoogleEvents(res.data)
-        setCalendarPermissionRequired(false)
+        setCalendarActionRequired(null)
       })
       .catch((error) => {
         setGoogleEvents([])
-        setCalendarPermissionRequired(error.response?.data?.code === 'CALENDAR_PERMISSION_REQUIRED')
+        const code = error.response?.data?.code
+        setCalendarActionRequired(
+          ['CALENDAR_PERMISSION_REQUIRED', 'GOOGLE_CALENDAR_RECONNECT_REQUIRED'].includes(code)
+            ? code
+            : null
+        )
       })
   }, [])
+
+  useEffect(() => {
+    fetchGoogleEvents()
+    const interval = window.setInterval(fetchGoogleEvents, CALENDAR_REFRESH_MS)
+    window.addEventListener('focus', fetchGoogleEvents)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', fetchGoogleEvents)
+    }
+  }, [fetchGoogleEvents])
 
   const requestCalendarPermission = () => {
     window.location.href = `${API_BASE_URL}/oauth2/authorization/google?calendar_consent=1`
@@ -249,17 +266,19 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
         })}
       </div>
 
-      {calendarPermissionRequired && (
+      {calendarActionRequired && (
         <div className="mt-3 rounded-lg border-2 border-blue-200 bg-blue-50 px-3 py-2">
           <p className="text-[11px] font-bold text-blue-900">
-            Google Calendar 일정을 보려면 캘린더 읽기 권한이 필요해요.
+            {calendarActionRequired === 'GOOGLE_CALENDAR_RECONNECT_REQUIRED'
+              ? 'Google Calendar 연결이 만료되었어요.'
+              : 'Google Calendar 일정을 보려면 캘린더 읽기 권한이 필요해요.'}
           </p>
           <button
             type="button"
             onClick={requestCalendarPermission}
             className="mt-2 rounded border-2 border-blue-500 bg-white px-2.5 py-1 text-[10px] font-black text-blue-600 hover:bg-blue-100 transition-colors"
           >
-            권한 허용하기
+            {calendarActionRequired === 'GOOGLE_CALENDAR_RECONNECT_REQUIRED' ? '다시 연결하기' : '권한 허용하기'}
           </button>
         </div>
       )}

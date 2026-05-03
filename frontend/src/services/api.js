@@ -27,12 +27,13 @@ api.interceptors.response.use(
     error.userMessage = getApiErrorMessage(error)
     const status = error.response?.status
     const url = error.config?.url || ''
-    const isCalendarPermissionRequired = url.includes('/calendar/events')
-      && error.response?.data?.code === 'CALENDAR_PERMISSION_REQUIRED'
+    const isCalendarActionRequired = url.includes('/calendar/events')
+      && ['CALENDAR_PERMISSION_REQUIRED', 'GOOGLE_CALENDAR_RECONNECT_REQUIRED']
+        .includes(error.response?.data?.code)
     if (
       typeof window !== 'undefined' &&
       !url.includes('/auth/me') &&
-      !isCalendarPermissionRequired &&
+      !isCalendarActionRequired &&
       (status === 403 || status >= 500)
     ) {
       window.dispatchEvent(new CustomEvent('dumpit:toast', {
