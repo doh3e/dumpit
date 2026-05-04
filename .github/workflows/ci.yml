@@ -3,8 +3,14 @@ name: CI
 on:
   push:
     branches: [main, dev]
+    paths-ignore:
+      - 'desktop/**'
+      - '.github/workflows/desktop.yml'
   pull_request:
     branches: [main, dev]
+    paths-ignore:
+      - 'desktop/**'
+      - '.github/workflows/desktop.yml'
 
 jobs:
   backend:
