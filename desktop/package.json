@@ -1,0 +1,47 @@
+{
+  "name": "dumpit-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Dumpit desktop client",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "build:frontend": "node scripts/build-frontend.mjs",
+    "start": "electron .",
+    "package": "npm run build:frontend && electron-builder",
+    "package:win": "npm run build:frontend && electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^30.5.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "kr.dumpit.desktop",
+    "productName": "덤핏",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "assets/**/*",
+      "electron/**/*",
+      "package.json",
+      {
+        "from": "../frontend/dist",
+        "to": "frontend-dist",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "assets/icons/app.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    }
+  }
+}
