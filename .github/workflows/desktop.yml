@@ -1,18 +1,6 @@
 name: Desktop Build
 
 on:
-  push:
-    branches: [desktop]
-    paths:
-      - 'desktop/**'
-      - 'frontend/**'
-      - '.github/workflows/desktop.yml'
-  pull_request:
-    branches: [desktop]
-    paths:
-      - 'desktop/**'
-      - 'frontend/**'
-      - '.github/workflows/desktop.yml'
   workflow_dispatch:
 
 jobs:
@@ -27,10 +15,16 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: |
+            frontend/package-lock.json
+            desktop/package-lock.json
 
       - name: Install frontend dependencies
         working-directory: frontend
+        run: npm ci
+
+      - name: Install desktop dependencies
+        working-directory: desktop
         run: npm ci
 
       - name: Build frontend for desktop
@@ -43,10 +37,6 @@ jobs:
           VITE_SENTRY_TRACES_SAMPLE_RATE: ${{ secrets.VITE_SENTRY_TRACES_SAMPLE_RATE }}
           VITE_SENTRY_SEND_DEFAULT_PII: ${{ secrets.VITE_SENTRY_SEND_DEFAULT_PII }}
         run: npm run build:frontend
-
-      - name: Install desktop dependencies
-        working-directory: desktop
-        run: npm install
 
       - name: Package desktop app
         working-directory: desktop
