@@ -88,8 +88,8 @@ function getFrontendDistPath() {
 
 function getAppIconPath() {
   return isDev
-    ? path.resolve(__dirname, '..', '..', 'frontend', 'public', 'favicon-48x48.png')
-    : path.join(app.getAppPath(), 'frontend-dist', 'favicon-48x48.png')
+    ? path.resolve(__dirname, '..', 'assets', 'icons', 'app.ico')
+    : path.join(app.getAppPath(), 'assets', 'icons', 'app.ico')
 }
 
 function resolveFrontendFile(url) {
