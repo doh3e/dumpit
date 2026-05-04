@@ -23,7 +23,7 @@ export default function HomePage() {
         <div className="mb-8">
           <img
             src="/logo.png"
-            alt="DumpIt 로고"
+            alt="덤핏 로고"
             className="w-72 mx-auto drop-shadow-lg"
           />
           <p className="mt-4 text-xl font-extrabold text-dark tracking-wide">
@@ -75,7 +75,7 @@ export default function HomePage() {
 
       <footer className="border-t-2 border-dark py-5 px-6 text-center">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-sm font-bold text-dark/50">
-          <span>&copy; 2026 Dumpit</span>
+          <span>&copy; 2026 Dumpit!</span>
           <span className="hidden sm:inline text-dark/20">|</span>
           <Link to="/privacy" className="hover:text-primary transition-colors">
             개인정보 처리방침

@@ -197,7 +197,10 @@ export default function DashboardPage() {
           </div>
 
           <div className="card-kitschy">
-            <h3 className="font-extrabold text-dark mb-4">달력</h3>
+            <div className="flex items-baseline gap-2 mb-4">
+              <h3 className="font-extrabold text-dark">달력</h3>
+              <span className="text-[10px] text-dark/40 font-medium">날짜를 클릭해서 일정을 태스크로 추가해보세요!</span>
+            </div>
             <MiniCalendar tasks={taskList} onTaskAdded={fetchTasks} />
           </div>
 

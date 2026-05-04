@@ -38,24 +38,22 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
   const playAlarm = useCallback(() => {
     try {
       const ctx = new AudioContext()
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.value = 800
-      gain.gain.value = 0.3
-      osc.start()
-      osc.stop(ctx.currentTime + 0.3)
-      setTimeout(() => {
-        const osc2 = ctx.createOscillator()
-        const gain2 = ctx.createGain()
-        osc2.connect(gain2)
-        gain2.connect(ctx.destination)
-        osc2.frequency.value = 1000
-        gain2.gain.value = 0.3
-        osc2.start()
-        osc2.stop(ctx.currentTime + 0.3)
-      }, 400)
+      const playBell = (freq, startTime) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.type = 'sine'
+        osc.frequency.value = freq
+        gain.gain.setValueAtTime(0, startTime)
+        gain.gain.linearRampToValueAtTime(0.14, startTime + 0.01)
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.2)
+        osc.start(startTime)
+        osc.stop(startTime + 1.2)
+      }
+      playBell(523, ctx.currentTime)
+      playBell(659, ctx.currentTime + 0.55)
+      playBell(784, ctx.currentTime + 1.1)
     } catch {
       /* audio not available */
     }

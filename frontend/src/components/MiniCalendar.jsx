@@ -18,14 +18,17 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
   const [googleEvents, setGoogleEvents] = useState([])
   const [calendarActionRequired, setCalendarActionRequired] = useState(null)
   const [hoveredDay, setHoveredDay] = useState(null)
+  const [selectedDay, setSelectedDay] = useState(null)
   const [addingEventId, setAddingEventId] = useState(null)
   const tooltipTimeout = useRef(null)
 
   const prevMonth = () => {
+    setSelectedDay(null)
     if (month === 0) { setYear(year - 1); setMonth(11) }
     else setMonth(month - 1)
   }
   const nextMonth = () => {
+    setSelectedDay(null)
     if (month === 11) { setYear(year + 1); setMonth(0) }
     else setMonth(month + 1)
   }
@@ -104,20 +107,20 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
     : null
 
   const handleDayEnter = (day) => {
+    if (selectedDay) return
     clearTimeout(tooltipTimeout.current)
     setHoveredDay(day)
   }
 
   const handleDayLeave = () => {
-    tooltipTimeout.current = setTimeout(() => setHoveredDay(null), 200)
+    tooltipTimeout.current = setTimeout(() => setHoveredDay(null), 150)
   }
 
-  const handleTooltipEnter = () => {
+  const handleDayClick = (day, hasAny) => {
+    if (!hasAny) return
     clearTimeout(tooltipTimeout.current)
-  }
-
-  const handleTooltipLeave = () => {
-    tooltipTimeout.current = setTimeout(() => setHoveredDay(null), 200)
+    setHoveredDay(null)
+    setSelectedDay((prev) => (prev === day ? null : day))
   }
 
   const handleAddFromGoogle = async (event) => {
@@ -192,18 +195,19 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
           return (
             <div
               key={day}
-              className="relative"
+              className={`relative ${selectedDay === day || hoveredDay === day ? 'z-10' : ''}`}
               onMouseEnter={() => hasAny && handleDayEnter(day)}
               onMouseLeave={handleDayLeave}
+              onClick={() => handleDayClick(day, hasAny)}
             >
               <div
-                className={`text-center py-1.5 rounded text-xs font-bold transition-colors cursor-default ${
+                className={`text-center py-1.5 rounded text-xs font-bold transition-colors ${
                   isToday
                     ? 'bg-primary text-white'
                     : hasAny
-                    ? 'text-dark hover:bg-dark/5'
+                    ? `text-dark hover:bg-dark/5 ${selectedDay === day ? 'bg-dark/5' : ''}`
                     : 'text-dark hover:bg-accent'
-                }`}
+                } ${hasAny ? 'cursor-pointer' : 'cursor-default'}`}
               >
                 {day}
                 <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-0.5">
@@ -216,42 +220,67 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                 </div>
               </div>
 
-              {hoveredDay === day && hasAny && (
-                <div
-                  className="absolute z-50 left-1/2 -translate-x-1/2 top-full mt-1 w-52 card-kitschy !p-3 space-y-2"
-                  onMouseEnter={handleTooltipEnter}
-                  onMouseLeave={handleTooltipLeave}
-                >
-                  <p className="text-[10px] font-bold text-dark/40">
-                    {month + 1}월 {day}일
-                  </p>
-
+              {/* hover 미리보기 - 읽기 전용 */}
+              {hoveredDay === day && !selectedDay && hasAny && (
+                <div className="absolute z-50 left-1/2 -translate-x-1/2 top-full mt-1 w-52 card-kitschy !p-3 space-y-2 pointer-events-none">
+                  <p className="text-[10px] font-bold text-dark/40">{month + 1}월 {day}일 · 클릭해서 고정</p>
                   {dayTasks?.map((t) => (
                     <div key={t.taskId} className="flex items-start gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-secondary mt-1 flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-[11px] font-bold text-dark truncate">{t.title}</p>
                         {t.deadline && (
-                          <p className="text-[9px] text-dark/40 font-medium">
-                            마감 {formatTime(t.deadline)}
-                          </p>
+                          <p className="text-[9px] text-dark/40 font-medium">마감 {formatTime(t.deadline)}</p>
                         )}
                       </div>
                     </div>
                   ))}
+                  {dayGoogle?.map((e) => (
+                    <div key={e.id} className="flex items-start gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-dark truncate">{e.summary}</p>
+                        <p className="text-[9px] text-dark/40 font-medium">
+                          {formatTime(e.start)}{e.end && ` ~ ${formatTime(e.end)}`}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
+              {/* 클릭 고정 모달 - 추가 버튼 있음 */}
+              {selectedDay === day && hasAny && (
+                <div className="absolute z-50 left-1/2 -translate-x-1/2 top-full mt-1 w-52 card-kitschy !p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-bold text-dark/40">{month + 1}월 {day}일</p>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedDay(null) }}
+                      className="text-[10px] text-dark/30 hover:text-dark transition-colors leading-none"
+                    >✕</button>
+                  </div>
+                  {dayTasks?.map((t) => (
+                    <div key={t.taskId} className="flex items-start gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-secondary mt-1 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-dark truncate">{t.title}</p>
+                        {t.deadline && (
+                          <p className="text-[9px] text-dark/40 font-medium">마감 {formatTime(t.deadline)}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                   {dayGoogle?.map((e) => (
                     <div key={e.id} className="flex items-start gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-bold text-dark truncate">{e.summary}</p>
                         <p className="text-[9px] text-dark/40 font-medium">
-                          {formatTime(e.start)}
-                          {e.end && ` ~ ${formatTime(e.end)}`}
+                          {formatTime(e.start)}{e.end && ` ~ ${formatTime(e.end)}`}
                         </p>
                       </div>
                       <button
-                        onClick={() => handleAddFromGoogle(e)}
+                        onClick={(evt) => { evt.stopPropagation(); handleAddFromGoogle(e) }}
                         disabled={addingEventId === e.id}
                         className="text-[9px] font-bold text-blue-500 hover:text-primary transition-colors flex-shrink-0 mt-0.5"
                       >

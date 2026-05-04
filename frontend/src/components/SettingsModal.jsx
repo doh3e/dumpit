@@ -58,8 +58,8 @@ export default function SettingsModal({ onClose }) {
   const isIOS = isIOSDevice()
   const isStandalone = isStandaloneWebApp()
   const notificationNote = isIOS && !isStandalone
-    ? '아이폰/아이패드에서는 홈 화면에 추가한 앱에서만 백그라운드 웹 푸시가 가능해요. 현재 알림은 Dumpit을 열어둔 상태에서 동작해요.'
-    : '현재 알림은 Dumpit 탭이나 앱이 열려 있을 때 마감 정보를 확인해 띄워요.'
+    ? '아이폰/아이패드에서는 홈 화면에 추가한 앱에서만 백그라운드 웹 푸시가 가능해요. 현재 알림은 Dumpit!을 열어둔 상태에서 동작해요.'
+    : '현재 알림은 Dumpit! 탭이나 앱이 열려 있을 때 마감 정보를 확인해 띄워요.'
 
   const handleNotificationToggle = async () => {
     if (permission === 'unsupported' || permission === 'denied') return

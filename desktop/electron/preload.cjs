@@ -241,11 +241,11 @@ window.addEventListener('DOMContentLoaded', () => {
         padding-bottom: 2.25rem !important;
       }
 
-      .dumpit-desktop-home main img[alt*="DumpIt"] {
+      .dumpit-desktop-home main img[alt*="덤핏"] {
         width: 13rem !important;
       }
 
-      .dumpit-desktop-home main img[alt*="DumpIt"] + p {
+      .dumpit-desktop-home main img[alt*="덤핏"] + p {
         margin-top: 0.75rem !important;
         font-size: 1rem !important;
       }
