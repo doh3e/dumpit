@@ -3,6 +3,9 @@ name: Deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'desktop/**'
+      - '.github/workflows/desktop.yml'
 
 jobs:
   deploy-backend:

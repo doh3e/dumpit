@@ -10,7 +10,7 @@ export default function Footer() {
       <footer className="border-t-2 border-dark/10 bg-accent">
         <div className="max-w-5xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
           <p className="font-bold text-dark/60">
-            &copy; 2026 Dumpit · 운영자:{' '}
+            &copy; 2026 Dumpit! · 운영자:{' '}
             <a
               href="mailto:dumpitadmin@gmail.com"
               className="text-primary underline"

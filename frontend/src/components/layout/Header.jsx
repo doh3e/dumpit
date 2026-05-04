@@ -63,7 +63,7 @@ export default function Header({ onOpenDrawer }) {
             <img src={menuImage} alt="" className="h-5 w-5 object-contain" />
           </button>
           <Link to="/dashboard" className="flex items-center gap-2">
-            <img src="/text_logo.png" alt="DumpIt" className="h-24 w-auto" />
+            <img src="/text_logo.png" alt="덤핏" className="h-24 w-auto" />
             <span className="text-[10px] font-bold bg-secondary text-white px-2 py-0.5 rounded border border-dark">
               BETA
             </span>
