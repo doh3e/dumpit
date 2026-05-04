@@ -36,7 +36,8 @@
       "icon": "assets/icons/app.ico",
       "target": [
         "nsis"
-      ]
+      ],
+      "artifactName": "dumpit-setup.exe"
     },
     "mac": {
       "target": [

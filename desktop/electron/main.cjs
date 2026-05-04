@@ -35,6 +35,7 @@ const AUTH_NAVIGATION_HOSTS = new Set([
 const isDev = !app.isPackaged
 const isDebug = process.env.DUMPIT_DESKTOP_DEBUG === '1'
 let mainWindow
+let authWindow = null
 let tray
 let isQuitting = false
 let preferences = {
@@ -372,6 +373,45 @@ function persistAuthSessionCookies() {
   })
 }
 
+function openAuthWindow(url) {
+  if (authWindow && !authWindow.isDestroyed()) {
+    authWindow.focus()
+    return
+  }
+
+  authWindow = new BrowserWindow({
+    width: 500,
+    height: 700,
+    title: '덤핏 로그인',
+    icon: getAppIconPath(),
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  })
+
+  authWindow.loadURL(url)
+
+  const onAuthComplete = (navUrl) => {
+    let parsed
+    try { parsed = new URL(navUrl) } catch { return }
+    if (!WEB_APP_ORIGINS.has(parsed.origin)) return
+
+    if (isDebug) console.log('[desktop] auth completed, reloading main window')
+    authWindow.close()
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.loadURL(`${APP_URL}/`)
+    }
+  }
+
+  authWindow.webContents.on('will-navigate', (_event, navUrl) => onAuthComplete(navUrl))
+  authWindow.webContents.on('did-redirect-navigation', (_event, navUrl, _isInPlace, isMainFrame) => {
+    if (isMainFrame) onAuthComplete(navUrl)
+  })
+
+  authWindow.on('closed', () => { authWindow = null })
+}
+
 async function removeLegacyAuthCookies() {
   const cookies = await session.defaultSession.cookies.get({ url: 'https://api.dumpit.kr/api' })
   await Promise.all(cookies
@@ -400,10 +440,19 @@ function debugApiCookieHeaders() {
   )
 }
 
+function isOAuthUrl(url) {
+  return url.includes('/oauth2/') || url.includes('/login/oauth2/')
+}
+
 function allowApiCorsForDesktopApp() {
   session.defaultSession.webRequest.onBeforeSendHeaders(
     { urls: ['https://api.dumpit.kr/api/*'] },
     (details, callback) => {
+      if (isOAuthUrl(details.url)) {
+        callback({ requestHeaders: details.requestHeaders })
+        return
+      }
+
       const requestHeaders = {
         ...details.requestHeaders,
         Origin: 'https://dumpit.kr',
@@ -425,6 +474,11 @@ function allowApiCorsForDesktopApp() {
   session.defaultSession.webRequest.onHeadersReceived(
     { urls: ['https://api.dumpit.kr/api/*'] },
     (details, callback) => {
+      if (isOAuthUrl(details.url)) {
+        callback({ responseHeaders: details.responseHeaders })
+        return
+      }
+
       const responseHeaders = Object.fromEntries(
         Object.entries(details.responseHeaders || {})
           .filter(([key]) => !key.toLowerCase().startsWith('access-control-'))
@@ -433,11 +487,11 @@ function allowApiCorsForDesktopApp() {
       callback({
         responseHeaders: {
           ...responseHeaders,
-        'Access-Control-Allow-Credentials': ['true'],
-        'Access-Control-Allow-Headers': ['Content-Type, Authorization, X-Requested-With'],
-        'Access-Control-Allow-Methods': ['GET, POST, PUT, DELETE, PATCH, OPTIONS'],
-        'Access-Control-Allow-Origin': [APP_URL],
-        'Access-Control-Expose-Headers': ['Location'],
+          'Access-Control-Allow-Credentials': ['true'],
+          'Access-Control-Allow-Headers': ['Content-Type, Authorization, X-Requested-With'],
+          'Access-Control-Allow-Methods': ['GET, POST, PUT, DELETE, PATCH, OPTIONS'],
+          'Access-Control-Allow-Origin': [APP_URL],
+          'Access-Control-Expose-Headers': ['Location'],
         },
       })
     }
@@ -566,6 +620,11 @@ function createWindow() {
   })
 
   createdWindow.webContents.on('will-navigate', (event, url) => {
+    if (shouldKeepAuthNavigationInApp(url)) {
+      event.preventDefault()
+      openAuthWindow(url)
+      return
+    }
     if (handleNavigation(createdWindow, url)) {
       event.preventDefault()
     }

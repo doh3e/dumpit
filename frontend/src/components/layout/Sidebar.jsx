@@ -2,6 +2,7 @@ import { NavLink, Link } from 'react-router-dom'
 import PomodoroTimer from '../PomodoroTimer'
 import { useAuth } from '../../context/AuthContext'
 import settingImage from '../../assets/setting_image.png'
+import downloadImage from '../../assets/download.png'
 
 const MENU = [
   { label: '대시보드', path: '/dashboard' },
@@ -95,6 +96,21 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, isDrawerOpe
         >
           설정
         </button>
+        {!window.dumpitDesktop && (
+          <>
+            <hr className="border-dark/20" />
+            <a
+              href="https://github.com/doh3e/dumpit/releases/latest/download/dumpit-setup.exe"
+              target="_blank"
+              rel="noreferrer"
+              onClick={handleNavClick}
+              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-xs text-dark/70 border-2 border-transparent hover:bg-accent hover:border-dark transition-all"
+            >
+              <img src={downloadImage} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
+              데스크탑 앱 다운로드
+            </a>
+          </>
+        )}
       </div>
     </>
   )
