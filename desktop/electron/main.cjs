@@ -1,7 +1,8 @@
-const { app, BrowserWindow, protocol, shell } = require('electron')
+const { app, BrowserWindow, Menu, protocol, shell } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
-const { pathToFileURL } = require('node:url')
+
+app.setName('Dumpit')
 
 const APP_HOST = 'dumpit'
 const APP_URL = `app://${APP_HOST}`
@@ -16,6 +17,21 @@ const AUTH_NAVIGATION_HOSTS = new Set([
   'oauth2.googleapis.com',
 ])
 const isDev = !app.isPackaged
+const CONTENT_TYPES = {
+  '.css': 'text/css; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.ico': 'image/x-icon',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+}
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -70,6 +86,12 @@ function getFrontendDistPath() {
     : path.join(app.getAppPath(), 'frontend-dist')
 }
 
+function getAppIconPath() {
+  return isDev
+    ? path.resolve(__dirname, '..', '..', 'frontend', 'public', 'favicon-48x48.png')
+    : path.join(app.getAppPath(), 'frontend-dist', 'favicon-48x48.png')
+}
+
 function resolveFrontendFile(url) {
   const distPath = getFrontendDistPath()
   const parsed = new URL(url)
@@ -91,15 +113,92 @@ function resolveFrontendFile(url) {
 }
 
 function registerFrontendProtocol() {
-  protocol.handle('app', (request) => {
+  protocol.handle('app', async (request) => {
     const parsed = new URL(request.url)
 
     if (parsed.hostname !== APP_HOST) {
       return new Response('Not found', { status: 404 })
     }
 
-    return fetch(pathToFileURL(resolveFrontendFile(request.url)).toString())
+    const filePath = resolveFrontendFile(request.url)
+    const fileBuffer = await fs.promises.readFile(filePath)
+    const contentType = CONTENT_TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream'
+
+    return new Response(fileBuffer, {
+      headers: {
+        'content-type': contentType,
+      },
+    })
   })
+}
+
+function createApplicationMenu(mainWindow) {
+  const template = [
+    {
+      label: '덤핏',
+      submenu: [
+        {
+          label: '덤핏 열기',
+          click: () => {
+            if (mainWindow.isMinimized()) mainWindow.restore()
+            mainWindow.show()
+            mainWindow.focus()
+          },
+        },
+        { type: 'separator' },
+        {
+          label: '홈으로 이동',
+          click: () => mainWindow.loadURL(`${APP_URL}/`),
+        },
+        { type: 'separator' },
+        {
+          label: '종료',
+          role: 'quit',
+        },
+      ],
+    },
+    {
+      label: '보기',
+      submenu: [
+        {
+          label: '새로고침',
+          role: 'reload',
+        },
+        {
+          label: '확대',
+          role: 'zoomIn',
+        },
+        {
+          label: '축소',
+          role: 'zoomOut',
+        },
+        {
+          label: '기본 크기',
+          role: 'resetZoom',
+        },
+        { type: 'separator' },
+        {
+          label: '전체 화면',
+          role: 'togglefullscreen',
+        },
+      ],
+    },
+    {
+      label: '도움말',
+      submenu: [
+        {
+          label: '덤핏 웹사이트 열기',
+          click: () => shell.openExternal('https://dumpit.kr'),
+        },
+        {
+          label: '문의 메일 보내기',
+          click: () => shell.openExternal('mailto:dumpitadmin@gmail.com'),
+        },
+      ],
+    },
+  ]
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
 function createWindow() {
@@ -109,6 +208,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 700,
     title: 'Dumpit',
+    icon: getAppIconPath(),
     backgroundColor: '#fff7e8',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -118,6 +218,7 @@ function createWindow() {
     },
   })
 
+  createApplicationMenu(mainWindow)
   mainWindow.loadURL(`app://${APP_HOST}/`)
 
   mainWindow.webContents.on('will-navigate', (event, url) => {
@@ -150,6 +251,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  app.setAppUserModelId('kr.dumpit.desktop')
   registerFrontendProtocol()
   createWindow()
 
