@@ -31,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Build frontend for desktop
-        working-directory: desktop
+        working-directory: frontend
         env:
           VITE_API_URL: https://api.dumpit.kr/api
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -39,7 +39,7 @@ jobs:
           VITE_SENTRY_ENVIRONMENT: ${{ secrets.VITE_SENTRY_ENVIRONMENT }}
           VITE_SENTRY_TRACES_SAMPLE_RATE: ${{ secrets.VITE_SENTRY_TRACES_SAMPLE_RATE }}
           VITE_SENTRY_SEND_DEFAULT_PII: ${{ secrets.VITE_SENTRY_SEND_DEFAULT_PII }}
-        run: npm run build:frontend
+        run: npm run build
 
       - name: Package desktop app
         working-directory: desktop
