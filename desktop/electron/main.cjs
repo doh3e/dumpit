@@ -14,7 +14,7 @@ const {
 const path = require('node:path')
 const fs = require('node:fs')
 
-app.setName('Dumpit')
+app.setName('덤핏(Dumpit!)')
 app.setPath('userData', path.join(app.getPath('appData'), 'Dumpit'))
 
 const APP_HOST = 'dumpit'
@@ -55,6 +55,14 @@ const CONTENT_TYPES = {
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
 }
+
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+}
+
+app.on('second-instance', () => {
+  showMainWindow()
+})
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -284,7 +292,7 @@ function createTray() {
   if (tray) return tray
 
   tray = new Tray(getTrayIconPath())
-  tray.setToolTip('Dumpit')
+  tray.setToolTip('덤핏(Dumpit!)')
   tray.setContextMenu(Menu.buildFromTemplate([
     {
       label: '덤핏 열기',
@@ -462,7 +470,7 @@ async function logStoredAuthCookies() {
 
 function registerNotificationBridge() {
   ipcMain.handle('dumpit:notify', (event, payload = {}) => {
-    const title = String(payload.title || 'Dumpit')
+    const title = String(payload.title || '덤핏(Dumpit!)')
     const body = typeof payload.body === 'string' ? payload.body : undefined
     const clickUrl = typeof payload.clickUrl === 'string' ? payload.clickUrl : undefined
     const notification = new Notification({
@@ -501,7 +509,7 @@ function createWindow() {
     height: initialHeight,
     minWidth: 960,
     minHeight: 820,
-    title: 'Dumpit',
+    title: '덤핏(Dumpit!)',
     icon: getAppIconPath(),
     backgroundColor: '#fff7e8',
     webPreferences: {
@@ -516,6 +524,11 @@ function createWindow() {
 
   createdWindow.webContents.on('did-finish-load', () => {
     createdWindow.webContents.setZoomFactor(DESKTOP_ZOOM_FACTOR)
+    createdWindow.setTitle('덤핏(Dumpit!)')
+  })
+
+  createdWindow.on('page-title-updated', (event) => {
+    event.preventDefault()
   })
 
   createdWindow.loadURL(`app://${APP_HOST}/`)
@@ -530,7 +543,7 @@ function createWindow() {
         buttons: ['트레이로 내리기', '종료하기'],
         defaultId: 0,
         cancelId: 0,
-        title: 'Dumpit',
+        title: '덤핏(Dumpit!)',
         message: '덤핏을 종료하지 않고 트레이로 내릴까요?',
         detail: '트레이 아이콘에서 다시 열 수 있어요. 완전히 종료하려면 트레이 메뉴의 종료를 사용할 수 있습니다.',
         checkboxLabel: '다시 묻지 않기',
@@ -620,4 +633,8 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   isQuitting = true
+  if (tray) {
+    tray.destroy()
+    tray = null
+  }
 })

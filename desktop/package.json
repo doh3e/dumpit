@@ -16,7 +16,7 @@
   },
   "build": {
     "appId": "kr.dumpit.desktop",
-    "productName": "Dumpit",
+    "productName": "덤핏",
     "directories": {
       "output": "release"
     },
