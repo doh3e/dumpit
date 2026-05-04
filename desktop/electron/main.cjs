@@ -597,7 +597,7 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  app.setAppUserModelId('kr.dumpit.desktop')
+  app.setAppUserModelId(isDev ? 'Dumpit!' : 'kr.dumpit.desktop')
   loadPreferences()
   persistAuthSessionCookies()
   debugApiCookieHeaders()
