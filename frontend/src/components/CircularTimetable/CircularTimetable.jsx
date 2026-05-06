@@ -30,47 +30,22 @@ function slicePath(startAngle, endAngle, outerR, innerR) {
   ].join(' ')
 }
 
-/**
- * 배치 범위 계산 — 자정을 넘기는 야간 루틴(예: 22~4시)도 지원
- * @returns { primary: [start,end][], overflow: [start,end][] }
- */
-function getPlacementRanges(routineStart, routineEnd, nowMin) {
-  const rS = routineStart * 60
-  const rE = routineEnd * 60
-  const primary = []
-  const overflow = []
-
-  const align = (m) => Math.ceil(m / 15) * 15
-
-  if (routineStart <= routineEnd) {
-    const pStart = Math.max(rS, nowMin)
-    if (pStart < rE) primary.push([align(pStart), rE])
-    const oStart = Math.max(rE, nowMin)
-    if (oStart < 1440) overflow.push([align(oStart), 1440])
-  } else {
-    if (nowMin < rE) {
-      primary.push([align(nowMin), rE])
-      overflow.push([align(rE), rS])
-    } else if (nowMin >= rS) {
-      primary.push([align(nowMin), 1440])
-      primary.push([0, rE])
-      overflow.push([align(rE), rS])
-    } else {
-      overflow.push([align(nowMin), rS])
-      primary.push([rS, 1440])
-      primary.push([0, rE])
-    }
+function rangePathsOutsideWork(routineStart, routineEnd) {
+  const startAngle = (routineStart / 24) * 360
+  const endAngle = (routineEnd / 24) * 360
+  if (routineStart === routineEnd) return []
+  if (routineStart < routineEnd) {
+    return [
+      [0, startAngle],
+      [endAngle, 360],
+    ].filter(([start, end]) => end > start)
   }
-
-  return { primary, overflow }
+  return [[endAngle, startAngle]]
 }
 
 function scheduleBlocks(tasks, routineStart, routineEnd, now) {
-  const nowMs = now.getTime()
   const nowH = now.getHours() + now.getMinutes() / 60
   const nowMin = Math.ceil((nowH * 60) / 15) * 15
-  const todayStr = now.toDateString()
-  const routineEndMin = routineEnd * 60
   const dayStart = new Date(now)
   dayStart.setHours(0, 0, 0, 0)
   const dayEnd = new Date(dayStart)
@@ -85,23 +60,21 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
   const overlapsToday = (start, end) => start < dayEnd && end > dayStart
 
-  // 1) 완료/취소 제외, 마감 지난 태스크 제외
+  // 시간표는 사용자가 시간을 정한 일만 표시한다.
+  // 마감/중요도 기반의 추천과 자동 배치는 대시보드 추천 카드와 해야 할 일 목록이 담당한다.
   const active = tasks.filter((t) => {
     if (t.status === 'DONE' || t.status === 'CANCELLED') return false
-    if (t.deadline) {
-      const dl = toDate(t.deadline)
-      if (dl && dl.getTime() <= nowMs) return false
-    }
     return true
   })
 
   const fixedBlocks = []
-  const floatingTasks = []
 
   active.forEach((t, i) => {
-    if (t.startTime && t.endTime && t.isLocked) {
+    if (t.startTime && (t.endTime || t.routineId || t.category === 'ROUTINE')) {
       const s = toDate(t.startTime)
-      const e = toDate(t.endTime)
+      const e = t.endTime
+        ? toDate(t.endTime)
+        : new Date(s.getTime() + Math.max(15, t.estimatedMinutes || 15) * 60000)
       if (s && e && e > s && overlapsToday(s, e)) {
         const startMin = clamp(minutesFromDayStart(s), nowMin, 1440)
         const endMin = clamp(minutesFromDayStart(e), 0, 1440)
@@ -113,127 +86,44 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
           endH: endMin / 60,
           color: PRIORITY_COLORS[i % PRIORITY_COLORS.length],
           priority: t.effectivePriority ?? 0.5,
-          isLocked: true,
+          isLocked: Boolean(t.isLocked || t.routineId || t.category === 'ROUTINE'),
         })
       }
-    } else {
-      const dl = toDate(t.deadline)
-      if (!dl || dl.toDateString() === todayStr) {
-        floatingTasks.push({ ...t, _idx: i })
-      }
     }
   })
 
-  // 2) 오늘 마감 → 마감시간순, 나머지 → 우선순위순 (같으면 마감 가까운 순)
-  floatingTasks.sort((a, b) => {
-    const da = toDate(a.deadline)
-    const db = toDate(b.deadline)
-    const todayA = da && da.toDateString() === todayStr
-    const todayB = db && db.toDateString() === todayStr
-
-    // 오늘 마감 태스크가 항상 먼저
-    if (todayA && !todayB) return -1
-    if (!todayA && todayB) return 1
-
-    if (todayA && todayB) {
-      // 둘 다 오늘 마감: 마감 빠른 순 → 우선순위 높은 순
-      const t = da.getTime() - db.getTime()
-      return t !== 0 ? t : (b.effectivePriority ?? 0.5) - (a.effectivePriority ?? 0.5)
-    }
-
-    // 나머지: 우선순위 높은 순 → 마감 가까운 순
-    const priA = a.effectivePriority ?? 0.5
-    const priB = b.effectivePriority ?? 0.5
-    if (priA !== priB) return priB - priA
-    if (da && db) return da.getTime() - db.getTime()
-    if (da) return -1
-    if (db) return 1
-    return 0
-  })
-
-  // 점유 시간 추적
-  const occupied = new Set()
-  fixedBlocks.forEach((b) => {
-    const s = Math.floor(b.startH * 60)
-    const e = Math.ceil(b.endH * 60)
-    for (let m = s; m < e; m++) occupied.add(m)
-  })
-
-  const autoBlocks = []
-
-  floatingTasks.forEach((t) => {
-    const duration = Math.max(15, t.estimatedMinutes || 60)
-    const dl = toDate(t.deadline)
-
-    // 3) 종료 시점 결정: 오늘 마감이면 마감시간, 아니면 일과 종료
-    let effectiveEnd
-    if (dl) {
-      const isToday = dl.toDateString() === todayStr
-      if (isToday) {
-        effectiveEnd = dl.getHours() * 60 + dl.getMinutes()
-      } else {
-        effectiveEnd = routineEndMin
-      }
-    } else {
-      effectiveEnd = routineEndMin
-    }
-
-    if (effectiveEnd <= nowMin) return
-
-    // 현재~종료 사이에서 실제 채울 수 있는 시간
-    if (duration > effectiveEnd - nowMin) return
-
-    // 현재 시간부터 빈 슬롯 찾기 (겹침 방지)
-    for (let cursor = nowMin; cursor + duration <= effectiveEnd; cursor += 15) {
-      let fits = true
-      for (let m = cursor; m < cursor + duration; m++) {
-        if (occupied.has(m)) { fits = false; break }
-      }
-      if (fits) {
-        autoBlocks.push({
-          id: t.taskId,
-          title: t.title,
-          startH: cursor / 60,
-          endH: (cursor + duration) / 60,
-          color: PRIORITY_COLORS[t._idx % PRIORITY_COLORS.length],
-          priority: t.effectivePriority ?? 0.5,
-          isLocked: false,
-        })
-        for (let m = cursor; m < cursor + duration; m++) occupied.add(m)
-        return
-      }
-    }
-  })
-
-  return [...fixedBlocks, ...autoBlocks].sort((a, b) => a.startH - b.startH)
+  return fixedBlocks.sort((a, b) => a.startH - b.startH)
 }
 
 const DEFAULT_START = 9
 const DEFAULT_END = 22
 
+function readRoutine() {
+  const start = localStorage.getItem('dumpit_routine_start')
+  const end = localStorage.getItem('dumpit_routine_end')
+  return {
+    start: start ? Number(start) : DEFAULT_START,
+    end: end ? Number(end) : DEFAULT_END,
+  }
+}
+
 export default function CircularTimetable({ tasks = [] }) {
   const [now, setNow] = useState(new Date())
-  const [showSettings, setShowSettings] = useState(false)
-  const [routineStart, setRoutineStart] = useState(() => {
-    const v = localStorage.getItem('dumpit_routine_start')
-    return v ? Number(v) : DEFAULT_START
-  })
-  const [routineEnd, setRoutineEnd] = useState(() => {
-    const v = localStorage.getItem('dumpit_routine_end')
-    return v ? Number(v) : DEFAULT_END
-  })
+  const [routine, setRoutine] = useState(readRoutine)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000)
     return () => clearInterval(id)
   }, [])
 
-  const saveRoutine = (start, end) => {
-    setRoutineStart(start)
-    setRoutineEnd(end)
-    localStorage.setItem('dumpit_routine_start', start)
-    localStorage.setItem('dumpit_routine_end', end)
-  }
+  useEffect(() => {
+    const handler = () => setRoutine(readRoutine())
+    window.addEventListener('dumpit_routine_changed', handler)
+    return () => window.removeEventListener('dumpit_routine_changed', handler)
+  }, [])
+
+  const routineStart = routine.start
+  const routineEnd = routine.end
 
   const currentHour = now.getHours() + now.getMinutes() / 60
   const blocks = useMemo(
@@ -243,10 +133,7 @@ export default function CircularTimetable({ tasks = [] }) {
 
   const currentBlock = blocks.find((b) => currentHour >= b.startH && currentHour < b.endH)
 
-  const routineStartAngle = (routineStart / 24) * 360
-  const routineEndAngle = routineStart <= routineEnd
-    ? (routineEnd / 24) * 360
-    : (routineEnd / 24) * 360 + 360
+  const inactiveRanges = rangePathsOutsideWork(routineStart, routineEnd)
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -254,12 +141,15 @@ export default function CircularTimetable({ tasks = [] }) {
         <circle cx={CENTER} cy={CENTER} r={RADIUS} fill="#F0F0F0" stroke="#1A1A1A" strokeWidth={2} />
         <circle cx={CENTER} cy={CENTER} r={INNER_RADIUS} fill="white" stroke="#1A1A1A" strokeWidth={2} />
 
-        <path
-          d={slicePath(routineStartAngle, routineEndAngle, RADIUS - 1, INNER_RADIUS + 1)}
-          fill="#E8F5E9"
-          stroke="none"
-          opacity={0.5}
-        />
+        {inactiveRanges.map(([startAngle, endAngle]) => (
+          <path
+            key={`${startAngle}-${endAngle}`}
+            d={slicePath(startAngle, endAngle, RADIUS - 1, INNER_RADIUS + 1)}
+            fill="#D8D8D8"
+            stroke="none"
+            opacity={0.72}
+          />
+        ))}
 
         {Array.from({ length: 24 }, (_, h) => {
           const angle = (h / 24) * 360
@@ -306,13 +196,13 @@ export default function CircularTimetable({ tasks = [] }) {
           )
         })()}
 
-        <text x={CENTER} y={CENTER - 6} textAnchor="middle" fontSize={14}
+        <text x={CENTER} y={CENTER} textAnchor="middle" fontSize={14}
           fontWeight={900} fill="#1A1A1A" fontFamily="'Press Start 2P', monospace">
           {String(now.getHours()).padStart(2, '0')}:{String(now.getMinutes()).padStart(2, '0')}
         </text>
-        <text x={CENTER} y={CENTER + 10} textAnchor="middle" fontSize={8}
-          fill="#1A1A1A" opacity={0.4} fontWeight={700}>
-          NOW
+        <text x={CENTER} y={CENTER + 18} textAnchor="middle" fontSize={11}
+          fill="#1A1A1A" opacity={0.45} fontWeight={800}>
+          {routineStart}시-{routineEnd}시
         </text>
 
         {[0, 6, 12, 18].map((h) => {
@@ -348,41 +238,10 @@ export default function CircularTimetable({ tasks = [] }) {
 
       {blocks.length === 0 && (
         <p className="text-xs text-dark/40 font-medium text-center">
-          일정이 없어요
+          시간이 정해진 일이 없어요
         </p>
       )}
 
-      <button
-        onClick={() => setShowSettings(!showSettings)}
-        className="text-[10px] font-bold text-dark/40 hover:text-primary transition-colors"
-      >
-        일과 시간: {routineStart}시~{routineEnd}시 (변경)
-      </button>
-
-      {showSettings && (
-        <div className="w-full flex items-center gap-2 bg-accent rounded-lg p-2 border border-dark/10">
-          <label className="text-[10px] font-bold text-dark/60">시작</label>
-          <select
-            value={routineStart}
-            onChange={(e) => saveRoutine(Number(e.target.value), routineEnd)}
-            className="text-xs font-bold border border-dark rounded px-1 py-0.5 bg-white"
-          >
-            {Array.from({ length: 24 }, (_, h) => (
-              <option key={h} value={h}>{h}시</option>
-            ))}
-          </select>
-          <label className="text-[10px] font-bold text-dark/60">종료</label>
-          <select
-            value={routineEnd}
-            onChange={(e) => saveRoutine(routineStart, Number(e.target.value))}
-            className="text-xs font-bold border border-dark rounded px-1 py-0.5 bg-white"
-          >
-            {Array.from({ length: 24 }, (_, h) => (
-              <option key={h} value={h}>{h}시</option>
-            ))}
-          </select>
-        </div>
-      )}
     </div>
   )
 }

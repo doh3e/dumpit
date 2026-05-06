@@ -20,21 +20,31 @@ export default function Layout() {
   const [showMobileTimer, setShowMobileTimer] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [tasks, setTasks] = useState([])
+  const [focusRecommendation, setFocusRecommendation] = useState(null)
   const [unreadNotices, setUnreadNotices] = useState([])
 
   const fetchTasks = useCallback(() => {
     if (!user) {
       setTasks([])
+      setFocusRecommendation(null)
       return
     }
-    api.get('/tasks')
-      .then((res) => setTasks(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setTasks([]))
+    api.get('/dashboard/planning')
+      .then((res) => {
+        const data = res.data || {}
+        setTasks(Array.isArray(data.tasks) ? data.tasks : [])
+        setFocusRecommendation(data.focusRecommendations?.[0] || null)
+      })
+      .catch(() => {
+        setTasks([])
+        setFocusRecommendation(null)
+      })
   }, [user])
 
   useEffect(() => {
     if (!user) {
       setTasks([])
+      setFocusRecommendation(null)
       setUnreadNotices([])
       return
     }
@@ -84,6 +94,7 @@ export default function Layout() {
           onOpenSettings={() => setShowSettings(true)}
           onOpenHelp={() => setShowHelp(true)}
           tasks={tasks}
+          focusRecommendation={focusRecommendation}
           isDrawerOpen={drawerOpen}
           onCloseDrawer={() => setDrawerOpen(false)}
         />
@@ -119,7 +130,7 @@ export default function Layout() {
                 X
               </button>
             </div>
-            <PomodoroTimer tasks={tasks} />
+            <PomodoroTimer tasks={tasks} recommendedTaskId={focusRecommendation?.task?.taskId} />
           </div>
         </div>,
         document.body

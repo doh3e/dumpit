@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self';" />
+  <title>덤핏 뽀모도로</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: transparent;
+      color: #1a1a1a;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      user-select: none;
+    }
+
+    .widget {
+      width: 100%;
+      height: 100%;
+      border: 2px solid #1a1a1a;
+      border-radius: 8px;
+      background: #fff7e8;
+      padding: 12px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 9px;
+      -webkit-app-region: drag;
+    }
+
+    .title {
+      width: 100%;
+      border-bottom: 1px solid rgba(26, 26, 26, 0.24);
+      padding-bottom: 8px;
+      color: rgba(26, 26, 26, 0.46);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      -webkit-app-region: no-drag;
+    }
+
+    .mode {
+      min-width: 54px;
+      height: 23px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #1a1a1a;
+      border-radius: 999px;
+      background: #e05d5d;
+      color: white;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .icon-button {
+      width: 25px;
+      height: 25px;
+      border: 2px solid #1a1a1a;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: white;
+      color: #1a1a1a;
+      font-size: 13px;
+      font-weight: 950;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    #open {
+      padding-bottom: 2px;
+    }
+
+    .icon-button:hover {
+      background: #7ec8a0;
+      color: white;
+    }
+
+    #close:hover {
+      background: #e05d5d;
+      color: white;
+    }
+
+    .timer {
+      position: relative;
+      width: 112px;
+      height: 112px;
+      margin-top: 2px;
+    }
+
+    .timer svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .timer circle {
+      fill: none;
+      stroke-width: 6;
+      stroke-linecap: round;
+    }
+
+    .track {
+      stroke: #e8e8e8;
+    }
+
+    .progress {
+      stroke: #e05d5d;
+      stroke-dasharray: 263.89;
+      stroke-dashoffset: 263.89;
+      transition: stroke-dashoffset 0.4s linear, stroke 0.2s ease;
+    }
+
+    .time {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      font-weight: 950;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .task {
+      width: 100%;
+      height: 28px;
+      border: 2px solid #1a1a1a;
+      border-radius: 7px;
+      background: white;
+      padding: 0 8px;
+      font-size: 10px;
+      font-weight: 850;
+      color: #1a1a1a;
+      -webkit-app-region: no-drag;
+      cursor: pointer;
+    }
+
+    .task:focus {
+      outline: 2px solid rgba(224, 93, 93, 0.35);
+      outline-offset: 1px;
+    }
+
+    .controls {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 58px;
+      gap: 7px;
+      -webkit-app-region: no-drag;
+    }
+
+    .action {
+      height: 34px;
+      border: 2px solid #1a1a1a;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 950;
+      color: #1a1a1a;
+      background: white;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 #1a1a1a;
+    }
+
+    .action.primary {
+      background: #e05d5d;
+      color: white;
+    }
+
+    .action:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 2px 2px 0 #1a1a1a;
+    }
+
+    body.break .mode,
+    body.break .action.primary {
+      background: #7ec8a0;
+    }
+
+    body.break .progress {
+      stroke: #7ec8a0;
+    }
+
+    body.idle .mode {
+      background: #fffdf8;
+      color: rgba(26, 26, 26, 0.62);
+    }
+
+    body.idle .progress {
+      stroke: rgba(26, 26, 26, 0.2);
+    }
+
+    body.idle .action.primary {
+      background: #e05d5d;
+    }
+  </style>
+</head>
+<body class="idle">
+  <main class="widget">
+    <div class="title">POMODORO</div>
+
+    <div class="top">
+      <div class="mode" id="mode">FOCUS</div>
+      <button class="icon-button" id="open" type="button" title="덤핏 열기" aria-label="덤핏 열기">↗</button>
+      <button class="icon-button" id="close" type="button" title="닫기" aria-label="닫기">×</button>
+    </div>
+
+    <section class="timer" aria-label="뽀모도로 타이머">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="track" cx="50" cy="50" r="42" />
+        <circle class="progress" id="progress" cx="50" cy="50" r="42" />
+      </svg>
+      <div class="time" id="time">--:--</div>
+    </section>
+
+    <select class="task" id="task" aria-label="집중할 태스크 선택">
+      <option value="">집중할 태스크 선택</option>
+    </select>
+
+    <div class="controls">
+      <button class="action primary" id="openAction" type="button">집중시작</button>
+      <button class="action" id="resetAction" type="button">초기화</button>
+    </div>
+  </main>
+</body>
+</html>

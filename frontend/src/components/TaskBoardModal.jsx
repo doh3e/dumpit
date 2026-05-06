@@ -59,7 +59,7 @@ function buildSections(tasks, sortMode) {
   const todayEnd = endOfDay(now)
   const threeDaysEnd = endOfDay(addDays(now, 3))
   const weekEnd = endOfDay(addDays(now, 7))
-  const weekAgo = startOfDay(addDays(now, -7))
+  const threeDaysAgo = startOfDay(addDays(now, -3))
 
   const active = tasks.filter((task) => task.status !== 'DONE' && task.status !== 'CANCELLED')
   const done = tasks.filter((task) => task.status === 'DONE')
@@ -81,18 +81,30 @@ function buildSections(tasks, sortMode) {
 
   const recentDone = done.filter((task) => {
     const completedAt = parseDate(task.completedAt)
-    if (completedAt) return completedAt >= weekAgo
+    if (completedAt) return completedAt >= threeDaysAgo
     const deadline = parseDate(task.deadline)
-    return !deadline || deadline >= weekAgo
+    return !deadline || deadline >= threeDaysAgo
   })
 
   return [
-    { id: 'overdue', title: '마감기한 지난 일', tone: 'border-red-300 bg-red-50', tasks: sortTasks(overdue, 'deadline') },
     { id: 'today', title: '오늘 할 일', tone: 'border-primary/40 bg-white', tasks: sortTasks(today, sortMode) },
     { id: 'three', title: '3일 내로 할 일', tone: 'border-secondary/30 bg-white', tasks: sortTasks(threeDays, sortMode) },
     { id: 'week', title: '일주일 내로 할 일', tone: 'border-yellow-300 bg-yellow-50/40', tasks: sortTasks(week, sortMode) },
     { id: 'later', title: '그 외', tone: 'border-dark/10 bg-white', tasks: sortTasks(later, sortMode) },
-    { id: 'done', title: '완료된 일 (최근 일주일)', tone: 'border-dark/10 bg-dark/5', tasks: sortTasks(recentDone, sortMode) },
+    { id: 'overdue', title: '마감기한 지난 일', tone: 'border-red-300 bg-red-50', tasks: sortTasks(overdue, 'deadline') },
+    { id: 'done', title: '완료된 일 (최근 3일)', tone: 'border-dark/10 bg-dark/5', tasks: sortTasks(recentDone, sortMode) },
+  ]
+}
+
+function buildSectionsFromPlanning(sections, sortMode) {
+  if (!sections) return null
+  return [
+    { id: 'today', title: '오늘 할 일', tone: 'border-primary/40 bg-white', tasks: sortTasks(sections.today || [], sortMode) },
+    { id: 'three', title: '3일 내로 할 일', tone: 'border-secondary/30 bg-white', tasks: sortTasks(sections.next3Days || [], sortMode) },
+    { id: 'week', title: '일주일 내로 할 일', tone: 'border-yellow-300 bg-yellow-50/40', tasks: sortTasks(sections.next7Days || [], sortMode) },
+    { id: 'later', title: '그 외', tone: 'border-dark/10 bg-white', tasks: sortTasks(sections.later || [], sortMode) },
+    { id: 'overdue', title: '마감기한 지난 일', tone: 'border-red-300 bg-red-50', tasks: sortTasks(sections.overdue || [], 'deadline') },
+    { id: 'done', title: '완료된 일 (최근 3일)', tone: 'border-dark/10 bg-dark/5', tasks: sortTasks(sections.recentDone || [], sortMode) },
   ]
 }
 
@@ -139,9 +151,12 @@ function TaskRow({ task, onEdit, onToggle }) {
   )
 }
 
-export default function TaskBoardModal({ tasks, onClose, onEditTask, onToggleTask }) {
+export default function TaskBoardModal({ tasks, sections: planningSections, onClose, onEditTask, onToggleTask }) {
   const [sortMode, setSortMode] = useState('priority')
-  const sections = useMemo(() => buildSections(tasks, sortMode), [tasks, sortMode])
+  const sections = useMemo(
+    () => buildSectionsFromPlanning(planningSections, sortMode) || buildSections(tasks, sortMode),
+    [tasks, planningSections, sortMode]
+  )
 
   return createPortal(
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-dark/40 px-3 py-4" onClick={onClose}>

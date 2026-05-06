@@ -41,6 +41,21 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Task> getTasksForUser(String email, Integer doneSinceDays) {
+        if (doneSinceDays == null) {
+            return getTasksForUser(email);
+        }
+        if (doneSinceDays < 1 || doneSinceDays > 365) {
+            throw new BadRequestException("doneSinceDays는 1일부터 365일 사이로 입력해주세요.");
+        }
+
+        User user = findUser(email);
+        LocalDateTime doneSince = LocalDateTime.now().minusDays(doneSinceDays);
+        return taskRepository.findByUserWithRecentDoneOrderByPriority(user, doneSince);
+    }
+
+    @Override
     @Transactional
     public Task createTask(String email, String title, String description,
                            LocalDateTime deadline, Integer estimatedMinutes,
@@ -85,14 +100,17 @@ public class TaskServiceImpl implements TaskService {
         Map<String, Object> before = snapshot(task);
 
         if (fields.title() != null) task.setTitle(fields.title());
-        if (fields.description() != null) task.setDescription(fields.description());
+        if (fields.hasDescription()) task.setDescription(fields.description());
         if (fields.status() != null) task.setStatus(Task.Status.valueOf(fields.status()));
-        if (fields.deadline() != null) task.setDeadline(fields.deadline());
-        if (fields.estimatedMinutes() != null) task.setEstimatedMinutes(fields.estimatedMinutes());
-        if (fields.startTime() != null) task.setStartTime(fields.startTime());
-        if (fields.endTime() != null) task.setEndTime(fields.endTime());
-        if (fields.isLocked() != null) task.setIsLocked(fields.isLocked());
-        if (fields.userPriorityScore() != null) task.setUserPriorityScore(fields.userPriorityScore());
+        if (fields.hasDeadline()) {
+            validateFutureDeadline(fields.deadline());
+            task.setDeadline(fields.deadline());
+        }
+        if (fields.hasEstimatedMinutes()) task.setEstimatedMinutes(fields.estimatedMinutes());
+        if (fields.hasStartTime()) task.setStartTime(fields.startTime());
+        if (fields.hasEndTime()) task.setEndTime(fields.endTime());
+        if (fields.hasIsLocked()) task.setIsLocked(Boolean.TRUE.equals(fields.isLocked()));
+        if (fields.hasUserPriorityScore()) task.setUserPriorityScore(fields.userPriorityScore());
         if (fields.category() != null) task.setCategory(fields.category());
 
         if (prevStatus != Task.Status.DONE && task.getStatus() == Task.Status.DONE) {

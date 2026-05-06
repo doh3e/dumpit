@@ -10,6 +10,8 @@ public interface TaskService {
 
     List<Task> getTasksForUser(String email);
 
+    List<Task> getTasksForUser(String email, Integer doneSinceDays);
+
     Task createTask(String email, String title, String description,
                     LocalDateTime deadline, Integer estimatedMinutes,
                     LocalDateTime startTime, LocalDateTime endTime,
@@ -34,13 +36,20 @@ public interface TaskService {
     record TaskUpdateFields(
             String title,
             String description,
+            boolean hasDescription,
             String status,
             Double userPriorityScore,
+            boolean hasUserPriorityScore,
             LocalDateTime deadline,
+            boolean hasDeadline,
             Integer estimatedMinutes,
+            boolean hasEstimatedMinutes,
             LocalDateTime startTime,
+            boolean hasStartTime,
             LocalDateTime endTime,
+            boolean hasEndTime,
             Boolean isLocked,
+            boolean hasIsLocked,
             Task.Category category
     ) {}
 }

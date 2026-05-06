@@ -36,8 +36,19 @@ const isDev = !app.isPackaged
 const isDebug = process.env.DUMPIT_DESKTOP_DEBUG === '1'
 let mainWindow
 let authWindow = null
+let pomodoroWidgetWindow = null
 let tray
 let isQuitting = false
+let latestPomodoroState = {
+  active: false,
+  mode: 'FOCUS',
+  time: '--:--',
+  running: false,
+  progress: 0,
+  taskTitle: null,
+  selectedTaskId: '',
+  tasks: [],
+}
 let preferences = {
   skipCloseToTrayPrompt: false,
 }
@@ -128,6 +139,10 @@ function getTrayIconPath() {
   return isDev
     ? path.resolve(__dirname, '..', 'assets', 'icons', 'tray.ico')
     : path.join(app.getAppPath(), 'assets', 'icons', 'tray.ico')
+}
+
+function getPomodoroWidgetPath() {
+  return path.join(__dirname, 'pomodoro-widget.html')
 }
 
 function getPreferencesPath() {
@@ -289,6 +304,58 @@ function openSettingsFromTray() {
   }
 }
 
+function showPomodoroWidget() {
+  if (pomodoroWidgetWindow && !pomodoroWidgetWindow.isDestroyed()) {
+    pomodoroWidgetWindow.show()
+    pomodoroWidgetWindow.focus()
+    sendPomodoroStateToWidget()
+    return
+  }
+
+  const { workArea } = screen.getPrimaryDisplay()
+  const width = 190
+  const height = 280
+
+  pomodoroWidgetWindow = new BrowserWindow({
+    width,
+    height,
+    x: Math.max(workArea.x, workArea.x + workArea.width - width - 18),
+    y: Math.max(workArea.y, workArea.y + workArea.height - height - 18),
+    minWidth: width,
+    minHeight: height,
+    maxWidth: width,
+    maxHeight: height,
+    title: '덤핏 뽀모도로',
+    icon: getAppIconPath(),
+    frame: false,
+    resizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: false,
+    alwaysOnTop: true,
+    backgroundColor: '#00000000',
+    transparent: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'pomodoro-widget-preload.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+  })
+
+  pomodoroWidgetWindow.setAlwaysOnTop(true, 'floating')
+  pomodoroWidgetWindow.loadFile(getPomodoroWidgetPath())
+  pomodoroWidgetWindow.webContents.on('did-finish-load', sendPomodoroStateToWidget)
+  pomodoroWidgetWindow.on('closed', () => {
+    pomodoroWidgetWindow = null
+  })
+}
+
+function sendPomodoroStateToWidget() {
+  if (!pomodoroWidgetWindow || pomodoroWidgetWindow.isDestroyed()) return
+  pomodoroWidgetWindow.webContents.send('dumpit:pomodoro-widget-state', latestPomodoroState)
+}
+
 function createTray() {
   if (tray) return tray
 
@@ -306,6 +373,10 @@ function createTray() {
     {
       label: '루틴 열기',
       click: () => showMainWindow(`${APP_URL}/routines`),
+    },
+    {
+      label: '뽀모도로 위젯 열기',
+      click: () => showPomodoroWidget(),
     },
     {
       label: '설정 열기',
@@ -328,10 +399,35 @@ function createTray() {
 function updateTrayPomodoro(payload = {}) {
   if (!tray) return
 
+  if (payload.active === false) {
+    tray.setToolTip('덤핏(Dumpit!)')
+    return
+  }
+
   const modeLabel = payload.mode === 'BREAK' ? '휴식' : '집중'
   const timeLabel = typeof payload.time === 'string' ? payload.time : '--:--'
   const stateLabel = payload.running ? '진행 중' : '일시정지'
   tray.setToolTip(`Dumpit\n뽀모도로 ${modeLabel} ${timeLabel} · ${stateLabel}`)
+}
+
+function updatePomodoroState(payload = {}) {
+  latestPomodoroState = {
+    active: payload.active !== false,
+    mode: payload.mode === 'BREAK' ? 'BREAK' : 'FOCUS',
+    time: typeof payload.time === 'string' ? payload.time : '--:--',
+    running: Boolean(payload.running),
+    progress: Number.isFinite(payload.progress) ? payload.progress : 0,
+    taskTitle: typeof payload.taskTitle === 'string' ? payload.taskTitle : null,
+    selectedTaskId: typeof payload.selectedTaskId === 'string' ? payload.selectedTaskId : '',
+    tasks: Array.isArray(payload.tasks) ? payload.tasks : [],
+  }
+
+  if (payload.active === false) {
+    latestPomodoroState.active = false
+  }
+
+  updateTrayPomodoro(latestPomodoroState)
+  sendPomodoroStateToWidget()
 }
 
 function persistAuthSessionCookies() {
@@ -549,7 +645,31 @@ function registerNotificationBridge() {
   })
 
   ipcMain.on('dumpit:pomodoro-state', (_event, payload) => {
-    updateTrayPomodoro(payload)
+    updatePomodoroState(payload)
+  })
+
+  ipcMain.on('dumpit:pomodoro-widget-show', () => {
+    showPomodoroWidget()
+  })
+
+  ipcMain.on('dumpit:pomodoro-widget-close', () => {
+    if (pomodoroWidgetWindow && !pomodoroWidgetWindow.isDestroyed()) {
+      pomodoroWidgetWindow.close()
+    }
+  })
+
+  ipcMain.on('dumpit:pomodoro-widget-open-main', () => {
+    showMainWindow()
+  })
+
+  ipcMain.on('dumpit:pomodoro-widget-ready', () => {
+    sendPomodoroStateToWidget()
+  })
+
+  ipcMain.on('dumpit:pomodoro-widget-command', (_event, command) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('dumpit:pomodoro-command', command)
+    }
   })
 }
 

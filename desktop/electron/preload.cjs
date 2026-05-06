@@ -2,11 +2,17 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('dumpitDesktop', {
   notify: (payload) => ipcRenderer.invoke('dumpit:notify', payload),
+  openPomodoroWidget: () => ipcRenderer.send('dumpit:pomodoro-widget-show'),
   updatePomodoroState: (payload) => ipcRenderer.send('dumpit:pomodoro-state', payload),
   onNotificationClick: (callback) => {
     const listener = (_event, payload) => callback(payload)
     ipcRenderer.on('dumpit:notification-click', listener)
     return () => ipcRenderer.removeListener('dumpit:notification-click', listener)
+  },
+  onPomodoroCommand: (callback) => {
+    const listener = (_event, payload) => callback(payload)
+    ipcRenderer.on('dumpit:pomodoro-command', listener)
+    return () => ipcRenderer.removeListener('dumpit:pomodoro-command', listener)
   },
 })
 
@@ -15,80 +21,6 @@ ipcRenderer.on('dumpit:open-settings', () => {
   const settingsButton = buttons.find((button) => button.textContent?.trim() === '설정')
   settingsButton?.click()
 })
-
-function findPomodoroState() {
-  const timeElement = Array.from(document.querySelectorAll('span'))
-    .find((element) => /^\d{2}:\d{2}$/.test(element.textContent?.trim() || ''))
-
-  if (!timeElement) return null
-
-  let root = timeElement.parentElement
-  for (let i = 0; i < 8 && root; i += 1) {
-    const modeElement = Array.from(root.querySelectorAll('div, span'))
-      .find((element) => ['FOCUS', 'BREAK'].includes(element.textContent?.trim()))
-
-    if (modeElement) {
-      const buttonText = Array.from(root.querySelectorAll('button'))
-        .map((button) => button.textContent || '')
-        .join(' ')
-
-      return {
-        mode: modeElement.textContent.trim(),
-        time: timeElement.textContent.trim(),
-        running: buttonText.includes('일시정지'),
-      }
-    }
-
-    root = root.parentElement
-  }
-
-  const modeElement = Array.from(document.querySelectorAll('div, span'))
-    .find((element) => ['FOCUS', 'BREAK'].includes(element.textContent?.trim()))
-
-  if (!modeElement) return null
-
-  const buttonText = Array.from(document.querySelectorAll('button'))
-    .map((button) => button.textContent || '')
-    .join(' ')
-
-  return {
-    mode: modeElement.textContent.trim(),
-    time: timeElement.textContent.trim(),
-    running: buttonText.includes('일시정지'),
-  }
-}
-
-function installPomodoroTraySync() {
-  let lastSerializedState = ''
-  let lastCompletionKey = ''
-
-  const sync = () => {
-    const state = findPomodoroState()
-    if (!state) return
-
-    const serializedState = JSON.stringify(state)
-    if (serializedState !== lastSerializedState) {
-      lastSerializedState = serializedState
-      window.dumpitDesktop?.updatePomodoroState(state)
-    }
-
-    const completionKey = `${state.mode}:${state.time}:${state.running}`
-    if (state.running && state.time === '00:00' && completionKey !== lastCompletionKey) {
-      lastCompletionKey = completionKey
-      window.dumpitDesktop?.notify({
-        title: state.mode === 'BREAK' ? 'Dumpit! 휴식이 끝났어요' : 'Dumpit! 집중 완료',
-        body: state.mode === 'BREAK'
-          ? '다시 집중할 준비가 됐어요.'
-          : '좋아요. 잠깐 쉬어갈 시간이에요.',
-      }).catch(() => {})
-    }
-  }
-
-  window.setInterval(sync, 1000)
-  window.addEventListener('focus', sync)
-  window.addEventListener('visibilitychange', sync)
-  sync()
-}
 
 function updateDesktopRouteClass() {
   document.documentElement.classList.toggle(
@@ -108,6 +40,9 @@ function installNotificationShim() {
 
       window.dumpitDesktop.onNotificationClick(({ id, clickUrl }) => {
         const notification = notifications.get(id)
+        if (notification?.cleanupTimer) {
+          window.clearTimeout(notification.cleanupTimer)
+        }
         if (notification?.onclick) {
           notification.onclick({ target: notification })
         } else if (clickUrl) {
@@ -132,6 +67,9 @@ function installNotificationShim() {
           this.onclick = null
           this.id = String(nextNotificationId++)
           notifications.set(this.id, this)
+          this.cleanupTimer = window.setTimeout(() => {
+            notifications.delete(this.id)
+          }, 10 * 60 * 1000)
 
           window.dumpitDesktop.notify({
             id: this.id,
@@ -140,11 +78,13 @@ function installNotificationShim() {
             silent: options.silent,
             clickUrl: options.data?.url,
           }).catch(() => {
+            window.clearTimeout(this.cleanupTimer)
             notifications.delete(this.id)
           })
         }
 
         close() {
+          window.clearTimeout(this.cleanupTimer)
           notifications.delete(this.id)
         }
       }
@@ -176,7 +116,6 @@ function installNotificationShim() {
 // Keep desktop-only presentation tweaks isolated from the shared web app.
 window.addEventListener('DOMContentLoaded', () => {
   installNotificationShim()
-  installPomodoroTraySync()
   document.documentElement.classList.add('dumpit-desktop')
   updateDesktopRouteClass()
 

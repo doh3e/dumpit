@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -48,11 +48,14 @@ function startOfLocalDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
-function isVisibleToday(task) {
-  if (!task.deadline) return true
-  const deadline = parseDate(task.deadline)
-  if (!deadline || Number.isNaN(deadline.getTime())) return true
-  return startOfLocalDay(deadline) >= startOfLocalDay(new Date())
+function endOfLocalDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999)
+}
+
+function addDays(date, days) {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
 }
 
 function getUrgencyInfo(deadline) {
@@ -91,6 +94,100 @@ function groupByParent(list) {
   return result
 }
 
+function getDashboardBucket(task, now = new Date()) {
+  const deadline = parseDate(task.deadline)
+  if (!deadline || Number.isNaN(deadline.getTime())) return 4
+  if (deadline < now) return 0
+  if (deadline <= endOfLocalDay(now)) return 1
+  if (deadline <= endOfLocalDay(addDays(now, 3))) return 2
+  if (deadline <= endOfLocalDay(addDays(now, 7))) return 3
+  return 4
+}
+
+function sortDashboardTasks(tasks) {
+  const now = new Date()
+  return [...tasks].sort((a, b) => {
+    const bucketA = getDashboardBucket(a, now)
+    const bucketB = getDashboardBucket(b, now)
+    if (bucketA !== bucketB) return bucketA - bucketB
+
+    const priorityA = a.effectivePriority ?? -1
+    const priorityB = b.effectivePriority ?? -1
+    if (priorityA !== priorityB) return priorityB - priorityA
+
+    const deadlineA = parseDate(a.deadline)?.getTime() ?? Number.MAX_SAFE_INTEGER
+    const deadlineB = parseDate(b.deadline)?.getTime() ?? Number.MAX_SAFE_INTEGER
+    return deadlineA - deadlineB
+  })
+}
+
+function getBucketLabel(task) {
+  const bucket = getDashboardBucket(task)
+  if (bucket === 0) return '마감 지남'
+  if (bucket === 1) return '오늘'
+  if (bucket === 2) return '3일 내'
+  if (bucket === 3) return '일주일 내'
+  return '그 외'
+}
+
+function getFocusRecommendation(tasks) {
+  const now = new Date()
+  let best = null
+
+  tasks
+    .filter((task) => task.status !== 'DONE' && task.status !== 'CANCELLED')
+    .forEach((task) => {
+      const start = parseDate(task.startTime)
+      const end = parseDate(task.endTime)
+      const deadline = parseDate(task.deadline)
+      const priority = task.effectivePriority ?? 0.5
+      const reasons = []
+      let score = priority * 40
+
+      if (start && end && start <= now && now < end) {
+        score += 120
+        reasons.push('지금 진행 중인 고정 시간대에 있어요.')
+      } else if (start && start > now && startOfLocalDay(start).getTime() === startOfLocalDay(now).getTime()) {
+        score -= 40
+      }
+
+      if (deadline && !Number.isNaN(deadline.getTime())) {
+        const diffHours = (deadline.getTime() - now.getTime()) / 3600000
+        if (diffHours < 0) {
+          score += 100
+          reasons.push('마감 시간이 이미 지나서 먼저 정리하는 게 좋아요.')
+        } else if (deadline <= endOfLocalDay(now)) {
+          score += 80
+          reasons.push('오늘 마감이라 시간 압박이 커요.')
+        } else if (deadline <= endOfLocalDay(addDays(now, 3))) {
+          score += 55
+          reasons.push('3일 안에 마감돼서 미리 시작하기 좋아요.')
+        } else if (deadline <= endOfLocalDay(addDays(now, 7))) {
+          score += 30
+          reasons.push('일주일 안에 마감되는 일이에요.')
+        }
+      }
+
+      if (priority >= 0.75) {
+        reasons.push('중요도가 높은 편이에요.')
+      }
+      if (task.estimatedMinutes && task.estimatedMinutes <= 40) {
+        score += 8
+        reasons.push(`${task.estimatedMinutes}분 정도라 한 번 집중하기 좋아요.`)
+      }
+
+      if (reasons.length === 0) {
+        reasons.push('마감과 중요도를 같이 봤을 때 지금 후보로 좋아요.')
+      }
+
+      if (!best || score > best.score) {
+        best = { task, score, reasons: reasons.slice(0, 2) }
+      }
+    })
+
+  return best
+}
+
 const URGENCY_STYLE = {
   red: {
     badge: 'bg-red-500 text-white border-red-500 animate-pulse',
@@ -114,11 +211,19 @@ export default function DashboardPage() {
   const [showTaskBoard, setShowTaskBoard] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [coinToast, setCoinToast] = useState(null)
+  const [planning, setPlanning] = useState(null)
 
   const fetchTasks = () => {
-    api.get('/tasks')
-      .then((res) => setTasks(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setTasks([]))
+    api.get('/dashboard/planning')
+      .then((res) => {
+        const data = res.data || {}
+        setPlanning(data)
+        setTasks(Array.isArray(data.tasks) ? data.tasks : [])
+      })
+      .catch(() => {
+        setPlanning(null)
+        setTasks([])
+      })
       .finally(() => setLoading(false))
   }
 
@@ -143,16 +248,45 @@ export default function DashboardPage() {
 
   const taskList = Array.isArray(tasks) ? tasks : []
 
-  const activeTasks = groupByParent(
-    taskList.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED' && isVisibleToday(t))
+  const activeTaskBase = useMemo(
+    () => taskList.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED'),
+    [taskList]
   )
-  const doneTasks = taskList.filter((t) => {
-    if (t.status !== 'DONE') return false
-    if (!t.deadline) return true
-    const deadline = parseDate(t.deadline)
-    if (!deadline || Number.isNaN(deadline.getTime())) return true
-    return isSameLocalDate(deadline, new Date()) || deadline > new Date()
-  })
+  const activeTasks = useMemo(
+    () => {
+      const sections = planning?.sections
+      if (sections) {
+        return groupByParent([
+          ...(sections.overdue || []),
+          ...(sections.today || []),
+          ...(sections.next3Days || []),
+          ...(sections.next7Days || []),
+          ...(sections.later || []),
+        ])
+      }
+      return groupByParent(sortDashboardTasks(activeTaskBase))
+    },
+    [activeTaskBase, planning]
+  )
+  const focusRecommendation = useMemo(
+    () => planning ? (planning.focusRecommendations?.[0] || null) : getFocusRecommendation(activeTaskBase),
+    [activeTaskBase, planning]
+  )
+  const nowSuggestion = planning?.nowSuggestion || (focusRecommendation
+    ? {
+        type: 'OPEN_SLOT',
+        title: '지금은 비어 있는 시간이에요.',
+        message: '25분 정도 집중하기 좋은 일을 골라봤어요.',
+        task: focusRecommendation.task,
+      }
+    : null)
+  const doneTasks = useMemo(() => taskList
+    .filter((t) => t.status === 'DONE')
+    .sort((a, b) => {
+      const aTime = parseDate(a.completedAt)?.getTime() ?? 0
+      const bTime = parseDate(b.completedAt)?.getTime() ?? 0
+      return bTime - aTime
+    }), [taskList])
 
   return (
     <div className="space-y-6">
@@ -190,10 +324,40 @@ export default function DashboardPage() {
           <p className="font-bold text-dark/50">불러오는 중...</p>
         </div>
       ) : (
+        <>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card-kitschy">
-            <h3 className="font-extrabold text-dark mb-4">오늘 일과표</h3>
-            <CircularTimetable tasks={activeTasks} />
+            <div className="mb-4 flex flex-wrap items-baseline gap-2">
+              <h3 className="font-extrabold text-dark">오늘 일과표</h3>
+              <span className="text-[10px] font-bold text-dark/40">시간이 정해진 일과 오늘의 흐름을 보여줘요.</span>
+            </div>
+            {nowSuggestion && (
+              <div className="relative mx-auto mb-3 max-w-sm px-8 text-center">
+                <span className="pointer-events-none absolute left-0 top-0 text-5xl font-dungeon leading-none text-primary/50">
+                  {'“'}
+                </span>
+                <span className="pointer-events-none absolute bottom-0 right-0 text-5xl font-dungeon leading-none text-primary/50">
+                  {'”'}
+                </span>
+                <div className="relative">
+                  <p className="text-sm font-black leading-5 text-dark">{nowSuggestion.title}</p>
+                  <p className="mt-0.5 text-[11px] font-bold leading-4 text-dark/50">
+                    {nowSuggestion.message}
+                  </p>
+                  {nowSuggestion.task && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingTask(nowSuggestion.task)}
+                      className="mx-auto mt-1.5 block max-w-full truncate text-[11px] font-black text-primary hover:text-secondary"
+                      title={nowSuggestion.task.title}
+                    >
+                      추천 · {nowSuggestion.task.title}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+            <CircularTimetable tasks={planning?.timedTasks || activeTaskBase} />
           </div>
 
           <div className="card-kitschy">
@@ -240,6 +404,9 @@ export default function DashboardPage() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dark/10 bg-white text-dark/50">
+                            {getBucketLabel(task)}
+                          </span>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${color}`}>
                             {label}
                           </span>
@@ -333,6 +500,7 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+        </>
       )}
 
       {showAddModal && (
@@ -345,6 +513,7 @@ export default function DashboardPage() {
       {showTaskBoard && (
         <TaskBoardModal
           tasks={taskList}
+          sections={planning?.sections}
           onClose={() => setShowTaskBoard(false)}
           onEditTask={(task) => {
             setShowTaskBoard(false)

@@ -27,6 +27,24 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     """)
     List<Task> findByUserOrderByPriority(@Param("user") User user);
 
+    @Query("""
+        SELECT t FROM Task t
+        WHERE t.user = :user
+          AND t.deletedAt IS NULL
+          AND (
+            t.status NOT IN ('DONE', 'CANCELLED')
+            OR (t.status = 'DONE' AND t.completedAt >= :doneSince)
+          )
+        ORDER BY
+            CASE WHEN t.userPriorityScore IS NOT NULL THEN t.userPriorityScore
+                ELSE t.aiPriorityScore END DESC NULLS LAST,
+            t.deadline ASC NULLS LAST
+    """)
+    List<Task> findByUserWithRecentDoneOrderByPriority(
+            @Param("user") User user,
+            @Param("doneSince") LocalDateTime doneSince
+    );
+
     List<Task> findByUserAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(User user, Task.Status status);
 
     boolean existsByRoutineRoutineIdAndRoutineScheduledDateAndDeletedAtIsNull(UUID routineId, LocalDate routineScheduledDate);

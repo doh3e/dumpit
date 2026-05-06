@@ -118,6 +118,7 @@ export default function SettingsModal({ onClose }) {
   const saveRoutine = () => {
     localStorage.setItem('dumpit_routine_start', routineStart)
     localStorage.setItem('dumpit_routine_end', routineEnd)
+    window.dispatchEvent(new CustomEvent('dumpit_routine_changed'))
     onClose()
   }
 
@@ -140,7 +141,7 @@ export default function SettingsModal({ onClose }) {
         <section className="mb-6">
           <h3 className="font-extrabold text-dark text-sm mb-3">일과 시간</h3>
           <p className="text-xs text-dark/50 font-medium mb-3">
-            시간표에 표시되는 루틴 시간대를 설정하세요
+            시간표에 표시될 나의 일과 시간대를 설정하세요
           </p>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">

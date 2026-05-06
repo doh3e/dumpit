@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         sans: ['Mona12', 'system-ui', 'sans-serif'],
         display: ['"Press Start 2P"', 'Mona12', 'sans-serif'],
+        dungeon: ['RoundedFixedsys', 'sans-serif'],
       },
       boxShadow: {
         // 키치한 굵은 그림자

@@ -2,10 +2,11 @@ package com.dumpit.controller;
 
 import com.dumpit.dto.TaskRequest;
 import com.dumpit.dto.TaskResponse;
-import com.dumpit.dto.TaskUpdateRequest;
 import com.dumpit.entity.Task;
+import com.dumpit.exception.BadRequestException;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.TaskService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,7 +17,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -25,10 +28,14 @@ import java.util.UUID;
 public class TaskController {
 
     private final TaskService taskService;
+    private final ObjectMapper objectMapper;
 
     @GetMapping
-    public ResponseEntity<List<TaskResponse>> getTasks(@AuthenticationPrincipal OAuth2User principal) {
-        List<Task> tasks = taskService.getTasksForUser(principal.getAttribute("email"));
+    public ResponseEntity<List<TaskResponse>> getTasks(
+            @AuthenticationPrincipal OAuth2User principal,
+            @RequestParam(required = false) Integer doneSinceDays
+    ) {
+        List<Task> tasks = taskService.getTasksForUser(principal.getAttribute("email"), doneSinceDays);
         return ResponseEntity.ok(tasks.stream().map(TaskResponse::from).toList());
     }
 
@@ -50,18 +57,51 @@ public class TaskController {
     public ResponseEntity<TaskResponse> updateTask(
             @AuthenticationPrincipal OAuth2User principal,
             @PathVariable("taskId") UUID taskId,
-            @Valid @RequestBody TaskUpdateRequest req) {
+            @RequestBody Map<String, Object> req) {
+        String title = value(req, "title", String.class);
+        String description = value(req, "description", String.class);
+        if (title != null && title.length() > 200) {
+            throw new BadRequestException("할 일은 200자 이하로 입력해주세요.");
+        }
+        if (description != null && description.length() > 1000) {
+            throw new BadRequestException("메모는 1000자 이하로 입력해주세요.");
+        }
+
         Task task = taskService.updateTask(
                 principal.getAttribute("email"),
                 taskId,
                 new TaskService.TaskUpdateFields(
-                        req.title(), req.description(), req.status(),
-                        req.userPriorityScore(), req.deadline(),
-                        req.estimatedMinutes(), req.startTime(), req.endTime(),
-                        req.isLocked(), req.category()
+                        title,
+                        description,
+                        req.containsKey("description"),
+                        value(req, "status", String.class),
+                        value(req, "userPriorityScore", Double.class),
+                        req.containsKey("userPriorityScore"),
+                        value(req, "deadline", LocalDateTime.class),
+                        req.containsKey("deadline"),
+                        value(req, "estimatedMinutes", Integer.class),
+                        req.containsKey("estimatedMinutes"),
+                        value(req, "startTime", LocalDateTime.class),
+                        req.containsKey("startTime"),
+                        value(req, "endTime", LocalDateTime.class),
+                        req.containsKey("endTime"),
+                        value(req, "isLocked", Boolean.class),
+                        req.containsKey("isLocked"),
+                        value(req, "category", Task.Category.class)
                 )
         );
         return ResponseEntity.ok(TaskResponse.from(task));
+    }
+
+    private <T> T value(Map<String, Object> req, String key, Class<T> type) {
+        if (!req.containsKey(key) || req.get(key) == null) {
+            return null;
+        }
+        try {
+            return objectMapper.convertValue(req.get(key), type);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(key + " 값을 확인해주세요.");
+        }
     }
 
     @PostMapping("/{taskId}/reanalyze")

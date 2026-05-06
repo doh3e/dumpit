@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import settingImage from '../assets/setting_image.png'
@@ -17,7 +17,23 @@ function loadMinutes(key, fallback) {
   return n
 }
 
-export default function PomodoroTimer({ tasks = [], compact = false }) {
+function notifyDesktopPomodoroComplete(mode) {
+  if (typeof window === 'undefined' || !window.dumpitDesktop?.notify) return
+
+  window.dumpitDesktop.notify({
+    title: mode === MODE.BREAK ? 'Dumpit! 휴식이 끝났어요' : 'Dumpit! 집중 완료',
+    body: mode === MODE.BREAK
+      ? '다시 집중할 준비가 됐어요.'
+      : '좋아요. 잠깐 쉬어갈 시간이에요.',
+  }).catch(() => {})
+}
+
+function openDesktopPomodoroWidget() {
+  if (typeof window === 'undefined') return
+  window.dumpitDesktop?.openPomodoroWidget?.()
+}
+
+export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', compact = false }) {
   const { refreshCoins } = useAuth()
   const [focusMin, setFocusMin] = useState(() => loadMinutes('dumpit_pomodoro_focus', DEFAULT_FOCUS_MIN))
   const [breakMin, setBreakMin] = useState(() => loadMinutes('dumpit_pomodoro_break', DEFAULT_BREAK_MIN))
@@ -30,10 +46,53 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
   const [showSettings, setShowSettings] = useState(false)
   const intervalRef = useRef(null)
 
-  const taskList = Array.isArray(tasks) ? tasks : []
-  const activeTasks = taskList.filter(
-    (t) => t.status !== 'DONE' && t.status !== 'CANCELLED'
+  const taskList = useMemo(() => (Array.isArray(tasks) ? tasks : []), [tasks])
+  const activeTasks = useMemo(() => {
+    const recommendedId = String(recommendedTaskId || '')
+    const deadlineTime = (task) => {
+      if (!task.deadline) return Number.MAX_SAFE_INTEGER
+      const date = Array.isArray(task.deadline)
+        ? new Date(task.deadline[0], (task.deadline[1] || 1) - 1, task.deadline[2] || 1, task.deadline[3] || 0, task.deadline[4] || 0, task.deadline[5] || 0)
+        : new Date(task.deadline)
+      return Number.isNaN(date.getTime()) ? Number.MAX_SAFE_INTEGER : date.getTime()
+    }
+
+    return taskList
+      .filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED')
+      .sort((a, b) => {
+        const ar = String(a.taskId) === recommendedId ? 1 : 0
+        const br = String(b.taskId) === recommendedId ? 1 : 0
+        if (ar !== br) return br - ar
+
+        const ap = a.effectivePriority ?? -1
+        const bp = b.effectivePriority ?? -1
+        if (ap !== bp) return bp - ap
+        return deadlineTime(a) - deadlineTime(b)
+      })
+  }, [taskList, recommendedTaskId])
+  const selectedTask = useMemo(
+    () => activeTasks.find((t) => String(t.taskId) === String(selectedTaskId)),
+    [activeTasks, selectedTaskId]
   )
+  const desktopTasks = useMemo(() => activeTasks.map((task) => ({
+    id: String(task.taskId),
+    title: task.title,
+  })), [activeTasks])
+
+  useEffect(() => {
+    const recommendedId = String(recommendedTaskId || '')
+    const selectedStillExists = selectedTaskId
+      && activeTasks.some((task) => String(task.taskId) === String(selectedTaskId))
+
+    if (selectedStillExists) return
+    if (recommendedId && activeTasks.some((task) => String(task.taskId) === recommendedId)) {
+      setSelectedTaskId(recommendedId)
+      return
+    }
+    if (selectedTaskId) {
+      setSelectedTaskId('')
+    }
+  }, [activeTasks, recommendedTaskId, selectedTaskId])
 
   const playAlarm = useCallback(() => {
     try {
@@ -61,6 +120,7 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
 
   const handleFocusComplete = useCallback(async () => {
     playAlarm()
+    notifyDesktopPomodoroComplete(MODE.FOCUS)
     setCompletedCount((c) => c + 1)
     try {
       const res = await api.post('/pomodoro/complete', { focusMinutes: focusMin })
@@ -77,6 +137,7 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
 
   const handleBreakComplete = useCallback(() => {
     playAlarm()
+    notifyDesktopPomodoroComplete(MODE.BREAK)
     setMode(MODE.FOCUS)
     setRemaining(focusMin * 60)
     setRunning(false)
@@ -110,13 +171,13 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
     }
   }, [remaining, running, mode, handleFocusComplete, handleBreakComplete])
 
-  const toggle = () => setRunning(!running)
+  const toggle = useCallback(() => setRunning((value) => !value), [])
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setRunning(false)
     setMode(MODE.FOCUS)
     setRemaining(focusMin * 60)
-  }
+  }, [focusMin])
 
   const saveSettings = (newFocus, newBreak) => {
     const f = Math.max(MIN_MIN, Math.min(MAX_MIN, Number(newFocus) || DEFAULT_FOCUS_MIN))
@@ -137,6 +198,46 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
   const progress = total > 0 ? ((total - remaining) / total) * 100 : 0
 
   const isFocus = mode === MODE.FOCUS
+  const isDesktop = typeof window !== 'undefined' && Boolean(window.dumpitDesktop)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.dumpitDesktop?.updatePomodoroState) return
+
+    window.dumpitDesktop.updatePomodoroState({
+      active: true,
+      mode,
+      time: `${min}:${sec}`,
+      running,
+      progress,
+      taskTitle: selectedTask?.title || '',
+      selectedTaskId: String(selectedTaskId || ''),
+      tasks: desktopTasks,
+    })
+  }, [mode, min, sec, running, progress, selectedTask, selectedTaskId, desktopTasks])
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.dumpitDesktop?.updatePomodoroState?.({ active: false })
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.dumpitDesktop?.onPomodoroCommand) return undefined
+
+    return window.dumpitDesktop.onPomodoroCommand((command) => {
+      if (command === 'toggle') {
+        toggle()
+      }
+      if (command === 'reset') {
+        reset()
+      }
+      if (command?.type === 'selectTask') {
+        setSelectedTaskId(command.taskId ? String(command.taskId) : '')
+      }
+    })
+  }, [toggle, reset])
 
   return (
     <div className={`flex flex-col items-center gap-2 ${compact ? 'p-2' : 'p-3'}`}>
@@ -149,6 +250,16 @@ export default function PomodoroTimer({ tasks = [], compact = false }) {
         }`}>
           {isFocus ? 'FOCUS' : 'BREAK'}
         </div>
+        {isDesktop && (
+          <button
+            onClick={openDesktopPomodoroWidget}
+            className="w-6 h-6 flex items-center justify-center rounded-md border-2 border-dark bg-white text-dark text-[13px] font-black leading-none hover:bg-secondary hover:text-white transition-colors"
+            aria-label="뽀모도로 위젯 열기"
+            title="뽀모도로 위젯 열기"
+          >
+            ↗
+          </button>
+        )}
         <button
           onClick={() => setShowSettings(!showSettings)}
           className="w-6 h-6 flex items-center justify-center hover:opacity-70 transition-opacity"

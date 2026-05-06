@@ -12,7 +12,7 @@ const MENU = [
   { label: '마이페이지', path: '/mypage' },
 ]
 
-export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, isDrawerOpen, onCloseDrawer }) {
+export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecommendation, isDrawerOpen, onCloseDrawer }) {
   const { user } = useAuth()
   const handleNavClick = () => {
     if (onCloseDrawer) onCloseDrawer()
@@ -66,7 +66,11 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, isDrawerOpe
         <h4 className="text-[10px] font-black text-dark/40 uppercase tracking-wider px-2 mb-1">
           Pomodoro
         </h4>
-        <PomodoroTimer tasks={tasks} compact />
+        <PomodoroTimer
+          tasks={tasks}
+          recommendedTaskId={focusRecommendation?.task?.taskId}
+          compact
+        />
       </div>
 
       <div className="mt-auto pt-4 border-t-2 border-dark/20 flex flex-col gap-1">
