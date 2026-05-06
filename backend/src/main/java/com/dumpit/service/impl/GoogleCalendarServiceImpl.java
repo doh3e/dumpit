@@ -14,7 +14,6 @@ import org.springframework.web.client.RestClientResponseException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,11 +27,8 @@ public class GoogleCalendarServiceImpl implements GoogleCalendarService {
     private static final String CALENDAR_API = "https://www.googleapis.com/calendar/v3";
 
     @Override
-    public List<CalendarEvent> getUpcomingEvents(String accessTokenValue) {
+    public List<CalendarEvent> getEvents(String accessTokenValue, Instant timeMin, Instant timeMax) {
         try {
-            Instant now = Instant.now();
-            Instant end = now.plus(30, ChronoUnit.DAYS);
-
             RestClient restClient = RestClient.builder()
                     .baseUrl(CALENDAR_API)
                     .defaultHeader("Authorization", "Bearer " + accessTokenValue)
@@ -41,11 +37,11 @@ public class GoogleCalendarServiceImpl implements GoogleCalendarService {
             String raw = restClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/calendars/primary/events")
-                            .queryParam("timeMin", now.toString())
-                            .queryParam("timeMax", end.toString())
+                            .queryParam("timeMin", timeMin.toString())
+                            .queryParam("timeMax", timeMax.toString())
                             .queryParam("singleEvents", true)
                             .queryParam("orderBy", "startTime")
-                            .queryParam("maxResults", 50)
+                            .queryParam("maxResults", 250)
                             .build())
                     .retrieve()
                     .body(String.class);

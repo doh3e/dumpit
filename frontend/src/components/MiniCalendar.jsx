@@ -33,8 +33,13 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
     else setMonth(month + 1)
   }
 
+  const visibleRange = useMemo(() => ({
+    timeMin: new Date(year, month, 1).toISOString(),
+    timeMax: new Date(year, month + 1, 1).toISOString(),
+  }), [year, month])
+
   const fetchGoogleEvents = useCallback(() => {
-    api.get('/calendar/events')
+    api.get('/calendar/events', { params: visibleRange })
       .then((res) => {
         setGoogleEvents(res.data)
         setCalendarActionRequired(null)
@@ -48,7 +53,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
             : null
         )
       })
-  }, [])
+  }, [visibleRange])
 
   useEffect(() => {
     fetchGoogleEvents()
@@ -299,7 +304,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
         <div className="mt-3 rounded-lg border-2 border-blue-200 bg-blue-50 px-3 py-2">
           <p className="text-[11px] font-bold text-blue-900">
             {calendarActionRequired === 'GOOGLE_CALENDAR_RECONNECT_REQUIRED'
-              ? 'Google Calendar 연결이 만료되었어요.'
+              ? 'Google Calendar 권한 갱신이 필요해요.'
               : 'Google Calendar 일정을 보려면 캘린더 읽기 권한이 필요해요.'}
           </p>
           <button
@@ -307,7 +312,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
             onClick={requestCalendarPermission}
             className="mt-2 rounded border-2 border-blue-500 bg-white px-2.5 py-1 text-[10px] font-black text-blue-600 hover:bg-blue-100 transition-colors"
           >
-            {calendarActionRequired === 'GOOGLE_CALENDAR_RECONNECT_REQUIRED' ? '다시 연결하기' : '권한 허용하기'}
+            {calendarActionRequired === 'GOOGLE_CALENDAR_RECONNECT_REQUIRED' ? '권한 갱신하기' : '권한 허용하기'}
           </button>
         </div>
       )}

@@ -84,7 +84,38 @@ const SECTIONS = [
     ),
   },
   {
-    title: '5. 이용자의 권리',
+    title: '5. Google 사용자 데이터의 이용, 공유 및 공개',
+    body: (
+      <>
+        <p className="mb-2">
+          덤핏은 Google OAuth 및 Google API를 통해 이용자가 명시적으로 승인한 범위 내에서만 Google 사용자 데이터에 접근합니다.
+          덤핏이 접근하는 Google 사용자 데이터에는 Google 계정 인증 정보와 Google Calendar 일정 조회 권한 및 일정 정보가 포함될 수 있습니다.
+        </p>
+        <p className="mb-2">
+          Google Calendar 일정 정보는 서비스 내 일과표 표시 및 이용자가 선택한 일정 기반 태스크 생성 기능을 제공하기 위해 사용되며,
+          덤핏 서버에 별도로 저장하지 않습니다.
+        </p>
+        <p className="mb-2">
+          덤핏은 Google 사용자 데이터를 판매하지 않으며, 광고, 리타게팅, 개인화 광고, 신용평가, 대출 심사 또는 이와 유사한 목적으로
+          사용하거나 제3자에게 이전하지 않습니다.
+        </p>
+        <p className="mb-2">
+          덤핏은 다음의 경우에 한해 Google 사용자 데이터를 공유, 이전 또는 공개할 수 있습니다.
+        </p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>이용자가 요청한 서비스 기능을 제공하거나 개선하기 위해 필요한 경우</li>
+          <li>서비스 보안, 오류 분석, 부정 이용 방지 및 안정적인 운영을 위해 필요한 경우</li>
+          <li>법령, 수사기관 또는 규제기관의 적법한 요청에 따라 필요한 경우</li>
+          <li>이용자의 명시적인 동의를 받은 경우</li>
+        </ul>
+        <p className="mt-2 text-dark/70">
+          The use of raw or derived user data received from Workspace APIs will adhere to the Google User Data Policy, including the Limited Use requirements.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: '6. 이용자의 권리',
     body: (
       <>
         <p className="mb-2">이용자는 언제든지 다음 권리를 행사할 수 있습니다.</p>
@@ -101,7 +132,7 @@ const SECTIONS = [
     ),
   },
   {
-    title: '6. 쿠키의 운영',
+    title: '7. 쿠키의 운영',
     body: (
       <p>
         덤핏은 로그인 세션 유지 및 서비스 이용 편의 제공을 위해 쿠키를 사용합니다. 이용자는 브라우저 설정을 통해 쿠키 저장을 거부할 수 있으나, 이 경우 일부 서비스 이용이 제한될 수 있습니다.
@@ -109,7 +140,7 @@ const SECTIONS = [
     ),
   },
   {
-    title: '7. 개인정보의 안전성 확보 조치',
+    title: '8. 개인정보의 안전성 확보 조치',
     body: (
       <ul className="list-disc pl-5 space-y-1">
         <li>HTTPS(TLS) 암호화 통신 적용</li>
@@ -120,7 +151,7 @@ const SECTIONS = [
     ),
   },
   {
-    title: '8. 개인정보 보호책임자',
+    title: '9. 개인정보 보호책임자',
     body: (
       <div className="p-3 bg-accent rounded-lg border border-dark/10">
         <p className="text-sm">
@@ -136,7 +167,7 @@ const SECTIONS = [
     ),
   },
   {
-    title: '9. 처리방침의 변경',
+    title: '10. 처리방침의 변경',
     body: (
       <p>
         본 개인정보 처리방침은 법령 또는 서비스 정책의 변경에 따라 수정될 수 있으며, 변경 시 서비스 내 공지를 통해 안내합니다.
@@ -162,7 +193,7 @@ export default function PrivacyPolicyModal({ onClose }) {
         </div>
 
         <p className="text-xs text-dark/60 font-semibold mb-3">
-          시행일자: 2026년 4월 25일
+          시행일자: 2026년 5월 6일
         </p>
 
         <div className="flex-1 overflow-y-auto pr-2 space-y-5 text-sm text-dark">
