@@ -151,7 +151,6 @@ public class SecurityConfig {
                 if (authRequest == null) return null;
                 Map<String, Object> params = new HashMap<>(authRequest.getAdditionalParameters());
                 params.put("access_type", "offline");
-                params.put("include_granted_scopes", "true");
                 if ("1".equals(request.getParameter("calendar_consent"))) {
                     params.put("prompt", "consent");
                 }
