@@ -45,6 +45,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
   const [coinToast, setCoinToast] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
   const intervalRef = useRef(null)
+  const targetEndAtRef = useRef(null)
 
   const taskList = useMemo(() => (Array.isArray(tasks) ? tasks : []), [tasks])
   const activeTasks = useMemo(() => {
@@ -146,18 +147,29 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
   useEffect(() => {
     if (!running) {
       clearInterval(intervalRef.current)
+      targetEndAtRef.current = null
       return
     }
+
+    targetEndAtRef.current = Date.now() + remaining * 1000
+    const syncRemaining = () => {
+      const nextRemaining = Math.max(0, Math.ceil((targetEndAtRef.current - Date.now()) / 1000))
+      setRemaining(nextRemaining)
+      if (nextRemaining === 0) {
+        clearInterval(intervalRef.current)
+      }
+    }
+
+    syncRemaining()
     intervalRef.current = setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current)
-          return 0
-        }
-        return prev - 1
-      })
+      syncRemaining()
     }, 1000)
-    return () => clearInterval(intervalRef.current)
+    return () => {
+      clearInterval(intervalRef.current)
+    }
+    // remaining is intentionally read only when a run starts/resumes.
+    // During a run, targetEndAtRef keeps the countdown tied to wall-clock time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running])
 
   useEffect(() => {

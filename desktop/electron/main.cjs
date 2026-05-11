@@ -13,6 +13,7 @@ const {
 } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
+const { autoUpdater } = require('electron-updater')
 
 app.setName('덤핏(Dumpit!)')
 app.setPath('userData', path.join(app.getPath('appData'), 'Dumpit'))
@@ -39,6 +40,8 @@ let authWindow = null
 let pomodoroWidgetWindow = null
 let tray
 let isQuitting = false
+let manualUpdateCheck = false
+let updateDialogOpen = false
 let latestPomodoroState = {
   active: false,
   mode: 'FOCUS',
@@ -66,6 +69,35 @@ const CONTENT_TYPES = {
   '.webp': 'image/webp',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
+}
+
+function ignoreClosedConsolePipe(stream) {
+  stream?.on?.('error', (error) => {
+    if (error?.code !== 'EPIPE') {
+      throw error
+    }
+  })
+}
+
+ignoreClosedConsolePipe(process.stdout)
+ignoreClosedConsolePipe(process.stderr)
+
+function debugLog(...args) {
+  if (!isDebug) return
+  try {
+    console.log(...args)
+  } catch (error) {
+    if (error?.code !== 'EPIPE') throw error
+  }
+}
+
+function debugWarn(...args) {
+  if (!isDebug) return
+  try {
+    console.warn(...args)
+  } catch (error) {
+    if (error?.code !== 'EPIPE') throw error
+  }
 }
 
 if (!app.requestSingleInstanceLock()) {
@@ -260,6 +292,11 @@ function createApplicationMenu(mainWindow) {
       label: '도움말',
       submenu: [
         {
+          label: '업데이트 확인',
+          click: () => checkForDesktopUpdates({ manual: true }),
+        },
+        { type: 'separator' },
+        {
           label: '덤핏 웹사이트 열기',
           click: () => shell.openExternal('https://dumpit.kr'),
         },
@@ -272,6 +309,123 @@ function createApplicationMenu(mainWindow) {
   ]
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
+function getFocusedWindow() {
+  return BrowserWindow.getFocusedWindow() || mainWindow || undefined
+}
+
+function showUpdateMessage(options) {
+  const focusedWindow = getFocusedWindow()
+  if (focusedWindow && !focusedWindow.isDestroyed()) {
+    return dialog.showMessageBox(focusedWindow, options)
+  }
+  return dialog.showMessageBox(options)
+}
+
+function checkForDesktopUpdates({ manual = false } = {}) {
+  manualUpdateCheck = manual
+
+  if (isDev) {
+    if (manual) {
+      showUpdateMessage({
+        type: 'info',
+        buttons: ['확인'],
+        title: '덤핏 업데이트',
+        message: '개발 모드에서는 자동 업데이트를 확인하지 않아요.',
+      })
+    }
+    return
+  }
+
+  autoUpdater.checkForUpdates().catch((error) => {
+    debugWarn('[desktop] update check failed', error)
+    if (manual) {
+      showUpdateMessage({
+        type: 'error',
+        buttons: ['확인'],
+        title: '덤핏 업데이트',
+        message: '업데이트 확인에 실패했어요.',
+        detail: error?.message || '잠시 후 다시 시도해주세요.',
+      })
+    }
+    manualUpdateCheck = false
+  })
+}
+
+function registerAutoUpdater() {
+  if (isDev) return
+
+  autoUpdater.autoDownload = true
+  autoUpdater.autoInstallOnAppQuit = true
+
+  autoUpdater.on('update-available', (info) => {
+    debugLog(`[desktop] update available: ${info.version}`)
+    if (manualUpdateCheck) {
+      showUpdateMessage({
+        type: 'info',
+        buttons: ['확인'],
+        title: '덤핏 업데이트',
+        message: `새 버전 ${info.version}을 다운로드하고 있어요.`,
+      })
+    }
+  })
+
+  autoUpdater.on('update-not-available', () => {
+    debugLog('[desktop] update not available')
+    if (manualUpdateCheck) {
+      showUpdateMessage({
+        type: 'info',
+        buttons: ['확인'],
+        title: '덤핏 업데이트',
+        message: '현재 최신 버전을 사용 중이에요.',
+      })
+    }
+    manualUpdateCheck = false
+  })
+
+  autoUpdater.on('error', (error) => {
+    debugWarn('[desktop] updater error', error)
+    if (manualUpdateCheck) {
+      showUpdateMessage({
+        type: 'error',
+        buttons: ['확인'],
+        title: '덤핏 업데이트',
+        message: '업데이트 중 문제가 생겼어요.',
+        detail: error?.message || '잠시 후 다시 시도해주세요.',
+      })
+    }
+    manualUpdateCheck = false
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    debugLog(`[desktop] update downloaded: ${info.version}`)
+    manualUpdateCheck = false
+    if (updateDialogOpen) return
+
+    updateDialogOpen = true
+    showUpdateMessage({
+      type: 'info',
+      buttons: ['지금 재시작', '나중에'],
+      defaultId: 0,
+      cancelId: 1,
+      title: '덤핏 업데이트',
+      message: `새 버전 ${info.version}이 준비됐어요.`,
+      detail: '지금 재시작하면 업데이트가 적용됩니다.',
+    }).then(({ response }) => {
+      updateDialogOpen = false
+      if (response === 0) {
+        isQuitting = true
+        autoUpdater.quitAndInstall()
+      }
+    }).catch((error) => {
+      updateDialogOpen = false
+      debugWarn('[desktop] failed to show update dialog', error)
+    })
+  })
+
+  setTimeout(() => checkForDesktopUpdates(), 10_000)
+  setInterval(() => checkForDesktopUpdates(), 6 * 60 * 60 * 1000)
 }
 
 function showMainWindow(url) {
@@ -340,6 +494,7 @@ function showPomodoroWidget() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      backgroundThrottling: false,
     },
   })
 
@@ -457,14 +612,10 @@ function persistAuthSessionCookies() {
     session.defaultSession.cookies.set(cookieDetails)
       .then(() => session.defaultSession.flushStorageData())
       .then(() => {
-        if (isDebug) {
-          console.log(`[desktop] persisted ${cookie.name} for ${domain}`)
-        }
+        debugLog(`[desktop] persisted ${cookie.name} for ${domain}`)
       })
       .catch((error) => {
-        if (isDebug) {
-          console.warn(`[desktop] failed to persist ${cookie.name} for ${domain}`, error)
-        }
+        debugWarn(`[desktop] failed to persist ${cookie.name} for ${domain}`, error)
       })
   })
 }
@@ -493,7 +644,7 @@ function openAuthWindow(url) {
     try { parsed = new URL(navUrl) } catch { return }
     if (!WEB_APP_ORIGINS.has(parsed.origin)) return
 
-    if (isDebug) console.log('[desktop] auth completed, reloading main window')
+    debugLog('[desktop] auth completed, reloading main window')
     authWindow.close()
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.loadURL(`${APP_URL}/`)
@@ -524,14 +675,14 @@ function debugApiCookieHeaders() {
   session.defaultSession.webRequest.onCompleted(
     { urls: ['https://api.dumpit.kr/api/*'] },
     (details) => {
-      console.log(`[desktop] api response ${details.statusCode} ${details.method} ${details.url}`)
+      debugLog(`[desktop] api response ${details.statusCode} ${details.method} ${details.url}`)
     }
   )
 
   session.defaultSession.webRequest.onErrorOccurred(
     { urls: ['https://api.dumpit.kr/api/*'] },
     (details) => {
-      console.log(`[desktop] api error ${details.error} ${details.method} ${details.url}`)
+      debugLog(`[desktop] api error ${details.error} ${details.method} ${details.url}`)
     }
   )
 }
@@ -555,11 +706,9 @@ function allowApiCorsForDesktopApp() {
         Referer: 'https://dumpit.kr/',
       }
 
-      if (isDebug) {
-        const cookieHeader = requestHeaders.Cookie || requestHeaders.cookie || ''
-        console.log(`[desktop] api request ${details.method} ${details.url}`)
-        console.log(`[desktop] api Cookie header present: ${cookieHeader ? 'yes' : 'no'}`)
-      }
+      const cookieHeader = requestHeaders.Cookie || requestHeaders.cookie || ''
+      debugLog(`[desktop] api request ${details.method} ${details.url}`)
+      debugLog(`[desktop] api Cookie header present: ${cookieHeader ? 'yes' : 'no'}`)
 
       callback({
         requestHeaders,
@@ -612,9 +761,9 @@ async function logStoredAuthCookies() {
         expirationDate: cookie.expirationDate,
       }))
 
-    console.log('[desktop] stored auth cookies on startup:', JSON.stringify(authCookies, null, 2))
+    debugLog('[desktop] stored auth cookies on startup:', JSON.stringify(authCookies, null, 2))
   } catch (error) {
-    console.warn('[desktop] failed to inspect auth cookies on startup', error)
+    debugWarn('[desktop] failed to inspect auth cookies on startup', error)
   }
 }
 
@@ -691,6 +840,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      backgroundThrottling: false,
     },
   })
 
@@ -796,6 +946,7 @@ app.whenReady().then(async () => {
   allowApiCorsForDesktopApp()
   registerNotificationBridge()
   registerFrontendProtocol()
+  registerAutoUpdater()
   await removeLegacyAuthCookies()
   await logStoredAuthCookies()
   createTray()

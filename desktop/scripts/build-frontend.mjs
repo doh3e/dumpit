@@ -9,10 +9,15 @@ const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 const result = spawnSync(npmCommand, ['run', 'build'], {
   cwd: frontendDir,
   stdio: 'inherit',
+  shell: process.platform === 'win32',
   env: {
     ...process.env,
     VITE_API_URL: process.env.VITE_API_URL || 'https://api.dumpit.kr/api',
   },
 })
+
+if (result.error) {
+  console.error(result.error)
+}
 
 process.exit(result.status ?? 1)
