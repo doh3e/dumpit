@@ -667,16 +667,24 @@ function openAuthWindow(url) {
   })
 
   authWindow.loadURL(url)
+  let authCompleting = false
 
   const onAuthComplete = (navUrl) => {
+    if (authCompleting) return
     let parsed
     try { parsed = new URL(navUrl) } catch { return }
     if (!WEB_APP_ORIGINS.has(parsed.origin)) return
 
+    authCompleting = true
     debugLog('[desktop] auth completed, reloading main window')
-    authWindow.close()
+    const completedAuthWindow = authWindow
+    if (completedAuthWindow && !completedAuthWindow.isDestroyed()) {
+      completedAuthWindow.close()
+    }
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.loadURL(`${APP_URL}/`)
+      mainWindow.show()
+      mainWindow.focus()
     }
   }
 
