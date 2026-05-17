@@ -10,12 +10,25 @@ public interface OpenAiService {
     PriorityResult scorePriority(String title, String description,
                                  LocalDateTime deadline, Integer estimatedMinutes);
 
+    ScheduleInferenceResult inferSchedule(String title, String description,
+                                          LocalDateTime startTime,
+                                          LocalDateTime deadline,
+                                          Integer estimatedMinutes);
+
     SubtaskResult proposeSubtasks(String title, String description, Integer estimatedMinutes);
 
     BrainDumpResult analyzeBrainDump(String rawText);
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record PriorityResult(double score, String category, String reason) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record ScheduleInferenceResult(
+            String startTime,
+            String deadline,
+            Integer estimatedMinutes,
+            String reason
+    ) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record BrainDumpResult(List<BrainDumpTask> tasks) {}

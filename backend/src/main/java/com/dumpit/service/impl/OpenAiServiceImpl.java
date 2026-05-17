@@ -108,6 +108,59 @@ public class OpenAiServiceImpl implements OpenAiService {
     }
 
     @Override
+    public ScheduleInferenceResult inferSchedule(String title, String description,
+                                                 LocalDateTime startTime,
+                                                 LocalDateTime deadline,
+                                                 Integer estimatedMinutes) {
+        String nowStr = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        String prompt = """
+            You infer missing schedule fields for a Dumpit task.
+            Return only valid JSON in this shape:
+            {"startTime":"YYYY-MM-DDTHH:mm:ss|null","deadline":"YYYY-MM-DDTHH:mm:ss|null","estimatedMinutes":60,"reason":"short explanation"}
+
+            Rules:
+            - Current time is %s.
+            - Preserve provided values exactly unless they are logically impossible.
+            - If both startTime and estimatedMinutes are known, deadline should usually be startTime + estimatedMinutes.
+            - If both deadline and estimatedMinutes are known, startTime should usually be deadline - estimatedMinutes.
+            - If both startTime and deadline are known, estimatedMinutes should be the duration in minutes.
+            - If only one schedule field is known, infer the missing fields from the task title and description.
+            - If there is not enough context, choose a practical default: estimatedMinutes 30 to 60, and keep inferred times in the future.
+            - deadline means the end/due time of the task.
+            - estimatedMinutes must be between 1 and 1440.
+
+            <user_input>
+            Title: %s
+            Description: %s
+            Provided startTime: %s
+            Provided deadline: %s
+            Provided estimatedMinutes: %s
+            </user_input>
+            """.formatted(
+                nowStr,
+                title,
+                description != null ? description : "none",
+                startTime != null ? startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "unknown",
+                deadline != null ? deadline.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "unknown",
+                estimatedMinutes != null ? estimatedMinutes : "unknown"
+        );
+
+        try {
+            String json = callChatApi(prompt, DATA_BOUNDARY_RULE);
+            ScheduleInferenceResult result = objectMapper.readValue(json, ScheduleInferenceResult.class);
+            return new ScheduleInferenceResult(
+                    normalizeFutureDateTime(result.startTime()),
+                    normalizeFutureDateTime(result.deadline()),
+                    clampMinutes(result.estimatedMinutes()),
+                    trimToLimit(result.reason(), 300)
+            );
+        } catch (Exception e) {
+            log.error("Schedule inference failed: {}", e.getMessage());
+            return new ScheduleInferenceResult(null, null, null, "Fallback used because AI schedule inference failed.");
+        }
+    }
+
+    @Override
     public SubtaskResult proposeSubtasks(String title, String description, Integer estimatedMinutes) {
         String prompt = """
             You break a task into actionable subtasks for the Dumpit app.
@@ -283,6 +336,10 @@ public class OpenAiServiceImpl implements OpenAiService {
     }
 
     private String normalizeFutureDeadline(String raw) {
+        return normalizeFutureDateTime(raw);
+    }
+
+    private String normalizeFutureDateTime(String raw) {
         if (raw == null || raw.isBlank()) return null;
         try {
             LocalDateTime deadline = LocalDateTime.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE_TIME);

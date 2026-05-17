@@ -65,12 +65,13 @@ function formatRemaining(deadline) {
   return `${minutes}분 남음`
 }
 
-export default function DeadlineNudgeMenu() {
+export default function DeadlineNudgeMenu({ variant = 'pill' }) {
   const [open, setOpen] = useState(false)
   const [permission, setPermission] = useState(getNotificationPermission)
   const [nudges, setNudges] = useState([])
   const menuRef = useRef(null)
   const urgentCount = nudges.length
+  const isCard = variant === 'mobile-card'
 
   const fetchNudges = useCallback(() => {
     api.get('/notifications/deadline-nudges')
@@ -176,18 +177,39 @@ export default function DeadlineNudgeMenu() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className={`flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-extrabold text-sm transition-colors ${
-          urgentCount > 0
-            ? 'bg-yellow-300/30 border-yellow-200/80 text-yellow-100 hover:bg-yellow-300/40'
-            : 'bg-white/25 border-white/80 text-white/60 hover:bg-white/30'
-        }`}
+        className={isCard
+          ? 'w-full rounded-lg border-2 border-dark/10 bg-yellow-50 px-2 py-2 text-center transition-colors hover:bg-yellow-100'
+          : `flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-extrabold text-sm transition-colors ${
+              urgentCount > 0
+                ? 'bg-yellow-300/30 border-yellow-200/80 text-yellow-100 hover:bg-yellow-300/40'
+                : 'bg-white/25 border-white/80 text-white/60 hover:bg-white/30'
+            }`
+        }
         aria-label="마감 임박 알림"
       >
-        <span className="text-xs leading-none">!</span>
-        {urgentCount > 0 && (
-          <span className="text-sm font-extrabold leading-none">
-            {urgentCount > 9 ? '9+' : urgentCount}
-          </span>
+        {isCard ? (
+          <>
+            <span className={`mx-auto mb-1 flex h-5 w-5 items-center justify-center rounded-full border-2 text-[11px] font-black leading-none ${
+              urgentCount > 0
+                ? 'border-yellow-500 bg-yellow-300 text-dark'
+                : 'border-dark/15 bg-white text-dark/40'
+            }`}>
+              !
+            </span>
+            <p className="text-[10px] font-black text-dark/50">마감</p>
+            <p className={`text-sm font-black ${urgentCount > 0 ? 'text-dark' : 'text-dark/35'}`}>
+              {urgentCount > 9 ? '9+' : urgentCount}
+            </p>
+          </>
+        ) : (
+          <>
+            <span className="text-xs leading-none">!</span>
+            {urgentCount > 0 && (
+              <span className="text-sm font-extrabold leading-none">
+                {urgentCount > 9 ? '9+' : urgentCount}
+              </span>
+            )}
+          </>
         )}
       </button>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -203,6 +203,52 @@ const URGENCY_STYLE = {
   },
 }
 
+function replaceTask(list, updatedTask) {
+  if (!Array.isArray(list) || !updatedTask?.taskId) return list
+  return list.map((task) => task.taskId === updatedTask.taskId ? { ...task, ...updatedTask } : task)
+}
+
+function replacePlanningTask(planning, updatedTask) {
+  if (!planning || !updatedTask?.taskId) return planning
+
+  const nextSections = planning.sections
+    ? {
+        ...planning.sections,
+        today: replaceTask(planning.sections.today, updatedTask),
+        next3Days: replaceTask(planning.sections.next3Days, updatedTask),
+        next7Days: replaceTask(planning.sections.next7Days, updatedTask),
+        later: replaceTask(planning.sections.later, updatedTask),
+        overdue: replaceTask(planning.sections.overdue, updatedTask),
+        recentDone: replaceTask(planning.sections.recentDone, updatedTask),
+      }
+    : planning.sections
+
+  const nowSuggestion = planning.nowSuggestion?.task?.taskId === updatedTask.taskId
+    ? {
+        ...planning.nowSuggestion,
+        title: planning.nowSuggestion.type === 'CURRENT_EVENT'
+          ? `지금은 ${updatedTask.title} 중이에요.`
+          : planning.nowSuggestion.title,
+        task: { ...planning.nowSuggestion.task, ...updatedTask },
+      }
+    : planning.nowSuggestion
+
+  return {
+    ...planning,
+    tasks: replaceTask(planning.tasks, updatedTask),
+    timedTasks: replaceTask(planning.timedTasks, updatedTask),
+    sections: nextSections,
+    nowSuggestion,
+    focusRecommendations: Array.isArray(planning.focusRecommendations)
+      ? planning.focusRecommendations.map((recommendation) => (
+          recommendation.task?.taskId === updatedTask.taskId
+            ? { ...recommendation, task: { ...recommendation.task, ...updatedTask } }
+            : recommendation
+        ))
+      : planning.focusRecommendations,
+  }
+}
+
 export default function DashboardPage() {
   const { refreshCoins } = useAuth()
   const [tasks, setTasks] = useState([])
@@ -213,8 +259,8 @@ export default function DashboardPage() {
   const [coinToast, setCoinToast] = useState(null)
   const [planning, setPlanning] = useState(null)
 
-  const fetchTasks = () => {
-    api.get('/dashboard/planning')
+  const fetchTasks = useCallback(() => {
+    return api.get('/dashboard/planning')
       .then((res) => {
         const data = res.data || {}
         setPlanning(data)
@@ -225,9 +271,19 @@ export default function DashboardPage() {
         setTasks([])
       })
       .finally(() => setLoading(false))
-  }
+  }, [])
 
-  useEffect(() => { fetchTasks() }, [])
+  useEffect(() => { fetchTasks() }, [fetchTasks])
+
+  const handleTaskUpdated = useCallback((updatedTask) => {
+    setEditingTask(null)
+    if (updatedTask?.taskId) {
+      setTasks((prev) => replaceTask(prev, updatedTask))
+      setPlanning((prev) => replacePlanningTask(prev, updatedTask))
+      window.dispatchEvent(new CustomEvent('dumpit:tasks-updated'))
+    }
+    fetchTasks()
+  }, [fetchTasks])
 
   const toggleStatus = async (task) => {
     const next = task.status === 'DONE' ? 'TODO' : 'DONE'
@@ -527,7 +583,7 @@ export default function DashboardPage() {
         <EditTaskModal
           task={editingTask}
           onClose={() => setEditingTask(null)}
-          onUpdated={() => { setEditingTask(null); fetchTasks() }}
+          onUpdated={handleTaskUpdated}
         />
       )}
 

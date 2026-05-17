@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,16 +64,19 @@ public class TaskServiceImpl implements TaskService {
                            LocalDateTime startTime, LocalDateTime endTime,
                            Boolean isLocked, Task.Category category) {
         User user = findUser(email);
-        validateFutureDeadline(deadline);
-        Task task = Task.of(user, title, description, deadline, estimatedMinutes);
+        ScheduleFields schedule = inferScheduleIfNeeded(title, description, startTime, deadline, estimatedMinutes);
+        validateSchedule(schedule.startTime(), schedule.deadline(), schedule.estimatedMinutes());
+        Task task = Task.of(user, title, description, schedule.deadline(), schedule.estimatedMinutes());
 
-        if (startTime != null) task.setStartTime(startTime);
+        if (schedule.startTime() != null) task.setStartTime(schedule.startTime());
         if (endTime != null) task.setEndTime(endTime);
+        else if (schedule.deadline() != null && schedule.startTime() != null) task.setEndTime(schedule.deadline());
         if (isLocked != null) task.setIsLocked(isLocked);
+        else if (schedule.startTime() != null) task.setIsLocked(true);
 
         aiUsageService.consume(email, AiUsageService.UsageType.TASK_PRIORITY);
         OpenAiService.PriorityResult priority =
-                openAiService.scorePriority(title, description, deadline, estimatedMinutes);
+                openAiService.scorePriority(title, description, schedule.deadline(), schedule.estimatedMinutes());
         task.setAiPriorityScore(priority.score());
 
         if (category != null) {
@@ -99,15 +104,29 @@ public class TaskServiceImpl implements TaskService {
         Task.Status prevStatus = task.getStatus();
         Map<String, Object> before = snapshot(task);
 
+        String nextTitle = fields.title() != null ? fields.title() : task.getTitle();
+        String nextDescription = fields.hasDescription() ? fields.description() : task.getDescription();
+        LocalDateTime nextDeadline = fields.hasDeadline() ? fields.deadline() : task.getDeadline();
+        Integer nextEstimatedMinutes = fields.hasEstimatedMinutes() ? fields.estimatedMinutes() : task.getEstimatedMinutes();
+        LocalDateTime nextStartTime = fields.hasStartTime() ? fields.startTime() : task.getStartTime();
+        boolean scheduleTouched = fields.hasDeadline() || fields.hasEstimatedMinutes() || fields.hasStartTime();
+        ScheduleFields nextSchedule = scheduleTouched
+                ? inferScheduleIfNeeded(nextTitle, nextDescription, nextStartTime, nextDeadline, nextEstimatedMinutes)
+                : new ScheduleFields(nextStartTime, nextDeadline, nextEstimatedMinutes);
+
         if (fields.title() != null) task.setTitle(fields.title());
         if (fields.hasDescription()) task.setDescription(fields.description());
         if (fields.status() != null) task.setStatus(Task.Status.valueOf(fields.status()));
-        if (fields.hasDeadline()) {
-            validateFutureDeadline(fields.deadline());
-            task.setDeadline(fields.deadline());
+        if (scheduleTouched) {
+            validateSchedule(nextSchedule.startTime(), nextSchedule.deadline(), nextSchedule.estimatedMinutes());
+            task.setStartTime(nextSchedule.startTime());
+            task.setDeadline(nextSchedule.deadline());
+            task.setEstimatedMinutes(nextSchedule.estimatedMinutes());
+            task.setEndTime(nextSchedule.startTime() != null && nextSchedule.deadline() != null
+                    ? nextSchedule.deadline()
+                    : null);
+            task.setIsLocked(nextSchedule.startTime() != null);
         }
-        if (fields.hasEstimatedMinutes()) task.setEstimatedMinutes(fields.estimatedMinutes());
-        if (fields.hasStartTime()) task.setStartTime(fields.startTime());
         if (fields.hasEndTime()) task.setEndTime(fields.endTime());
         if (fields.hasIsLocked()) task.setIsLocked(Boolean.TRUE.equals(fields.isLocked()));
         if (fields.hasUserPriorityScore()) task.setUserPriorityScore(fields.userPriorityScore());
@@ -230,6 +249,67 @@ public class TaskServiceImpl implements TaskService {
         return (int) (10 + priority * 40);
     }
 
+    private ScheduleFields inferScheduleIfNeeded(String title, String description,
+                                                 LocalDateTime startTime,
+                                                 LocalDateTime deadline,
+                                                 Integer estimatedMinutes) {
+        if (startTime == null && deadline == null && estimatedMinutes == null) {
+            return new ScheduleFields(null, null, null);
+        }
+
+        if (startTime != null && deadline != null) {
+            return new ScheduleFields(startTime, deadline,
+                    estimatedMinutes != null ? estimatedMinutes : (int) java.time.Duration.between(startTime, deadline).toMinutes());
+        }
+        if (startTime != null && estimatedMinutes != null) {
+            return new ScheduleFields(startTime, startTime.plusMinutes(estimatedMinutes), estimatedMinutes);
+        }
+        if (deadline != null && estimatedMinutes != null) {
+            return new ScheduleFields(deadline.minusMinutes(estimatedMinutes), deadline, estimatedMinutes);
+        }
+
+        OpenAiService.ScheduleInferenceResult inferred =
+                openAiService.inferSchedule(title, description, startTime, deadline, estimatedMinutes);
+        LocalDateTime inferredStart = parseDateTime(inferred.startTime());
+        LocalDateTime inferredDeadline = parseDateTime(inferred.deadline());
+        Integer inferredMinutes = inferred.estimatedMinutes();
+
+        LocalDateTime nextStart = startTime != null ? startTime : inferredStart;
+        LocalDateTime nextDeadline = deadline != null ? deadline : inferredDeadline;
+        Integer nextEstimated = estimatedMinutes != null ? estimatedMinutes : inferredMinutes;
+
+        if (nextStart != null && nextDeadline != null && nextEstimated == null) {
+            nextEstimated = (int) java.time.Duration.between(nextStart, nextDeadline).toMinutes();
+        }
+        if (nextStart != null && nextEstimated != null && nextDeadline == null) {
+            nextDeadline = nextStart.plusMinutes(nextEstimated);
+        }
+        if (nextDeadline != null && nextEstimated != null && nextStart == null) {
+            nextStart = nextDeadline.minusMinutes(nextEstimated);
+        }
+
+        return new ScheduleFields(nextStart, nextDeadline, nextEstimated);
+    }
+
+    private LocalDateTime parseDateTime(String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        } catch (DateTimeParseException ex) {
+            return null;
+        }
+    }
+
+    private void validateSchedule(LocalDateTime startTime, LocalDateTime deadline, Integer estimatedMinutes) {
+        if (estimatedMinutes != null && (estimatedMinutes < 1 || estimatedMinutes > 1440)) {
+            throw new BadRequestException("예상 시간은 1분부터 1440분 사이로 입력해주세요.");
+        }
+        if (startTime != null && deadline != null && !deadline.isAfter(startTime)) {
+            throw new BadRequestException("마감 시간은 시작 시간 이후로 설정해주세요.");
+        }
+        validateFutureDeadline(deadline);
+    }
+
     private void validateFutureDeadline(LocalDateTime deadline) {
         if (deadline != null && !deadline.isAfter(LocalDateTime.now())) {
             throw new BadRequestException("마감일시는 현재 시간 이후로 설정해야 합니다.");
@@ -270,4 +350,10 @@ public class TaskServiceImpl implements TaskService {
         values.put("deletedAt", task.getDeletedAt());
         return values;
     }
+
+    private record ScheduleFields(
+            LocalDateTime startTime,
+            LocalDateTime deadline,
+            Integer estimatedMinutes
+    ) {}
 }

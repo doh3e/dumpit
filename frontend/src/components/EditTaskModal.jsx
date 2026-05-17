@@ -19,9 +19,11 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   const aiUsage = useAiUsage()
   const [showSplit, setShowSplit] = useState(false)
   const initialDeadline = task.deadline ? task.deadline.slice(0, 16) : ''
+  const initialStartTime = task.startTime ? task.startTime.slice(0, 16) : ''
   const [title, setTitle] = useState(task.title || '')
   const [description, setDescription] = useState(task.description || '')
   const [deadline, setDeadline] = useState(initialDeadline)
+  const [startTime, setStartTime] = useState(initialStartTime)
   const [estimatedMinutes, setEstimatedMinutes] = useState(
     task.estimatedMinutes ?? ''
   )
@@ -40,18 +42,25 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
       alert('마감일시는 현재 시간 이후로 설정해야 합니다.')
       return
     }
+    if (startTime && deadline && new Date(deadline) <= new Date(startTime)) {
+      alert('마감 시간은 시작 시간 이후로 설정해주세요.')
+      return
+    }
 
     setSaving(true)
     try {
-      await api.patch(`/tasks/${task.taskId}`, {
+      const payload = {
         title: title.trim(),
         description: description.trim() || null,
         deadline: deadline || null,
         estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes) : null,
         userPriorityScore: priorityScore,
         category,
-      })
-      onUpdated()
+        startTime: startTime || null,
+      }
+      payload.isLocked = Boolean(startTime)
+      const res = await api.patch(`/tasks/${task.taskId}`, payload)
+      onUpdated(res.data)
     } catch (err) {
       alert(getApiErrorMessage(err, '수정에 실패했어요. 다시 시도해주세요.'))
     } finally {
@@ -75,7 +84,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
 
       <form
         onSubmit={handleSubmit}
-        className="relative card-kitschy w-full max-w-md mx-4 space-y-4"
+        className="relative card-kitschy w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto space-y-4"
       >
         <h3 className="heading-kitschy text-xl">일정 수정</h3>
 
@@ -102,9 +111,19 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">마감일시 (선택)</label>
+            <label className="block text-xs font-bold text-dark/60 mb-1">시작 시간 (선택)</label>
+            <input
+              type="datetime-local"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-dark/60 mb-1">마감 시간 (선택)</label>
             <input
               type="datetime-local"
               value={deadline}
@@ -115,7 +134,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">예상 시간 (분)</label>
+            <label className="block text-xs font-bold text-dark/60 mb-1">예상 시간</label>
             <input
               type="number"
               value={estimatedMinutes}

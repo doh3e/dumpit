@@ -56,10 +56,12 @@ export default function Layout() {
 
     const interval = window.setInterval(fetchTasks, 60000)
     window.addEventListener('focus', fetchTasks)
+    window.addEventListener('dumpit:tasks-updated', fetchTasks)
 
     return () => {
       window.clearInterval(interval)
       window.removeEventListener('focus', fetchTasks)
+      window.removeEventListener('dumpit:tasks-updated', fetchTasks)
     }
   }, [fetchTasks, user])
 

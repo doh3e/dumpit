@@ -188,12 +188,7 @@ export default function Header({ onOpenDrawer }) {
                           {usage ? usage.remaining : '-'}
                         </p>
                       </div>
-                      <div className="rounded-lg border-2 border-dark/10 bg-yellow-50 px-2 py-2 text-center">
-                        <p className="mb-1 text-[10px] font-black text-dark/50">마감</p>
-                        <div className="flex justify-center">
-                          <DeadlineNudgeMenu />
-                        </div>
-                      </div>
+                      <DeadlineNudgeMenu variant="mobile-card" />
                     </div>
                     {usage && (
                       <p className="mt-2 text-[10px] font-semibold text-dark/40 text-right">

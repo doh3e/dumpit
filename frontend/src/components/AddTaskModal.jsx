@@ -5,12 +5,6 @@ import { CATEGORIES } from '../constants/categories'
 import AiUsageBadge from './AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
-function getTodayDefaultDeadline() {
-  const d = new Date()
-  d.setHours(23, 59, 0, 0)
-  return formatDateTimeInput(d)
-}
-
 function getMinDeadlineInput() {
   return formatDateTimeInput(new Date())
 }
@@ -24,7 +18,8 @@ export default function AddTaskModal({ onClose, onCreated }) {
   const aiUsage = useAiUsage()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [deadline, setDeadline] = useState(getTodayDefaultDeadline)
+  const [startTime, setStartTime] = useState('')
+  const [deadline, setDeadline] = useState('')
   const [estimatedMinutes, setEstimatedMinutes] = useState('')
   const [category, setCategory] = useState('')
   const [saving, setSaving] = useState(false)
@@ -36,12 +31,17 @@ export default function AddTaskModal({ onClose, onCreated }) {
       alert('마감일시는 현재 시간 이후로 설정해야 합니다.')
       return
     }
+    if (startTime && deadline && new Date(deadline) <= new Date(startTime)) {
+      alert('마감 시간은 시작 시간 이후로 설정해주세요.')
+      return
+    }
 
     setSaving(true)
     try {
       await api.post('/tasks', {
         title: title.trim(),
         description: description.trim() || null,
+        startTime: startTime || null,
         deadline: deadline || null,
         estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes) : null,
         category: category || null,
@@ -61,7 +61,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
 
       <form
         onSubmit={handleSubmit}
-        className="relative card-kitschy w-full max-w-md mx-4 space-y-4"
+        className="relative card-kitschy w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto space-y-4"
       >
         <h3 className="heading-kitschy text-xl">일정 추가</h3>
 
@@ -83,16 +83,26 @@ export default function AddTaskModal({ onClose, onCreated }) {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="추가 정보가 있다면..."
+            placeholder="추가 정보가 있다면 적어주세요. AI가 더 똑똑하게 분석할 수 있어요."
             rows={2}
             maxLength={1000}
             className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary resize-none"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">마감일시 (선택)</label>
+            <label className="block text-xs font-bold text-dark/60 mb-1">시작 시간 (선택)</label>
+            <input
+              type="datetime-local"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-dark/60 mb-1">마감 시간 (선택)</label>
             <input
               type="datetime-local"
               value={deadline}
@@ -103,7 +113,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">예상 시간 (분)</label>
+            <label className="block text-xs font-bold text-dark/60 mb-1">예상 시간 (분/선택)</label>
             <input
               type="number"
               value={estimatedMinutes}

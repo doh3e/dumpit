@@ -4,6 +4,12 @@ import api, { API_BASE_URL, getApiErrorMessage } from '../services/api'
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 const CALENDAR_REFRESH_MS = 10 * 60 * 1000
 
+function isPageVisible() {
+  return typeof document === 'undefined'
+    || Boolean(window.dumpitDesktop)
+    || document.visibilityState === 'visible'
+}
+
 function formatTime(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
@@ -38,7 +44,9 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
     timeMax: new Date(year, month + 1, 1).toISOString(),
   }), [year, month])
 
-  const fetchGoogleEvents = useCallback(() => {
+  const fetchGoogleEvents = useCallback(({ force = false } = {}) => {
+    if (!force && !isPageVisible()) return
+
     api.get('/calendar/events', { params: visibleRange })
       .then((res) => {
         setGoogleEvents(res.data)
@@ -56,13 +64,18 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
   }, [visibleRange])
 
   useEffect(() => {
-    fetchGoogleEvents()
+    fetchGoogleEvents({ force: true })
     const interval = window.setInterval(fetchGoogleEvents, CALENDAR_REFRESH_MS)
-    window.addEventListener('focus', fetchGoogleEvents)
+    const fetchWhenVisible = () => {
+      if (isPageVisible()) fetchGoogleEvents({ force: true })
+    }
+    window.addEventListener('focus', fetchWhenVisible)
+    document.addEventListener('visibilitychange', fetchWhenVisible)
 
     return () => {
       window.clearInterval(interval)
-      window.removeEventListener('focus', fetchGoogleEvents)
+      window.removeEventListener('focus', fetchWhenVisible)
+      document.removeEventListener('visibilitychange', fetchWhenVisible)
     }
   }, [fetchGoogleEvents])
 
