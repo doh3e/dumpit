@@ -113,6 +113,8 @@ public class OpenAiServiceImpl implements OpenAiService {
                                                  LocalDateTime deadline,
                                                  Integer estimatedMinutes) {
         String nowStr = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        String todayEnd = LocalDateTime.now().toLocalDate().atTime(23, 59, 0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        String tomorrowEnd = LocalDateTime.now().toLocalDate().plusDays(1).atTime(23, 59, 0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         String prompt = """
             You infer missing schedule fields for a Dumpit task.
             Return only valid JSON in this shape:
@@ -125,8 +127,12 @@ public class OpenAiServiceImpl implements OpenAiService {
             - If both deadline and estimatedMinutes are known, startTime should usually be deadline - estimatedMinutes.
             - If both startTime and deadline are known, estimatedMinutes should be the duration in minutes.
             - If only one schedule field is known, infer the missing fields from the task title and description.
-            - If there is not enough context, choose a practical default: estimatedMinutes 30 to 60, and keep inferred times in the future.
-            - deadline means the end/due time of the task.
+            - If ALL three fields are unknown, infer all of them from the task title and description:
+              * Estimate estimatedMinutes based on task type (e.g. 운동/exercise→60, 회의/meeting→30-60, 공부/study→60-120, 장보기/shopping→30-60, 독서/reading→30-60, 식사/meal→30, 청소/cleaning→30-60).
+              * For simple, urgent, or routine tasks (errands, admin, chores) set deadline to today at 23:59 (%s).
+              * For tasks that need preparation or are moderately complex set deadline to tomorrow at 23:59 (%s).
+              * Return null for startTime when all fields are unknown.
+            - deadline means the end/due time of the task. All deadlines must be strictly in the future.
             - estimatedMinutes must be between 1 and 1440.
 
             <user_input>
@@ -138,6 +144,8 @@ public class OpenAiServiceImpl implements OpenAiService {
             </user_input>
             """.formatted(
                 nowStr,
+                todayEnd,
+                tomorrowEnd,
                 title,
                 description != null ? description : "none",
                 startTime != null ? startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "unknown",
@@ -260,6 +268,62 @@ public class OpenAiServiceImpl implements OpenAiService {
             log.error("Brain dump analysis failed: {}", e.getMessage());
             throw new RuntimeException("AI brain dump analysis failed.");
         }
+    }
+
+    @Override
+    public IdeaExtractResult extractIdeas(String rawText) {
+        String prompt = """
+            You organize a free-form idea dump for the Dumpit productivity app.
+            Extract and structure ideas and return only valid JSON in this shape:
+            {"ideas":[{"title":"...","content":"...","category":"WORK","children":[{"title":"...","content":"...","category":"WORK","children":[]}]}]}
+
+            HIERARCHY RULES (most important):
+            - First, check if the input opens with a single overarching theme, project, or goal (e.g., a project name, a to-do subject, a decision to work on something). If yes, that becomes the ONE root idea, and everything that follows — each topic, section, or bullet — becomes a child or grandchild of it.
+            - Only produce multiple root-level ideas when the input contains genuinely separate, unrelated themes that share no single unifying topic from the start.
+            - When in doubt, prefer one root with children over multiple roots.
+
+            STRUCTURE RULES:
+            - Children can have children (maximum 3 levels deep total).
+            - Group related sub-thoughts under the nearest logical parent.
+            - Write clean, concise titles in Korean (최대 30자). Rephrase informal or unclear phrasing into clear idea titles.
+            - Write content as a concise summary of the relevant portion of the input (최대 200자). Include key details beyond just restating the title.
+            - category must be one of: WORK, STUDY, APPOINTMENT, CHORE, ROUTINE, HEALTH, HOBBY, OTHER
+            - Children inherit the parent's category unless clearly different.
+            - Skip text that has no concrete substance (filler, transitions, exclamations, etc.).
+            - Always include "children" field, using an empty array [] when there are no children.
+            - All title and content fields MUST be written in Korean (한국어).
+
+            <user_input>
+            %s
+            </user_input>
+            """.formatted(rawText);
+
+        try {
+            String json = callChatApi(prompt, DATA_BOUNDARY_RULE);
+            IdeaExtractResult result = objectMapper.readValue(json, IdeaExtractResult.class);
+            List<IdeaNode> ideas = result.ideas() == null ? List.of() : result.ideas().stream()
+                    .filter(n -> n.title() != null && !n.title().isBlank())
+                    .map(n -> sanitizeIdeaNode(n, 0))
+                    .toList();
+            return new IdeaExtractResult(ideas);
+        } catch (Exception e) {
+            log.error("Idea extraction failed: {}", e.getMessage());
+            throw new RuntimeException("AI idea extraction failed.");
+        }
+    }
+
+    private IdeaNode sanitizeIdeaNode(IdeaNode node, int depth) {
+        List<IdeaNode> children = depth >= 2 || node.children() == null ? List.of() :
+                node.children().stream()
+                        .filter(c -> c.title() != null && !c.title().isBlank())
+                        .map(c -> sanitizeIdeaNode(c, depth + 1))
+                        .toList();
+        return new IdeaNode(
+                trimToLimit(node.title(), 30),
+                trimToLimit(node.content(), 200),
+                safeCategory(node.category()),
+                children
+        );
     }
 
     private String buildUrgencyInfo(LocalDateTime deadline) {

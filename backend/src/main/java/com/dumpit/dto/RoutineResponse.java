@@ -16,10 +16,16 @@ public record RoutineResponse(
         String repeatType,
         Set<Integer> daysOfWeek,
         Set<Integer> daysOfMonth,
+        Integer monthlyWeekOrdinal,
+        Integer monthlyWeekDay,
+        Boolean runOnLastDayIfMissing,
         LocalTime createTime,
+        LocalTime routineStartTime,
+        LocalTime routineEndTime,
         LocalDate startDate,
         LocalDate endDate,
         LocalDate lastGeneratedDate,
+        LocalDateTime nextRunAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -32,10 +38,16 @@ public record RoutineResponse(
                 routine.getRepeatType().name(),
                 routine.dayOfWeekSet(),
                 routine.dayOfMonthSet(),
+                routine.getMonthlyWeekOrdinal(),
+                routine.getMonthlyWeekDay(),
+                routine.getRunOnLastDayIfMissing(),
                 routine.getCreateTime(),
+                routine.getRoutineStartTime() != null ? routine.getRoutineStartTime() : routine.getCreateTime(),
+                routine.getRoutineEndTime(),
                 routine.getStartDate(),
                 routine.getEndDate(),
                 routine.getLastGeneratedDate(),
+                routine.getNextRunAt(),
                 routine.getCreatedAt(),
                 routine.getUpdatedAt()
         );

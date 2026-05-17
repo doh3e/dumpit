@@ -87,6 +87,8 @@ public class GlobalExceptionHandler {
             case "End date cannot be before start date." -> "종료일은 시작일보다 빠를 수 없습니다.";
             case "Weekly routines need at least one day between 1 and 7." -> "주간 루틴은 1~7 사이의 요일을 하나 이상 선택해야 합니다.";
             case "Monthly routines need at least one day between 1 and 31." -> "월간 루틴은 1~31 사이의 날짜를 하나 이상 선택해야 합니다.";
+            case "Monthly weekday routines need an ordinal between 1 and 5." -> "월간 요일 루틴은 1~5 사이의 주차를 선택해야 합니다.";
+            case "Monthly weekday routines need a day between 1 and 7." -> "월간 요일 루틴은 1~7 사이의 요일을 선택해야 합니다.";
             default -> message;
         };
     }
@@ -122,8 +124,12 @@ public class GlobalExceptionHandler {
             case "startDate" -> "시작일";
             case "endDate" -> "종료일";
             case "createTime" -> "실행 시간";
+            case "routineStartTime" -> "시작 시간";
+            case "routineEndTime" -> "종료 시간";
             case "daysOfWeek" -> "요일";
             case "daysOfMonth" -> "날짜";
+            case "monthlyWeekOrdinal" -> "주차";
+            case "monthlyWeekDay" -> "요일";
             case "email" -> "이메일";
             case "reason" -> "사유";
             default -> "입력값";

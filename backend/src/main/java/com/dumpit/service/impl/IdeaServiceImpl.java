@@ -1,5 +1,6 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.dto.IdeaExtractConfirmRequest;
 import com.dumpit.entity.Idea;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
@@ -123,6 +124,40 @@ public class IdeaServiceImpl implements IdeaService {
         ideaRepository.save(idea);
         activityLogService.record(idea.getUser(), "IDEA_CONVERTED", "IDEA", idea.getIdeaId(), before, snapshot(idea));
         return saved;
+    }
+
+    @Override
+    @Transactional
+    public OpenAiService.IdeaExtractResult extractIdeas(String email, String rawText) {
+        int cost = Math.max(1, (int) Math.ceil(rawText.length() / 200.0));
+        aiUsageService.consumeVariable(email, AiUsageService.UsageType.IDEA_EXTRACT, cost);
+        return openAiService.extractIdeas(rawText);
+    }
+
+    @Override
+    @Transactional
+    public List<Idea> confirmExtractedIdeas(String email, List<IdeaExtractConfirmRequest.IdeaNodeInput> nodes) {
+        User user = findUser(email);
+        List<Idea> allSaved = new ArrayList<>();
+        for (IdeaExtractConfirmRequest.IdeaNodeInput node : nodes) {
+            saveNodeRecursive(user, node, null, allSaved);
+        }
+        return allSaved;
+    }
+
+    private void saveNodeRecursive(User user, IdeaExtractConfirmRequest.IdeaNodeInput node,
+                                   Idea parent, List<Idea> allSaved) {
+        if (node.title() == null || node.title().isBlank()) return;
+        Idea idea = Idea.of(user, node.title().trim(), trimToNull(node.content()));
+        idea.update(null, null, false, parseCategory(node.category()), parent);
+        Idea saved = ideaRepository.save(idea);
+        activityLogService.record(user, "IDEA_CREATED", "IDEA", saved.getIdeaId(), null, snapshot(saved));
+        allSaved.add(saved);
+        if (node.children() != null) {
+            for (IdeaExtractConfirmRequest.IdeaNodeInput child : node.children()) {
+                saveNodeRecursive(user, child, saved, allSaved);
+            }
+        }
     }
 
     @Override

@@ -1,12 +1,15 @@
 package com.dumpit.controller;
 
 import com.dumpit.dto.IdeaBulkRequest;
+import com.dumpit.dto.IdeaExtractConfirmRequest;
+import com.dumpit.dto.IdeaExtractRequest;
 import com.dumpit.dto.IdeaRequest;
 import com.dumpit.dto.IdeaResponse;
 import com.dumpit.dto.IdeaUpdateRequest;
 import com.dumpit.entity.Idea;
 import com.dumpit.entity.Task;
 import com.dumpit.service.IdeaService;
+import com.dumpit.service.OpenAiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -82,6 +85,28 @@ public class IdeaController {
             @PathVariable UUID ideaId) {
         Task task = ideaService.convertToTask(principal.getAttribute("email"), ideaId);
         return ResponseEntity.status(HttpStatus.CREATED).body(com.dumpit.dto.TaskResponse.from(task));
+    }
+
+    @PostMapping("/ai-extract")
+    public ResponseEntity<OpenAiService.IdeaExtractResult> extractIdeas(
+            @AuthenticationPrincipal OAuth2User principal,
+            @Valid @RequestBody IdeaExtractRequest request) {
+        return ResponseEntity.ok(ideaService.extractIdeas(
+                principal.getAttribute("email"),
+                request.rawText()
+        ));
+    }
+
+    @PostMapping("/ai-extract/confirm")
+    public ResponseEntity<List<IdeaResponse>> confirmExtractedIdeas(
+            @AuthenticationPrincipal OAuth2User principal,
+            @Valid @RequestBody IdeaExtractConfirmRequest request) {
+        List<Idea> ideas = ideaService.confirmExtractedIdeas(
+                principal.getAttribute("email"),
+                request.ideas()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ideas.stream().map(IdeaResponse::from).toList());
     }
 
     @DeleteMapping("/{ideaId}")

@@ -254,7 +254,9 @@ public class TaskServiceImpl implements TaskService {
                                                  LocalDateTime deadline,
                                                  Integer estimatedMinutes) {
         if (startTime == null && deadline == null && estimatedMinutes == null) {
-            return new ScheduleFields(null, null, null);
+            OpenAiService.ScheduleInferenceResult inferred =
+                    openAiService.inferSchedule(title, description, null, null, null);
+            return new ScheduleFields(null, parseDateTime(inferred.deadline()), inferred.estimatedMinutes());
         }
 
         if (startTime != null && deadline != null) {

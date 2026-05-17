@@ -8,7 +8,7 @@ function formatReset(resetAt) {
 export default function AiUsageBadge({ usage, cost = 1 }) {
   if (!usage) {
     return (
-      <p className="text-[11px] font-semibold text-dark/40">
+      <p className="text-[11px] font-semibold text-dark/50">
         AI 사용량은 매일 자정에 초기화돼요.
       </p>
     )

@@ -41,6 +41,9 @@ function loadNotificationsEnabled() {
 }
 
 export default function SettingsModal({ onClose }) {
+  const isDesktop = typeof window !== 'undefined' && Boolean(window.dumpitDesktop)
+  const [appInfo, setAppInfo] = useState(null)
+  const [checkingUpdate, setCheckingUpdate] = useState(false)
   const [routineStart, setRoutineStart] = useState(() => {
     const v = localStorage.getItem('dumpit_routine_start')
     return v ? Number(v) : DEFAULT_START
@@ -114,6 +117,24 @@ export default function SettingsModal({ onClose }) {
       .catch(() => setPurchases([]))
       .finally(() => setLoadingPurchases(false))
   }, [])
+
+  useEffect(() => {
+    if (!isDesktop) return
+    window.dumpitDesktop.getAppInfo?.()
+      .then((info) => setAppInfo(info))
+      .catch(() => setAppInfo(null))
+  }, [isDesktop])
+
+  const checkForUpdates = async () => {
+    if (!window.dumpitDesktop?.checkForUpdates) return
+    setCheckingUpdate(true)
+    try {
+      const info = await window.dumpitDesktop.checkForUpdates()
+      if (info) setAppInfo(info)
+    } finally {
+      window.setTimeout(() => setCheckingUpdate(false), 800)
+    }
+  }
 
   const saveRoutine = () => {
     localStorage.setItem('dumpit_routine_start', routineStart)
@@ -269,6 +290,34 @@ export default function SettingsModal({ onClose }) {
             </div>
           )}
         </section>
+
+        {isDesktop && (
+          <>
+            <hr className="border-dark/10 mb-6" />
+
+            <section className="mb-6">
+              <h3 className="font-extrabold text-dark text-sm mb-3">앱 정보</h3>
+              <div className="rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-dark">덤핏 데스크탑</p>
+                    <p className="mt-0.5 text-xs font-semibold text-dark/50">
+                      v{appInfo?.version || '-'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={checkForUpdates}
+                    disabled={checkingUpdate}
+                    className="rounded-lg border-2 border-dark bg-accent px-3 py-2 text-xs font-black text-dark shadow-kitschy transition-transform active:translate-y-0.5 disabled:opacity-50"
+                  >
+                    {checkingUpdate ? '확인 중...' : '업데이트 확인'}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
 
         <div className="flex gap-3">
           <button

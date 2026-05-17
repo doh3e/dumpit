@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,7 +54,7 @@ public class RoutineServiceImpl implements RoutineService {
         apply(routine, request);
         Routine saved = routineRepository.save(routine);
         activityLogService.record(user, "ROUTINE_CREATED", "ROUTINE", saved.getRoutineId(), null, snapshot(saved));
-        generateRoutineTaskForDate(saved, LocalDate.now());
+        generateRoutineTaskIfDue(saved, LocalDateTime.now());
         return saved;
     }
 
@@ -65,7 +66,7 @@ public class RoutineServiceImpl implements RoutineService {
         apply(routine, request);
         Routine saved = routineRepository.save(routine);
         activityLogService.record(routine.getUser(), "ROUTINE_UPDATED", "ROUTINE", saved.getRoutineId(), before, snapshot(saved));
-        generateRoutineTaskForDate(saved, LocalDate.now());
+        generateRoutineTaskIfDue(saved, LocalDateTime.now());
         return saved;
     }
 
@@ -78,7 +79,10 @@ public class RoutineServiceImpl implements RoutineService {
         Routine saved = routineRepository.save(routine);
         activityLogService.record(routine.getUser(), "ROUTINE_TOGGLED", "ROUTINE", saved.getRoutineId(), before, snapshot(saved));
         if (enabled) {
-            generateRoutineTaskForDate(saved, LocalDate.now());
+            saved.setNextRunAt(calculateNextRunAt(saved, LocalDateTime.now().minusSeconds(1)));
+            generateRoutineTaskIfDue(saved, LocalDateTime.now());
+        } else {
+            saved.setNextRunAt(null);
         }
         return saved;
     }
@@ -96,14 +100,22 @@ public class RoutineServiceImpl implements RoutineService {
     @Override
     @Transactional
     public int generateDueRoutines() {
-        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
         int generated = 0;
 
-        for (Routine routine : routineRepository.findGenerationCandidates(today)) {
-            if (generateRoutineTaskForDate(routine, today)) generated++;
+        backfillMissingNextRunAt(now);
+
+        for (Routine routine : routineRepository.findDueRoutines(now)) {
+            if (generateRoutineTaskIfDue(routine, now)) generated++;
         }
 
         return generated;
+    }
+
+    private void backfillMissingNextRunAt(LocalDateTime now) {
+        for (Routine routine : routineRepository.findEnabledRoutinesMissingNextRunAt()) {
+            routine.setNextRunAt(calculateNextRunAt(routine, now.minusSeconds(1)));
+        }
     }
 
     @Override
@@ -116,7 +128,8 @@ public class RoutineServiceImpl implements RoutineService {
         return switch (routine.getRepeatType()) {
             case DAILY -> true;
             case WEEKLY -> routine.dayOfWeekSet().contains(date.getDayOfWeek().getValue());
-            case MONTHLY -> routine.dayOfMonthSet().contains(date.getDayOfMonth());
+            case MONTHLY -> shouldGenerateMonthly(routine, date);
+            case MONTHLY_WEEKDAY -> shouldGenerateMonthlyWeekday(routine, date);
         };
     }
 
@@ -125,34 +138,89 @@ public class RoutineServiceImpl implements RoutineService {
         routine.setDescription(trimToNull(request.description()));
         routine.setEnabled(request.enabled() == null || request.enabled());
         routine.setRepeatType(request.repeatType());
-        routine.setCreateTime(request.createTime() != null ? request.createTime() : LocalTime.of(6, 0));
+        LocalTime requestedStartTime = request.routineStartTime() != null
+                ? request.routineStartTime()
+                : request.createTime();
+        routine.setCreateTime(requestedStartTime);
+        routine.setRoutineStartTime(requestedStartTime);
+        routine.setRoutineEndTime(request.routineEndTime());
         routine.setStartDate(request.startDate());
         routine.setEndDate(request.endDate());
+        routine.setRunOnLastDayIfMissing(Boolean.TRUE.equals(request.runOnLastDayIfMissing()));
 
         validateDateRange(request.startDate(), request.endDate());
+        validateRoutineTimes(requestedStartTime, request.routineEndTime());
         validateRepeatRule(request);
 
         routine.setDaysOfWeek(toCsv(request.daysOfWeek()));
         routine.setDaysOfMonth(toCsv(request.daysOfMonth()));
+        routine.setMonthlyWeekOrdinal(request.repeatType() == Routine.RepeatType.MONTHLY_WEEKDAY
+                ? request.monthlyWeekOrdinal()
+                : null);
+        routine.setMonthlyWeekDay(request.repeatType() == Routine.RepeatType.MONTHLY_WEEKDAY
+                ? request.monthlyWeekDay()
+                : null);
+        routine.setNextRunAt(Boolean.TRUE.equals(routine.getEnabled())
+                ? calculateNextRunAt(routine, LocalDateTime.now().minusSeconds(1))
+                : null);
     }
 
-    private boolean generateRoutineTaskForDate(Routine routine, LocalDate date) {
-        if (!shouldGenerateOn(routine, date)) return false;
-        if (date.equals(routine.getLastGeneratedDate())) return false;
+    private boolean shouldGenerateMonthly(Routine routine, LocalDate date) {
+        Set<Integer> days = routine.dayOfMonthSet();
+        if (days.contains(date.getDayOfMonth())) return true;
+        if (!Boolean.TRUE.equals(routine.getRunOnLastDayIfMissing())) return false;
+
+        int lastDay = YearMonth.from(date).lengthOfMonth();
+        return date.getDayOfMonth() == lastDay
+                && days.stream().anyMatch((day) -> day > lastDay);
+    }
+
+    private boolean shouldGenerateMonthlyWeekday(Routine routine, LocalDate date) {
+        Integer ordinal = routine.getMonthlyWeekOrdinal();
+        Integer dayOfWeek = routine.getMonthlyWeekDay();
+        if (ordinal == null || dayOfWeek == null) return false;
+        if (date.getDayOfWeek().getValue() != dayOfWeek) return false;
+        return ((date.getDayOfMonth() - 1) / 7) + 1 == ordinal;
+    }
+
+    private boolean generateRoutineTaskIfDue(Routine routine, LocalDateTime now) {
+        LocalDateTime nextRunAt = routine.getNextRunAt();
+        if (nextRunAt == null || nextRunAt.isAfter(now)) return false;
+        return generateRoutineTaskForDate(routine, nextRunAt.toLocalDate(), now);
+    }
+
+    private boolean generateRoutineTaskForDate(Routine routine, LocalDate date, LocalDateTime now) {
+        if (!shouldGenerateOn(routine, date)) {
+            routine.setNextRunAt(calculateNextRunAt(routine, now));
+            return false;
+        }
+        if (date.equals(routine.getLastGeneratedDate())) {
+            routine.setNextRunAt(calculateNextRunAt(routine, now));
+            return false;
+        }
         if (taskRepository.existsByRoutineRoutineIdAndRoutineScheduledDateAndDeletedAtIsNull(routine.getRoutineId(), date)) {
             routine.setLastGeneratedDate(date);
+            routine.setNextRunAt(calculateNextRunAt(routine, now));
             return false;
         }
 
-        LocalDateTime routineDateTime = LocalDateTime.of(date, routine.getCreateTime());
+        LocalTime startTime = routineStartTime(routine);
+        LocalTime endTime = routine.getRoutineEndTime();
+        LocalDateTime deadline = LocalDateTime.of(date, endTime != null ? endTime : LocalTime.of(23, 59));
         Task task = Task.of(
                 routine.getUser(),
                 routine.getName(),
                 routine.getDescription(),
-                routineDateTime,
+                deadline,
                 null
         );
-        task.setStartTime(routineDateTime);
+        if (startTime != null) {
+            task.setStartTime(LocalDateTime.of(date, startTime));
+        }
+        if (startTime != null && endTime != null) {
+            task.setEndTime(deadline);
+            task.setIsLocked(true);
+        }
         task.setCategory(Task.Category.ROUTINE);
         task.setAiPriorityScore(0.5);
         task.setRoutine(routine);
@@ -163,16 +231,59 @@ public class RoutineServiceImpl implements RoutineService {
             deadlineNudgeService.index(saved);
             activityLogService.record(routine.getUser(), "TASK_CREATED", "TASK", saved.getTaskId(), null, taskSnapshot(saved));
             routine.setLastGeneratedDate(date);
+            routine.setNextRunAt(calculateNextRunAt(routine, now));
             return true;
         } catch (DataIntegrityViolationException ignored) {
             routine.setLastGeneratedDate(date);
+            routine.setNextRunAt(calculateNextRunAt(routine, now));
             return false;
         }
+    }
+
+    private LocalDateTime calculateNextRunAt(Routine routine, LocalDateTime after) {
+        LocalDate cursor = after.toLocalDate();
+        if (cursor.isBefore(routine.getStartDate())) {
+            cursor = routine.getStartDate();
+        }
+
+        LocalDate limit = routine.getEndDate() != null ? routine.getEndDate() : cursor.plusYears(5);
+        while (!cursor.isAfter(limit)) {
+            LocalDateTime candidate = nextRunCandidate(routine, cursor, after);
+            if (!cursor.equals(routine.getLastGeneratedDate()) && candidate.isAfter(after) && shouldGenerateOn(routine, cursor)) {
+                return candidate;
+            }
+            cursor = cursor.plusDays(1);
+        }
+        return null;
+    }
+
+    private LocalDateTime nextRunCandidate(Routine routine, LocalDate date, LocalDateTime after) {
+        LocalTime startTime = routineStartTime(routine);
+        if (startTime != null) {
+            return LocalDateTime.of(date, startTime);
+        }
+        if (date.equals(after.toLocalDate())) {
+            return after.plusSeconds(1);
+        }
+        return date.atStartOfDay().plusMinutes(5);
+    }
+
+    private LocalTime routineStartTime(Routine routine) {
+        return routine.getRoutineStartTime() != null ? routine.getRoutineStartTime() : routine.getCreateTime();
     }
 
     private void validateDateRange(LocalDate startDate, LocalDate endDate) {
         if (endDate != null && endDate.isBefore(startDate)) {
             throw new BadRequestException("종료일은 시작일보다 빠를 수 없습니다.");
+        }
+    }
+
+    private void validateRoutineTimes(LocalTime startTime, LocalTime endTime) {
+        if (endTime != null && startTime == null) {
+            throw new BadRequestException("루틴 종료 시간을 쓰려면 시작 시간도 선택해주세요.");
+        }
+        if (startTime != null && endTime != null && !endTime.isAfter(startTime)) {
+            throw new BadRequestException("루틴 종료 시간은 시작 시간 이후로 설정해주세요.");
         }
     }
 
@@ -188,6 +299,15 @@ public class RoutineServiceImpl implements RoutineService {
             Set<Integer> days = request.daysOfMonth() == null ? Set.of() : request.daysOfMonth();
             if (days.isEmpty() || days.stream().anyMatch((day) -> day < 1 || day > 31)) {
                 throw new BadRequestException("월간 루틴은 1~31 사이의 날짜를 하나 이상 선택해야 합니다.");
+            }
+        }
+
+        if (request.repeatType() == Routine.RepeatType.MONTHLY_WEEKDAY) {
+            if (request.monthlyWeekOrdinal() == null || request.monthlyWeekOrdinal() < 1 || request.monthlyWeekOrdinal() > 5) {
+                throw new BadRequestException("월간 요일 루틴은 1~5 사이의 주차를 선택해야 합니다.");
+            }
+            if (request.monthlyWeekDay() == null || request.monthlyWeekDay() < 1 || request.monthlyWeekDay() > 7) {
+                throw new BadRequestException("월간 요일 루틴은 1~7 사이의 요일을 선택해야 합니다.");
             }
         }
     }
@@ -228,10 +348,16 @@ public class RoutineServiceImpl implements RoutineService {
         values.put("repeatType", routine.getRepeatType());
         values.put("daysOfWeek", routine.getDaysOfWeek());
         values.put("daysOfMonth", routine.getDaysOfMonth());
+        values.put("monthlyWeekOrdinal", routine.getMonthlyWeekOrdinal());
+        values.put("monthlyWeekDay", routine.getMonthlyWeekDay());
+        values.put("runOnLastDayIfMissing", routine.getRunOnLastDayIfMissing());
         values.put("createTime", routine.getCreateTime());
+        values.put("routineStartTime", routineStartTime(routine));
+        values.put("routineEndTime", routine.getRoutineEndTime());
         values.put("startDate", routine.getStartDate());
         values.put("endDate", routine.getEndDate());
         values.put("lastGeneratedDate", routine.getLastGeneratedDate());
+        values.put("nextRunAt", routine.getNextRunAt());
         values.put("deletedAt", routine.getDeletedAt());
         return values;
     }
