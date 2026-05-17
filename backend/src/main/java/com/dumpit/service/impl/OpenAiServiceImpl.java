@@ -113,6 +113,8 @@ public class OpenAiServiceImpl implements OpenAiService {
                                                  LocalDateTime deadline,
                                                  Integer estimatedMinutes) {
         String nowStr = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        String todayEnd = LocalDateTime.now().toLocalDate().atTime(23, 59, 0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        String tomorrowEnd = LocalDateTime.now().toLocalDate().plusDays(1).atTime(23, 59, 0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         String prompt = """
             You infer missing schedule fields for a Dumpit task.
             Return only valid JSON in this shape:
@@ -125,8 +127,12 @@ public class OpenAiServiceImpl implements OpenAiService {
             - If both deadline and estimatedMinutes are known, startTime should usually be deadline - estimatedMinutes.
             - If both startTime and deadline are known, estimatedMinutes should be the duration in minutes.
             - If only one schedule field is known, infer the missing fields from the task title and description.
-            - If there is not enough context, choose a practical default: estimatedMinutes 30 to 60, and keep inferred times in the future.
-            - deadline means the end/due time of the task.
+            - If ALL three fields are unknown, infer all of them from the task title and description:
+              * Estimate estimatedMinutes based on task type (e.g. 운동/exercise→60, 회의/meeting→30-60, 공부/study→60-120, 장보기/shopping→30-60, 독서/reading→30-60, 식사/meal→30, 청소/cleaning→30-60).
+              * For simple, urgent, or routine tasks (errands, admin, chores) set deadline to today at 23:59 (%s).
+              * For tasks that need preparation or are moderately complex set deadline to tomorrow at 23:59 (%s).
+              * Return null for startTime when all fields are unknown.
+            - deadline means the end/due time of the task. All deadlines must be strictly in the future.
             - estimatedMinutes must be between 1 and 1440.
 
             <user_input>
@@ -138,6 +144,8 @@ public class OpenAiServiceImpl implements OpenAiService {
             </user_input>
             """.formatted(
                 nowStr,
+                todayEnd,
+                tomorrowEnd,
                 title,
                 description != null ? description : "none",
                 startTime != null ? startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "unknown",

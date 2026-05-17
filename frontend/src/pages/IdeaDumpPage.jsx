@@ -63,6 +63,32 @@ function buildTreeRows(ideas, query, expandedIds) {
   return rows
 }
 
+function CategoryPills({ value, onChange, compact = false }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {CATEGORIES.map((category) => {
+        const isSelected = value === category.value
+        return (
+          <button
+            key={category.value}
+            type="button"
+            onClick={() => onChange(category.value)}
+            className={`rounded-full border-2 font-bold transition-all ${
+              compact ? 'px-2 py-1 text-[11px]' : 'px-2.5 py-1 text-xs'
+            } ${
+              isSelected
+                ? 'border-dark bg-primary text-white shadow-[2px_2px_0_#2D2A32]'
+                : 'border-dark/15 bg-accent text-dark hover:border-dark/40'
+            }`}
+          >
+            <span aria-hidden="true">{category.emoji}</span> {category.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function IdeaDumpPage() {
   const [ideas, setIdeas] = useState([])
   const [selectedId, setSelectedId] = useState(null)
@@ -260,43 +286,54 @@ export default function IdeaDumpPage() {
         </div>
       </div>
 
-      <form onSubmit={handleQuickSubmit} className="card-kitschy space-y-3">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_160px_200px] gap-3">
+      <form onSubmit={handleQuickSubmit} className="card-kitschy">
+        <div>
           <textarea
             value={quickForm.rawText}
             onChange={(e) => setQuickForm((prev) => ({ ...prev, rawText: e.target.value }))}
-            rows={3}
+            rows={5}
             maxLength={3000}
             placeholder={'아이디어를 한 줄에 하나씩 적어보세요.\n여러 줄이면 각각 따로 저장됩니다.'}
-            className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+            className="w-full resize-none bg-transparent text-sm font-semibold leading-relaxed text-dark outline-none placeholder:text-dark/30"
           />
-          <select
-            value={quickForm.category}
-            onChange={(e) => setQuickForm((prev) => ({ ...prev, category: e.target.value }))}
-            className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
-          >
-            {CATEGORIES.map((category) => (
-              <option key={category.value} value={category.value}>{category.label}</option>
-            ))}
-          </select>
-          <select
-            value={quickForm.parentIdeaId}
-            onChange={(e) => setQuickForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
-            className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
-          >
-            <option value="">상위 없음</option>
-            {ideas.map((idea) => (
-              <option key={idea.ideaId} value={idea.ideaId}>{idea.title}</option>
-            ))}
-          </select>
         </div>
-        <button
-          type="submit"
-          disabled={!quickForm.rawText.trim() || saving}
-          className="btn-kitschy bg-primary text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          줄 단위로 저장
-        </button>
+        <div className="mt-4 border-t-2 border-dark/10 pt-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-black text-dark/50">카테고리</p>
+                <span className="text-xs font-medium text-dark/40">{quickForm.rawText.length} / 3000자</span>
+              </div>
+              <CategoryPills
+                value={quickForm.category}
+                onChange={(category) => setQuickForm((prev) => ({ ...prev, category }))}
+                compact
+              />
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="min-w-0 sm:w-48">
+                <label className="mb-1 block text-xs font-black text-dark/50">상위 아이디어</label>
+                <select
+                  value={quickForm.parentIdeaId}
+                  onChange={(e) => setQuickForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
+                  className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
+                >
+                  <option value="">상위 없음</option>
+                  {ideas.map((idea) => (
+                    <option key={idea.ideaId} value={idea.ideaId}>{idea.title}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                disabled={!quickForm.rawText.trim() || saving}
+                className="btn-kitschy bg-primary text-white text-sm disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                줄 단위로 저장
+              </button>
+            </div>
+          </div>
+        </div>
       </form>
 
       {error && (
@@ -404,26 +441,28 @@ export default function IdeaDumpPage() {
                 className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-base font-black outline-none focus:border-primary"
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <select
-                  value={detailForm.category}
-                  onChange={(e) => setDetailForm((prev) => ({ ...prev, category: e.target.value }))}
-                  className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
-                >
-                  {CATEGORIES.map((category) => (
-                    <option key={category.value} value={category.value}>{category.label}</option>
-                  ))}
-                </select>
-                <select
-                  value={detailForm.parentIdeaId}
-                  onChange={(e) => setDetailForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
-                  className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
-                >
-                  <option value="">상위 없음</option>
-                  {selectableParents.map((idea) => (
-                    <option key={idea.ideaId} value={idea.ideaId}>{idea.title}</option>
-                  ))}
-                </select>
+              <div className="space-y-3">
+                <div>
+                  <p className="mb-2 text-xs font-black text-dark/50">카테고리</p>
+                  <CategoryPills
+                    value={detailForm.category}
+                    onChange={(category) => setDetailForm((prev) => ({ ...prev, category }))}
+                    compact
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-black text-dark/50">상위 아이디어</label>
+                  <select
+                    value={detailForm.parentIdeaId}
+                    onChange={(e) => setDetailForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
+                    className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
+                  >
+                    <option value="">상위 없음</option>
+                    {selectableParents.map((idea) => (
+                      <option key={idea.ideaId} value={idea.ideaId}>{idea.title}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <textarea

@@ -4,6 +4,7 @@ import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES } from '../constants/categories'
 import SubtaskProposalModal from './SubtaskProposalModal'
 import AiUsageBadge from './AiUsageBadge'
+import { EstimatedMinutesField, TaskDateTimeField } from './TaskTimeInputs'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 const TASK_CATEGORIES = CATEGORIES.filter((category) => category.value !== 'ROUTINE')
@@ -25,7 +26,9 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   const [title, setTitle] = useState(task.title || '')
   const [description, setDescription] = useState(task.description || '')
   const [deadline, setDeadline] = useState(initialDeadline)
+  const [useStartTime, setUseStartTime] = useState(!!initialStartTime)
   const [startTime, setStartTime] = useState(initialStartTime)
+  const [useEstimatedMinutes, setUseEstimatedMinutes] = useState(task.estimatedMinutes != null)
   const [estimatedMinutes, setEstimatedMinutes] = useState(
     task.estimatedMinutes ?? ''
   )
@@ -55,12 +58,12 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         title: title.trim(),
         description: description.trim() || null,
         deadline: deadline || null,
-        estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes) : null,
+        estimatedMinutes: useEstimatedMinutes && estimatedMinutes ? parseInt(estimatedMinutes) : null,
         userPriorityScore: priorityScore,
         category,
-        startTime: startTime || null,
+        startTime: useStartTime ? (startTime || null) : null,
       }
-      payload.isLocked = Boolean(startTime)
+      payload.isLocked = Boolean(useStartTime && startTime)
       const res = await api.patch(`/tasks/${task.taskId}`, payload)
       onUpdated(res.data)
     } catch (err) {
@@ -113,39 +116,55 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">시작 시간 (선택)</label>
-            <input
-              type="datetime-local"
+        <div className="space-y-3">
+          <TaskDateTimeField
+            label="마감 시간 (비워두면 AI가 자동 설정)"
+            value={deadline}
+            min={!deadline || new Date(deadline) > new Date() ? getMinDeadlineInput() : undefined}
+            defaultTimeWhenEmpty="23:59"
+            onChange={(e) => setDeadline(e.target.value)}
+            onClear={() => setDeadline('')}
+          />
+
+          <div className="flex flex-wrap gap-3">
+            <label className="inline-flex items-center gap-2 text-xs font-bold text-dark/65">
+              <input
+                type="checkbox"
+                checked={useStartTime}
+                onChange={(e) => setUseStartTime(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              시작 시간 입력
+            </label>
+            <label className="inline-flex items-center gap-2 text-xs font-bold text-dark/65">
+              <input
+                type="checkbox"
+                checked={useEstimatedMinutes}
+                onChange={(e) => {
+                  setUseEstimatedMinutes(e.target.checked)
+                }}
+                className="h-4 w-4 accent-primary"
+              />
+              예상 시간 직접 입력
+            </label>
+          </div>
+
+          {useStartTime && (
+            <TaskDateTimeField
+              label="시작 시간 (선택)"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
+              onClear={() => setStartTime('')}
             />
-          </div>
+          )}
 
-          <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">마감 시간 (선택)</label>
-            <input
-              type="datetime-local"
-              value={deadline}
-              min={!deadline || new Date(deadline) > new Date() ? getMinDeadlineInput() : undefined}
-              onChange={(e) => setDeadline(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">예상 시간</label>
-            <input
-              type="number"
+          {useEstimatedMinutes && (
+            <EstimatedMinutesField
+              label="예상 시간 (선택)"
               value={estimatedMinutes}
               onChange={(e) => setEstimatedMinutes(e.target.value)}
-              placeholder="60"
-              min="1"
-              className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
             />
-          </div>
+          )}
         </div>
 
         <div>
