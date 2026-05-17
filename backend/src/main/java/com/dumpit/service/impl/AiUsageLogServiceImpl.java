@@ -19,11 +19,17 @@ public class AiUsageLogServiceImpl implements AiUsageLogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(User user, AiUsageService.UsageType usageType, int usedAfter, boolean allowed, String note) {
+        record(user, usageType.name(), usageType.cost(), usedAfter, allowed, note);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void record(User user, String typeName, int cost, int usedAfter, boolean allowed, String note) {
         int normalized = Math.max(0, usedAfter);
         aiUsageLogRepository.save(AiUsageLog.of(
                 user,
-                usageType.name(),
-                usageType.cost(),
+                typeName,
+                cost,
                 normalized,
                 AiUsageService.DAILY_LIMIT,
                 Math.max(0, AiUsageService.DAILY_LIMIT - normalized),

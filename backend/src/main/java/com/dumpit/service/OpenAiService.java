@@ -19,6 +19,8 @@ public interface OpenAiService {
 
     BrainDumpResult analyzeBrainDump(String rawText);
 
+    IdeaExtractResult extractIdeas(String rawText);
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     record PriorityResult(double score, String category, String reason) {}
 
@@ -32,6 +34,12 @@ public interface OpenAiService {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record BrainDumpResult(List<BrainDumpTask> tasks) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record IdeaExtractResult(List<IdeaNode> ideas) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record IdeaNode(String title, String content, String category, List<IdeaNode> children) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record SubtaskResult(List<SubtaskProposal> subtasks) {}
