@@ -5,6 +5,8 @@ import { CATEGORIES } from '../constants/categories'
 import AiUsageBadge from './AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
+const TASK_CATEGORIES = CATEGORIES.filter((category) => category.value !== 'ROUTINE')
+
 function getMinDeadlineInput() {
   return formatDateTimeInput(new Date())
 }
@@ -141,7 +143,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
             >
               AI 자동
             </button>
-            {CATEGORIES.map((c) => (
+            {TASK_CATEGORIES.map((c) => (
               <button
                 key={c.value}
                 type="button"

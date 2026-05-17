@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public class Routine {
 
-    public enum RepeatType { DAILY, WEEKLY, MONTHLY }
+    public enum RepeatType { DAILY, WEEKLY, MONTHLY, MONTHLY_WEEKDAY }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -57,9 +57,24 @@ public class Routine {
     @Setter
     private String daysOfMonth;
 
+    @Setter
+    private Integer monthlyWeekOrdinal;
+
+    @Setter
+    private Integer monthlyWeekDay;
+
     @Column(nullable = false)
     @Setter
-    private LocalTime createTime = LocalTime.of(6, 0);
+    private Boolean runOnLastDayIfMissing = false;
+
+    @Setter
+    private LocalTime createTime;
+
+    @Setter
+    private LocalTime routineStartTime;
+
+    @Setter
+    private LocalTime routineEndTime;
 
     @Column(nullable = false)
     @Setter
@@ -70,6 +85,9 @@ public class Routine {
 
     @Setter
     private LocalDate lastGeneratedDate;
+
+    @Setter
+    private LocalDateTime nextRunAt;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

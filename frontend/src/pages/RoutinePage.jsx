@@ -11,6 +11,14 @@ const WEEK_DAYS = [
   { value: 7, label: '일' },
 ]
 
+const MONTHLY_ORDINALS = [
+  { value: 1, label: '첫째' },
+  { value: 2, label: '둘째' },
+  { value: 3, label: '셋째' },
+  { value: 4, label: '넷째' },
+  { value: 5, label: '다섯째' },
+]
+
 const EMPTY_FORM = {
   name: '',
   description: '',
@@ -18,7 +26,13 @@ const EMPTY_FORM = {
   repeatType: 'DAILY',
   daysOfWeek: [],
   daysOfMonth: [],
-  createTime: '06:00',
+  monthlyWeekOrdinal: 1,
+  monthlyWeekDay: 1,
+  runOnLastDayIfMissing: false,
+  hasStartTime: false,
+  startTime: '06:00',
+  hasEndTime: false,
+  endTime: '07:00',
   startDate: new Date().toISOString().slice(0, 10),
   endDate: '',
 }
@@ -35,6 +49,12 @@ function formatDate(value) {
   return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
 }
 
+function formatDateTime(value) {
+  const date = parseDate(value)
+  if (!date || Number.isNaN(date.getTime())) return '-'
+  return date.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 function formatRule(routine) {
   if (routine.repeatType === 'DAILY') return '매일'
   if (routine.repeatType === 'WEEKLY') {
@@ -45,8 +65,13 @@ function formatRule(routine) {
   }
   if (routine.repeatType === 'MONTHLY') {
     return routine.daysOfMonth?.length > 0
-      ? `매월 ${routine.daysOfMonth.sort((a, b) => a - b).join(', ')}일`
+      ? `매월 ${[...routine.daysOfMonth].sort((a, b) => a - b).join(', ')}일`
       : '날짜 미설정'
+  }
+  if (routine.repeatType === 'MONTHLY_WEEKDAY') {
+    const ordinal = MONTHLY_ORDINALS.find((item) => item.value === routine.monthlyWeekOrdinal)?.label
+    const day = WEEK_DAYS.find((item) => item.value === routine.monthlyWeekDay)?.label
+    return ordinal && day ? `매월 ${ordinal} ${day}요일` : '월간 요일 미설정'
   }
   return '-'
 }
@@ -92,7 +117,13 @@ export default function RoutinePage() {
       repeatType: routine.repeatType || 'DAILY',
       daysOfWeek: routine.daysOfWeek || [],
       daysOfMonth: routine.daysOfMonth || [],
-      createTime: routine.createTime?.slice(0, 5) || '06:00',
+      monthlyWeekOrdinal: routine.monthlyWeekOrdinal || 1,
+      monthlyWeekDay: routine.monthlyWeekDay || 1,
+      runOnLastDayIfMissing: Boolean(routine.runOnLastDayIfMissing),
+      hasStartTime: Boolean(routine.routineStartTime || routine.createTime),
+      startTime: (routine.routineStartTime || routine.createTime)?.slice(0, 5) || '06:00',
+      hasEndTime: Boolean(routine.routineEndTime),
+      endTime: routine.routineEndTime?.slice(0, 5) || '07:00',
       startDate: routine.startDate || new Date().toISOString().slice(0, 10),
       endDate: routine.endDate || '',
     })
@@ -106,7 +137,12 @@ export default function RoutinePage() {
     repeatType: form.repeatType,
     daysOfWeek: form.repeatType === 'WEEKLY' ? form.daysOfWeek : [],
     daysOfMonth: form.repeatType === 'MONTHLY' ? form.daysOfMonth : [],
-    createTime: form.createTime,
+    monthlyWeekOrdinal: form.repeatType === 'MONTHLY_WEEKDAY' ? form.monthlyWeekOrdinal : null,
+    monthlyWeekDay: form.repeatType === 'MONTHLY_WEEKDAY' ? form.monthlyWeekDay : null,
+    runOnLastDayIfMissing: form.repeatType === 'MONTHLY' ? form.runOnLastDayIfMissing : false,
+    createTime: form.hasStartTime ? form.startTime : null,
+    routineStartTime: form.hasStartTime ? form.startTime : null,
+    routineEndTime: form.hasStartTime && form.hasEndTime ? form.endTime : null,
     startDate: form.startDate,
     endDate: form.endDate || null,
   })
@@ -114,6 +150,10 @@ export default function RoutinePage() {
   const saveRoutine = async (event) => {
     event.preventDefault()
     if (!form.name.trim() || saving) return
+    if (form.hasStartTime && form.hasEndTime && form.endTime <= form.startTime) {
+      setError('종료 시간은 시작 시간 이후로 설정해주세요.')
+      return
+    }
 
     setSaving(true)
     setError(null)
@@ -209,13 +249,18 @@ export default function RoutinePage() {
                           {routine.enabled ? 'ON' : 'OFF'}
                         </span>
                         <span className="text-[10px] font-black text-dark/40">{formatRule(routine)}</span>
-                        <span className="text-[10px] font-black text-dark/40">{routine.createTime?.slice(0, 5)}</span>
+                        <span className="text-[10px] font-black text-dark/40">
+                          {routine.routineStartTime || routine.createTime
+                            ? `${(routine.routineStartTime || routine.createTime).slice(0, 5)}${routine.routineEndTime ? `-${routine.routineEndTime.slice(0, 5)}` : ''}`
+                            : '하루 안'}
+                        </span>
                       </div>
                       <p className="mt-1 truncate text-sm font-black text-dark">{routine.name}</p>
                       <p className="mt-1 text-[10px] font-semibold text-dark/45">
                         {formatDate(routine.startDate)} 시작
                         {routine.endDate && ` · ${formatDate(routine.endDate)} 종료`}
                         {routine.lastGeneratedDate && ` · 마지막 생성 ${formatDate(routine.lastGeneratedDate)}`}
+                        {routine.nextRunAt && ` · 다음 ${formatDateTime(routine.nextRunAt)}`}
                       </p>
                     </button>
                     <div className="flex shrink-0 gap-1">
@@ -279,8 +324,8 @@ export default function RoutinePage() {
             루틴 켜기
           </label>
 
-          <div className="grid grid-cols-3 gap-2">
-            {['DAILY', 'WEEKLY', 'MONTHLY'].map((type) => (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {['DAILY', 'WEEKLY', 'MONTHLY', 'MONTHLY_WEEKDAY'].map((type) => (
               <button
                 key={type}
                 type="button"
@@ -289,7 +334,7 @@ export default function RoutinePage() {
                   form.repeatType === type ? 'border-dark bg-primary text-white' : 'border-dark/20 bg-accent text-dark'
                 }`}
               >
-                {type === 'DAILY' ? '매일' : type === 'WEEKLY' ? '요일' : '날짜'}
+                {type === 'DAILY' ? '매일' : type === 'WEEKLY' ? '요일' : type === 'MONTHLY' ? '날짜' : '주차'}
               </button>
             ))}
           </div>
@@ -312,31 +357,121 @@ export default function RoutinePage() {
           )}
 
           {form.repeatType === 'MONTHLY' && (
-            <div className="grid grid-cols-7 gap-1.5">
-              {monthDays.map((day) => (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, daysOfMonth: toggleNumber(prev.daysOfMonth, day) }))}
-                  className={`h-8 rounded border-2 text-xs font-black ${
-                    form.daysOfMonth.includes(day) ? 'border-dark bg-secondary text-white' : 'border-dark/20 bg-accent text-dark'
-                  }`}
-                >
-                  {day}
-                </button>
-              ))}
+            <div className="space-y-3">
+              <div className="grid grid-cols-7 gap-1.5">
+                {monthDays.map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, daysOfMonth: toggleNumber(prev.daysOfMonth, day) }))}
+                    className={`h-8 rounded border-2 text-xs font-black ${
+                      form.daysOfMonth.includes(day) ? 'border-dark bg-secondary text-white' : 'border-dark/20 bg-accent text-dark'
+                    }`}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+              <label className="flex items-start gap-2 rounded-lg border-2 border-dark/10 bg-accent/60 px-3 py-2 text-xs font-extrabold text-dark">
+                <input
+                  type="checkbox"
+                  checked={form.runOnLastDayIfMissing}
+                  onChange={(e) => setForm((prev) => ({ ...prev, runOnLastDayIfMissing: e.target.checked }))}
+                  className="mt-0.5 h-4 w-4 accent-primary"
+                />
+                <span>특정 달에 존재하지 않는 날짜는 해당 달의 마지막 일자에 실행하기</span>
+              </label>
+            </div>
+          )}
+
+          {form.repeatType === 'MONTHLY_WEEKDAY' && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-dark/60 mb-1">몇째 주</label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {MONTHLY_ORDINALS.map((ordinal) => (
+                    <button
+                      key={ordinal.value}
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, monthlyWeekOrdinal: ordinal.value }))}
+                      className={`h-9 rounded border-2 text-xs font-black ${
+                        form.monthlyWeekOrdinal === ordinal.value ? 'border-dark bg-secondary text-white' : 'border-dark/20 bg-accent text-dark'
+                      }`}
+                    >
+                      {ordinal.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-dark/60 mb-1">요일</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {WEEK_DAYS.map((day) => (
+                    <button
+                      key={day.value}
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, monthlyWeekDay: day.value }))}
+                      className={`h-9 w-9 rounded-full border-2 text-xs font-black ${
+                        form.monthlyWeekDay === day.value ? 'border-dark bg-secondary text-white' : 'border-dark/20 bg-accent text-dark'
+                      }`}
+                    >
+                      {day.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[11px] font-semibold text-dark/45">
+                선택한 주차의 요일이 없는 달에는 태스크를 만들지 않아요.
+              </p>
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-dark/60 mb-1">루틴 실행 시간</label>
-              <input
-                type="time"
-                value={form.createTime}
-                onChange={(e) => setForm((prev) => ({ ...prev, createTime: e.target.value }))}
-                className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none"
-              />
+              <label className="flex items-center gap-2 text-xs font-bold text-dark/60 mb-1">
+                <input
+                  type="checkbox"
+                  checked={form.hasStartTime}
+                  onChange={(e) => setForm((prev) => ({ ...prev, hasStartTime: e.target.checked, hasEndTime: e.target.checked ? prev.hasEndTime : false }))}
+                  className="h-4 w-4 accent-primary"
+                />
+                시작 시간 지정
+              </label>
+              {form.hasStartTime ? (
+                <div className="space-y-2">
+                  <input
+                    type="time"
+                    value={form.startTime}
+                    onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
+                    className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none"
+                  />
+                  <label className="flex items-center gap-2 text-xs font-bold text-dark/60">
+                    <input
+                      type="checkbox"
+                      checked={form.hasEndTime}
+                      onChange={(e) => setForm((prev) => ({ ...prev, hasEndTime: e.target.checked }))}
+                      className="h-4 w-4 accent-primary"
+                    />
+                    종료 시간도 지정
+                  </label>
+                  {form.hasEndTime ? (
+                    <input
+                      type="time"
+                      value={form.endTime}
+                      onChange={(e) => setForm((prev) => ({ ...prev, endTime: e.target.value }))}
+                      className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none"
+                    />
+                  ) : (
+                    <div className="rounded-lg border-2 border-dark/20 bg-accent px-3 py-2 text-xs font-extrabold text-dark/60">
+                      종료 시간 없음 · 마감 23:59
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-lg border-2 border-dark/20 bg-accent px-3 py-2 text-xs font-extrabold text-dark/60">
+                  오늘 안에 완료 · 마감 23:59
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-xs font-bold text-dark/60 mb-1">시작일</label>

@@ -6,6 +6,8 @@ import SubtaskProposalModal from './SubtaskProposalModal'
 import AiUsageBadge from './AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
+const TASK_CATEGORIES = CATEGORIES.filter((category) => category.value !== 'ROUTINE')
+
 function formatDateTimeInput(d) {
   const pad = (value) => String(value).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
@@ -149,7 +151,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         <div>
           <label className="block text-xs font-bold text-dark/60 mb-1">카테고리</label>
           <div className="flex flex-wrap gap-1.5">
-            {CATEGORIES.map((c) => (
+            {TASK_CATEGORIES.map((c) => (
               <button
                 key={c.value}
                 type="button"

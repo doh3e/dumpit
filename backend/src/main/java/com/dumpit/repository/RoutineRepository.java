@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -32,11 +31,18 @@ public interface RoutineRepository extends JpaRepository<Routine, UUID> {
         SELECT r FROM Routine r
         WHERE r.enabled = true
           AND r.deletedAt IS NULL
-          AND r.startDate <= :date
-          AND (r.endDate IS NULL OR r.endDate >= :date)
-          AND (r.lastGeneratedDate IS NULL OR r.lastGeneratedDate < :date)
+          AND r.nextRunAt IS NOT NULL
+          AND r.nextRunAt <= :now
     """)
-    List<Routine> findGenerationCandidates(@Param("date") LocalDate date);
+    List<Routine> findDueRoutines(@Param("now") LocalDateTime now);
+
+    @Query("""
+        SELECT r FROM Routine r
+        WHERE r.enabled = true
+          AND r.deletedAt IS NULL
+          AND r.nextRunAt IS NULL
+    """)
+    List<Routine> findEnabledRoutinesMissingNextRunAt();
 
     @Modifying
     @Query("""

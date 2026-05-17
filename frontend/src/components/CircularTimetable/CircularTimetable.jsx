@@ -70,7 +70,7 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
   const fixedBlocks = []
 
   active.forEach((t, i) => {
-    if (t.startTime && (t.endTime || t.routineId || t.category === 'ROUTINE')) {
+    if (t.startTime && t.endTime) {
       const s = toDate(t.startTime)
       const e = t.endTime
         ? toDate(t.endTime)
@@ -86,7 +86,7 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
           endH: endMin / 60,
           color: PRIORITY_COLORS[i % PRIORITY_COLORS.length],
           priority: t.effectivePriority ?? 0.5,
-          isLocked: Boolean(t.isLocked || t.routineId || t.category === 'ROUTINE'),
+          isLocked: Boolean(t.isLocked),
         })
       }
     }

@@ -300,11 +300,7 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
     }
 
     private boolean isTimedTask(Task task) {
-        if (task.getStartTime() == null) return false;
-        return task.getEndTime() != null
-                || task.getRoutineId() != null
-                || task.getCategory() == Task.Category.ROUTINE
-                || Boolean.TRUE.equals(task.getIsLocked());
+        return task.getStartTime() != null && task.getEndTime() != null;
     }
 
     private boolean isHappeningNow(Task task, LocalDateTime now) {
