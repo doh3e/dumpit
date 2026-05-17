@@ -353,6 +353,13 @@ function checkForDesktopUpdates({ manual = false } = {}) {
   })
 }
 
+function getUpdaterStatus() {
+  return {
+    version: app.getVersion(),
+    isPackaged: app.isPackaged,
+  }
+}
+
 function registerAutoUpdater() {
   if (isDev) return
 
@@ -768,6 +775,13 @@ async function logStoredAuthCookies() {
 }
 
 function registerNotificationBridge() {
+  ipcMain.handle('dumpit:app-info', () => getUpdaterStatus())
+
+  ipcMain.handle('dumpit:check-for-updates', () => {
+    checkForDesktopUpdates({ manual: true })
+    return getUpdaterStatus()
+  })
+
   ipcMain.handle('dumpit:notify', (event, payload = {}) => {
     const title = String(payload.title || '덤핏(Dumpit!)')
     const body = typeof payload.body === 'string' ? payload.body : undefined
