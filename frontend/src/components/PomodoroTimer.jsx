@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import settingImage from '../assets/setting_image.png'
+import arrowheadImage from '../assets/arrowheads.png'
 
 const DEFAULT_FOCUS_MIN = 25
 const DEFAULT_BREAK_MIN = 5
@@ -265,11 +266,11 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         {isDesktop && (
           <button
             onClick={openDesktopPomodoroWidget}
-            className="w-6 h-6 flex items-center justify-center rounded-md border-2 border-dark bg-white text-dark text-[13px] font-black leading-none hover:bg-secondary hover:text-white transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded-md border-2 border-dark bg-white hover:bg-secondary transition-colors"
             aria-label="뽀모도로 위젯 열기"
             title="뽀모도로 위젯 열기"
           >
-            ↗
+            <img src={arrowheadImage} alt="" className="w-3.5 h-3.5 object-contain" />
           </button>
         )}
         <button
