@@ -24,6 +24,11 @@ spring:
       port: ${REDIS_PORT}
       timeout: 1s
 
+  session:
+    store-type: ${SPRING_SESSION_STORE_TYPE:none}
+    redis:
+      namespace: ${SPRING_SESSION_REDIS_NAMESPACE:dumpit:session}
+
   security:
     oauth2:
       client:
