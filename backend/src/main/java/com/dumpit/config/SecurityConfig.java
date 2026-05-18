@@ -4,12 +4,15 @@ import com.dumpit.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
@@ -30,6 +33,7 @@ import java.util.Map;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
@@ -63,7 +67,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           ClientRegistrationRepository clientRegistrationRepository) throws Exception {
+                                           ClientRegistrationRepository clientRegistrationRepository,
+                                           OAuth2AuthorizedClientRepository authorizedClientRepository) throws Exception {
         http
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
@@ -108,8 +113,11 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
-                .authorizedClientRepository(authorizedClientRepository())
-                .defaultSuccessUrl(frontendUrl + "/dashboard", true)
+                .authorizedClientRepository(authorizedClientRepository)
+                .successHandler((request, response, authentication) -> {
+                    logGoogleAuthorizedClientState(authorizedClientRepository, request, authentication);
+                    response.sendRedirect(frontendUrl + "/dashboard");
+                })
                 .failureUrl(frontendUrl + "/?error=login_failed")
             )
 
@@ -123,6 +131,21 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    private void logGoogleAuthorizedClientState(OAuth2AuthorizedClientRepository authorizedClientRepository,
+                                                HttpServletRequest request,
+                                                Authentication authentication) {
+        OAuth2AuthorizedClient client = authorizedClientRepository
+                .loadAuthorizedClient("google", authentication, request);
+        if (client == null) {
+            log.warn("Google OAuth login completed but authorized client was not found in session.");
+            return;
+        }
+        log.info("Google OAuth login completed: accessTokenExpiresAt={}, refreshTokenPresent={}, scopes={}",
+                client.getAccessToken() != null ? client.getAccessToken().getExpiresAt() : null,
+                client.getRefreshToken() != null,
+                client.getAccessToken() != null ? client.getAccessToken().getScopes() : null);
     }
 
     /**

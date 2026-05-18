@@ -3,6 +3,7 @@ package com.dumpit.controller;
 import com.dumpit.service.GoogleCalendarService;
 import com.dumpit.service.GoogleCalendarService.CalendarEvent;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/calendar")
 @RequiredArgsConstructor
+@Slf4j
 public class CalendarController {
 
     private static final String CALENDAR_READONLY_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
@@ -55,12 +57,23 @@ public class CalendarController {
         try {
             client = authorizedClientManager.authorize(authorizeRequest);
         } catch (OAuth2AuthorizationException ex) {
+            log.warn("Google Calendar authorized client refresh failed: errorCode={}, description={}",
+                    ex.getError() != null ? ex.getError().getErrorCode() : null,
+                    ex.getError() != null ? ex.getError().getDescription() : null);
             return reconnectRequired();
         }
 
         if (client == null || client.getAccessToken() == null) {
+            log.warn("Google Calendar authorized client is missing: clientPresent={}, accessTokenPresent={}",
+                    client != null,
+                    client != null && client.getAccessToken() != null);
             return ResponseEntity.ok(Collections.emptyList());
         }
+
+        log.debug("Google Calendar authorized client loaded: accessTokenExpiresAt={}, refreshTokenPresent={}, scopes={}",
+                client.getAccessToken().getExpiresAt(),
+                client.getRefreshToken() != null,
+                client.getAccessToken().getScopes());
 
         if (!client.getAccessToken().getScopes().contains(CALENDAR_READONLY_SCOPE)) {
             return ResponseEntity.status(403).body(new CalendarPermissionRequiredResponse(
