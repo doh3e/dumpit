@@ -8,8 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,6 +53,7 @@ public class CalendarController {
                 .attribute(HttpServletRequest.class.getName(), request)
                 .attribute(HttpServletResponse.class.getName(), response)
                 .build();
+
         OAuth2AuthorizedClient client;
         try {
             client = authorizedClientManager.authorize(authorizeRequest);
@@ -78,7 +79,7 @@ public class CalendarController {
         if (!client.getAccessToken().getScopes().contains(CALENDAR_READONLY_SCOPE)) {
             return ResponseEntity.status(403).body(new CalendarPermissionRequiredResponse(
                     "CALENDAR_PERMISSION_REQUIRED",
-                    "Google Calendar 일정을 불러오려면 캘린더 읽기 권한이 필요합니다."
+                    "Google Calendar ?쇱젙??遺덈윭?ㅻ젮硫?罹섎┛???쎄린 沅뚰븳???꾩슂?⑸땲??"
             ));
         }
 
@@ -109,7 +110,7 @@ public class CalendarController {
     private ResponseEntity<CalendarPermissionRequiredResponse> reconnectRequired() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new CalendarPermissionRequiredResponse(
                 "GOOGLE_CALENDAR_RECONNECT_REQUIRED",
-                "Google Calendar 연결이 만료되었습니다. 다시 연결해주세요."
+                "Google Calendar ?곌껐??留뚮즺?섏뿀?듬땲?? ?ㅼ떆 ?곌껐?댁＜?몄슂."
         ));
     }
 
