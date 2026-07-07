@@ -277,21 +277,35 @@ public class OpenAiServiceImpl implements OpenAiService {
             Extract and structure ideas and return only valid JSON in this shape:
             {"ideas":[{"title":"...","content":"...","category":"WORK","children":[{"title":"...","content":"...","category":"WORK","children":[]}]}]}
 
-            HIERARCHY RULES (most important):
-            - First, check if the input opens with a single overarching theme, project, or goal (e.g., a project name, a to-do subject, a decision to work on something). If yes, that becomes the ONE root idea, and everything that follows — each topic, section, or bullet — becomes a child or grandchild of it.
-            - Only produce multiple root-level ideas when the input contains genuinely separate, unrelated themes that share no single unifying topic from the start.
-            - When in doubt, prefer one root with children over multiple roots.
+            COVERAGE RULES (most important):
+            - Every distinct thought in the input must appear as exactly ONE idea node. Do not drop thoughts, and do not split a single sentence or thought into multiple ideas.
+            - One line or one sentence usually equals one idea. Merge only when two fragments are obviously the same thought continued.
+            - Skip ONLY pure filler with zero content (e.g., "음...", "그니까", standalone exclamations). If a fragment carries any meaning, keep it as an idea.
 
-            STRUCTURE RULES:
+            HIERARCHY RULES:
+            - Nest a child under a parent ONLY when the text clearly signals subordination: indentation, sub-bullets, "~에 대해서", "예를 들면", or an explicit topic followed by its details.
+            - If the input opens with one overarching theme or project and everything after it elaborates on it, use that as the single root and nest the rest under it.
+            - If thoughts are separate and unrelated, keep them as separate root-level ideas. A flat list of roots is perfectly fine — do NOT invent a parent grouping that the user never wrote.
             - Children can have children (maximum 3 levels deep total).
-            - Group related sub-thoughts under the nearest logical parent.
-            - Write clean, concise titles in Korean (최대 30자). Rephrase informal or unclear phrasing into clear idea titles.
-            - Write content as a concise summary of the relevant portion of the input (최대 200자). Include key details beyond just restating the title.
+
+            TITLE AND CONTENT RULES:
+            - Titles must reuse the user's own key words as much as possible. Do not paraphrase into stiff or formal language; only trim particles and filler. (제목 최대 50자)
+            - content should faithfully summarize the relevant portion of the input using the user's wording (최대 200자). Never invent details that are not in the input. If the input fragment is already short, content may repeat it as-is or be an empty string.
             - category must be one of: WORK, STUDY, APPOINTMENT, CHORE, ROUTINE, HEALTH, HOBBY, OTHER
             - Children inherit the parent's category unless clearly different.
-            - Skip text that has no concrete substance (filler, transitions, exclamations, etc.).
             - Always include "children" field, using an empty array [] when there are no children.
             - All title and content fields MUST be written in Korean (한국어).
+
+            EXAMPLE:
+            Input: "사이드프로젝트로 가계부 앱 만들까. 리액트로 프론트 하고. 백엔드는 스프링. 아 그리고 내일 치과 예약해야됨"
+            Output: {"ideas":[
+              {"title":"가계부 앱 사이드프로젝트","content":"사이드프로젝트로 가계부 앱 만들기","category":"HOBBY","children":[
+                {"title":"프론트는 리액트","content":"","category":"HOBBY","children":[]},
+                {"title":"백엔드는 스프링","content":"","category":"HOBBY","children":[]}
+              ]},
+              {"title":"내일 치과 예약","content":"","category":"HEALTH","children":[]}
+            ]}
+            (Note: "치과 예약" is unrelated to the project, so it stays a separate root.)
 
             <user_input>
             %s
@@ -319,7 +333,7 @@ public class OpenAiServiceImpl implements OpenAiService {
                         .map(c -> sanitizeIdeaNode(c, depth + 1))
                         .toList();
         return new IdeaNode(
-                trimToLimit(node.title(), 30),
+                trimToLimit(node.title(), 50),
                 trimToLimit(node.content(), 200),
                 safeCategory(node.category()),
                 children
