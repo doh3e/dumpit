@@ -149,7 +149,8 @@ public class TaskServiceImpl implements TaskService {
 
         Task saved = taskRepository.save(task);
         deadlineNudgeService.index(saved);
-        activityLogService.record(task.getUser(), "TASK_UPDATED", "TASK", saved.getTaskId(), before, snapshot(saved));
+        Map<String, Object> after = snapshot(saved);
+        activityLogService.record(task.getUser(), TaskChangeClassifier.classify(before, after), "TASK", saved.getTaskId(), before, after);
         return saved;
     }
 
