@@ -1,6 +1,7 @@
 package com.dumpit.dto;
 
 import com.dumpit.entity.Task;
+import com.dumpit.service.priority.PriorityCalculator;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
@@ -35,7 +36,7 @@ public record TaskResponse(
                 t.getStatus().name(),
                 t.getCategory() != null ? t.getCategory().name() : Task.Category.OTHER.name(),
                 t.getAiPriorityScore(), t.getUserPriorityScore(),
-                t.getEffectivePriority(),
+                PriorityCalculator.effectivePriority(t, LocalDateTime.now()),
                 t.getDeadline(), t.getEstimatedMinutes(),
                 t.getStartTime(), t.getEndTime(),
                 t.getIsLocked(),
