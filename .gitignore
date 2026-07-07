@@ -31,6 +31,8 @@ desktop/out/
 
 *.session.sql
 Dumpit_기획서_v2.md
+dumpit_ai_learning_insight.md
 
 *.log
 npm-debug.log*
+backup_*.sql
