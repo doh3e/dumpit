@@ -53,6 +53,10 @@ dependencies {
     // Sentry error monitoring
     implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.40.0'
 
+    // Flyway (DB 스키마 마이그레이션) — Postgres 15+는 flyway-database-postgresql 필요
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
     // PostgreSQL Driver
     runtimeOnly 'org.postgresql:postgresql'
 
