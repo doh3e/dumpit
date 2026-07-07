@@ -259,7 +259,7 @@ export default function IdeaDumpPage() {
     localStorage.setItem(SCRATCH_KEY, value)
   }
 
-  const scratchTokenCost = Math.max(1, Math.ceil(scratchText.length / 200))
+  const scratchTokenCost = Math.min(5, Math.max(1, Math.ceil(scratchText.length / 200)))
 
   const handleExtract = async () => {
     if (!scratchText.trim() || extracting) return
