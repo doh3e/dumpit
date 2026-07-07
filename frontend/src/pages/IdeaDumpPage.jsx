@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useBlocker } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES, getCategory } from '../constants/categories'
+import AiUsageBadge from '../components/AiUsageBadge'
+import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 const EMPTY_DETAIL = { title: '', content: '', category: 'OTHER', pinned: false, parentIdeaId: '' }
 const SCRATCH_KEY = 'dumpit:idea-scratch'
@@ -129,6 +131,7 @@ export default function IdeaDumpPage() {
   const [newContent, setNewContent] = useState('')
   const [newCategory, setNewCategory] = useState('OTHER')
   const [newParentId, setNewParentId] = useState('')
+  const aiUsage = useAiUsage()
 
   const selectedIdea = useMemo(
     () => ideas.find((idea) => idea.ideaId === selectedId) || null,
@@ -266,6 +269,7 @@ export default function IdeaDumpPage() {
     try {
       const res = await api.post('/ideas/ai-extract', { rawText: scratchText })
       setExtractResult(res.data.ideas || [])
+      dispatchAiUsed()
     } catch (err) {
       setError(getApiErrorMessage(err, 'AI 분석에 실패했어요.'))
     } finally {
@@ -338,6 +342,7 @@ export default function IdeaDumpPage() {
     setError(null)
     try {
       await api.post(`/ideas/${selectedIdea.ideaId}/convert-to-task`)
+      dispatchAiUsed()
       fetchIdeas()
     } catch (err) {
       setError(getApiErrorMessage(err, '태스크로 전환하지 못했어요.'))
@@ -409,12 +414,13 @@ export default function IdeaDumpPage() {
               <button
                 type="button"
                 onClick={handleExtract}
-                disabled={!scratchText.trim() || extracting}
+                disabled={!scratchText.trim() || extracting || !aiUsage.hasEnough(scratchTokenCost)}
                 className="btn-kitschy bg-dark text-white text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {extracting ? 'AI 분석 중...' : 'AI로 아이디어 추출'}
               </button>
             </div>
+            <AiUsageBadge usage={aiUsage.usage} cost={scratchTokenCost} />
             {extractResult && (
               <div className="border-t-2 border-dark/10 pt-4 space-y-3">
                 <p className="text-xs font-black text-dark/60">분석 결과 — 확인 후 저장하세요</p>
