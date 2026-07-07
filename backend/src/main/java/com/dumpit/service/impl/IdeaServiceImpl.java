@@ -1,5 +1,6 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.common.SnapshotText;
 import com.dumpit.dto.IdeaExtractConfirmRequest;
 import com.dumpit.entity.Idea;
 import com.dumpit.entity.Task;
@@ -241,8 +242,8 @@ public class IdeaServiceImpl implements IdeaService {
     private Map<String, Object> snapshot(Idea idea) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("ideaId", idea.getIdeaId());
-        values.put("title", idea.getTitle());
-        values.put("content", idea.getContent());
+        SnapshotText.putMasked(values, "title", idea.getTitle());
+        SnapshotText.putMasked(values, "content", idea.getContent());
         values.put("category", idea.getCategory());
         values.put("pinned", idea.getPinned());
         values.put("parentIdeaId", idea.getParentIdea() != null ? idea.getParentIdea().getIdeaId() : null);
@@ -255,8 +256,8 @@ public class IdeaServiceImpl implements IdeaService {
     private Map<String, Object> taskSnapshot(Task task) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("taskId", task.getTaskId());
-        values.put("title", task.getTitle());
-        values.put("description", task.getDescription());
+        SnapshotText.putMasked(values, "title", task.getTitle());
+        SnapshotText.putMasked(values, "description", task.getDescription());
         values.put("status", task.getStatus());
         values.put("category", task.getCategory());
         values.put("deadline", task.getDeadline());

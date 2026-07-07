@@ -1,5 +1,6 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.common.SnapshotText;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.exception.BadRequestException;
@@ -335,8 +336,8 @@ public class TaskServiceImpl implements TaskService {
     private Map<String, Object> snapshot(Task task) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("taskId", task.getTaskId());
-        values.put("title", task.getTitle());
-        values.put("description", task.getDescription());
+        SnapshotText.putMasked(values, "title", task.getTitle());
+        SnapshotText.putMasked(values, "description", task.getDescription());
         values.put("status", task.getStatus());
         values.put("category", task.getCategory());
         values.put("deadline", task.getDeadline());

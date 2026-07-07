@@ -1,5 +1,6 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.common.SnapshotText;
 import com.dumpit.dto.RoutineRequest;
 import com.dumpit.entity.Routine;
 import com.dumpit.entity.Task;
@@ -342,8 +343,8 @@ public class RoutineServiceImpl implements RoutineService {
     private Map<String, Object> snapshot(Routine routine) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("routineId", routine.getRoutineId());
-        values.put("name", routine.getName());
-        values.put("description", routine.getDescription());
+        SnapshotText.putMasked(values, "name", routine.getName());
+        SnapshotText.putMasked(values, "description", routine.getDescription());
         values.put("enabled", routine.getEnabled());
         values.put("repeatType", routine.getRepeatType());
         values.put("daysOfWeek", routine.getDaysOfWeek());
@@ -365,8 +366,8 @@ public class RoutineServiceImpl implements RoutineService {
     private Map<String, Object> taskSnapshot(Task task) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("taskId", task.getTaskId());
-        values.put("title", task.getTitle());
-        values.put("description", task.getDescription());
+        SnapshotText.putMasked(values, "title", task.getTitle());
+        SnapshotText.putMasked(values, "description", task.getDescription());
         values.put("status", task.getStatus());
         values.put("category", task.getCategory());
         values.put("deadline", task.getDeadline());
