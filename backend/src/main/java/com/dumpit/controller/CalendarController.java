@@ -1,5 +1,6 @@
 package com.dumpit.controller;
 
+import com.dumpit.exception.ApiException;
 import com.dumpit.service.GoogleCalendarService;
 import com.dumpit.service.GoogleCalendarService.CalendarEvent;
 import lombok.RequiredArgsConstructor;
@@ -77,6 +78,10 @@ public class CalendarController {
                 client.getAccessToken().getScopes());
 
         if (!client.getAccessToken().getScopes().contains(CALENDAR_READONLY_SCOPE)) {
+            log.warn("Calendar scope missing on stored token: scopes={}, accessTokenExpiresAt={}, refreshTokenPresent={}",
+                    client.getAccessToken().getScopes(),
+                    client.getAccessToken().getExpiresAt(),
+                    client.getRefreshToken() != null);
             return ResponseEntity.status(403).body(new CalendarPermissionRequiredResponse(
                     "CALENDAR_PERMISSION_REQUIRED",
                     "Google Calendar ?쇱젙??遺덈윭?ㅻ젮硫?罹섎┛???쎄린 沅뚰븳???꾩슂?⑸땲??"
@@ -92,8 +97,18 @@ public class CalendarController {
             end = start.plus(MAX_RANGE);
         }
 
-        List<CalendarEvent> events = googleCalendarService.getEvents(client.getAccessToken().getTokenValue(), start, end);
-        return ResponseEntity.ok(events);
+        try {
+            List<CalendarEvent> events = googleCalendarService.getEvents(client.getAccessToken().getTokenValue(), start, end);
+            return ResponseEntity.ok(events);
+        } catch (ApiException ex) {
+            if ("GOOGLE_CALENDAR_RECONNECT_REQUIRED".equals(ex.getCode())) {
+                log.warn("Token state at Calendar API rejection: accessTokenExpiresAt={}, refreshTokenPresent={}, scopes={}",
+                        client.getAccessToken().getExpiresAt(),
+                        client.getRefreshToken() != null,
+                        client.getAccessToken().getScopes());
+            }
+            throw ex;
+        }
     }
 
     private Instant parseInstantOrDefault(String value, Instant fallback) {

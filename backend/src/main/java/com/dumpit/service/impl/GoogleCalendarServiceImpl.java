@@ -61,6 +61,8 @@ public class GoogleCalendarServiceImpl implements GoogleCalendarService {
 
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 401 || e.getStatusCode().value() == 403) {
+                log.warn("Google Calendar API rejected token: status={}, body={}",
+                        e.getStatusCode().value(), e.getResponseBodyAsString());
                 throw new ApiException(
                         HttpStatus.FORBIDDEN,
                         "GOOGLE_CALENDAR_RECONNECT_REQUIRED",
