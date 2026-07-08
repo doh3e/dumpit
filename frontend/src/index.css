@@ -27,21 +27,24 @@
 :root {
   --bg:#F7EFDF; --card:#FFFDF6; --fg:#33271E; --sub:#8C7C66;
   --line:#E0D2B6; --edge:#3A2C21; --chip:#F0DFBB;
-  --accent:#D95F52; --accent2:#C98A2D; --on-accent:#FFFBF0;
+  --accent:#D95F52; --accent2:#3E8E85; --on-accent:#FFFBF0;
   --shadow-hero:#EBC0AC; --shadow-sm:#DCC5A0;
   --overlay:rgba(58,44,33,.35);
   --danger:#BE4B3D;
-  --p1:#C98A2D; --p2:#E9B44C; --p3:#A66B22;
+  /* 색 역할: accent=주 포인트(빨강) accent2=보조 포인트(틸) warn=마감 임박(앰버) starlight=별·보상(골드) */
+  --warn:#D98E2B; --starlight:#E9B44C;
+  --p1:#4AA396; --p2:#8AD6C4; --p3:#2E6B60;
 }
 
 [data-theme="dark"] {
   --bg:#1F1B2E; --card:#2B2442; --fg:#F2E9D8; --sub:#9D93A8;
   --line:#413966; --edge:#141021; --chip:#3A3156;
-  --accent:#F09355; --accent2:#E9B44C; --on-accent:#241E14;
+  --accent:#F09355; --accent2:#5FC4B4; --on-accent:#241E14;
   --shadow-hero:#141021; --shadow-sm:#141021;
   --overlay:rgba(10,8,20,.55);
   --danger:#E57B67;
-  --p1:#C98A2D; --p2:#E9B44C; --p3:#8A5A1E;
+  --warn:#E9B44C; --starlight:#E9B44C;
+  --p1:#4AA396; --p2:#8AD6C4; --p3:#27584F;
 }
 
 *, *::before, *::after {
@@ -113,8 +116,8 @@ body {
 
   /* 섹션/카드 톤 변형 */
   .tone-today { border-color: var(--accent); background: var(--card); }
-  .tone-soon { border-color: var(--accent2); background: var(--card); }
-  .tone-chip { border-color: var(--accent2); background: var(--chip); }
+  .tone-soon { border-color: var(--warn); background: var(--card); }
+  .tone-chip { border-color: var(--warn); background: var(--chip); }
   .tone-later { border-color: var(--line); background: var(--card); }
   .tone-done { border-color: var(--line); background: var(--chip); }
   .tone-overdue {
@@ -122,8 +125,8 @@ body {
     background: color-mix(in srgb, var(--accent) 8%, var(--card));
   }
   .tone-urgent-soon {
-    border-color: var(--accent2);
-    background: color-mix(in srgb, var(--accent2) 8%, var(--card));
+    border-color: var(--warn);
+    background: color-mix(in srgb, var(--warn) 8%, var(--card));
   }
   .tone-danger {
     border-color: var(--danger);
@@ -139,7 +142,7 @@ body {
   .cat-work { --cat: #5B84AE; }
   .cat-study { --cat: #7A6FC0; }
   .cat-appointment { --cat: #C4708F; }
-  .cat-chore { --cat: #B08A3E; }
+  .cat-chore { --cat: #D49E35; }
   .cat-routine { --cat: #9A6FB8; }
   .cat-health { --cat: #6E9E62; }
   .cat-hobby { --cat: #C07862; }
@@ -214,10 +217,10 @@ body {
 
 /* ---- 별빛 로그 (마이페이지 히트맵) — 완료량을 별 밝기로 ---- */
 .star-log-0 { background: var(--chip); border-color: transparent; }
-.star-log-1 { background: color-mix(in srgb, var(--accent2) 35%, var(--chip)); border-color: transparent; }
-.star-log-2 { background: color-mix(in srgb, var(--accent2) 65%, var(--chip)); border-color: transparent; }
-.star-log-3 { background: var(--accent2); border-color: transparent; }
-[data-theme="dark"] .star-log-3 { box-shadow: 0 0 6px color-mix(in srgb, var(--accent2) 60%, transparent); }
+.star-log-1 { background: color-mix(in srgb, var(--starlight) 35%, var(--chip)); border-color: transparent; }
+.star-log-2 { background: color-mix(in srgb, var(--starlight) 65%, var(--chip)); border-color: transparent; }
+.star-log-3 { background: var(--starlight); border-color: transparent; }
+[data-theme="dark"] .star-log-3 { box-shadow: 0 0 6px color-mix(in srgb, var(--starlight) 60%, transparent); }
 
 /* ---- 보상 모션 ---- */
 .pixel-spark {
@@ -241,16 +244,16 @@ body {
     4px -20px var(--accent),
     0 -16px var(--accent), 4px -16px var(--accent), 8px -16px var(--accent),
     0 -12px var(--line), 4px -12px var(--card), 8px -12px var(--line),
-    0 -8px var(--line), 4px -8px var(--accent2), 8px -8px var(--line),
+    0 -8px var(--line), 4px -8px var(--warn), 8px -8px var(--line),
     0 -4px var(--line), 4px -4px var(--card), 8px -4px var(--line),
     -4px 0 var(--accent), 0 0 var(--line), 4px 0 var(--line), 8px 0 var(--line), 12px 0 var(--accent),
-    0 4px var(--accent2), 8px 4px var(--accent2),
-    4px 8px var(--accent), 4px 12px var(--accent2);
+    0 4px var(--warn), 8px 4px var(--warn),
+    4px 8px var(--accent), 4px 12px var(--warn);
 }
 .rocket-trail {
   position: absolute; left: 50%; bottom: -8vh; width: 3px; height: 3px; background: transparent;
   animation: rocket-up 1.4s ease-in forwards;
-  box-shadow: -14px 28px var(--accent2), 18px 44px var(--p2), -6px 64px var(--line), 10px 84px var(--accent2);
+  box-shadow: -14px 28px var(--warn), 18px 44px var(--starlight), -6px 64px var(--line), 10px 84px var(--warn);
 }
 @keyframes rocket-up {
   from { transform: translateY(0); opacity: 1; }

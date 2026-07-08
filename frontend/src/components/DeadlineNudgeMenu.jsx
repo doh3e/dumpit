@@ -181,7 +181,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
           ? 'w-full rounded-lg border-2 tone-urgent-soon px-2 py-2 text-center transition-colors'
           : `flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-extrabold text-sm transition-colors ${
               urgentCount > 0
-                ? 'bg-chip border-line text-secondary'
+                ? 'bg-chip border-line text-warn'
                 : 'bg-chip border-line text-sub hover:text-dark'
             }`
         }
@@ -191,7 +191,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
           <>
             <span className={`mx-auto mb-1 flex h-5 w-5 items-center justify-center rounded-full border-2 text-[11px] font-black leading-none ${
               urgentCount > 0
-                ? 'border-secondary bg-secondary text-on-accent'
+                ? 'border-warn bg-warn text-on-accent'
                 : 'border-line bg-card text-sub'
             }`}>
               !
@@ -236,7 +236,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                     className={`block rounded-lg border-2 p-3 transition-colors ${
                       task.overdue
                         ? 'border-primary tone-overdue'
-                        : 'border-secondary tone-urgent-soon'
+                        : 'border-warn tone-urgent-soon'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -246,7 +246,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                       <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black ${
                         task.overdue
                           ? 'border-primary bg-primary text-on-accent'
-                          : 'border-secondary bg-secondary text-on-accent'
+                          : 'border-warn bg-warn text-on-accent'
                       }`}>
                         {formatRemaining(task.deadline)}
                       </span>

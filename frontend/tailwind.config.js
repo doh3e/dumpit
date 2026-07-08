@@ -18,6 +18,7 @@ export default {
         edge:        'var(--edge)',
         chip:        'var(--chip)',
         sub:         'var(--sub)',
+        warn:        'var(--warn)',
         'on-accent': 'var(--on-accent)',
       },
       fontFamily: {

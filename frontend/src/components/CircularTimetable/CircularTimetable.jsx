@@ -6,7 +6,7 @@ const RADIUS = 95
 const INNER_RADIUS = 50
 
 const PRIORITY_COLORS = [
-  '#D95F52', '#E9944C', '#7C9070', '#5B84AE', '#9A6FB8', '#C98A2D',
+  '#D95F52', '#E9944C', '#7C9070', '#5B84AE', '#9A6FB8', '#4A9E94',
 ]
 
 function polarToXY(angleDeg, r) {

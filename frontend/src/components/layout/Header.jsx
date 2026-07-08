@@ -75,7 +75,7 @@ export default function Header({ onOpenDrawer }) {
     : usage.remaining >= 50
     ? 'text-dark'
     : usage.remaining >= 20
-    ? 'text-secondary'
+    ? 'text-warn'
     : 'text-primary'
 
   return (

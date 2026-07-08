@@ -197,7 +197,7 @@ const URGENCY_STYLE = {
     card: 'tone-overdue',
   },
   orange: {
-    badge: 'bg-secondary text-on-accent border-secondary',
+    badge: 'bg-warn text-on-accent border-warn',
     card: 'tone-urgent-soon',
   },
   yellow: {

@@ -3,7 +3,7 @@ import api, { getApiErrorMessage } from '../services/api'
 import MarkdownRenderer from '../components/MarkdownRenderer'
 
 const STATUS_LABEL = {
-  PENDING: { label: '대기 중', color: 'tone-urgent-soon text-secondary' },
+  PENDING: { label: '대기 중', color: 'tone-urgent-soon text-warn' },
   REPLIED: { label: '답변 완료', color: 'cat-chip cat-health' },
   CLOSED: { label: '종료', color: 'bg-chip text-sub border-line' },
 }

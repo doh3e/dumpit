@@ -44,7 +44,7 @@ const CATEGORY_LABEL = {
 // 카테고리 파이 색 — index.css .cat-* 계열과 동일한 뮤트 휴 (차트 전용 하드코딩)
 const CATEGORY_COLOR = {
   WORK: '#5B84AE', STUDY: '#7A6FC0', APPOINTMENT: '#C4708F',
-  CHORE: '#B08A3E', ROUTINE: '#9A6FB8', HEALTH: '#6E9E62',
+  CHORE: '#D49E35', ROUTINE: '#9A6FB8', HEALTH: '#6E9E62',
   HOBBY: '#C07862', OTHER: '#8A8578',
 }
 
