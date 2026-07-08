@@ -28,7 +28,8 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1:8080',
+          // localhost로 통일해야 OAuth redirect_uri와 세션 쿠키 호스트가 프론트(localhost:5173)와 일치함
+          target: 'http://localhost:8080',
           changeOrigin: true,
           cookieDomainRewrite: 'localhost',
         },
