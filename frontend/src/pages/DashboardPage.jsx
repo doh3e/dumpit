@@ -523,13 +523,8 @@ export default function DashboardPage() {
                             {cat.emoji} {cat.label}
                           </span>
                           {isChild && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-secondary/10 border border-secondary/40 rounded-full text-secondary">
+                            <span className="text-[10px] font-bold px-2 py-0.5 bg-chip border border-line rounded-full text-secondary">
                               ↳ 서브
-                            </span>
-                          )}
-                          {task.isLocked && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-secondary/20 border border-secondary rounded-full text-secondary">
-                              고정
                             </span>
                           )}
                           {urgency && (
