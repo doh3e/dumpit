@@ -1,5 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { API_BASE_URL } from '../services/api'
+import StarField from '../components/StarField'
 
 export default function HomePage() {
   const [searchParams] = useSearchParams()
@@ -11,9 +12,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-accent flex flex-col">
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-20 text-center">
+      <StarField />
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-20 text-center">
         {loginError && (
-          <div className="card-kitschy bg-primary/10 border-primary mb-6 max-w-md">
+          <div className="card-retro tone-overdue mb-6 max-w-md">
             <p className="font-bold text-primary text-sm">
               로그인에 실패했어요. 다시 시도해주세요.
             </p>
@@ -31,11 +33,11 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="max-w-xl mb-12 text-base font-semibold text-dark/70 leading-relaxed">
+        <div className="max-w-xl mb-12 text-base font-semibold text-sub leading-relaxed">
           <p>
             해야 할 일들이 우주먼지처럼 뒤엉켜 있나요?<br />
           </p>
-          <p className="my-4 text-2xl font-bold text-dark/90">
+          <p className="my-5 font-dungeon text-[32px] max-sm:text-2xl text-primary leading-tight">
             그냥 다 쏟아내세요!
           </p>
           <p>
@@ -46,7 +48,7 @@ export default function HomePage() {
 
         <button
           onClick={handleGoogleLogin}
-          className="btn-kitschy bg-primary text-white text-lg flex items-center gap-3 mx-auto"
+          className="btn-retro-primary text-lg flex items-center gap-3 mx-auto"
         >
           <svg className="w-5 h-5 drop-shadow-xl" viewBox="0 0 24 24" fill="currentColor">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -65,26 +67,26 @@ export default function HomePage() {
             { title: '루틴 관리', desc: '반복적으로 해야할 일을 루틴으로 등록해 관리하기' },
             { title: '마이페이지', desc: '자신의 할 일을 어떻게 관리하고 있는지 통계로 확인하기' },
           ].map(({ title, desc }) => (
-            <div key={title} className="card-kitschy text-left">
+            <div key={title} className="card-retro text-left">
               <h3 className="font-extrabold text-dark text-base mb-1">{title}</h3>
-              <p className="text-sm text-dark/60 font-medium">{desc}</p>
+              <p className="text-sm text-sub font-medium">{desc}</p>
             </div>
           ))}
         </div>
       </main>
 
-      <footer className="border-t-2 border-dark py-5 px-6 text-center">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-sm font-bold text-dark/50">
+      <footer className="border-t border-line py-5 px-6 text-center">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-sm font-bold text-sub">
           <span>&copy; 2026 Dumpit!</span>
-          <span className="hidden sm:inline text-dark/20">|</span>
+          <span className="hidden sm:inline text-sub">|</span>
           <Link to="/privacy" className="hover:text-primary transition-colors">
             개인정보 처리방침
           </Link>
-          <span className="hidden sm:inline text-dark/20">|</span>
+          <span className="hidden sm:inline text-sub">|</span>
           <Link to="/terms" className="hover:text-primary transition-colors">
             서비스 이용약관
           </Link>
-          <span className="hidden sm:inline text-dark/20">|</span>
+          <span className="hidden sm:inline text-sub">|</span>
           <a href="mailto:dumpitadmin@gmail.com" className="hover:text-primary transition-colors">
             dumpitadmin@gmail.com
           </a>

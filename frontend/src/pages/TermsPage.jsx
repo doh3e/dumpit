@@ -67,7 +67,7 @@ const SECTIONS = [
         <p className="mb-2">
           운영자는 베타 서비스 기간 중 사전 예고 없이 서비스의 일부 또는 전부를 변경하거나 중단할 수 있습니다.
         </p>
-        <p className="text-dark/70">
+        <p className="text-sub">
           베타 서비스 특성상 데이터 유실, 기능 변경, 서비스 종료가 발생할 수 있으므로 중요한 데이터는 별도로 보관하시기 바랍니다.
         </p>
       </>
@@ -115,7 +115,7 @@ const SECTIONS = [
   {
     title: '11. 문의',
     body: (
-      <div className="p-3 bg-accent rounded-lg border border-dark/10">
+      <div className="p-3 bg-accent rounded-lg border border-line">
         <p className="text-sm">
           약관 관련 문의는 아래로 연락해 주세요.
         </p>
@@ -140,17 +140,17 @@ export default function TermsPage() {
           </Link>
         </div>
 
-        <div className="card-kitschy space-y-6">
+        <div className="card-retro space-y-6">
           <div>
-            <h1 className="heading-kitschy text-2xl">서비스 이용약관</h1>
-            <p className="text-xs text-dark/60 font-semibold mt-2">시행일자: 2026년 4월 30일</p>
+            <h1 className="font-dungeon text-dark text-2xl">서비스 이용약관</h1>
+            <p className="text-xs text-sub font-semibold mt-2">시행일자: 2026년 4월 30일</p>
           </div>
 
           <div className="space-y-6 text-sm text-dark">
             {SECTIONS.map((section) => (
               <section key={section.title}>
                 <h2 className="font-extrabold text-dark mb-2">{section.title}</h2>
-                <div className="text-dark/80 leading-relaxed">{section.body}</div>
+                <div className="text-sub leading-relaxed">{section.body}</div>
               </section>
             ))}
           </div>

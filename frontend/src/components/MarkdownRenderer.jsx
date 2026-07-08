@@ -11,7 +11,7 @@ function renderInline(raw) {
   let text = escapeHtml(raw)
   const code = []
   text = text.replace(/`([^`]+)`/g, (_, value) => {
-    code.push(`<code class="rounded bg-dark/10 px-1 py-0.5 font-mono text-[0.9em]">${value}</code>`)
+    code.push(`<code class="rounded bg-chip px-1 py-0.5 font-mono text-[0.9em]">${value}</code>`)
     return `@@CODE${code.length - 1}@@`
   })
   text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
@@ -61,7 +61,7 @@ export default function MarkdownRenderer({ content = '', className = '' }) {
     const quote = /^>\s+(.+)$/.exec(line)
     if (quote) {
       closeList()
-      html.push(`<blockquote class="my-2 border-l-4 border-primary/50 bg-accent px-3 py-2 text-dark/70">${renderInline(quote[1])}</blockquote>`)
+      html.push(`<blockquote class="my-2 border-l-4 border-primary/50 bg-accent px-3 py-2 text-sub">${renderInline(quote[1])}</blockquote>`)
       continue
     }
 
@@ -73,7 +73,7 @@ export default function MarkdownRenderer({ content = '', className = '' }) {
 
   return (
     <div
-      className={`prose prose-sm max-w-none whitespace-normal text-sm font-semibold leading-relaxed text-dark/75 ${className}`}
+      className={`prose prose-sm max-w-none whitespace-normal text-sm font-semibold leading-relaxed text-sub ${className}`}
       dangerouslySetInnerHTML={{ __html: html.join('') }}
     />
   )

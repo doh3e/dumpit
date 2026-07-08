@@ -19,11 +19,11 @@ const NumberedList = ({ items }) => (
 )
 
 const DetailBlock = ({ title, rows }) => (
-  <div className="p-3 bg-accent rounded-lg border border-dark/10">
+  <div className="p-3 bg-accent rounded-lg border border-line">
     <p className="font-bold text-dark text-sm">{title}</p>
     <div className="mt-1 space-y-0.5">
       {rows.map((row) => (
-        <p key={row} className="text-xs text-dark/70">{row}</p>
+        <p key={row} className="text-xs text-sub">{row}</p>
       ))}
     </div>
   </div>
@@ -36,7 +36,7 @@ export default function PrivacyPolicyContent() {
     <div className="space-y-6 text-sm text-dark">
       <section>
         <SectionTitle>1. 개인정보의 처리 목적</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 다음 목적을 위해 개인정보를 처리합니다.</p>
           <div>
             <p className="font-bold text-dark">1. 회원 가입 및 로그인</p>
@@ -81,7 +81,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>2. 처리하는 개인정보 항목</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 서비스 제공을 위해 다음 개인정보를 처리합니다.</p>
           <div>
             <p className="font-bold text-dark">1. Google OAuth 로그인 시 수집하는 정보</p>
@@ -103,8 +103,8 @@ export default function PrivacyPolicyContent() {
               '이용자가 동의한 범위 내의 Google Calendar 일정 조회 권한',
               '일정명, 일정 시간 등 Google Calendar 일정 정보',
             ]} />
-            <p className="mt-2 text-dark/70">단, Google Calendar 원본 일정 데이터는 일과표 표시를 위해 조회하며, 덤핏 서버에 원본 형태로 저장하지 않습니다.</p>
-            <p className="mt-2 text-dark/70">이용자가 Google Calendar 일정을 선택하여 덤핏 태스크로 변환하는 경우, 선택한 일정명, 시간 등은 덤핏의 태스크 데이터로 저장될 수 있습니다.</p>
+            <p className="mt-2 text-sub">단, Google Calendar 원본 일정 데이터는 일과표 표시를 위해 조회하며, 덤핏 서버에 원본 형태로 저장하지 않습니다.</p>
+            <p className="mt-2 text-sub">이용자가 Google Calendar 일정을 선택하여 덤핏 태스크로 변환하는 경우, 선택한 일정명, 시간 등은 덤핏의 태스크 데이터로 저장될 수 있습니다.</p>
           </div>
           <div>
             <p className="font-bold text-dark">4. AI 기능 이용 시 처리하는 정보</p>
@@ -133,7 +133,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>3. Google 사용자 데이터의 처리</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 Google OAuth 및 Google API를 통해 이용자가 명시적으로 승인한 범위 내에서만 Google 사용자 데이터에 접근합니다.</p>
           <p>덤핏이 접근할 수 있는 Google 사용자 데이터에는 Google 계정 인증 정보와 Google Calendar 일정 조회 권한 및 일정 정보가 포함될 수 있습니다.</p>
           <DetailBlock title="1. Google 계정 인증 정보" rows={[
@@ -158,13 +158,13 @@ export default function PrivacyPolicyContent() {
           <p>이용자가 Google Calendar 기반으로 생성한 태스크에 대해 AI 분석 기능을 사용하는 경우, 해당 태스크에 포함된 일정명 및 시간 등 필요한 최소 정보가 OpenAI, L.L.C.에 전송될 수 있습니다.</p>
           <p>서비스 보안 유지, 오류 분석, 부정 이용 방지, 법령상 의무 이행 또는 수사기관·법원·규제기관의 적법한 요청이 있는 경우 필요한 범위 내에서 Google 사용자 데이터를 공유, 이전 또는 공개할 수 있습니다.</p>
           <p>덤핏은 이용자가 요청한 서비스 기능 제공, 보안 유지, 오류 분석, 법령상 의무 이행에 필요한 범위를 넘어 Google 사용자 데이터를 제3자에게 공유, 이전 또는 공개하지 않습니다.</p>
-          <p className="text-dark/70">The use of raw or derived user data received from Workspace APIs will adhere to the Google User Data Policy, including the Limited Use requirements.</p>
+          <p className="text-sub">The use of raw or derived user data received from Workspace APIs will adhere to the Google User Data Policy, including the Limited Use requirements.</p>
         </div>
       </section>
 
       <section>
         <SectionTitle>4. 개인정보의 보유 및 이용 기간</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 개인정보 처리 목적 달성 시 또는 회원 탈퇴 시 개인정보를 지체 없이 파기합니다.</p>
           <p>단, 법령 준수, 부정 이용 방지, 분쟁 대응, 서비스 안정성 확보를 위해 필요한 일부 로그는 아래 기간 동안 보관한 후 파기합니다.</p>
           <div className="space-y-2">
@@ -185,7 +185,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>5. 개인정보의 파기 절차 및 방법</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 보유기간 경과, 처리 목적 달성, 회원 탈퇴 등 파기 사유가 발생한 개인정보를 지체 없이 파기합니다.</p>
           <div>
             <p className="font-bold text-dark">1. 파기 절차</p>
@@ -200,7 +200,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>6. 개인정보의 제3자 제공</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 이용자의 개인정보를 원칙적으로 외부에 제공하지 않습니다.</p>
           <p>다만, 다음 경우에는 개인정보를 제공할 수 있습니다.</p>
           <NumberedList items={['이용자가 사전에 명시적으로 동의한 경우', '법령에 특별한 규정이 있는 경우', '수사기관, 법원, 규제기관 등이 적법한 절차에 따라 요청한 경우', '이용자 또는 제3자의 생명, 신체, 재산상 이익을 보호하기 위해 필요한 경우']} />
@@ -210,7 +210,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>7. 개인정보 처리업무의 위탁</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 원활한 서비스 제공을 위해 다음과 같이 개인정보 처리업무를 외부 서비스에 위탁할 수 있습니다.</p>
           <div className="space-y-2">
             <DetailBlock title="1. OpenAI, L.L.C." rows={['국가: 미국', '위탁 업무: AI 기반 태스크 추출, 우선순위 분석, 카테고리 분류', '처리 항목: 브레인덤프 원문, 태스크 제목, 설명, 마감일, 카테고리 등 AI 분석에 필요한 정보', '보유 및 이용 기간: 위탁 목적 달성 시까지. 단, OpenAI의 부정사용 모니터링 정책에 따라 일부 데이터가 최대 30일간 보관될 수 있음']} />
@@ -224,7 +224,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>8. 개인정보의 국외 이전</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 서비스 제공을 위해 국외 사업자가 제공하는 클라우드 및 API 서비스를 사용할 수 있습니다.</p>
           <p>이에 따라 개인정보가 아래와 같이 국외로 이전될 수 있습니다.</p>
           <div className="space-y-2">
@@ -240,7 +240,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>9. AI 기능 이용에 관한 사항</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 이용자가 입력한 텍스트 또는 선택한 일정 정보를 바탕으로 AI 기능을 제공합니다.</p>
           <p>AI 기능은 다음 목적으로 사용됩니다.</p>
           <NumberedList items={['브레인덤프 원문에서 태스크 후보 추출', '태스크 우선순위 분석', '태스크 카테고리 분류', '오늘의 할 일 추천 또는 정렬', '일정 기반 태스크 생성 보조']} />
@@ -254,7 +254,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>10. 쿠키의 설치·운영 및 거부</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 로그인 세션 유지, 서비스 이용 편의 제공, 보안 점검을 위해 쿠키를 사용할 수 있습니다.</p>
           <p>쿠키는 이용자의 브라우저에 저장되는 작은 정보 파일입니다.</p>
           <p>이용자는 브라우저 설정을 통해 쿠키 저장을 거부하거나 삭제할 수 있습니다.</p>
@@ -264,7 +264,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>11. 이용자의 권리와 행사 방법</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>이용자는 언제든지 다음 권리를 행사할 수 있습니다.</p>
           <NumberedList items={['개인정보 열람 요청', '개인정보 정정 요청', '개인정보 삭제 요청', '개인정보 처리정지 요청', '회원 탈퇴 및 데이터 삭제 요청', 'Google 연동 해제 요청']} />
           <p>이용자는 서비스 내 마이페이지 또는 개인정보 보호책임자 이메일을 통해 권리를 행사할 수 있습니다.</p>
@@ -276,16 +276,16 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>12. 개인정보의 안전성 확보 조치</SectionTitle>
-        <div className="text-dark/80 leading-relaxed">
+        <div className="text-sub leading-relaxed">
           <NumberedList items={['HTTPS(TLS) 기반 암호화 통신 적용', '주요 자격증명 및 API Key의 환경변수 또는 시크릿 관리', '개인정보 처리 시스템 접근 권한 제한', '최소 인원 접근 원칙 적용', '접속 및 처리 로그 관리', '비정상 접근 및 오류 모니터링', '서비스 운영 환경의 보안 설정 관리', '불필요한 개인정보 수집 최소화']} />
         </div>
       </section>
 
       <section>
         <SectionTitle>13. 개인정보 보호책임자</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>덤핏은 개인정보 처리와 관련한 문의, 열람, 정정, 삭제, 처리정지 요청을 처리하기 위해 아래 담당자를 지정합니다.</p>
-          <div className="p-3 bg-accent rounded-lg border border-dark/10">
+          <div className="p-3 bg-accent rounded-lg border border-line">
             <p className="text-sm font-bold text-dark">개인정보 보호책임자 및 고충처리 담당</p>
             <p className="text-sm"><span className="font-bold">담당</span>: 덤핏 운영팀</p>
             <p className="text-sm">
@@ -299,7 +299,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>14. 권익침해 구제 방법</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>이용자는 개인정보 침해에 대한 상담 또는 피해 구제를 위해 아래 기관에 문의할 수 있습니다.</p>
           <div className="space-y-2">
             <DetailBlock title="1. 개인정보침해신고센터" rows={['웹사이트: https://privacy.kisa.or.kr', '전화: 국번 없이 118']} />
@@ -312,7 +312,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>15. 개인정보처리방침의 변경</SectionTitle>
-        <div className="text-dark/80 leading-relaxed space-y-3">
+        <div className="text-sub leading-relaxed space-y-3">
           <p>본 개인정보처리방침은 법령, 서비스 내용, 개인정보 처리 방식의 변경에 따라 수정될 수 있습니다.</p>
           <p>개인정보처리방침이 변경되는 경우 덤핏 서비스 내 공지 또는 개인정보처리방침 페이지를 통해 안내합니다.</p>
           <p>변경된 개인정보처리방침은 고지한 시행일자부터 적용됩니다.</p>
@@ -321,7 +321,7 @@ export default function PrivacyPolicyContent() {
 
       <section>
         <SectionTitle>부칙</SectionTitle>
-        <div className="text-dark/80 leading-relaxed">
+        <div className="text-sub leading-relaxed">
           <p>본 개인정보처리방침은 2026년 5월 7일부터 시행됩니다.</p>
         </div>
       </section>
