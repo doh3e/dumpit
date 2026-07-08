@@ -22,19 +22,19 @@ const FEATURES = [
 export default function HelpModal({ onClose }) {
   return createPortal(
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-dark/50" onClick={onClose} />
+      <div className="absolute inset-0 overlay-retro" onClick={onClose} />
       <div
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto card-kitschy"
+        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto card-retro"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h2 className="heading-kitschy text-base text-dark">Dumpit! 도움말</h2>
-            <p className="text-xs font-bold text-dark/50 mt-0.5">현재 베타 서비스 중이에요</p>
+            <h2 className="font-dungeon text-dark text-base text-dark">Dumpit! 도움말</h2>
+            <p className="text-xs font-bold text-sub mt-0.5">현재 베타 서비스 중이에요</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg border-2 border-dark font-black text-dark hover:bg-primary hover:text-white transition-colors flex-shrink-0 flex items-center justify-center"
+            className="w-8 h-8 rounded-lg border border-line font-black text-sub hover:bg-chip hover:text-dark transition-colors flex-shrink-0 flex items-center justify-center"
           >
             ✕
           </button>
@@ -42,7 +42,7 @@ export default function HelpModal({ onClose }) {
 
         <div className="mb-5 rounded-lg border-2 border-secondary bg-secondary/10 px-4 py-3">
           <p className="text-xs font-black text-secondary mb-1">🎉 베타 서비스 안내</p>
-          <p className="text-xs font-semibold text-dark/70 leading-relaxed">
+          <p className="text-xs font-semibold text-sub leading-relaxed">
             Dumpit!은 현재 베타 서비스 중이에요. 모든 활동이 무료인 대신,
             AI를 활용하는 기능에는 일일 사용량 제한이 있습니다.
           </p>
@@ -51,35 +51,35 @@ export default function HelpModal({ onClose }) {
         <h3 className="text-sm font-black text-dark mb-2">주요 기능</h3>
         <div className="space-y-2 mb-5">
           {FEATURES.map(({ icon, title, desc }) => (
-            <div key={title} className="flex gap-3 rounded-lg border border-dark/10 bg-white px-3 py-2">
+            <div key={title} className="flex gap-3 rounded-lg border border-line bg-card px-3 py-2">
               <span className="text-base flex-shrink-0">{icon}</span>
               <div>
                 <p className="text-xs font-black text-dark">{title}</p>
-                <p className="text-[11px] font-semibold text-dark/60 leading-snug">{desc}</p>
+                <p className="text-[11px] font-semibold text-sub leading-snug">{desc}</p>
               </div>
             </div>
           ))}
         </div>
 
         <h3 className="text-sm font-black text-dark mb-2">⚡ 일일 AI 사용량 안내</h3>
-        <div className="rounded-lg border-2 border-dark/10 overflow-hidden mb-1">
+        <div className="rounded-lg border-2 border-line overflow-hidden mb-1">
           {AI_COSTS.map(({ label, cost, highlight }) => (
             <div
               key={label}
-              className={`flex items-center justify-between px-3 py-2 border-b border-dark/10 last:border-0 ${
-                highlight ? 'bg-dark' : 'bg-white'
+              className={`flex items-center justify-between px-3 py-2 border-b border-line last:border-0 ${
+                highlight ? 'bg-chip' : 'bg-card'
               }`}
             >
-              <span className={`text-xs ${highlight ? 'font-black text-white' : 'font-semibold text-dark/70'}`}>
+              <span className={`text-xs ${highlight ? 'font-black text-dark' : 'font-semibold text-sub'}`}>
                 {label}
               </span>
-              <span className={`text-xs font-black ${highlight ? 'text-white' : 'text-dark'}`}>{cost}</span>
+              <span className={`text-xs font-black ${highlight ? 'text-dark' : 'text-dark'}`}>{cost}</span>
             </div>
           ))}
         </div>
-        <p className="text-[11px] font-semibold text-dark/50 mb-5">매일 자정(KST)에 초기화돼요.</p>
+        <p className="text-[11px] font-semibold text-sub mb-5">매일 자정(KST)에 초기화돼요.</p>
 
-        <button onClick={onClose} className="w-full btn-kitschy text-sm">
+        <button onClick={onClose} className="w-full btn-retro text-sm">
           확인했어요!
         </button>
       </div>

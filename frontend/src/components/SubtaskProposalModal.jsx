@@ -60,12 +60,12 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
 
   return createPortal(
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
-      <div className="absolute inset-0 bg-dark/40" onClick={onClose} />
+      <div className="absolute inset-0 overlay-retro" onClick={onClose} />
 
-      <div className="relative card-kitschy w-full max-w-lg mx-4 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative card-retro w-full max-w-lg mx-4 space-y-4 max-h-[90vh] overflow-y-auto">
         <div>
-          <h3 className="heading-kitschy text-xl">태스크 쪼개기</h3>
-          <p className="mt-1 text-xs font-semibold text-dark/60 truncate">
+          <h3 className="font-dungeon text-dark text-xl">태스크 쪼개기</h3>
+          <p className="mt-1 text-xs font-semibold text-sub truncate">
             원본: {task.title}
           </p>
         </div>
@@ -74,7 +74,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
 
         {loading ? (
           <div className="text-center py-10">
-            <p className="font-bold text-dark/50 text-sm">AI가 쪼개는 중...</p>
+            <p className="font-bold text-sub text-sm">AI가 쪼개는 중...</p>
           </div>
         ) : error ? (
           <div className="text-center py-10">
@@ -82,7 +82,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
           </div>
         ) : (
           <>
-            <p className="text-[11px] font-semibold text-dark/50">
+            <p className="text-[11px] font-semibold text-sub">
               저장하면 각 항목이 '{task.title}'의 하위 태스크로 만들어져요. 체크 해제하면 제외돼요.
             </p>
 
@@ -91,7 +91,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                 <div
                   key={idx}
                   className={`p-3 rounded-lg border-2 transition-colors ${
-                    s.include ? 'border-dark bg-accent' : 'border-dark/20 bg-white opacity-50'
+                    s.include ? 'border-dark bg-accent' : 'border-line bg-card opacity-50'
                   }`}
                 >
                   <div className="flex items-start gap-2">
@@ -108,7 +108,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         onChange={(e) => updateField(idx, 'title', e.target.value)}
                         placeholder="서브태스크 제목"
                         maxLength={200}
-                        className="w-full px-2 py-1 border-2 border-dark rounded text-sm font-bold bg-white outline-none focus:border-primary"
+                        className="w-full px-2 py-1 border border-line rounded text-sm font-bold bg-card outline-none focus:border-primary"
                         disabled={!s.include}
                       />
                       <textarea
@@ -117,21 +117,21 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         rows={1}
                         placeholder="메모 (선택)"
                         maxLength={1000}
-                        className="w-full px-2 py-1 border-2 border-dark/30 rounded text-xs font-semibold bg-white outline-none focus:border-primary resize-none"
+                        className="w-full px-2 py-1 border-2 border-line rounded text-xs font-semibold bg-card outline-none focus:border-primary resize-none"
                         disabled={!s.include}
                       />
                       <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-bold text-dark/60">예상 시간</label>
+                        <label className="text-[10px] font-bold text-sub">예상 시간</label>
                         <input
                           type="number"
                           value={s.estimatedMinutes}
                           onChange={(e) => updateField(idx, 'estimatedMinutes', e.target.value)}
                           min="1"
                           placeholder="30"
-                          className="w-20 px-2 py-1 border-2 border-dark/30 rounded text-xs font-bold bg-white outline-none focus:border-primary"
+                          className="w-20 px-2 py-1 border-2 border-line rounded text-xs font-bold bg-card outline-none focus:border-primary"
                           disabled={!s.include}
                         />
-                        <span className="text-[10px] font-bold text-dark/60">분</span>
+                        <span className="text-[10px] font-bold text-sub">분</span>
                       </div>
                     </div>
                   </div>
@@ -145,7 +145,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
           <button
             type="button"
             onClick={onClose}
-            className="btn-kitschy flex-1 bg-accent text-dark text-sm py-2"
+            className="btn-retro flex-1 text-sm py-2"
           >
             취소
           </button>
@@ -153,7 +153,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
             type="button"
             onClick={handleSubmit}
             disabled={loading || error || saving}
-            className="btn-kitschy flex-1 bg-secondary text-white text-sm py-2 disabled:opacity-50"
+            className="btn-retro flex-1 bg-secondary text-on-accent text-sm py-2 disabled:opacity-50"
           >
             {saving ? '저장 중...' : '선택한 항목 저장'}
           </button>
