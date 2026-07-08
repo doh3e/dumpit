@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,6 +22,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
@@ -50,6 +52,7 @@ public class SecurityConfig {
     private String frontendUrl;
 
     @Bean
+    @Profile("!local")
     public OAuth2AuthorizedClientRepository authorizedClientRepository(
             ClientRegistrationRepository clientRegistrationRepository,
             StringRedisTemplate redisTemplate,
@@ -58,6 +61,13 @@ public class SecurityConfig {
                 clientRegistrationRepository,
                 redisTemplate,
                 objectMapper);
+    }
+
+    /** 로컬 개발용 — Redis 없이 세션에 OAuth 토큰 저장 */
+    @Bean
+    @Profile("local")
+    public OAuth2AuthorizedClientRepository localAuthorizedClientRepository() {
+        return new HttpSessionOAuth2AuthorizedClientRepository();
     }
 
     @Bean
