@@ -178,11 +178,11 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
         type="button"
         onClick={() => setOpen((value) => !value)}
         className={isCard
-          ? 'w-full rounded-lg border-2 border-dark/10 bg-yellow-50 px-2 py-2 text-center transition-colors hover:bg-yellow-100'
+          ? 'w-full rounded-lg border-2 tone-urgent-soon px-2 py-2 text-center transition-colors'
           : `flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-extrabold text-sm transition-colors ${
               urgentCount > 0
-                ? 'bg-yellow-300/30 border-yellow-200/80 text-yellow-100 hover:bg-yellow-300/40'
-                : 'bg-white/25 border-white/80 text-white/60 hover:bg-white/30'
+                ? 'bg-chip border-line text-secondary'
+                : 'bg-chip border-line text-sub hover:text-dark'
             }`
         }
         aria-label="마감 임박 알림"
@@ -191,13 +191,13 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
           <>
             <span className={`mx-auto mb-1 flex h-5 w-5 items-center justify-center rounded-full border-2 text-[11px] font-black leading-none ${
               urgentCount > 0
-                ? 'border-yellow-500 bg-yellow-300 text-dark'
-                : 'border-dark/15 bg-white text-dark/40'
+                ? 'border-secondary bg-secondary text-on-accent'
+                : 'border-line bg-card text-sub'
             }`}>
               !
             </span>
-            <p className="text-[10px] font-black text-dark/50">마감</p>
-            <p className={`text-sm font-black ${urgentCount > 0 ? 'text-dark' : 'text-dark/35'}`}>
+            <p className="text-[10px] font-black text-sub">마감</p>
+            <p className={`text-sm font-black ${urgentCount > 0 ? 'text-dark' : 'text-sub'}`}>
               {urgentCount > 9 ? '9+' : urgentCount}
             </p>
           </>
@@ -215,16 +215,16 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
 
       {open && (
         <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))]">
-          <div className="card-kitschy !p-3 bg-white">
-            <div className="flex items-center justify-between gap-3 px-1 pb-2 border-b-2 border-dark/10">
+          <div className="card-retro !p-3 bg-card">
+            <div className="flex items-center justify-between gap-3 px-1 pb-2 border-b-2 border-line">
               <p className="text-sm font-black text-dark">마감 임박</p>
-              <span className="text-[10px] font-extrabold text-dark/50">24시간 이내</span>
+              <span className="text-[10px] font-extrabold text-sub">24시간 이내</span>
             </div>
 
             {urgentCount === 0 ? (
               <div className="py-6 text-center">
                 <p className="text-sm font-extrabold text-dark">급한 마감이 없어요</p>
-                <p className="mt-1 text-xs font-semibold text-dark/50">오늘은 조금 숨 돌려도 됩니다.</p>
+                <p className="mt-1 text-xs font-semibold text-sub">오늘은 조금 숨 돌려도 됩니다.</p>
               </div>
             ) : (
               <div className="mt-3 space-y-2 max-h-80 overflow-y-auto pr-1">
@@ -235,8 +235,8 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                     onClick={() => setOpen(false)}
                     className={`block rounded-lg border-2 p-3 transition-colors ${
                       task.overdue
-                        ? 'border-red-500 bg-red-50 hover:bg-red-100'
-                        : 'border-yellow-400 bg-yellow-50 hover:bg-yellow-100'
+                        ? 'border-primary tone-overdue'
+                        : 'border-secondary tone-urgent-soon'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -245,13 +245,13 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                       </p>
                       <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black ${
                         task.overdue
-                          ? 'border-red-500 bg-red-500 text-white'
-                          : 'border-yellow-500 bg-yellow-300 text-dark'
+                          ? 'border-primary bg-primary text-on-accent'
+                          : 'border-secondary bg-secondary text-on-accent'
                       }`}>
                         {formatRemaining(task.deadline)}
                       </span>
                     </div>
-                    <p className="mt-1 text-[11px] font-semibold text-dark/55">
+                    <p className="mt-1 text-[11px] font-semibold text-sub">
                       마감 {formatDeadline(task.deadline)}
                     </p>
                   </Link>

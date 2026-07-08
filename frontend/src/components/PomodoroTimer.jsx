@@ -256,17 +256,17 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     <div className={`flex flex-col items-center gap-2 ${compact ? 'p-2' : 'p-3'}`}>
       {/* Mode label + settings button */}
       <div className="flex items-center gap-2">
-        <div className={`text-[10px] font-black px-3 py-1 rounded-full border-2 border-dark ${
+        <div className={`text-[10px] font-black px-3 py-1 rounded-full border border-edge ${
           isFocus
-            ? 'bg-primary text-white'
-            : 'bg-secondary text-white'
+            ? 'bg-primary text-on-accent'
+            : 'bg-secondary text-on-accent'
         }`}>
           {isFocus ? 'FOCUS' : 'BREAK'}
         </div>
         {isDesktop && (
           <button
             onClick={openDesktopPomodoroWidget}
-            className="w-6 h-6 flex items-center justify-center rounded-md border-2 border-dark bg-white hover:bg-secondary transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded-md border border-line bg-card hover:bg-secondary transition-colors"
             aria-label="뽀모도로 위젯 열기"
             title="뽀모도로 위젯 열기"
           >
@@ -285,32 +285,32 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
 
       {/* Settings panel */}
       {showSettings && (
-        <div className="w-full bg-accent border-2 border-dark rounded-lg p-2 space-y-2">
+        <div className="w-full bg-accent border border-line rounded-lg p-2 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[10px] font-bold text-dark/70">집중 (분)</label>
+            <label className="text-[10px] font-bold text-sub">집중 (분)</label>
             <input
               type="number"
               min={MIN_MIN}
               max={MAX_MIN}
               value={focusMin}
               onChange={(e) => setFocusMin(Number(e.target.value))}
-              className="w-16 text-xs font-bold border-2 border-dark rounded px-2 py-1 bg-white"
+              className="w-16 text-xs font-bold border border-line rounded px-2 py-1 bg-card"
             />
           </div>
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[10px] font-bold text-dark/70">휴식 (분)</label>
+            <label className="text-[10px] font-bold text-sub">휴식 (분)</label>
             <input
               type="number"
               min={MIN_MIN}
               max={MAX_MIN}
               value={breakMin}
               onChange={(e) => setBreakMin(Number(e.target.value))}
-              className="w-16 text-xs font-bold border-2 border-dark rounded px-2 py-1 bg-white"
+              className="w-16 text-xs font-bold border border-line rounded px-2 py-1 bg-card"
             />
           </div>
           <button
             onClick={() => saveSettings(focusMin, breakMin)}
-            className="w-full btn-kitschy bg-primary text-white text-[10px] py-1.5"
+            className="w-full btn-retro-primary text-[10px] py-1.5"
           >
             적용
           </button>
@@ -323,13 +323,13 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           <circle
             cx="50" cy="50" r="42"
             fill="none"
-            stroke="#E8E8E8"
+            stroke="var(--line)"
             strokeWidth="6"
           />
           <circle
             cx="50" cy="50" r="42"
             fill="none"
-            stroke={isFocus ? '#E05D5D' : '#7EC8A0'}
+            stroke={isFocus ? 'var(--accent)' : 'var(--accent2)'}
             strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 42}`}
@@ -338,7 +338,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-xl font-black text-dark tracking-wider">
+          <span className="font-dungeon text-xl text-dark tracking-wider">
             {min}:{sec}
           </span>
         </div>
@@ -349,7 +349,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         <select
           value={selectedTaskId}
           onChange={(e) => setSelectedTaskId(e.target.value)}
-          className="w-full text-[10px] font-bold border-2 border-dark rounded-lg px-2 py-1.5 bg-white truncate"
+          className="w-full text-[10px] font-bold border border-line rounded-lg px-2 py-1.5 bg-card truncate"
         >
           <option value="">집중할 태스크 선택</option>
           {activeTasks.map((t) => (
@@ -364,17 +364,17 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       <div className="flex items-center gap-2 w-full">
         <button
           onClick={toggle}
-          className={`btn-kitschy flex-1 text-xs py-2 ${
+          className={`btn-retro flex-1 text-xs py-2 ${
             running
               ? 'bg-accent text-dark'
-              : 'bg-primary text-white'
+              : 'bg-primary text-on-accent'
           }`}
         >
           {running ? '일시정지' : isFocus ? '집중시작' : '쉬기시작'}
         </button>
         <button
           onClick={reset}
-          className="btn-kitschy bg-accent text-dark text-xs py-2 px-3"
+          className="btn-retro text-xs py-2 px-3"
         >
           초기화
         </button>
@@ -382,7 +382,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
 
       {/* Completed count */}
       {completedCount > 0 && (
-        <p className="text-[10px] font-bold text-dark/50">
+        <p className="text-[10px] font-bold text-sub">
           오늘 {completedCount}회 집중 완료
         </p>
       )}

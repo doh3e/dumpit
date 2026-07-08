@@ -118,6 +118,10 @@ body {
   .cat-hobby { --cat: #C07862; }
   .cat-other { --cat: #8A8578; }
 
+  /* 구글 캘린더 이벤트 식별 도트 — 브랜드 연상 위해 블루 유지, 테마별 채도만 조절 */
+  .gcal-dot { background: #5B84AE; }
+  [data-theme="dark"] .gcal-dot { background: #7FA8D0; }
+
   /* 구 클래스 별칭 — 전 화면 즉시 전환용, 개명 완료 후 제거 예정 */
   .btn-kitschy { @apply btn-retro; }
   .card-kitschy { @apply card-retro; }

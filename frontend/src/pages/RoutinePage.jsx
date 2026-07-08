@@ -196,13 +196,13 @@ export default function RoutinePage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="heading-kitschy text-2xl">루틴</h2>
-          <p className="mt-2 text-sm font-semibold text-dark/60">
+          <h2 className="font-dungeon text-dark text-2xl">루틴</h2>
+          <p className="mt-2 text-sm font-semibold text-sub">
             정해둔 날짜나 요일에 루틴명과 같은 태스크를 자동으로 만들어요.
           </p>
         </div>
-        <div className="card-kitschy !py-3">
-          <p className="text-xs font-bold text-dark/50">활성 루틴</p>
+        <div className="card-retro !py-3">
+          <p className="text-xs font-bold text-sub">활성 루틴</p>
           <p className="text-xl font-black text-primary">
             {routines.filter((routine) => routine.enabled).length}
           </p>
@@ -210,26 +210,26 @@ export default function RoutinePage() {
       </div>
 
       {error && (
-        <div className="card-kitschy !py-3 bg-primary/10 border-primary">
+        <div className="card-retro !py-3 bg-primary/10 border-primary">
           <p className="text-sm font-bold text-primary">{error}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.9fr)_minmax(22rem,0.7fr)] gap-6">
-        <section className="card-kitschy">
+        <section className="card-retro">
           <div className="flex items-center justify-between gap-3 mb-4">
             <h3 className="text-base font-black text-dark">루틴 목록</h3>
-            <button type="button" onClick={resetForm} className="btn-kitschy bg-accent text-dark text-xs py-1.5">
+            <button type="button" onClick={resetForm} className="btn-retro text-xs py-1.5">
               새 루틴
             </button>
           </div>
 
           {loading ? (
-            <div className="py-12 text-center font-bold text-dark/50">불러오는 중...</div>
+            <div className="py-12 text-center font-bold text-sub">불러오는 중...</div>
           ) : sortedRoutines.length === 0 ? (
             <div className="py-12 text-center">
               <p className="font-extrabold text-dark">아직 루틴이 없어요</p>
-              <p className="mt-2 text-xs font-semibold text-dark/50">반복되는 일을 하나 등록해보세요.</p>
+              <p className="mt-2 text-xs font-semibold text-sub">반복되는 일을 하나 등록해보세요.</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-[34rem] overflow-y-auto pr-1">
@@ -237,26 +237,26 @@ export default function RoutinePage() {
                 <div
                   key={routine.routineId}
                   className={`rounded-lg border-2 p-3 ${
-                    routine.enabled ? 'border-dark/20 bg-white' : 'border-dark/10 bg-white/60 opacity-70'
+                    routine.enabled ? 'border-line bg-card' : 'border-line bg-card/60 opacity-70'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <button type="button" onClick={() => editRoutine(routine)} className="min-w-0 flex-1 text-left">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${
-                          routine.enabled ? 'bg-secondary text-white border-secondary' : 'bg-accent text-dark border-dark/20'
+                          routine.enabled ? 'bg-secondary text-on-accent border-secondary' : 'bg-accent text-dark border-line'
                         }`}>
                           {routine.enabled ? 'ON' : 'OFF'}
                         </span>
-                        <span className="text-[10px] font-black text-dark/40">{formatRule(routine)}</span>
-                        <span className="text-[10px] font-black text-dark/40">
+                        <span className="text-[10px] font-black text-sub">{formatRule(routine)}</span>
+                        <span className="text-[10px] font-black text-sub">
                           {routine.routineStartTime || routine.createTime
                             ? `${(routine.routineStartTime || routine.createTime).slice(0, 5)}${routine.routineEndTime ? `-${routine.routineEndTime.slice(0, 5)}` : ''}`
                             : '하루 안'}
                         </span>
                       </div>
                       <p className="mt-1 truncate text-sm font-black text-dark">{routine.name}</p>
-                      <p className="mt-1 text-[10px] font-semibold text-dark/45">
+                      <p className="mt-1 text-[10px] font-semibold text-sub">
                         {formatDate(routine.startDate)} 시작
                         {routine.endDate && ` · ${formatDate(routine.endDate)} 종료`}
                         {routine.lastGeneratedDate && ` · 마지막 생성 ${formatDate(routine.lastGeneratedDate)}`}
@@ -267,7 +267,7 @@ export default function RoutinePage() {
                       <button
                         type="button"
                         onClick={() => toggleEnabled(routine)}
-                        className="rounded border-2 border-dark/20 bg-accent px-2 py-1 text-xs font-black text-dark"
+                        className="rounded border-2 border-line bg-accent px-2 py-1 text-xs font-black text-dark"
                       >
                         {routine.enabled ? '끄기' : '켜기'}
                       </button>
@@ -286,31 +286,31 @@ export default function RoutinePage() {
           )}
         </section>
 
-        <form onSubmit={saveRoutine} className="card-kitschy space-y-4">
+        <form onSubmit={saveRoutine} className="card-retro space-y-4">
           <div>
-            <p className="text-[10px] font-bold text-dark/40">{editingId ? '편집 중' : '새 루틴'}</p>
+            <p className="text-[10px] font-bold text-sub">{editingId ? '편집 중' : '새 루틴'}</p>
             <h3 className="mt-1 text-base font-black text-dark">루틴 설정</h3>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">루틴명 *</label>
+            <label className="block text-xs font-bold text-sub mb-1">루틴명 *</label>
             <input
               value={form.name}
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
               maxLength={200}
               placeholder="예: 아침 스트레칭"
-              className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">메모</label>
+            <label className="block text-xs font-bold text-sub mb-1">메모</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               rows={3}
               maxLength={1000}
-              className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+              className="w-full resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
             />
           </div>
 
@@ -331,7 +331,7 @@ export default function RoutinePage() {
                 type="button"
                 onClick={() => setForm((prev) => ({ ...prev, repeatType: type }))}
                 className={`rounded-lg border-2 px-3 py-2 text-xs font-black ${
-                  form.repeatType === type ? 'border-dark bg-primary text-white' : 'border-dark/20 bg-accent text-dark'
+                  form.repeatType === type ? 'border-edge bg-primary text-on-accent' : 'border-line bg-accent text-dark'
                 }`}
               >
                 {type === 'DAILY' ? '매일' : type === 'WEEKLY' ? '요일' : type === 'MONTHLY' ? '날짜' : '주차'}
@@ -347,7 +347,7 @@ export default function RoutinePage() {
                   type="button"
                   onClick={() => setForm((prev) => ({ ...prev, daysOfWeek: toggleNumber(prev.daysOfWeek, day.value) }))}
                   className={`h-9 w-9 rounded-full border-2 text-xs font-black ${
-                    form.daysOfWeek.includes(day.value) ? 'border-dark bg-secondary text-white' : 'border-dark/20 bg-accent text-dark'
+                    form.daysOfWeek.includes(day.value) ? 'border-edge bg-secondary text-on-accent' : 'border-line bg-accent text-dark'
                   }`}
                 >
                   {day.label}
@@ -365,14 +365,14 @@ export default function RoutinePage() {
                     type="button"
                     onClick={() => setForm((prev) => ({ ...prev, daysOfMonth: toggleNumber(prev.daysOfMonth, day) }))}
                     className={`h-8 rounded border-2 text-xs font-black ${
-                      form.daysOfMonth.includes(day) ? 'border-dark bg-secondary text-white' : 'border-dark/20 bg-accent text-dark'
+                      form.daysOfMonth.includes(day) ? 'border-edge bg-secondary text-on-accent' : 'border-line bg-accent text-dark'
                     }`}
                   >
                     {day}
                   </button>
                 ))}
               </div>
-              <label className="flex items-start gap-2 rounded-lg border-2 border-dark/10 bg-accent/60 px-3 py-2 text-xs font-extrabold text-dark">
+              <label className="flex items-start gap-2 rounded-lg border-2 border-line bg-accent/60 px-3 py-2 text-xs font-extrabold text-dark">
                 <input
                   type="checkbox"
                   checked={form.runOnLastDayIfMissing}
@@ -387,7 +387,7 @@ export default function RoutinePage() {
           {form.repeatType === 'MONTHLY_WEEKDAY' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-dark/60 mb-1">몇째 주</label>
+                <label className="block text-xs font-bold text-sub mb-1">몇째 주</label>
                 <div className="grid grid-cols-5 gap-1.5">
                   {MONTHLY_ORDINALS.map((ordinal) => (
                     <button
@@ -395,7 +395,7 @@ export default function RoutinePage() {
                       type="button"
                       onClick={() => setForm((prev) => ({ ...prev, monthlyWeekOrdinal: ordinal.value }))}
                       className={`h-9 rounded border-2 text-xs font-black ${
-                        form.monthlyWeekOrdinal === ordinal.value ? 'border-dark bg-secondary text-white' : 'border-dark/20 bg-accent text-dark'
+                        form.monthlyWeekOrdinal === ordinal.value ? 'border-edge bg-secondary text-on-accent' : 'border-line bg-accent text-dark'
                       }`}
                     >
                       {ordinal.label}
@@ -404,7 +404,7 @@ export default function RoutinePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-dark/60 mb-1">요일</label>
+                <label className="block text-xs font-bold text-sub mb-1">요일</label>
                 <div className="flex flex-wrap gap-1.5">
                   {WEEK_DAYS.map((day) => (
                     <button
@@ -412,7 +412,7 @@ export default function RoutinePage() {
                       type="button"
                       onClick={() => setForm((prev) => ({ ...prev, monthlyWeekDay: day.value }))}
                       className={`h-9 w-9 rounded-full border-2 text-xs font-black ${
-                        form.monthlyWeekDay === day.value ? 'border-dark bg-secondary text-white' : 'border-dark/20 bg-accent text-dark'
+                        form.monthlyWeekDay === day.value ? 'border-edge bg-secondary text-on-accent' : 'border-line bg-accent text-dark'
                       }`}
                     >
                       {day.label}
@@ -420,7 +420,7 @@ export default function RoutinePage() {
                   ))}
                 </div>
               </div>
-              <p className="text-[11px] font-semibold text-dark/45">
+              <p className="text-[11px] font-semibold text-sub">
                 선택한 주차의 요일이 없는 달에는 태스크를 만들지 않아요.
               </p>
             </div>
@@ -428,7 +428,7 @@ export default function RoutinePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="flex items-center gap-2 text-xs font-bold text-dark/60 mb-1">
+              <label className="flex items-center gap-2 text-xs font-bold text-sub mb-1">
                 <input
                   type="checkbox"
                   checked={form.hasStartTime}
@@ -443,9 +443,9 @@ export default function RoutinePage() {
                     type="time"
                     value={form.startTime}
                     onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
-                    className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none"
+                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
                   />
-                  <label className="flex items-center gap-2 text-xs font-bold text-dark/60">
+                  <label className="flex items-center gap-2 text-xs font-bold text-sub">
                     <input
                       type="checkbox"
                       checked={form.hasEndTime}
@@ -459,38 +459,38 @@ export default function RoutinePage() {
                       type="time"
                       value={form.endTime}
                       onChange={(e) => setForm((prev) => ({ ...prev, endTime: e.target.value }))}
-                      className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none"
+                      className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
                     />
                   ) : (
-                    <div className="rounded-lg border-2 border-dark/20 bg-accent px-3 py-2 text-xs font-extrabold text-dark/60">
+                    <div className="rounded-lg border-2 border-line bg-accent px-3 py-2 text-xs font-extrabold text-sub">
                       종료 시간 없음 · 마감 23:59
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="rounded-lg border-2 border-dark/20 bg-accent px-3 py-2 text-xs font-extrabold text-dark/60">
+                <div className="rounded-lg border-2 border-line bg-accent px-3 py-2 text-xs font-extrabold text-sub">
                   오늘 안에 완료 · 마감 23:59
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-xs font-bold text-dark/60 mb-1">시작일</label>
+              <label className="block text-xs font-bold text-sub mb-1">시작일</label>
               <input
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setForm((prev) => ({ ...prev, startDate: e.target.value }))}
-                className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none"
+                className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">종료일</label>
+            <label className="block text-xs font-bold text-sub mb-1">종료일</label>
             <input
               type="date"
               value={form.endDate}
               onChange={(e) => setForm((prev) => ({ ...prev, endDate: e.target.value }))}
-              className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none"
+              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
             />
           </div>
 
@@ -498,12 +498,12 @@ export default function RoutinePage() {
             <button
               type="submit"
               disabled={!form.name.trim() || saving}
-              className="btn-kitschy flex-1 bg-primary text-white text-sm py-2 disabled:opacity-50"
+              className="btn-retro flex-1 bg-primary text-on-accent text-sm py-2 disabled:opacity-50"
             >
               {saving ? '저장 중...' : editingId ? '수정' : '추가'}
             </button>
             {editingId && (
-              <button type="button" onClick={resetForm} className="btn-kitschy bg-accent text-dark text-sm py-2">
+              <button type="button" onClick={resetForm} className="btn-retro text-sm py-2">
                 취소
               </button>
             )}
