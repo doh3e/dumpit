@@ -170,7 +170,7 @@ export default function BrainDumpPage() {
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-extrabold text-dark">{item.title}</p>
+                  <p className="font-galmuri galmuri-semibold text-dark">{item.title}</p>
                   {(deadlineStr || item.estimatedMinutes) && (
                     <p className="text-xs text-sub font-medium mt-0.5">
                       {deadlineStr && `마감: ${deadlineStr}`}

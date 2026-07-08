@@ -6,6 +6,20 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Galmuri11';
+  src: url('/fonts/Galmuri11.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Galmuri11';
+  src: url('/fonts/Galmuri11-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -42,8 +56,15 @@ body {
 }
 
 /* 픽셀 폰트는 안티앨리어싱 없이 또렷하게 */
-.font-dungeon {
+.font-dungeon,
+.font-galmuri {
   -webkit-font-smoothing: none;
+}
+
+/* 갈무리11 세미볼드 — Bold(700)뿐이라 Regular에 반픽셀 스트로크로 중간 굵기를 만든다 */
+.galmuri-semibold {
+  font-weight: 400;
+  text-shadow: 0.5px 0 0 currentColor;
 }
 
 @layer components {

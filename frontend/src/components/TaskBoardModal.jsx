@@ -202,7 +202,7 @@ export default function TaskBoardModal({ tasks, sections: planningSections, onCl
             {sections.map((section) => (
               <section key={section.id} className={`flex min-h-0 flex-col rounded-lg border-2 p-3 ${section.tone}`}>
                 <div className="mb-3 flex flex-shrink-0 items-center justify-between gap-2">
-                  <h3 className="text-sm font-black text-dark">{section.title}</h3>
+                  <h3 className="font-galmuri font-bold text-sm text-dark">{section.title}</h3>
                   <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[10px] font-black text-sub">
                     {section.tasks.length}
                   </span>

@@ -429,14 +429,14 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card-retro">
             <div className="mb-4 flex flex-wrap items-baseline gap-2">
-              <h3 className="font-extrabold text-dark">오늘 일과표</h3>
+              <h3 className="font-galmuri font-bold text-dark">오늘 일과표</h3>
               <span className="text-[10px] font-bold text-sub">시간이 정해진 일과 오늘의 흐름을 보여줘요.</span>
             </div>
             {allDoneToday && (
               <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
                 <div className="flex-1 min-w-[180px]">
                   <p className="label-retro mb-2">지금 할 일</p>
-                  <p className="text-[22px] max-sm:text-[19px] font-extrabold leading-tight text-dark">
+                  <p className="font-galmuri font-bold text-[22px] max-sm:text-[19px] leading-tight text-dark">
                     오늘 다 비웠어요 🚀
                   </p>
                   <p className="text-xs text-sub mt-1">머릿속이 가벼워졌네요. 내일 또 만나요.</p>
@@ -451,7 +451,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => setEditingTask(nowSuggestion.task)}
-                    className="block max-w-full truncate text-left text-[22px] max-sm:text-[19px] font-extrabold leading-tight text-dark hover:text-primary transition-colors"
+                    className="block max-w-full truncate text-left font-galmuri font-bold text-[22px] max-sm:text-[19px] leading-tight text-dark hover:text-primary transition-colors"
                     title={nowSuggestion.task.title}
                   >
                     {nowSuggestion.task.title}
@@ -469,14 +469,14 @@ export default function DashboardPage() {
 
           <div className="card-retro">
             <div className="flex items-baseline gap-2 mb-4">
-              <h3 className="font-extrabold text-dark">달력</h3>
+              <h3 className="font-galmuri font-bold text-dark">달력</h3>
               <span className="text-[10px] text-sub font-medium">날짜를 클릭해서 일정을 태스크로 추가해보세요!</span>
             </div>
             <MiniCalendar tasks={taskList} onTaskAdded={fetchTasks} />
           </div>
 
           <div className="card-retro">
-            <h3 className="font-extrabold text-dark mb-4">
+            <h3 className="font-galmuri font-bold text-dark mb-4">
               해야 할 일 ({activeTasks.length})
             </h3>
 
@@ -535,7 +535,7 @@ export default function DashboardPage() {
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 font-extrabold text-dark text-sm truncate">
+                        <p className="mt-1 font-galmuri galmuri-semibold text-dark text-sm truncate">
                           {task.title}
                         </p>
                         <p className="text-[10px] text-sub font-medium mt-0.5">
@@ -559,7 +559,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="card-retro">
-            <h3 className="font-extrabold text-dark mb-4">
+            <h3 className="font-galmuri font-bold text-dark mb-4">
               완료한 일 ({doneTasks.length})
             </h3>
 
@@ -586,7 +586,7 @@ export default function DashboardPage() {
                     </button>
 
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-dark text-sm line-through truncate">
+                      <p className="font-galmuri galmuri-semibold text-dark text-sm line-through truncate">
                         {task.title}
                       </p>
                       <p className="text-[10px] text-sub font-medium">

@@ -48,7 +48,7 @@ export default function HelpModal({ onClose }) {
           </p>
         </div>
 
-        <h3 className="text-sm font-black text-dark mb-2">주요 기능</h3>
+        <h3 className="font-galmuri font-bold text-sm text-dark mb-2">주요 기능</h3>
         <div className="space-y-2 mb-5">
           {FEATURES.map(({ icon, title, desc }) => (
             <div key={title} className="flex gap-3 rounded-lg border border-line bg-card px-3 py-2">
@@ -61,7 +61,7 @@ export default function HelpModal({ onClose }) {
           ))}
         </div>
 
-        <h3 className="text-sm font-black text-dark mb-2">⚡ 일일 AI 사용량 안내</h3>
+        <h3 className="font-galmuri font-bold text-sm text-dark mb-2">⚡ 일일 AI 사용량 안내</h3>
         <div className="rounded-lg border-2 border-line overflow-hidden mb-1">
           {AI_COSTS.map(({ label, cost, highlight }) => (
             <div

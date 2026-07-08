@@ -70,7 +70,7 @@ function ExtractPreviewNode({ node, depth }) {
         <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
           {category.label}
         </span>
-        <p className="mt-1 text-sm font-black text-dark">{node.title}</p>
+        <p className="mt-1 font-galmuri galmuri-semibold text-sm text-dark">{node.title}</p>
         {node.content && <p className="mt-0.5 text-xs font-semibold text-sub">{node.content}</p>}
       </div>
       {node.children?.map((child, i) => (
@@ -558,7 +558,7 @@ export default function IdeaDumpPage() {
                         {idea.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
                         {childCount > 0 && <span className="text-[10px] font-black text-sub">하위 {childCount}</span>}
                       </div>
-                      <p className="mt-1 truncate text-sm font-black text-dark">{idea.title}</p>
+                      <p className="mt-1 truncate font-galmuri galmuri-semibold text-sm text-dark">{idea.title}</p>
                     </button>
                   </div>
                 )
@@ -580,7 +580,7 @@ export default function IdeaDumpPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-bold text-sub">수정 {formatDate(selectedIdea.updatedAt)}</p>
-                  <h3 className="mt-1 text-lg font-black text-dark">아이디어 상세</h3>
+                  <h3 className="mt-1 font-galmuri font-bold text-lg text-dark">아이디어 상세</h3>
                 </div>
                 <label className="flex items-center gap-2 text-sm font-extrabold text-dark">
                   <input
@@ -635,7 +635,7 @@ export default function IdeaDumpPage() {
 
               <div className="rounded-lg border-2 border-line bg-card p-3">
                 <div className="flex items-center justify-between gap-3">
-                  <h4 className="text-sm font-black text-dark">하위 아이디어</h4>
+                  <h4 className="font-galmuri font-bold text-sm text-dark">하위 아이디어</h4>
                   <span className="text-[10px] font-black text-sub">{selectedChildren.length}개</span>
                 </div>
                 {selectedChildren.length === 0 ? (
@@ -657,7 +657,7 @@ export default function IdeaDumpPage() {
                             </span>
                             {child.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
                           </div>
-                          <p className="mt-1 truncate text-sm font-black text-dark">{child.title}</p>
+                          <p className="mt-1 truncate font-galmuri galmuri-semibold text-sm text-dark">{child.title}</p>
                         </button>
                       )
                     })}

@@ -34,7 +34,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
           to={path}
           onClick={handleNavClick}
           className={({ isActive }) =>
-            `flex items-center px-4 py-3 rounded-lg font-bold text-sm transition-all ${
+            `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
               isActive
                 ? 'bg-chip text-dark'
                 : 'text-sub hover:text-dark hover:bg-chip'
@@ -50,7 +50,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
           to="/admin"
           onClick={handleNavClick}
           className={({ isActive }) =>
-            `flex items-center px-4 py-3 rounded-lg font-bold text-sm transition-all ${
+            `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
               isActive
                 ? 'bg-chip text-secondary'
                 : 'text-secondary hover:bg-chip'

@@ -23,6 +23,8 @@ export default {
       fontFamily: {
         sans: ['"Pretendard Variable"', 'Pretendard', '"Malgun Gothic"', 'system-ui', 'sans-serif'],
         dungeon: ['DungGeunMo', '"Malgun Gothic"', 'monospace'],
+        // 디스플레이 층 (히어로 멘트·섹션 제목·태스크 제목·네비) — 400/700 두 굵기
+        galmuri: ['Galmuri11', '"Pretendard Variable"', 'Pretendard', 'sans-serif'],
       },
       boxShadow: {
         retro:      '3px 3px 0 var(--shadow-sm)',

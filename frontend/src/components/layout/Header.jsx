@@ -101,7 +101,7 @@ export default function Header({ onOpenDrawer }) {
             <Link
               key={path}
               to={path}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-4 py-2 rounded-lg font-galmuri font-bold text-sm transition-all ${
                 pathname === path
                   ? 'bg-chip text-dark'
                   : 'text-sub hover:text-dark hover:bg-chip'

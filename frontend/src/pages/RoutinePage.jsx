@@ -218,7 +218,7 @@ export default function RoutinePage() {
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.9fr)_minmax(22rem,0.7fr)] gap-6">
         <section className="card-retro">
           <div className="flex items-center justify-between gap-3 mb-4">
-            <h3 className="text-base font-black text-dark">루틴 목록</h3>
+            <h3 className="font-galmuri font-bold text-base text-dark">루틴 목록</h3>
             <button type="button" onClick={resetForm} className="btn-retro text-xs py-1.5">
               새 루틴
             </button>
@@ -289,7 +289,7 @@ export default function RoutinePage() {
         <form onSubmit={saveRoutine} className="card-retro space-y-4">
           <div>
             <p className="text-[10px] font-bold text-sub">{editingId ? '편집 중' : '새 루틴'}</p>
-            <h3 className="mt-1 text-base font-black text-dark">루틴 설정</h3>
+            <h3 className="mt-1 font-galmuri font-bold text-base text-dark">루틴 설정</h3>
           </div>
 
           <div>

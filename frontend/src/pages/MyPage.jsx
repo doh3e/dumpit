@@ -373,7 +373,7 @@ export default function MyPage() {
       {stats && (
         <div className="card-retro !p-4 space-y-2">
           <div className="flex items-center justify-between">
-            <p className="font-dungeon text-sm text-dark">별빛 로그 <span className="text-sub font-sans font-bold">· 완료 기록</span></p>
+            <p className="font-galmuri font-bold text-sm text-dark">별빛 로그 <span className="text-sub font-sans font-bold">· 완료 기록</span></p>
             <span className="text-[10px] font-bold text-sub">최근 28주</span>
           </div>
           <HeatmapGrid heatmap={heatmap} />
@@ -395,7 +395,7 @@ export default function MyPage() {
 
       {/* Pie chart */}
       <div className="card-retro !p-4 space-y-3">
-        <p className="text-sm font-black text-dark">완료 태스크 카테고리 별 분포</p>
+        <p className="font-galmuri font-bold text-sm text-dark">완료 태스크 카테고리 별 분포</p>
         {pieData.length === 0 ? (
           <p className="text-xs font-semibold text-sub py-4 text-center">
             태스크를 완료하면 여기서 카테고리 분포를 볼 수 있어요.

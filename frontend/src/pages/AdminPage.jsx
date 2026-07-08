@@ -339,7 +339,7 @@ export default function AdminPage() {
         ) : (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="card-retro">
-              <h3 className="mb-4 font-extrabold text-dark">문의 목록</h3>
+              <h3 className="mb-4 font-galmuri font-bold text-dark">문의 목록</h3>
               <div className="max-h-[600px] space-y-2 overflow-y-auto pr-1">
                 {inquiries.map((inquiry) => {
                   const status = STATUS_LABEL[inquiry.status] ?? STATUS_LABEL.PENDING
@@ -368,7 +368,7 @@ export default function AdminPage() {
             </div>
 
             <div className="card-retro">
-              <h3 className="mb-4 font-extrabold text-dark">상세 / 답변</h3>
+              <h3 className="mb-4 font-galmuri font-bold text-dark">상세 / 답변</h3>
               {!selected ? (
                 <div className="py-12 text-center">
                   <p className="text-sm font-bold text-sub">왼쪽에서 문의를 선택해주세요.</p>
@@ -598,7 +598,7 @@ export default function AdminPage() {
       {tab === 'notices' && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="card-retro">
-            <h3 className="mb-4 font-extrabold text-dark">
+            <h3 className="mb-4 font-galmuri font-bold text-dark">
               {editingNoticeId ? '공지 수정' : '공지 작성'}
             </h3>
             <div className="space-y-3">
@@ -691,7 +691,7 @@ export default function AdminPage() {
           </div>
 
           <div className="card-retro">
-            <h3 className="mb-4 font-extrabold text-dark">공지 목록</h3>
+            <h3 className="mb-4 font-galmuri font-bold text-dark">공지 목록</h3>
             {loadingNotices ? (
               <div className="py-12 text-center">
                 <p className="font-bold text-sub">불러오는 중...</p>

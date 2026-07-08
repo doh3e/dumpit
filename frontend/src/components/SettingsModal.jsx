@@ -162,7 +162,7 @@ export default function SettingsModal({ onClose }) {
         </div>
 
         <section className="mb-6">
-          <h3 className="font-extrabold text-dark text-sm mb-3">테마</h3>
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">테마</h3>
           <div className="flex gap-2">
             {[
               { value: 'light', label: '라이트' },
@@ -184,7 +184,7 @@ export default function SettingsModal({ onClose }) {
         <hr className="border-line mb-6" />
 
         <section className="mb-6">
-          <h3 className="font-extrabold text-dark text-sm mb-3">일과 시간</h3>
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">일과 시간</h3>
           <p className="text-xs text-sub font-medium mb-3">
             시간표에 표시될 나의 일과 시간대를 설정하세요
           </p>
@@ -220,7 +220,7 @@ export default function SettingsModal({ onClose }) {
         <hr className="border-line mb-6" />
 
         <section className="mb-6">
-          <h3 className="font-extrabold text-dark text-sm mb-3">알림</h3>
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">알림</h3>
           <div className="flex items-center justify-between gap-4 rounded-lg border-2 border-line bg-card px-4 py-3">
             <div className="min-w-0">
               <p className="text-sm font-bold text-dark">마감 임박 알림</p>
@@ -288,7 +288,7 @@ export default function SettingsModal({ onClose }) {
         <hr className="border-line mb-6" />
 
         <section className="mb-6">
-          <h3 className="font-extrabold text-dark text-sm mb-3">보유 아이템</h3>
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">보유 아이템</h3>
           {loadingPurchases ? (
             <p className="text-xs text-sub font-medium">불러오는 중...</p>
           ) : purchases.length === 0 ? (
@@ -320,7 +320,7 @@ export default function SettingsModal({ onClose }) {
             <hr className="border-line mb-6" />
 
             <section className="mb-6">
-              <h3 className="font-extrabold text-dark text-sm mb-3">앱 정보</h3>
+              <h3 className="font-galmuri font-bold text-dark text-sm mb-3">앱 정보</h3>
               <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
