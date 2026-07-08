@@ -2,9 +2,30 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self'; font-src data:;" />
   <title>덤핏 뽀모도로</title>
   <style>
+    /* 웹 리디자인과 동일한 레트로 우주 토큰 (frontend/src/index.css 참조) */
+    :root {
+      --bg: #F7EFDF; --card: #FFFDF6; --fg: #33271E; --sub: #8C7C66;
+      --line: #E0D2B6; --edge: #3A2C21; --chip: #F0DFBB;
+      --accent: #D95F52; --accent2: #C98A2D; --on-accent: #FFFBF0;
+      --shadow-sm: #DCC5A0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1F1B2E; --card: #2B2442; --fg: #F2E9D8; --sub: #9D93A8;
+        --line: #413966; --edge: #141021; --chip: #3A3156;
+        --accent: #F09355; --accent2: #E9B44C; --on-accent: #241E14;
+        --shadow-sm: #141021;
+      }
+    }
+
+    @font-face {
+      font-family: 'DGM';
+      src: url(data:font/woff2;base64,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) format('woff2');
+    }
+
     * { box-sizing: border-box; }
 
     body {
@@ -13,17 +34,19 @@
       height: 100vh;
       overflow: hidden;
       background: transparent;
-      color: #1a1a1a;
+      color: var(--fg);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       user-select: none;
     }
 
+    .px { font-family: 'DGM', monospace; -webkit-font-smoothing: none; }
+
     .widget {
       width: 100%;
       height: 100%;
-      border: 2px solid #1a1a1a;
-      border-radius: 8px;
-      background: #fff7e8;
+      border: 1.5px solid var(--edge);
+      border-radius: 12px;
+      background: var(--bg);
       padding: 12px 10px 10px;
       display: flex;
       flex-direction: column;
@@ -34,11 +57,11 @@
 
     .title {
       width: 100%;
-      border-bottom: 1px solid rgba(26, 26, 26, 0.24);
+      border-bottom: 2px dotted var(--accent2);
       padding-bottom: 8px;
-      color: rgba(26, 26, 26, 0.46);
+      color: var(--sub);
+      font-family: 'DGM', monospace;
       font-size: 9px;
-      font-weight: 900;
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
@@ -58,26 +81,26 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid #1a1a1a;
+      border: 1.5px solid var(--edge);
       border-radius: 999px;
-      background: #e05d5d;
-      color: white;
+      background: var(--accent);
+      color: var(--on-accent);
+      font-family: 'DGM', monospace;
       font-size: 10px;
-      font-weight: 950;
       letter-spacing: 0;
     }
 
     .icon-button {
       width: 25px;
       height: 25px;
-      border: 2px solid #1a1a1a;
+      border: 1px solid var(--line);
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
-      background: white;
-      color: #1a1a1a;
+      background: var(--card);
+      color: var(--sub);
       font-size: 13px;
       font-weight: 950;
       line-height: 1;
@@ -89,13 +112,13 @@
     }
 
     .icon-button:hover {
-      background: #7ec8a0;
-      color: white;
+      background: var(--chip);
+      color: var(--fg);
     }
 
     #close:hover {
-      background: #e05d5d;
-      color: white;
+      background: var(--accent);
+      color: var(--on-accent);
     }
 
     .timer {
@@ -118,11 +141,11 @@
     }
 
     .track {
-      stroke: #e8e8e8;
+      stroke: var(--line);
     }
 
     .progress {
-      stroke: #e05d5d;
+      stroke: var(--accent);
       stroke-dasharray: 263.89;
       stroke-dashoffset: 263.89;
       transition: stroke-dashoffset 0.4s linear, stroke 0.2s ease;
@@ -133,8 +156,9 @@
       inset: 0;
       display: grid;
       place-items: center;
+      font-family: 'DGM', monospace;
+      -webkit-font-smoothing: none;
       font-size: 20px;
-      font-weight: 950;
       letter-spacing: 0;
       font-variant-numeric: tabular-nums;
     }
@@ -142,19 +166,19 @@
     .task {
       width: 100%;
       height: 28px;
-      border: 2px solid #1a1a1a;
+      border: 1px solid var(--line);
       border-radius: 7px;
-      background: white;
+      background: var(--card);
       padding: 0 8px;
       font-size: 10px;
       font-weight: 850;
-      color: #1a1a1a;
+      color: var(--fg);
       -webkit-app-region: no-drag;
       cursor: pointer;
     }
 
     .task:focus {
-      outline: 2px solid rgba(224, 93, 93, 0.35);
+      outline: 2px solid var(--accent2);
       outline-offset: 1px;
     }
 
@@ -168,46 +192,57 @@
 
     .action {
       height: 34px;
-      border: 2px solid #1a1a1a;
+      border: 1.5px solid var(--edge);
       border-radius: 7px;
       font-size: 11px;
       font-weight: 950;
-      color: #1a1a1a;
-      background: white;
+      color: var(--fg);
+      background: var(--card);
       cursor: pointer;
-      box-shadow: 3px 3px 0 #1a1a1a;
+      box-shadow: 3px 3px 0 var(--shadow-sm);
+      transition: transform .08s ease, box-shadow .08s ease;
     }
 
     .action.primary {
-      background: #e05d5d;
-      color: white;
+      background: var(--accent);
+      color: var(--on-accent);
     }
 
     .action:hover {
-      transform: translate(1px, 1px);
-      box-shadow: 2px 2px 0 #1a1a1a;
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 var(--shadow-sm);
+    }
+
+    .action:active {
+      transform: translate(3px, 3px);
+      box-shadow: 0 0 0 var(--shadow-sm);
     }
 
     body.break .mode,
     body.break .action.primary {
-      background: #7ec8a0;
+      background: var(--accent2);
+      color: var(--on-accent);
     }
 
     body.break .progress {
-      stroke: #7ec8a0;
+      stroke: var(--accent2);
     }
 
     body.idle .mode {
-      background: #fffdf8;
-      color: rgba(26, 26, 26, 0.62);
+      background: var(--chip);
+      color: var(--sub);
     }
 
     body.idle .progress {
-      stroke: rgba(26, 26, 26, 0.2);
+      stroke: var(--line);
     }
 
     body.idle .action.primary {
-      background: #e05d5d;
+      background: var(--accent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .action, .progress { transition: none; }
     }
   </style>
 </head>
