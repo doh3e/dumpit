@@ -57,6 +57,7 @@ body {
   .btn-retro:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
   .btn-retro:disabled { opacity: .5; transform: none; box-shadow: 3px 3px 0 var(--shadow-sm); }
   .btn-retro-primary { @apply btn-retro bg-primary text-on-accent; }
+  .btn-retro-secondary { @apply btn-retro bg-secondary text-on-accent; }
 
   .card-retro {
     @apply bg-card rounded-2xl p-5;
@@ -97,12 +98,55 @@ body {
     border-color: var(--accent);
     background: color-mix(in srgb, var(--accent) 8%, var(--card));
   }
+  .tone-urgent-soon {
+    border-color: var(--accent2);
+    background: color-mix(in srgb, var(--accent2) 8%, var(--card));
+  }
+
+  /* 카테고리 칩 — --cat 색상 하나에서 배경/보더/텍스트 파생 (라이트/다크 자동 대응) */
+  .cat-chip {
+    background: color-mix(in srgb, var(--cat) 14%, var(--card));
+    border-color: color-mix(in srgb, var(--cat) 38%, var(--card));
+    color: color-mix(in srgb, var(--cat) 72%, var(--fg));
+  }
+  .cat-work { --cat: #5B84AE; }
+  .cat-study { --cat: #7A6FC0; }
+  .cat-appointment { --cat: #C4708F; }
+  .cat-chore { --cat: #B08A3E; }
+  .cat-routine { --cat: #9A6FB8; }
+  .cat-health { --cat: #6E9E62; }
+  .cat-hobby { --cat: #C07862; }
+  .cat-other { --cat: #8A8578; }
 
   /* 구 클래스 별칭 — 전 화면 즉시 전환용, 개명 완료 후 제거 예정 */
   .btn-kitschy { @apply btn-retro; }
   .card-kitschy { @apply card-retro; }
   .heading-kitschy { @apply font-dungeon text-dark tracking-wide; }
 }
+
+/* ---- 픽셀 행성 궤도 (OrbitProgress) ---- */
+.pixel-planet {
+  position: absolute; top: 50%; left: 50%; width: 3px; height: 3px;
+  margin: -10.5px 0 0 -10.5px; background: var(--p2);
+  box-shadow:
+    6px 0 var(--p1), 9px 0 var(--p1), 12px 0 var(--p1),
+    3px 3px var(--p1), 6px 3px var(--p2), 9px 3px var(--p1), 12px 3px var(--p1), 15px 3px var(--p1),
+    0 6px var(--p1), 3px 6px var(--p2), 6px 6px var(--p1), 9px 6px var(--p1), 12px 6px var(--p1), 15px 6px var(--p1), 18px 6px var(--p1),
+    0 9px var(--p3), 3px 9px var(--p3), 6px 9px var(--p3), 9px 9px var(--p3), 12px 9px var(--p3), 15px 9px var(--p3), 18px 9px var(--p3),
+    0 12px var(--p1), 3px 12px var(--p1), 6px 12px var(--p1), 9px 12px var(--p1), 12px 12px var(--p1), 15px 12px var(--p1), 18px 12px var(--p1),
+    3px 15px var(--p1), 6px 15px var(--p1), 9px 15px var(--p1), 12px 15px var(--p1), 15px 15px var(--p1),
+    6px 18px var(--p1), 9px 18px var(--p1), 12px 18px var(--p1);
+}
+.orbit-sat {
+  position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; margin: -2.5px;
+  background: var(--accent); border-radius: 1px;
+  animation: orbit 9s linear infinite;
+}
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(var(--orbit-r, 29px)); }
+  to { transform: rotate(360deg) translateX(var(--orbit-r, 29px)); }
+}
+@media (prefers-reduced-motion: reduce) { .orbit-sat { animation: none; } }
 
 /* ---- 다크 모드 픽셀 별 배경 ---- */
 .starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; display: none; }
