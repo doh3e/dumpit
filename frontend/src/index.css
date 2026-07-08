@@ -1,7 +1,5 @@
-@import url("https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css");
-
 @font-face {
-  font-family: 'RoundedFixedsys';
+  font-family: 'DungGeunMo';
   src: url('/fonts/DungGeunMo.woff2') format('woff2'),
        url('/fonts/DungGeunMo.woff') format('woff');
   font-weight: normal;
@@ -36,9 +34,13 @@
 
 body {
   margin: 0;
-  font-family: 'Mona12', system-ui, sans-serif;
+  font-family: 'Pretendard Variable', Pretendard, 'Malgun Gothic', system-ui, sans-serif;
   background-color: var(--bg);
   color: var(--fg);
+}
+
+/* 픽셀 폰트는 안티앨리어싱 없이 또렷하게 */
+.font-dungeon, .font-display {
   -webkit-font-smoothing: none;
 }
 

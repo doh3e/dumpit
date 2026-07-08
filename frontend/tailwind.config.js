@@ -21,9 +21,9 @@ export default {
         'on-accent': 'var(--on-accent)',
       },
       fontFamily: {
-        sans: ['Mona12', 'system-ui', 'sans-serif'],
-        display: ['"Press Start 2P"', 'Mona12', 'sans-serif'],
-        dungeon: ['RoundedFixedsys', 'sans-serif'],
+        sans: ['"Pretendard Variable"', 'Pretendard', '"Malgun Gothic"', 'system-ui', 'sans-serif'],
+        dungeon: ['DungGeunMo', '"Malgun Gothic"', 'monospace'],
+        display: ['DungGeunMo', '"Malgun Gothic"', 'monospace'], // 구 이름 별칭, 개명 완료 후 제거 예정
       },
       boxShadow: {
         retro:      '3px 3px 0 var(--shadow-sm)',

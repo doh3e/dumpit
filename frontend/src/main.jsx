@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './sentry.js'
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'
 import './index.css'
 import App from './App.jsx'
 import { registerNotificationServiceWorker } from './utils/notifications.js'
