@@ -496,7 +496,7 @@ export default function IdeaDumpPage() {
       </div>
 
       {error && (
-        <div className="card-retro !py-3 bg-primary/10 border-primary">
+        <div className="card-retro !py-3 tone-overdue">
           <p className="text-sm font-bold text-primary">{error}</p>
         </div>
       )}
@@ -649,7 +649,7 @@ export default function IdeaDumpPage() {
                           key={child.ideaId}
                           type="button"
                           onClick={() => handleSelectIdea(child.ideaId)}
-                          className="w-full rounded-lg border-2 border-line bg-accent/40 px-3 py-2 text-left hover:border-line"
+                          className="w-full rounded-lg border-2 border-line bg-accent px-3 py-2 text-left hover:border-line"
                         >
                           <div className="flex items-center gap-2">
                             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>

@@ -40,7 +40,7 @@ export default function HelpModal({ onClose }) {
           </button>
         </div>
 
-        <div className="mb-5 rounded-lg border-2 border-secondary bg-secondary/10 px-4 py-3">
+        <div className="mb-5 rounded-lg border-2 tone-urgent-soon px-4 py-3">
           <p className="text-xs font-black text-secondary mb-1">🎉 베타 서비스 안내</p>
           <p className="text-xs font-semibold text-sub leading-relaxed">
             Dumpit!은 현재 베타 서비스 중이에요. 모든 활동이 무료인 대신,

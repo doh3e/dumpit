@@ -210,7 +210,7 @@ export default function RoutinePage() {
       </div>
 
       {error && (
-        <div className="card-retro !py-3 bg-primary/10 border-primary">
+        <div className="card-retro !py-3 tone-overdue">
           <p className="text-sm font-bold text-primary">{error}</p>
         </div>
       )}
@@ -237,7 +237,7 @@ export default function RoutinePage() {
                 <div
                   key={routine.routineId}
                   className={`rounded-lg border-2 p-3 ${
-                    routine.enabled ? 'border-line bg-card' : 'border-line bg-card/60 opacity-70'
+                    routine.enabled ? 'border-line bg-card' : 'border-line bg-card opacity-70'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -274,7 +274,7 @@ export default function RoutinePage() {
                       <button
                         type="button"
                         onClick={() => deleteRoutine(routine)}
-                        className="rounded border-2 border-primary/30 bg-primary/10 px-2 py-1 text-xs font-black text-primary"
+                        className="rounded border-2 tone-overdue px-2 py-1 text-xs font-black text-primary"
                       >
                         삭제
                       </button>
@@ -372,7 +372,7 @@ export default function RoutinePage() {
                   </button>
                 ))}
               </div>
-              <label className="flex items-start gap-2 rounded-lg border-2 border-line bg-accent/60 px-3 py-2 text-xs font-extrabold text-dark">
+              <label className="flex items-start gap-2 rounded-lg border-2 border-line bg-accent px-3 py-2 text-xs font-extrabold text-dark">
                 <input
                   type="checkbox"
                   checked={form.runOnLastDayIfMissing}

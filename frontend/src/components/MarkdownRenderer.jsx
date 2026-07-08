@@ -61,7 +61,7 @@ export default function MarkdownRenderer({ content = '', className = '' }) {
     const quote = /^>\s+(.+)$/.exec(line)
     if (quote) {
       closeList()
-      html.push(`<blockquote class="my-2 border-l-4 border-primary/50 bg-accent px-3 py-2 text-sub">${renderInline(quote[1])}</blockquote>`)
+      html.push(`<blockquote class="my-2 border-l-4 border-primary bg-accent px-3 py-2 text-sub">${renderInline(quote[1])}</blockquote>`)
       continue
     }
 

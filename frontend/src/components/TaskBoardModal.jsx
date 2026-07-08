@@ -135,7 +135,7 @@ function TaskRow({ task, onEdit, onToggle }) {
               {formatPriority(task)}
             </span>
             {task.parentTaskId && (
-              <span className="rounded-full border border-secondary/30 bg-secondary/10 px-2 py-0.5 text-[10px] font-black text-secondary">
+              <span className="rounded-full border border-line bg-chip px-2 py-0.5 text-[10px] font-black text-secondary">
                 서브
               </span>
             )}
@@ -208,7 +208,7 @@ export default function TaskBoardModal({ tasks, sections: planningSections, onCl
                   </span>
                 </div>
                 {section.tasks.length === 0 ? (
-                  <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-line bg-card/70 px-3 py-6 text-center">
+                  <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-line bg-card px-3 py-6 text-center">
                     <p className="text-xs font-bold text-sub">비어 있어요.</p>
                   </div>
                 ) : (

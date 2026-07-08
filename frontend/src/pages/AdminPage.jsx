@@ -350,7 +350,7 @@ export default function AdminPage() {
                       type="button"
                       onClick={() => openInquiry(inquiry)}
                       className={`w-full rounded-lg border-2 p-3 text-left transition-colors ${
-                        isSelected ? 'border-primary bg-primary/10' : 'border-line hover:border-line'
+                        isSelected ? 'tone-overdue' : 'border-line hover:border-line'
                       }`}
                     >
                       <div className="mb-1 flex flex-wrap items-center gap-2">

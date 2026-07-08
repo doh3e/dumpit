@@ -229,7 +229,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
                 setReanalyzing(false)
               }
             }}
-            className="mt-2 w-full text-xs font-bold text-primary border-2 border-primary rounded-lg py-1.5 hover:bg-primary/10 transition-colors disabled:opacity-50"
+            className="mt-2 w-full text-xs font-bold text-primary border-2 border-primary rounded-lg py-1.5 hover:bg-chip transition-colors disabled:opacity-50"
           >
             {reanalyzing ? 'AI 분석 중...' : 'AI 우선순위 재분석'}
           </button>
@@ -243,7 +243,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             type="button"
             onClick={() => setShowSplit(true)}
             disabled={!aiUsage.hasEnough(3)}
-            className="w-full text-xs font-bold text-secondary border-2 border-secondary rounded-lg py-2 hover:bg-secondary/10 transition-colors disabled:opacity-50"
+            className="w-full text-xs font-bold text-secondary border-2 border-secondary rounded-lg py-2 hover:bg-chip transition-colors disabled:opacity-50"
           >
             ✂️ AI로 쪼개기 (3~5개 서브태스크)
           </button>
