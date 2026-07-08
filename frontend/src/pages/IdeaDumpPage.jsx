@@ -259,7 +259,7 @@ export default function IdeaDumpPage() {
     localStorage.setItem(SCRATCH_KEY, value)
   }
 
-  const scratchTokenCost = Math.min(5, Math.max(1, Math.ceil(scratchText.length / 200)))
+  const scratchTokenCost = 5 // 고정 5점 (브레인 덤프와 동일, 백엔드 IDEA_EXTRACT와 일치)
 
   const handleExtract = async () => {
     if (!scratchText.trim() || extracting) return

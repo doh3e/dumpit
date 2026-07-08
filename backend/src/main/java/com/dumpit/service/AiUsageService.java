@@ -13,7 +13,7 @@ public interface AiUsageService {
         TASK_REANALYZE(1),
         SUBTASK_PROPOSAL(3),
         BRAIN_DUMP(5),
-        IDEA_EXTRACT(1);
+        IDEA_EXTRACT(5);
 
         private final int cost;
 

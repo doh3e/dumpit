@@ -130,9 +130,8 @@ public class IdeaServiceImpl implements IdeaService {
     @Override
     @Transactional
     public OpenAiService.IdeaExtractResult extractIdeas(String email, String rawText) {
-        // 200자당 1점, 상한 5점 (브레인 덤프 고정 5점과 일관성 유지)
-        int cost = Math.min(5, Math.max(1, (int) Math.ceil(rawText.length() / 200.0)));
-        aiUsageService.consumeVariable(email, AiUsageService.UsageType.IDEA_EXTRACT, cost);
+        // 고정 5점 (브레인 덤프와 동일)
+        aiUsageService.consume(email, AiUsageService.UsageType.IDEA_EXTRACT);
         return openAiService.extractIdeas(rawText);
     }
 

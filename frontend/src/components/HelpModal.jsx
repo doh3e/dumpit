@@ -6,7 +6,7 @@ const AI_COSTS = [
   { label: '우선순위 재분석', cost: '1점' },
   { label: '서브태스크 제안', cost: '3점' },
   { label: '브레인 덤프 분석', cost: '5점' },
-  { label: '아이디어 덤프 AI 분석', cost: '200자당 1점 (최대 5점)' },
+  { label: '아이디어 덤프 AI 분석', cost: '5점' },
   { label: '아이디어 → 태스크 변환', cost: '1점' },
   { label: '그 외 모든 활동', cost: '무료' },
 ]
