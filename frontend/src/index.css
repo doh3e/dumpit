@@ -148,6 +148,17 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { .orbit-sat { animation: none; } }
 
+/* ---- 결과 도착 스태거 (브레인/아이디어 덤프) ---- */
+.stagger-in > * {
+  animation: rise-in .3s ease-out both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .stagger-in > * { animation: none; } }
+
 /* ---- 다크 모드 픽셀 별 배경 ---- */
 .starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; display: none; }
 [data-theme="dark"] .starfield { display: block; }

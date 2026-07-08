@@ -66,12 +66,12 @@ function ExtractPreviewNode({ node, depth }) {
   const category = getCategory(node.category)
   return (
     <div style={{ paddingLeft: `${depth * 16}px` }} className="mt-1.5">
-      <div className="rounded-lg border-2 border-dark/10 bg-white px-3 py-2">
+      <div className="rounded-lg border-2 border-line bg-card px-3 py-2">
         <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
           {category.label}
         </span>
         <p className="mt-1 text-sm font-black text-dark">{node.title}</p>
-        {node.content && <p className="mt-0.5 text-xs font-semibold text-dark/60">{node.content}</p>}
+        {node.content && <p className="mt-0.5 text-xs font-semibold text-sub">{node.content}</p>}
       </div>
       {node.children?.map((child, i) => (
         <ExtractPreviewNode key={i} node={child} depth={depth + 1} />
@@ -95,14 +95,14 @@ function CategoryPills({ value, onChange, compact = false, iconOnly = false }) {
                 compact ? 'px-2 py-1 text-[11px]' : 'px-2.5 py-1 text-xs'
               } ${
                 isSelected
-                  ? 'border-dark bg-primary text-white shadow-[2px_2px_0_#2D2A32]'
-                  : 'border-dark/15 bg-accent text-dark hover:border-dark/40'
+                  ? 'border-edge bg-primary text-on-accent shadow-retro'
+                  : 'border-line bg-accent text-dark hover:border-line'
               }`}
             >
               {iconOnly ? category.emoji : <><span aria-hidden="true">{category.emoji}</span> {category.label}</>}
             </button>
             {iconOnly && (
-              <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-dark px-1.5 py-0.5 text-[10px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-chip px-1.5 py-0.5 text-[10px] font-bold text-dark border border-line opacity-0 transition-opacity group-hover:opacity-100">
                 {category.label}
               </div>
             )}
@@ -366,18 +366,18 @@ export default function IdeaDumpPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="heading-kitschy text-2xl">아이디어 덤프</h2>
-          <p className="mt-2 text-sm font-semibold text-dark/60">
+          <h2 className="font-dungeon text-dark text-2xl">아이디어 덤프</h2>
+          <p className="mt-2 text-sm font-semibold text-sub">
             생각을 자유롭게 쏟아내고, AI가 맥락을 잡아 정리해줘요.
           </p>
         </div>
-        <div className="card-kitschy !py-3">
-          <p className="text-xs font-bold text-dark/50">저장한 아이디어</p>
+        <div className="card-retro !py-3">
+          <p className="text-xs font-bold text-sub">저장한 아이디어</p>
           <p className="text-xl font-black text-primary">{ideas.length}</p>
         </div>
       </div>
 
-      <div className="card-kitschy space-y-4">
+      <div className="card-retro space-y-4">
         <div className="flex gap-2">
           {[{ key: 'dump', label: '덤프' }, { key: 'new', label: '새 아이디어' }].map(({ key, label }) => (
             <button
@@ -386,8 +386,8 @@ export default function IdeaDumpPage() {
               onClick={() => setInputMode(key)}
               className={`rounded-full border-2 px-3 py-1 text-xs font-black transition-all ${
                 inputMode === key
-                  ? 'border-dark bg-dark text-white'
-                  : 'border-dark/20 text-dark/50 hover:border-dark/40'
+                  ? 'border-edge bg-chip text-dark'
+                  : 'border-line text-sub hover:border-line'
               }`}
             >
               {label}
@@ -402,31 +402,33 @@ export default function IdeaDumpPage() {
               onChange={(e) => handleScratchChange(e.target.value)}
               rows={7}
               placeholder={'생각나는 대로 자유롭게 적어보세요.\nAI가 맥락을 파악해 아이디어로 정리해줄 거예요.\n\n※ 분석 후 원본 텍스트는 보존되지 않아요.'}
-              className="w-full resize-none bg-transparent text-sm font-semibold leading-relaxed text-dark outline-none placeholder:text-dark/30"
+              className="w-full resize-none bg-transparent text-sm font-semibold leading-relaxed text-dark outline-none placeholder:text-sub"
             />
-            <div className="border-t-2 border-dark/10 pt-4 flex items-center justify-between gap-3 flex-wrap">
-              <p className="text-xs font-bold text-dark/50">
+            <div className="border-t-2 border-line pt-4 flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-xs font-bold text-sub">
                 {scratchText.length} / {MAX_SCRATCH}자
                 {scratchText.trim() && (
-                  <span className="ml-2 text-dark/40">· AI 토큰 <span className="text-primary">{scratchTokenCost}</span>개 소모</span>
+                  <span className="ml-2 text-sub">· AI 토큰 <span className="text-primary">{scratchTokenCost}</span>개 소모</span>
                 )}
               </p>
               <button
                 type="button"
                 onClick={handleExtract}
                 disabled={!scratchText.trim() || extracting || !aiUsage.hasEnough(scratchTokenCost)}
-                className="btn-kitschy bg-dark text-white text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-retro bg-chip text-dark text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {extracting ? 'AI 분석 중...' : 'AI로 아이디어 추출'}
               </button>
             </div>
             <AiUsageBadge usage={aiUsage.usage} cost={scratchTokenCost} />
             {extractResult && (
-              <div className="border-t-2 border-dark/10 pt-4 space-y-3">
-                <p className="text-xs font-black text-dark/60">분석 결과 — 확인 후 저장하세요</p>
-                <div>
+              <div className="border-t-2 border-line pt-4 space-y-3">
+                <p className="text-xs font-black text-sub">분석 결과 — 확인 후 저장하세요</p>
+                <div className="stagger-in">
                   {extractResult.map((node, i) => (
-                    <ExtractPreviewNode key={i} node={node} depth={0} />
+                    <div key={i} style={{ '--i': i }}>
+                      <ExtractPreviewNode node={node} depth={0} />
+                    </div>
                   ))}
                 </div>
                 <div className="flex gap-2 pt-1">
@@ -434,14 +436,14 @@ export default function IdeaDumpPage() {
                     type="button"
                     onClick={handleConfirmExtract}
                     disabled={saving}
-                    className="btn-kitschy bg-primary text-white text-sm py-2 disabled:opacity-50"
+                    className="btn-retro-primary text-sm py-2 disabled:opacity-50"
                   >
                     저장
                   </button>
                   <button
                     type="button"
                     onClick={() => setExtractResult(null)}
-                    className="btn-kitschy bg-accent text-dark text-sm py-2"
+                    className="btn-retro text-sm py-2"
                   >
                     취소
                   </button>
@@ -458,7 +460,7 @@ export default function IdeaDumpPage() {
               onKeyDown={handleNewIdeaKeyDown}
               placeholder="제목"
               maxLength={200}
-              className="w-full bg-transparent text-sm font-black text-dark outline-none placeholder:text-dark/30"
+              className="w-full bg-transparent text-sm font-black text-dark outline-none placeholder:text-sub"
             />
             <textarea
               value={newContent}
@@ -466,14 +468,14 @@ export default function IdeaDumpPage() {
               rows={3}
               maxLength={3000}
               placeholder="내용 (선택)"
-              className="w-full resize-none rounded-lg border-2 border-dark/10 bg-accent/30 px-3 py-2 text-sm font-semibold leading-relaxed text-dark outline-none focus:border-dark/30 placeholder:text-dark/30"
+              className="w-full resize-none rounded-lg border-2 border-line bg-accent px-3 py-2 text-sm font-semibold leading-relaxed text-dark outline-none focus:border-primary placeholder:text-sub"
             />
-            <div className="border-t-2 border-dark/10 pt-3 flex flex-wrap items-center gap-2">
+            <div className="border-t-2 border-line pt-3 flex flex-wrap items-center gap-2">
               <CategoryPills value={newCategory} onChange={setNewCategory} iconOnly />
               <select
                 value={newParentId}
                 onChange={(e) => setNewParentId(e.target.value)}
-                className="rounded-lg border-2 border-dark bg-white px-2 py-1.5 text-xs font-extrabold outline-none max-w-[180px]"
+                className="rounded-lg border border-line bg-card px-2 py-1.5 text-xs font-extrabold outline-none max-w-[180px]"
               >
                 <option value="">상위 아이디어 없음</option>
                 {ideas.map((idea) => (
@@ -484,7 +486,7 @@ export default function IdeaDumpPage() {
                 type="button"
                 onClick={() => handleNewIdeaKeyDown({ key: 'Enter' })}
                 disabled={!newTitle.trim() || saving}
-                className="btn-kitschy bg-primary text-white text-sm py-1.5 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-retro-primary text-sm py-1.5 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 저장
               </button>
@@ -494,28 +496,28 @@ export default function IdeaDumpPage() {
       </div>
 
       {error && (
-        <div className="card-kitschy !py-3 bg-primary/10 border-primary">
+        <div className="card-retro !py-3 bg-primary/10 border-primary">
           <p className="text-sm font-bold text-primary">{error}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(0,1.1fr)] gap-6">
         <section className="space-y-3">
-          <div className="card-kitschy !p-3">
+          <div className="card-retro !p-3">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="검색"
-              className="w-full bg-transparent px-1 py-1 text-sm font-bold outline-none placeholder:text-dark/30"
+              className="w-full bg-transparent px-1 py-1 text-sm font-bold outline-none placeholder:text-sub"
             />
           </div>
 
           {loading ? (
-            <div className="card-kitschy text-center py-12">
-              <p className="font-bold text-dark/50">불러오는 중...</p>
+            <div className="card-retro text-center py-12">
+              <p className="font-bold text-sub">불러오는 중...</p>
             </div>
           ) : rows.length === 0 ? (
-            <div className="card-kitschy text-center py-12">
+            <div className="card-retro text-center py-12">
               <p className="font-extrabold text-dark">아이디어가 아직 없어요</p>
             </div>
           ) : (
@@ -526,8 +528,8 @@ export default function IdeaDumpPage() {
                 return (
                   <div
                     key={idea.ideaId}
-                    className={`flex items-start gap-2 rounded-lg border-2 bg-white p-3 transition-colors ${
-                      isSelected ? 'border-dark bg-white shadow-kitschy' : 'border-dark/10 bg-white hover:border-dark/30'
+                    className={`flex items-start gap-2 rounded-lg border-2 bg-card p-3 transition-colors ${
+                      isSelected ? 'border-edge bg-card shadow-retro' : 'border-line bg-card hover:border-edge'
                     }`}
                     style={{ paddingLeft: `${12 + depth * 18}px` }}
                   >
@@ -539,7 +541,7 @@ export default function IdeaDumpPage() {
                       }}
                       disabled={childCount === 0}
                       aria-label={isExpanded ? '하위 아이디어 접기' : '하위 아이디어 펼치기'}
-                      className="mt-0.5 h-6 w-6 shrink-0 text-[10px] font-black leading-none text-dark/50 hover:text-dark disabled:invisible"
+                      className="mt-0.5 h-6 w-6 shrink-0 text-[10px] font-black leading-none text-sub hover:text-dark disabled:invisible"
                     >
                       {isExpanded ? '▼' : '▶'}
                     </button>
@@ -552,9 +554,9 @@ export default function IdeaDumpPage() {
                         <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
                           {category.label}
                         </span>
-                        {idea.pinned && <span className="text-[10px] font-black text-yellow-600">고정</span>}
+                        {idea.pinned && <span className="text-[10px] font-black text-secondary">고정</span>}
                         {idea.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
-                        {childCount > 0 && <span className="text-[10px] font-black text-dark/40">하위 {childCount}</span>}
+                        {childCount > 0 && <span className="text-[10px] font-black text-sub">하위 {childCount}</span>}
                       </div>
                       <p className="mt-1 truncate text-sm font-black text-dark">{idea.title}</p>
                     </button>
@@ -565,19 +567,19 @@ export default function IdeaDumpPage() {
           )}
         </section>
 
-        <section className="card-kitschy min-h-[28rem]">
+        <section className="card-retro min-h-[28rem]">
           {!selectedIdea ? (
             <div className="h-full min-h-[20rem] flex items-center justify-center text-center">
               <div>
                 <p className="font-extrabold text-dark">아이디어를 선택하세요</p>
-                <p className="mt-2 text-xs font-semibold text-dark/50">목록에서 아이디어를 클릭하면 세부 내용을 편집할 수 있어요.</p>
+                <p className="mt-2 text-xs font-semibold text-sub">목록에서 아이디어를 클릭하면 세부 내용을 편집할 수 있어요.</p>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-bold text-dark/40">수정 {formatDate(selectedIdea.updatedAt)}</p>
+                  <p className="text-[10px] font-bold text-sub">수정 {formatDate(selectedIdea.updatedAt)}</p>
                   <h3 className="mt-1 text-lg font-black text-dark">아이디어 상세</h3>
                 </div>
                 <label className="flex items-center gap-2 text-sm font-extrabold text-dark">
@@ -595,12 +597,12 @@ export default function IdeaDumpPage() {
                 value={detailForm.title}
                 onChange={(e) => setDetailForm((prev) => ({ ...prev, title: e.target.value }))}
                 maxLength={200}
-                className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-base font-black outline-none focus:border-primary"
+                className="w-full rounded-lg border border-line bg-card px-3 py-2 text-base font-black outline-none focus:border-primary"
               />
 
               <div className="space-y-3">
                 <div>
-                  <p className="mb-2 text-xs font-black text-dark/50">카테고리</p>
+                  <p className="mb-2 text-xs font-black text-sub">카테고리</p>
                   <CategoryPills
                     value={detailForm.category}
                     onChange={(category) => setDetailForm((prev) => ({ ...prev, category }))}
@@ -608,11 +610,11 @@ export default function IdeaDumpPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-black text-dark/50">상위 아이디어</label>
+                  <label className="mb-1 block text-xs font-black text-sub">상위 아이디어</label>
                   <select
                     value={detailForm.parentIdeaId}
                     onChange={(e) => setDetailForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
-                    className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
+                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-extrabold outline-none"
                   >
                     <option value="">상위 아이디어 없음</option>
                     {selectableParents.map((idea) => (
@@ -628,16 +630,16 @@ export default function IdeaDumpPage() {
                 maxLength={3000}
                 rows={12}
                 placeholder="이 아이디어의 세부 메모를 적어두세요."
-                className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold leading-relaxed outline-none focus:border-primary"
+                className="w-full resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold leading-relaxed outline-none focus:border-primary"
               />
 
-              <div className="rounded-lg border-2 border-dark/20 bg-white p-3">
+              <div className="rounded-lg border-2 border-line bg-card p-3">
                 <div className="flex items-center justify-between gap-3">
                   <h4 className="text-sm font-black text-dark">하위 아이디어</h4>
-                  <span className="text-[10px] font-black text-dark/40">{selectedChildren.length}개</span>
+                  <span className="text-[10px] font-black text-sub">{selectedChildren.length}개</span>
                 </div>
                 {selectedChildren.length === 0 ? (
-                  <p className="mt-3 text-xs font-semibold text-dark/40">아직 연결된 하위 아이디어가 없어요.</p>
+                  <p className="mt-3 text-xs font-semibold text-sub">아직 연결된 하위 아이디어가 없어요.</p>
                 ) : (
                   <div className="mt-3 space-y-2">
                     {selectedChildren.map((child) => {
@@ -647,7 +649,7 @@ export default function IdeaDumpPage() {
                           key={child.ideaId}
                           type="button"
                           onClick={() => handleSelectIdea(child.ideaId)}
-                          className="w-full rounded-lg border-2 border-dark/10 bg-accent/40 px-3 py-2 text-left hover:border-dark/30"
+                          className="w-full rounded-lg border-2 border-line bg-accent/40 px-3 py-2 text-left hover:border-line"
                         >
                           <div className="flex items-center gap-2">
                             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
@@ -668,7 +670,7 @@ export default function IdeaDumpPage() {
                   type="button"
                   onClick={saveDetail}
                   disabled={!detailForm.title.trim() || saving}
-                  className="btn-kitschy bg-primary text-white text-sm py-2 disabled:opacity-50"
+                  className="btn-retro-primary text-sm py-2 disabled:opacity-50"
                 >
                   저장
                 </button>
@@ -676,7 +678,7 @@ export default function IdeaDumpPage() {
                   type="button"
                   onClick={addChildIdea}
                   disabled={saving}
-                  className="btn-kitschy bg-secondary text-white text-sm py-2 disabled:opacity-50"
+                  className="btn-retro-secondary text-sm py-2 disabled:opacity-50"
                 >
                   하위 아이디어
                 </button>
@@ -684,7 +686,7 @@ export default function IdeaDumpPage() {
                   type="button"
                   onClick={convertToTask}
                   disabled={saving || Boolean(selectedIdea.convertedTaskId)}
-                  className="btn-kitschy bg-dark text-white text-sm py-2 disabled:opacity-50"
+                  className="btn-retro bg-chip text-dark text-sm py-2 disabled:opacity-50"
                 >
                   {selectedIdea.convertedTaskId ? '태스크 전환됨' : '태스크로 전환'}
                 </button>
@@ -692,7 +694,7 @@ export default function IdeaDumpPage() {
                   type="button"
                   onClick={deleteSelected}
                   disabled={saving || childCounts.get(selectedIdea.ideaId) > 0}
-                  className="btn-kitschy bg-accent text-primary text-sm py-2 disabled:opacity-40"
+                  className="btn-retro bg-accent text-primary text-sm py-2 disabled:opacity-40"
                 >
                   삭제
                 </button>
