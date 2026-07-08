@@ -30,7 +30,10 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
     @Override
     @Transactional(readOnly = true)
     public TaskPlanningResponse getPlanning(String email) {
-        LocalDateTime now = LocalDateTime.now();
+        return getPlanning(email, LocalDateTime.now());
+    }
+
+    TaskPlanningResponse getPlanning(String email, LocalDateTime now) {
         List<Task> tasks = taskService.getTasksForUser(email, RECENT_DONE_DAYS);
         int availableFocusMinutes = availableFocusMinutes(tasks, now);
 
@@ -85,7 +88,6 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
             int availableFocusMinutes
     ) {
         Task currentTimedTask = active.stream()
-                .filter(this::isTimedTask)
                 .filter((task) -> isHappeningNow(task, now))
                 .min(Comparator.comparing(Task::getStartTime, Comparator.nullsLast(Comparator.naturalOrder())))
                 .orElse(null);
@@ -105,8 +107,8 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
                     "MEAL",
                     "식사는 챙기셨나요?",
                     "집중하는 것도 좋지만 끼니는 잊지마세요!",
-                    null,
-                    null
+                    recommendations.isEmpty() ? null : TaskResponse.from(recommendations.getFirst().task()),
+                    recommendations.isEmpty() ? null : availableFocusMinutes
             );
         }
         if (hour >= 5 && hour < 10) {
@@ -254,19 +256,17 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
         if (task.getCategory() == Task.Category.ROUTINE) {
             return isTimedTaskActiveSoon(task, now, 10);
         }
-        if (isTimedTask(task)) {
+        // 사용자가 시간을 고정한 태스크만 시간대 근처에서 추천 — 마감에서 파생된 슬롯은 언제든 추천 가능
+        if (isTimedTask(task) && Boolean.TRUE.equals(task.getIsLocked())) {
             return isTimedTaskActiveSoon(task, now, 10);
         }
         return true;
     }
 
     private boolean isTimedTaskActiveSoon(Task task, LocalDateTime now, int leadMinutes) {
-        if (!isTimedTask(task)) return false;
         LocalDateTime start = task.getStartTime();
-        LocalDateTime end = task.getEndTime() != null
-                ? task.getEndTime()
-                : start.plusMinutes(Math.max(15, task.getEstimatedMinutes() != null ? task.getEstimatedMinutes() : 15));
-        return !now.isBefore(start.minusMinutes(leadMinutes)) && now.isBefore(end);
+        if (start == null) return false;
+        return !now.isBefore(start.minusMinutes(leadMinutes)) && now.isBefore(effectiveEndTime(task, start));
     }
 
     private int availableFocusMinutes(List<Task> tasks, LocalDateTime now) {
@@ -304,12 +304,14 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
     }
 
     private boolean isHappeningNow(Task task, LocalDateTime now) {
-        if (!isTimedTask(task)) return false;
         LocalDateTime start = task.getStartTime();
-        LocalDateTime end = task.getEndTime() != null
-                ? task.getEndTime()
-                : start.plusMinutes(Math.max(15, task.getEstimatedMinutes() != null ? task.getEstimatedMinutes() : 15));
-        return !now.isBefore(start) && now.isBefore(end);
+        if (start == null) return false;
+        return !now.isBefore(start) && now.isBefore(effectiveEndTime(task, start));
+    }
+
+    private LocalDateTime effectiveEndTime(Task task, LocalDateTime start) {
+        if (task.getEndTime() != null) return task.getEndTime();
+        return start.plusMinutes(Math.max(15, task.getEstimatedMinutes() != null ? task.getEstimatedMinutes() : 15));
     }
 
     private boolean isActive(Task task) {

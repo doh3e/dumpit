@@ -444,6 +444,18 @@ export default function DashboardPage() {
                 <OrbitProgress done={todayDone} total={todayTotal} />
               </div>
             )}
+            {!allDoneToday && nowSuggestion && !nowSuggestion.task && (
+              <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
+                <div className="flex-1 min-w-[180px]">
+                  <p className="label-retro mb-2">지금 할 일</p>
+                  <p className="font-galmuri font-bold text-[22px] max-sm:text-[19px] leading-tight text-dark">
+                    {nowSuggestion.title}
+                  </p>
+                  <p className="text-xs text-sub mt-1">{nowSuggestion.message}</p>
+                </div>
+                <OrbitProgress done={todayDone} total={todayTotal} />
+              </div>
+            )}
             {!allDoneToday && nowSuggestion?.task && (
               <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
                 <div className="flex-1 min-w-[180px]">

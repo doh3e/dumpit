@@ -63,7 +63,8 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         category,
         startTime: useStartTime ? (startTime || null) : null,
       }
-      payload.isLocked = Boolean(useStartTime && startTime)
+      // 원래 고정이었거나 사용자가 시작시간을 바꾼 경우만 고정 — 마감에서 파생된 슬롯이 편집 저장으로 잠기지 않게
+      payload.isLocked = Boolean(useStartTime && startTime && (task.isLocked || startTime !== initialStartTime))
       const res = await api.patch(`/tasks/${task.taskId}`, payload)
       onUpdated(res.data)
     } catch (err) {

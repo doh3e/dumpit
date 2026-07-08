@@ -73,7 +73,7 @@ public class TaskServiceImpl implements TaskService {
         if (endTime != null) task.setEndTime(endTime);
         else if (schedule.deadline() != null && schedule.startTime() != null) task.setEndTime(schedule.deadline());
         if (isLocked != null) task.setIsLocked(isLocked);
-        else if (schedule.startTime() != null) task.setIsLocked(true);
+        else if (startTime != null) task.setIsLocked(true); // 사용자가 직접 입력한 시작시간만 고정 — 마감에서 파생된 슬롯은 잠그지 않는다
 
         aiUsageService.consume(email, AiUsageService.UsageType.TASK_PRIORITY);
         OpenAiService.PriorityResult priority =
