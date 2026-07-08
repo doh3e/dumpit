@@ -259,7 +259,7 @@ export default function MyPage() {
         .map(([cat, value]) => ({
           label: CATEGORY_LABEL[cat] || cat,
           value,
-          color: CATEGORY_COLOR[cat] || '#94a3b8',
+          color: CATEGORY_COLOR[cat] || '#8A8578',
         }))
     : []
 

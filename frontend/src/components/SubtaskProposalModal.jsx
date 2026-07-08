@@ -91,7 +91,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                 <div
                   key={idx}
                   className={`p-3 rounded-lg border-2 transition-colors ${
-                    s.include ? 'border-dark bg-accent' : 'border-line bg-card opacity-50'
+                    s.include ? 'border-edge bg-accent' : 'border-line bg-card opacity-50'
                   }`}
                 >
                   <div className="flex items-start gap-2">

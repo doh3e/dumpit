@@ -164,7 +164,7 @@ export default function TaskBoardModal({ tasks, sections: planningSections, onCl
         className="w-full max-w-6xl rounded-2xl card-retro p-0 bg-accent max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex flex-col gap-3 border-b-2 border-dark bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-line bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-dungeon text-dark text-xl">할 일 크게 보기</h2>
             <p className="mt-1 text-xs font-semibold text-sub">마감 구간별로 나눠서 전체 흐름을 볼 수 있어요.</p>

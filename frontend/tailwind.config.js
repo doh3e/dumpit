@@ -23,15 +23,10 @@ export default {
       fontFamily: {
         sans: ['"Pretendard Variable"', 'Pretendard', '"Malgun Gothic"', 'system-ui', 'sans-serif'],
         dungeon: ['DungGeunMo', '"Malgun Gothic"', 'monospace'],
-        display: ['DungGeunMo', '"Malgun Gothic"', 'monospace'], // 구 이름 별칭, 개명 완료 후 제거 예정
       },
       boxShadow: {
         retro:      '3px 3px 0 var(--shadow-sm)',
         'retro-lg': '5px 5px 0 var(--shadow-hero)',
-        // 구 이름 별칭 — 전 화면 즉시 전환용, 개명 완료 후 제거 예정
-        'kitschy':    '3px 3px 0 var(--shadow-sm)',
-        'kitschy-lg': '5px 5px 0 var(--shadow-hero)',
-        'kitschy-xl': '5px 5px 0 var(--shadow-hero)',
       },
       borderWidth: {
         '3': '3px',

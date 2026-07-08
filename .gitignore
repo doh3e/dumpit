@@ -36,3 +36,4 @@ dumpit_ai_learning_insight.md
 *.log
 npm-debug.log*
 backup_*.sql
+.playwright-mcp/

@@ -177,8 +177,8 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
                 onClick={() => setCategory(c.value)}
                 className={`px-2.5 py-1 rounded-full text-xs font-bold border-2 transition-all ${
                   category === c.value
-                    ? 'bg-primary text-on-accent border-dark'
-                    : 'bg-accent text-dark border-line hover:border-dark'
+                    ? 'bg-primary text-on-accent border-edge'
+                    : 'bg-accent text-dark border-line hover:border-edge'
                 }`}
               >
                 {c.emoji} {c.label}

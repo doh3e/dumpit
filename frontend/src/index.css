@@ -42,7 +42,7 @@ body {
 }
 
 /* 픽셀 폰트는 안티앨리어싱 없이 또렷하게 */
-.font-dungeon, .font-display {
+.font-dungeon {
   -webkit-font-smoothing: none;
 }
 
@@ -90,7 +90,7 @@ body {
 
   .overlay-retro { background: var(--overlay); }
 
-  /* 태스크 보드 섹션 톤 */
+  /* 섹션/카드 톤 변형 */
   .tone-today { border-color: var(--accent); background: var(--card); }
   .tone-soon { border-color: var(--accent2); background: var(--card); }
   .tone-chip { border-color: var(--accent2); background: var(--chip); }
@@ -128,10 +128,6 @@ body {
   .gcal-dot { background: #5B84AE; }
   [data-theme="dark"] .gcal-dot { background: #7FA8D0; }
 
-  /* 구 클래스 별칭 — 전 화면 즉시 전환용, 개명 완료 후 제거 예정 */
-  .btn-kitschy { @apply btn-retro; }
-  .card-kitschy { @apply card-retro; }
-  .heading-kitschy { @apply font-dungeon text-dark tracking-wide; }
 }
 
 /* ---- 픽셀 행성 궤도 (OrbitProgress) ---- */
