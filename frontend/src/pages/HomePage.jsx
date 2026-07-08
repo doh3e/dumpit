@@ -59,6 +59,18 @@ export default function HomePage() {
           Sign with Google
         </button>
 
+        <p className="mt-4 text-xs font-semibold text-sub">
+          로그인 시{' '}
+          <Link to="/terms" className="underline hover:text-primary transition-colors">
+            서비스 이용약관
+          </Link>{' '}
+          및{' '}
+          <Link to="/privacy" className="underline hover:text-primary transition-colors">
+            개인정보처리방침
+          </Link>
+          에 동의하는 것으로 간주됩니다.
+        </p>
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-20 max-w-3xl w-full">
           {[
             { title: '대시보드', desc: '오늘의 할 일을 대시보드로 한 눈에 파악하기' },

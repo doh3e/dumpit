@@ -15,10 +15,10 @@ export default function PrivacyPage() {
           <div>
             <h1 className="font-dungeon text-dark text-2xl">개인정보처리방침</h1>
             <p className="text-sm text-sub font-semibold mt-3">
-              덤핏(Dumpit!, 이하 “덤핏”)은 이용자의 개인정보를 중요하게 생각하며, 「개인정보 보호법」 등 관련 법령을 준수하기 위해 다음과 같이 개인정보처리방침을 수립·공개합니다.
+              덤핏(Dumpit!, 이하 “서비스”)은 이용자의 개인정보를 중요하게 생각하며, 「개인정보 보호법」 등 관련 법령을 준수하기 위하여 다음과 같이 개인정보처리방침을 수립·공개합니다.
             </p>
             <p className="text-sm text-sub font-semibold mt-2">
-              본 개인정보처리방침은 덤핏 웹 서비스(https://dumpit.kr)에 적용됩니다.
+              본 개인정보처리방침은 서비스의 웹사이트(https://dumpit.kr) 및 서비스가 제공하는 제반 기능에 적용됩니다.
             </p>
             <p className="text-xs text-sub font-semibold mt-2">시행일자: {PRIVACY_POLICY_EFFECTIVE_DATE}</p>
           </div>
