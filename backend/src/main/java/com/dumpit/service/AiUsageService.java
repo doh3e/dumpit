@@ -12,7 +12,8 @@ public interface AiUsageService {
         TASK_PRIORITY(1),
         TASK_REANALYZE(1),
         SUBTASK_PROPOSAL(3),
-        BRAIN_DUMP(5);
+        BRAIN_DUMP(5),
+        IDEA_EXTRACT(5);
 
         private final int cost;
 
@@ -30,6 +31,8 @@ public interface AiUsageService {
     AiUsageStatus getStatusForUser(User user);
 
     AiUsageStatus consume(String email, UsageType usageType);
+
+    AiUsageStatus consumeVariable(String email, UsageType usageType, int cost);
 
     record AiUsageStatus(
             int used,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -7,13 +7,16 @@ import MiniCalendar from '../components/MiniCalendar'
 import AddTaskModal from '../components/AddTaskModal'
 import EditTaskModal from '../components/EditTaskModal'
 import TaskBoardModal from '../components/TaskBoardModal'
+import OrbitProgress from '../components/OrbitProgress'
+import PixelBurst from '../components/PixelBurst'
+import RocketLaunch from '../components/RocketLaunch'
 import { getCategory } from '../constants/categories'
 import { calcCompletionCoins } from '../utils/taskRewards'
 
 const STATUS_LABEL = {
-  TODO: { label: '할 예정', color: 'bg-accent border-dark text-dark' },
-  IN_PROGRESS: { label: '진행 중', color: 'bg-secondary border-dark text-white' },
-  DONE: { label: '완료', color: 'bg-dark border-dark text-white' },
+  TODO: { label: '할 예정', color: 'bg-accent border-line text-sub' },
+  IN_PROGRESS: { label: '진행 중', color: 'bg-secondary border-secondary text-on-accent' },
+  DONE: { label: '완료', color: 'bg-chip border-line text-sub' },
 }
 
 /**
@@ -190,16 +193,16 @@ function getFocusRecommendation(tasks) {
 
 const URGENCY_STYLE = {
   red: {
-    badge: 'bg-red-500 text-white border-red-500 animate-pulse',
-    card: 'border-red-500 bg-red-50',
+    badge: 'bg-primary text-on-accent border-primary',
+    card: 'tone-overdue',
   },
   orange: {
-    badge: 'bg-orange-400 text-white border-orange-400',
-    card: 'border-orange-400 bg-orange-50',
+    badge: 'bg-warn text-on-accent border-warn',
+    card: 'tone-urgent-soon',
   },
   yellow: {
-    badge: 'bg-yellow-400 text-dark border-yellow-400',
-    card: 'border-yellow-400 bg-yellow-50',
+    badge: 'bg-chip text-dark border-line',
+    card: 'tone-chip',
   },
 }
 
@@ -258,6 +261,8 @@ export default function DashboardPage() {
   const [editingTask, setEditingTask] = useState(null)
   const [coinToast, setCoinToast] = useState(null)
   const [planning, setPlanning] = useState(null)
+  const [bursts, setBursts] = useState([])
+  const [showRocket, setShowRocket] = useState(false)
 
   const fetchTasks = useCallback(() => {
     return api.get('/dashboard/planning')
@@ -285,14 +290,20 @@ export default function DashboardPage() {
     fetchTasks()
   }, [fetchTasks])
 
-  const toggleStatus = async (task) => {
+  const toggleStatus = async (task, event) => {
     const next = task.status === 'DONE' ? 'TODO' : 'DONE'
+    const clickX = event?.clientX
+    const clickY = event?.clientY
     try {
       await api.patch(`/tasks/${task.taskId}`, { status: next })
       fetchTasks()
       refreshCoins()
 
       if (next === 'DONE') {
+        // 픽셀 버스트 — 체크 위치에서, 연타 시 동시 3개까지만
+        if (clickX != null) {
+          setBursts((prev) => prev.length >= 3 ? prev : [...prev, { id: Date.now(), x: clickX, y: clickY }])
+        }
         const coins = calcCompletionCoins(task)
         if (coins > 0) {
           setCoinToast({ coins, taskTitle: task.title })
@@ -344,31 +355,65 @@ export default function DashboardPage() {
       return bTime - aTime
     }), [taskList])
 
+  // 오늘 진행률 (궤도 링) — 마감이 오늘인 태스크 기준
+  const { todayDone, todayTotal } = useMemo(() => {
+    const now = new Date()
+    const todayAll = taskList.filter((t) => {
+      if (t.status === 'CANCELLED') return false
+      const d = parseDate(t.deadline)
+      return d && !isNaN(d) && isSameLocalDate(d, now)
+    })
+    return {
+      todayDone: todayAll.filter((t) => t.status === 'DONE').length,
+      todayTotal: todayAll.length,
+    }
+  }, [taskList])
+
+  const heroTime = useMemo(() => {
+    const d = parseDate(nowSuggestion?.task?.deadline)
+    if (!d || isNaN(d)) return null
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  }, [nowSuggestion])
+
+  // 하루 전체 완료 → 로켓 발사 (거짓→참 전환 시 1회, 하루 1번)
+  const allDoneToday = todayTotal > 0 && todayDone === todayTotal
+  const prevAllDone = useRef(allDoneToday)
+  useEffect(() => {
+    if (allDoneToday && !prevAllDone.current && !loading) {
+      const key = `dumpit-rocket-${new Date().toISOString().slice(0, 10)}`
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1')
+        setShowRocket(true)
+      }
+    }
+    prevAllDone.current = allDoneToday
+  }, [allDoneToday, loading])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="heading-kitschy text-2xl">대시보드</h2>
-          <p className="mt-2 text-sm font-semibold text-dark/60">
+          <h2 className="font-dungeon text-dark text-2xl">대시보드</h2>
+          <p className="mt-2 text-sm font-semibold text-sub">
             오늘의 할 일을 확인하고 시간을 효율적으로 관리해보세요
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowTaskBoard(true)}
-            className="btn-kitschy bg-accent text-dark text-sm"
+            className="btn-retro text-sm"
           >
             태스크 전체 보기
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="btn-kitschy bg-secondary text-white text-sm"
+            className="btn-retro-secondary text-sm"
           >
             태스크 추가
           </button>
           <Link
             to="/brain-dump"
-            className="btn-kitschy bg-primary text-white text-sm"
+            className="btn-retro-primary text-sm"
           >
             브레인 덤프
           </Link>
@@ -376,56 +421,74 @@ export default function DashboardPage() {
       </div>
 
       {loading ? (
-        <div className="card-kitschy text-center py-12">
-          <p className="font-bold text-dark/50">불러오는 중...</p>
+        <div className="card-retro text-center py-12">
+          <p className="font-bold text-sub">불러오는 중...</p>
         </div>
       ) : (
         <>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="card-kitschy">
+          <div className="card-retro">
             <div className="mb-4 flex flex-wrap items-baseline gap-2">
-              <h3 className="font-extrabold text-dark">오늘 일과표</h3>
-              <span className="text-[10px] font-bold text-dark/40">시간이 정해진 일과 오늘의 흐름을 보여줘요.</span>
+              <h3 className="font-galmuri font-bold text-dark">오늘 일과표</h3>
+              <span className="text-[10px] font-bold text-sub">시간이 정해진 일과 오늘의 흐름을 보여줘요.</span>
             </div>
-            {nowSuggestion && (
-              <div className="relative mx-auto mb-3 max-w-sm px-8 text-center">
-                <span className="pointer-events-none absolute left-0 top-0 text-5xl font-dungeon leading-none text-primary/50">
-                  {'“'}
-                </span>
-                <span className="pointer-events-none absolute bottom-0 right-0 text-5xl font-dungeon leading-none text-primary/50">
-                  {'”'}
-                </span>
-                <div className="relative">
-                  <p className="text-sm font-black leading-5 text-dark">{nowSuggestion.title}</p>
-                  <p className="mt-0.5 text-[11px] font-bold leading-4 text-dark/50">
-                    {nowSuggestion.message}
+            {allDoneToday && (
+              <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
+                <div className="flex-1 min-w-[180px]">
+                  <p className="label-retro mb-2">지금 할 일</p>
+                  <p className="font-galmuri font-bold text-[22px] max-sm:text-[19px] leading-tight text-dark">
+                    오늘 다 비웠어요 🚀
                   </p>
-                  {nowSuggestion.task && (
-                    <button
-                      type="button"
-                      onClick={() => setEditingTask(nowSuggestion.task)}
-                      className="mx-auto mt-1.5 block max-w-full truncate text-[11px] font-black text-primary hover:text-secondary"
-                      title={nowSuggestion.task.title}
-                    >
-                      추천 · {nowSuggestion.task.title}
-                    </button>
-                  )}
+                  <p className="text-xs text-sub mt-1">머릿속이 가벼워졌네요. 내일 또 만나요.</p>
                 </div>
+                <OrbitProgress done={todayDone} total={todayTotal} />
+              </div>
+            )}
+            {!allDoneToday && nowSuggestion && !nowSuggestion.task && (
+              <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
+                <div className="flex-1 min-w-[180px]">
+                  <p className="label-retro mb-2">지금 할 일</p>
+                  <p className="font-galmuri font-bold text-[22px] max-sm:text-[19px] leading-tight text-dark">
+                    {nowSuggestion.title}
+                  </p>
+                  <p className="text-xs text-sub mt-1">{nowSuggestion.message}</p>
+                </div>
+                <OrbitProgress done={todayDone} total={todayTotal} />
+              </div>
+            )}
+            {!allDoneToday && nowSuggestion?.task && (
+              <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
+                <div className="flex-1 min-w-[180px]">
+                  <p className="label-retro mb-2">지금 할 일</p>
+                  <button
+                    type="button"
+                    onClick={() => setEditingTask(nowSuggestion.task)}
+                    className="block max-w-full truncate text-left font-galmuri font-bold text-[22px] max-sm:text-[19px] leading-tight text-dark hover:text-primary transition-colors"
+                    title={nowSuggestion.task.title}
+                  >
+                    {nowSuggestion.task.title}
+                  </button>
+                  {heroTime && (
+                    <p className="font-dungeon text-[19px] text-primary mt-1">{heroTime}</p>
+                  )}
+                  <p className="text-xs text-sub mt-1">{nowSuggestion.message}</p>
+                </div>
+                <OrbitProgress done={todayDone} total={todayTotal} />
               </div>
             )}
             <CircularTimetable tasks={planning?.timedTasks || activeTaskBase} />
           </div>
 
-          <div className="card-kitschy">
+          <div className="card-retro">
             <div className="flex items-baseline gap-2 mb-4">
-              <h3 className="font-extrabold text-dark">달력</h3>
-              <span className="text-[10px] text-dark/40 font-medium">날짜를 클릭해서 일정을 태스크로 추가해보세요!</span>
+              <h3 className="font-galmuri font-bold text-dark">달력</h3>
+              <span className="text-[10px] text-sub font-medium">날짜를 클릭해서 일정을 태스크로 추가해보세요!</span>
             </div>
             <MiniCalendar tasks={taskList} onTaskAdded={fetchTasks} />
           </div>
 
-          <div className="card-kitschy">
-            <h3 className="font-extrabold text-dark mb-4">
+          <div className="card-retro">
+            <h3 className="font-galmuri font-bold text-dark mb-4">
               해야 할 일 ({activeTasks.length})
             </h3>
 
@@ -434,7 +497,7 @@ export default function DashboardPage() {
                 <p className="font-extrabold text-dark text-base">
                   {taskList.length === 0 ? '아직 할 일이 없어요!' : '모든 할 일 완료!'}
                 </p>
-                <p className="text-xs text-dark/50 mt-2">
+                <p className="text-xs text-sub mt-2">
                   브레인 덤프나 직접 추가를 통해 시작해보세요
                 </p>
               </div>
@@ -450,17 +513,19 @@ export default function DashboardPage() {
                     <div
                       key={task.taskId}
                       className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-colors ${
-                        uStyle ? uStyle.card : 'border-dark/10 hover:border-dark/30'
+                        uStyle ? uStyle.card : 'border-line hover:border-edge'
                       } ${isChild ? 'ml-6 border-l-4 border-l-secondary' : ''}`}
                     >
                       <button
-                        onClick={() => toggleStatus(task)}
-                        className="mt-0.5 w-5 h-5 rounded border-2 border-dark flex-shrink-0 hover:bg-primary transition-colors"
+                        onClick={(e) => toggleStatus(task, e)}
+                        aria-label="완료 처리"
+                        className="mt-0.5 w-5 h-5 rounded bg-card flex-shrink-0 hover:bg-primary transition-colors"
+                        style={{ border: '1.5px solid var(--edge)' }}
                       />
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-dark/10 bg-white text-dark/50">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-line bg-card text-sub">
                             {getBucketLabel(task)}
                           </span>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${color}`}>
@@ -470,27 +535,22 @@ export default function DashboardPage() {
                             {cat.emoji} {cat.label}
                           </span>
                           {isChild && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-secondary/10 border border-secondary/40 rounded-full text-secondary">
+                            <span className="text-[10px] font-bold px-2 py-0.5 bg-chip border border-line rounded-full text-secondary">
                               ↳ 서브
-                            </span>
-                          )}
-                          {task.isLocked && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-secondary/20 border border-secondary rounded-full text-secondary">
-                              고정
                             </span>
                           )}
                           {urgency && (
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                              uStyle ? uStyle.badge : 'bg-accent text-dark border-dark/20'
+                              uStyle ? uStyle.badge : 'bg-accent text-dark border-line'
                             }`}>
                               {urgency.text}
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 font-extrabold text-dark text-sm truncate">
+                        <p className="mt-1 font-galmuri galmuri-semibold text-dark text-sm truncate">
                           {task.title}
                         </p>
-                        <p className="text-[10px] text-dark/50 font-medium mt-0.5">
+                        <p className="text-[10px] text-sub font-medium mt-0.5">
                           {task.deadline && `마감 ${formatDeadline(task.deadline)}`}
                           {task.estimatedMinutes && ` · ${task.estimatedMinutes}분`}
                           {task.effectivePriority != null && ` · P ${Math.round(task.effectivePriority * 100)}`}
@@ -499,7 +559,7 @@ export default function DashboardPage() {
 
                       <button
                         onClick={() => setEditingTask(task)}
-                        className="mt-0.5 text-xs font-bold text-dark/40 hover:text-primary transition-colors flex-shrink-0"
+                        className="mt-0.5 text-xs font-bold text-sub hover:text-primary transition-colors flex-shrink-0"
                       >
                         수정
                       </button>
@@ -510,14 +570,14 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="card-kitschy">
-            <h3 className="font-extrabold text-dark mb-4">
+          <div className="card-retro">
+            <h3 className="font-galmuri font-bold text-dark mb-4">
               완료한 일 ({doneTasks.length})
             </h3>
 
             {doneTasks.length === 0 ? (
               <div className="text-center py-8">
-                <p className="font-bold text-dark/40 text-sm">
+                <p className="font-bold text-sub text-sm">
                   아직 완료한 항목이 없어요
                 </p>
               </div>
@@ -526,27 +586,29 @@ export default function DashboardPage() {
                 {doneTasks.map((task) => (
                   <div
                     key={task.taskId}
-                    className="flex items-center gap-3 p-3 rounded-lg border-2 border-dark/10 opacity-60"
+                    className="flex items-center gap-3 p-3 rounded-lg border-2 border-line opacity-60"
                   >
                     <button
                       onClick={() => toggleStatus(task)}
-                      className="w-5 h-5 rounded border-2 border-dark bg-dark flex-shrink-0 flex items-center justify-center"
+                      aria-label="완료 취소"
+                      className="w-5 h-5 rounded bg-primary flex-shrink-0 flex items-center justify-center"
+                      style={{ border: '1.5px solid var(--accent)' }}
                     >
-                      <span className="text-white text-[10px] font-bold">V</span>
+                      <span className="text-on-accent text-[10px] font-bold">V</span>
                     </button>
 
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-dark text-sm line-through truncate">
+                      <p className="font-galmuri galmuri-semibold text-dark text-sm line-through truncate">
                         {task.title}
                       </p>
-                      <p className="text-[10px] text-dark/40 font-medium">
+                      <p className="text-[10px] text-sub font-medium">
                         {task.deadline && `마감 ${formatDeadline(task.deadline)}`}
                       </p>
                     </div>
 
                     <button
                       onClick={() => setEditingTask(task)}
-                      className="text-xs font-bold text-dark/40 hover:text-primary transition-colors flex-shrink-0"
+                      className="text-xs font-bold text-sub hover:text-primary transition-colors flex-shrink-0"
                     >
                       수정
                     </button>
@@ -587,13 +649,24 @@ export default function DashboardPage() {
         />
       )}
 
+      {bursts.map((b) => (
+        <PixelBurst
+          key={b.id}
+          x={b.x}
+          y={b.y}
+          onDone={() => setBursts((prev) => prev.filter((p) => p.id !== b.id))}
+        />
+      ))}
+
+      {showRocket && <RocketLaunch onDone={() => setShowRocket(false)} />}
+
       {coinToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] animate-bounce">
-          <div className="card-kitschy !py-3 !px-5 bg-secondary border-dark flex items-center gap-3">
-            <span className="text-2xl font-black text-white">+{coinToast.coins} C</span>
+          <div className="card-retro !py-3 !px-5 bg-secondary flex items-center gap-3">
+            <span className="font-dungeon text-2xl text-on-accent">+{coinToast.coins} C</span>
             <div>
-              <p className="text-[10px] font-bold text-white/70">완료!</p>
-              <p className="text-xs font-extrabold text-white truncate max-w-[200px]">{coinToast.taskTitle}</p>
+              <p className="text-[10px] font-bold text-on-accent opacity-70">완료!</p>
+              <p className="text-xs font-extrabold text-on-accent truncate max-w-[200px]">{coinToast.taskTitle}</p>
             </div>
           </div>
         </div>

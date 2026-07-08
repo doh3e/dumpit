@@ -1,24 +1,30 @@
 package com.dumpit.config;
 
 import com.dumpit.service.CustomOAuth2UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
-import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
@@ -26,11 +32,19 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
+
+    private static final Set<String> GOOGLE_SCOPES = Set.of(
+            "email",
+            "profile",
+            "https://www.googleapis.com/auth/calendar.readonly"
+    );
 
     private final CustomOAuth2UserService customOAuth2UserService;
 
@@ -38,7 +52,21 @@ public class SecurityConfig {
     private String frontendUrl;
 
     @Bean
-    public OAuth2AuthorizedClientRepository authorizedClientRepository() {
+    @Profile("!local")
+    public OAuth2AuthorizedClientRepository authorizedClientRepository(
+            ClientRegistrationRepository clientRegistrationRepository,
+            StringRedisTemplate redisTemplate,
+            ObjectMapper objectMapper) {
+        return new RedisOAuth2AuthorizedClientRepository(
+                clientRegistrationRepository,
+                redisTemplate,
+                objectMapper);
+    }
+
+    /** 로컬 개발용 — Redis 없이 세션에 OAuth 토큰 저장 */
+    @Bean
+    @Profile("local")
+    public OAuth2AuthorizedClientRepository localAuthorizedClientRepository() {
         return new HttpSessionOAuth2AuthorizedClientRepository();
     }
 
@@ -63,7 +91,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           ClientRegistrationRepository clientRegistrationRepository) throws Exception {
+                                           ClientRegistrationRepository clientRegistrationRepository,
+                                           OAuth2AuthorizedClientRepository authorizedClientRepository) throws Exception {
         http
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
@@ -90,12 +119,12 @@ public class SecurityConfig {
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"status\":401,\"code\":\"UNAUTHORIZED\",\"error\":\"로그인이 필요합니다.\"}");
+                    response.getWriter().write("{\"status\":401,\"code\":\"UNAUTHORIZED\",\"error\":\"濡쒓렇?몄씠 ?꾩슂?⑸땲??\"}");
                 })
                 .accessDeniedHandler((request, response, denied) -> {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"status\":403,\"code\":\"FORBIDDEN\",\"error\":\"접근 권한이 없습니다.\"}");
+                    response.getWriter().write("{\"status\":403,\"code\":\"FORBIDDEN\",\"error\":\"?묎렐 沅뚰븳???놁뒿?덈떎.\"}");
                 })
             )
 
@@ -108,8 +137,11 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
-                .authorizedClientRepository(authorizedClientRepository())
-                .defaultSuccessUrl(frontendUrl + "/dashboard", true)
+                .authorizedClientRepository(authorizedClientRepository)
+                .successHandler((request, response, authentication) -> {
+                    logGoogleAuthorizedClientState(authorizedClientRepository, request, authentication);
+                    response.sendRedirect(frontendUrl + "/dashboard");
+                })
                 .failureUrl(frontendUrl + "/?error=login_failed")
             )
 
@@ -125,8 +157,23 @@ public class SecurityConfig {
         return http.build();
     }
 
+    private void logGoogleAuthorizedClientState(OAuth2AuthorizedClientRepository authorizedClientRepository,
+                                                HttpServletRequest request,
+                                                Authentication authentication) {
+        OAuth2AuthorizedClient client = authorizedClientRepository
+                .loadAuthorizedClient("google", authentication, request);
+        if (client == null) {
+            log.warn("Google OAuth login completed but authorized client was not found in Redis.");
+            return;
+        }
+        log.info("Google OAuth login completed: accessTokenExpiresAt={}, refreshTokenPresent={}, scopes={}",
+                client.getAccessToken() != null ? client.getAccessToken().getExpiresAt() : null,
+                client.getRefreshToken() != null,
+                client.getAccessToken() != null ? client.getAccessToken().getScopes() : null);
+    }
+
     /**
-     * Google OAuth2 요청에 access_type=offline 추가 → refresh_token 획득
+     * Google OAuth2 요청에 access_type=offline 추가 -> refresh_token 획득.
      */
     private OAuth2AuthorizationRequestResolver customAuthorizationRequestResolver(
             ClientRegistrationRepository clientRegistrationRepository) {
@@ -151,11 +198,13 @@ public class SecurityConfig {
                 if (authRequest == null) return null;
                 Map<String, Object> params = new HashMap<>(authRequest.getAdditionalParameters());
                 params.put("access_type", "offline");
-                params.put("include_granted_scopes", "true");
-                if ("1".equals(request.getParameter("calendar_consent"))) {
+                params.put("include_granted_scopes", "false");
+                if ("1".equals(request.getParameter("calendar_consent"))
+                        || "consent".equals(request.getParameter("prompt"))) {
                     params.put("prompt", "consent");
                 }
                 return OAuth2AuthorizationRequest.from(authRequest)
+                        .scopes(GOOGLE_SCOPES)
                         .additionalParameters(params)
                         .build();
             }

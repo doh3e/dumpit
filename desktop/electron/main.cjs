@@ -247,7 +247,7 @@ function createApplicationMenu(mainWindow) {
           click: () => {
             if (mainWindow.isMinimized()) mainWindow.restore()
             mainWindow.show()
-            mainWindow.focus()
+            focusWindowForKeyboard(mainWindow)
           },
         },
         { type: 'separator' },
@@ -313,6 +313,24 @@ function createApplicationMenu(mainWindow) {
 
 function getFocusedWindow() {
   return BrowserWindow.getFocusedWindow() || mainWindow || undefined
+}
+
+function focusWindowForKeyboard(targetWindow) {
+  if (!targetWindow || targetWindow.isDestroyed()) return
+
+  targetWindow.focus()
+
+  const focusWebContents = () => {
+    if (!targetWindow.isDestroyed()) {
+      targetWindow.webContents.focus()
+    }
+  }
+
+  if (targetWindow.webContents.isLoading()) {
+    targetWindow.webContents.once('did-finish-load', focusWebContents)
+  } else {
+    setTimeout(focusWebContents, 0)
+  }
 }
 
 function showUpdateMessage(options) {
@@ -442,11 +460,15 @@ function showMainWindow(url) {
 
   if (mainWindow.isMinimized()) mainWindow.restore()
   if (!mainWindow.isVisible()) mainWindow.show()
-  mainWindow.focus()
 
   if (url && !mainWindow.webContents.isLoading()) {
     mainWindow.loadURL(url)
+      .then(() => focusWindowForKeyboard(mainWindow))
+      .catch((error) => debugWarn('[desktop] failed to load main window URL', error))
+    return
   }
+
+  focusWindowForKeyboard(mainWindow)
 }
 
 function openSettingsFromTray() {
@@ -645,16 +667,24 @@ function openAuthWindow(url) {
   })
 
   authWindow.loadURL(url)
+  let authCompleting = false
 
   const onAuthComplete = (navUrl) => {
+    if (authCompleting) return
     let parsed
     try { parsed = new URL(navUrl) } catch { return }
     if (!WEB_APP_ORIGINS.has(parsed.origin)) return
 
+    authCompleting = true
     debugLog('[desktop] auth completed, reloading main window')
-    authWindow.close()
+    const completedAuthWindow = authWindow
+    if (completedAuthWindow && !completedAuthWindow.isDestroyed()) {
+      completedAuthWindow.close()
+    }
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.loadURL(`${APP_URL}/`)
+      mainWindow.show()
+      mainWindow.focus()
     }
   }
 
@@ -868,6 +898,10 @@ function createWindow() {
   createdWindow.on('page-title-updated', (event) => {
     event.preventDefault()
   })
+
+  createdWindow.on('show', () => focusWindowForKeyboard(createdWindow))
+  createdWindow.on('restore', () => focusWindowForKeyboard(createdWindow))
+  createdWindow.on('focus', () => focusWindowForKeyboard(createdWindow))
 
   createdWindow.loadURL(`app://${APP_HOST}/`)
 

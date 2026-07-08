@@ -6,7 +6,7 @@ const RADIUS = 95
 const INNER_RADIUS = 50
 
 const PRIORITY_COLORS = [
-  '#E05D5D', '#FF8C42', '#7EC8A0', '#6BA3D6', '#C08EDC', '#E8B84B',
+  '#D95F52', '#E9944C', '#7C9070', '#5B84AE', '#9A6FB8', '#4A9E94',
 ]
 
 function polarToXY(angleDeg, r) {
@@ -70,7 +70,7 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
   const fixedBlocks = []
 
   active.forEach((t, i) => {
-    if (t.startTime && (t.endTime || t.routineId || t.category === 'ROUTINE')) {
+    if (t.startTime && t.endTime) {
       const s = toDate(t.startTime)
       const e = t.endTime
         ? toDate(t.endTime)
@@ -86,7 +86,7 @@ function scheduleBlocks(tasks, routineStart, routineEnd, now) {
           endH: endMin / 60,
           color: PRIORITY_COLORS[i % PRIORITY_COLORS.length],
           priority: t.effectivePriority ?? 0.5,
-          isLocked: Boolean(t.isLocked || t.routineId || t.category === 'ROUTINE'),
+          isLocked: Boolean(t.isLocked),
         })
       }
     }
@@ -138,14 +138,14 @@ export default function CircularTimetable({ tasks = [] }) {
   return (
     <div className="flex flex-col items-center gap-3">
       <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
-        <circle cx={CENTER} cy={CENTER} r={RADIUS} fill="#F0F0F0" stroke="#1A1A1A" strokeWidth={2} />
-        <circle cx={CENTER} cy={CENTER} r={INNER_RADIUS} fill="white" stroke="#1A1A1A" strokeWidth={2} />
+        <circle cx={CENTER} cy={CENTER} r={RADIUS} fill="var(--chip)" stroke="var(--edge)" strokeWidth={1.5} />
+        <circle cx={CENTER} cy={CENTER} r={INNER_RADIUS} fill="var(--card)" stroke="var(--edge)" strokeWidth={1.5} />
 
         {inactiveRanges.map(([startAngle, endAngle]) => (
           <path
             key={`${startAngle}-${endAngle}`}
             d={slicePath(startAngle, endAngle, RADIUS - 1, INNER_RADIUS + 1)}
-            fill="#D8D8D8"
+            fill="var(--line)"
             stroke="none"
             opacity={0.72}
           />
@@ -160,7 +160,7 @@ export default function CircularTimetable({ tasks = [] }) {
             <line
               key={h}
               x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-              stroke="#1A1A1A"
+              stroke="var(--fg)"
               strokeWidth={isMajor ? 1.5 : 0.5}
               opacity={isMajor ? 0.3 : 0.1}
             />
@@ -176,7 +176,7 @@ export default function CircularTimetable({ tasks = [] }) {
               key={block.id}
               d={slicePath(startAngle, endAngle, RADIUS - 2, INNER_RADIUS + 2)}
               fill={block.color}
-              stroke="#1A1A1A"
+              stroke="var(--fg)"
               strokeWidth={isCurrent ? 2.5 : 1}
               opacity={isCurrent ? 1 : 0.7}
             />
@@ -190,18 +190,18 @@ export default function CircularTimetable({ tasks = [] }) {
           return (
             <>
               <line x1={base.x} y1={base.y} x2={tip.x} y2={tip.y}
-                stroke="#E05D5D" strokeWidth={2.5} strokeLinecap="round" />
-              <circle cx={tip.x} cy={tip.y} r={3} fill="#E05D5D" stroke="#1A1A1A" strokeWidth={1} />
+                stroke="var(--accent)" strokeWidth={2.5} strokeLinecap="round" />
+              <circle cx={tip.x} cy={tip.y} r={3} fill="var(--accent)" stroke="var(--edge)" strokeWidth={1} />
             </>
           )
         })()}
 
         <text x={CENTER} y={CENTER} textAnchor="middle" fontSize={14}
-          fontWeight={900} fill="#1A1A1A" fontFamily="'Press Start 2P', monospace">
+          fontWeight={900} fill="var(--fg)" fontFamily="DungGeunMo, monospace">
           {String(now.getHours()).padStart(2, '0')}:{String(now.getMinutes()).padStart(2, '0')}
         </text>
         <text x={CENTER} y={CENTER + 18} textAnchor="middle" fontSize={11}
-          fill="#1A1A1A" opacity={0.45} fontWeight={800}>
+          fill="var(--fg)" opacity={0.45} fontWeight={800}>
           {routineStart}시-{routineEnd}시
         </text>
 
@@ -210,7 +210,7 @@ export default function CircularTimetable({ tasks = [] }) {
           return (
             <text key={h} x={pos.x} y={pos.y} textAnchor="middle"
               dominantBaseline="middle" fontSize={9} fontWeight={800}
-              fill="#1A1A1A" opacity={0.5}>
+              fill="var(--fg)" opacity={0.5}>
               {h}
             </text>
           )
@@ -218,7 +218,7 @@ export default function CircularTimetable({ tasks = [] }) {
       </svg>
 
       {currentBlock && (
-        <div className="w-full bg-primary/10 border-2 border-primary rounded-lg py-2 px-3">
+        <div className="w-full tone-overdue border-2 rounded-lg py-2 px-3">
           <p className="text-[10px] font-bold text-primary mb-0.5">지금 해야 할 일</p>
           <p className="font-extrabold text-dark text-sm">{currentBlock.title}</p>
         </div>
@@ -228,16 +228,16 @@ export default function CircularTimetable({ tasks = [] }) {
         <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center">
           {blocks.map((block) => (
             <div key={block.id} className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm border border-dark flex-shrink-0"
+              <div className="w-2.5 h-2.5 rounded-sm border border-edge flex-shrink-0"
                 style={{ background: block.color }} />
-              <span className="text-[10px] font-bold text-dark/70">{block.title}</span>
+              <span className="text-[10px] font-bold text-sub">{block.title}</span>
             </div>
           ))}
         </div>
       )}
 
       {blocks.length === 0 && (
-        <p className="text-xs text-dark/40 font-medium text-center">
+        <p className="text-xs text-sub font-medium text-center">
           시간이 정해진 일이 없어요
         </p>
       )}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import coinImage from '../assets/coin_image.png'
+import PixelStation from '../components/PixelStation'
 import { useAuth } from '../context/AuthContext'
 
 function useDragScroll() {
@@ -40,34 +41,31 @@ const CATEGORY_LABEL = {
   HOBBY: '취미', OTHER: '기타',
 }
 
+// 카테고리 파이 색 — index.css .cat-* 계열과 동일한 뮤트 휴 (차트 전용 하드코딩)
 const CATEGORY_COLOR = {
-  WORK: '#60a5fa', STUDY: '#a78bfa', APPOINTMENT: '#fb923c',
-  CHORE: '#facc15', ROUTINE: '#4ade80', HEALTH: '#f87171',
-  HOBBY: '#f472b6', OTHER: '#94a3b8',
+  WORK: '#5B84AE', STUDY: '#7A6FC0', APPOINTMENT: '#C4708F',
+  CHORE: '#D49E35', ROUTINE: '#9A6FB8', HEALTH: '#6E9E62',
+  HOBBY: '#C07862', OTHER: '#8A8578',
 }
 
+// 정거장 모듈 — 테마 라벨과 기능 라벨 병기
 const STAT_CARDS = (stats) => [
-  { label: '완료한 태스크', value: stats.totalDone, bg: 'bg-primary', text: 'text-white' },
-  { label: '진행 중', value: stats.totalInProgress, bg: 'bg-secondary', text: 'text-white' },
-  { label: '연속 완료', value: `${stats.streak}일`, bg: 'bg-yellow-300', text: 'text-dark', sub: '오늘 기준' },
-  { label: '보유 코인', value: stats.coinBalance, bg: 'bg-accent', text: 'text-dark', icon: coinImage },
-  { label: '브레인 덤프', value: stats.brainDumpCount, bg: 'bg-blue-100', text: 'text-dark' },
-  { label: '저장한 아이디어', value: stats.ideaCount, bg: 'bg-purple-100', text: 'text-dark' },
+  { theme: '수거한 생각', label: '완료한 태스크', value: stats.totalDone, bg: 'bg-primary', text: 'text-on-accent' },
+  { theme: '처리 중', label: '진행 중', value: stats.totalInProgress, bg: 'bg-secondary', text: 'text-on-accent' },
+  { theme: '궤도 유지', label: '연속 완료', value: `${stats.streak}일`, bg: 'bg-chip', text: 'text-dark', sub: '오늘 기준' },
+  { theme: '자원', label: '보유 코인', value: stats.coinBalance, bg: 'bg-card', text: 'text-dark', icon: coinImage },
+  { label: '브레인 덤프', value: stats.brainDumpCount, bg: 'bg-card', text: 'text-dark' },
+  { label: '저장한 아이디어', value: stats.ideaCount, bg: 'bg-card', text: 'text-dark' },
 ]
 
 const heatmapColorClass = (count) => {
-  if (count >= 3) return 'bg-primary border-dark/30'
-  if (count === 2) return 'bg-primary/60 border-primary/40'
-  if (count === 1) return 'bg-primary/25 border-primary/25'
-  return 'bg-dark/10 border-transparent'
+  if (count >= 3) return 'star-log-3'
+  if (count === 2) return 'star-log-2'
+  if (count === 1) return 'star-log-1'
+  return 'star-log-0'
 }
 
-const heatmapBgClass = (count) => {
-  if (count >= 3) return 'bg-primary'
-  if (count === 2) return 'bg-primary/60'
-  if (count === 1) return 'bg-primary/25'
-  return 'bg-dark/10'
-}
+const heatmapBgClass = heatmapColorClass
 
 function formatLocalDateKey(date) {
   const year = date.getFullYear()
@@ -108,7 +106,7 @@ function HeatmapGrid({ heatmap }) {
                 <div
                   key={di}
                   title={`${dateStr} · ${count}개 완료`}
-                  className={`w-3 h-3 rounded-sm ${isToday ? `border-2 border-dark ${heatmapBgClass(count)}` : `border ${heatmapColorClass(count)}`}`}
+                  className={`w-3 h-3 rounded-sm ${isToday ? `border-2 border-edge ${heatmapBgClass(count)}` : `border ${heatmapColorClass(count)}`}`}
                 />
               )
             })}
@@ -116,8 +114,8 @@ function HeatmapGrid({ heatmap }) {
         ))}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[9px] text-dark/30">{entries[0]?.[0]?.slice(5)}</span>
-        <span className="text-[9px] text-dark/30">오늘</span>
+        <span className="text-[9px] text-sub">{entries[0]?.[0]?.slice(5)}</span>
+        <span className="text-[9px] text-sub">오늘</span>
       </div>
     </div>
   )
@@ -151,7 +149,7 @@ function PieChart({ data }) {
     <div className="flex items-center justify-center gap-4 flex-wrap">
       <svg viewBox="0 0 100 100" className="w-32 h-32 flex-shrink-0">
         {slices.map((s) => (
-          <path key={s.label} d={arc(50, 50, 45, s.start, s.angle)} fill={s.color} stroke="white" strokeWidth="1" />
+          <path key={s.label} d={arc(50, 50, 45, s.start, s.angle)} fill={s.color} stroke="var(--card)" strokeWidth="1" />
         ))}
       </svg>
       <div className="flex flex-col gap-1.5">
@@ -159,7 +157,7 @@ function PieChart({ data }) {
           <div key={s.label} className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: s.color }} />
             <span className="text-xs font-bold text-dark">{s.label}</span>
-            <span className="text-xs font-black text-dark/50">{s.value}</span>
+            <span className="text-xs font-black text-sub">{s.value}</span>
           </div>
         ))}
       </div>
@@ -250,7 +248,7 @@ export default function MyPage() {
   if (loadingProfile) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="font-bold text-dark/50">불러오는 중...</p>
+        <p className="font-bold text-sub">불러오는 중...</p>
       </div>
     )
   }
@@ -261,7 +259,7 @@ export default function MyPage() {
         .map(([cat, value]) => ({
           label: CATEGORY_LABEL[cat] || cat,
           value,
-          color: CATEGORY_COLOR[cat] || '#94a3b8',
+          color: CATEGORY_COLOR[cat] || '#8A8578',
         }))
     : []
 
@@ -282,23 +280,26 @@ export default function MyPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
 
+      {/* 나의 우주정거장 — 프로필이 도킹된 느낌 */}
+      <PixelStation />
+
       {/* Profile card */}
-      <div className="card-kitschy !p-5 flex items-start gap-4">
+      <div className="card-retro !p-5 flex items-start gap-4">
         {profile?.picture ? (
           <img
             src={profile.picture}
             alt="프로필"
-            className="w-16 h-16 rounded-full border-2 border-dark flex-shrink-0 object-cover"
+            className="w-16 h-16 rounded-full border border-line flex-shrink-0 object-cover"
           />
         ) : (
-          <div className="w-16 h-16 rounded-full border-2 border-dark bg-accent flex items-center justify-center flex-shrink-0">
+          <div className="w-16 h-16 rounded-full border border-line bg-accent flex items-center justify-center flex-shrink-0">
             <span className="text-2xl font-black text-dark">{(profile?.nickname || '?')[0]}</span>
           </div>
         )}
 
         <div className="flex-1 min-w-0">
           <p className="font-black text-dark text-lg leading-tight truncate">{profile?.nickname || '이름 없음'}</p>
-          <p className="text-xs font-semibold text-dark/50 truncate">{profile?.email}</p>
+          <p className="text-xs font-semibold text-sub truncate">{profile?.email}</p>
 
           {editingBio ? (
             <div className="mt-2 space-y-2">
@@ -309,26 +310,26 @@ export default function MyPage() {
                 maxLength={500}
                 rows={3}
                 placeholder="자기소개를 입력하세요"
-                className="w-full px-2 py-1 border-2 border-dark rounded text-sm font-semibold bg-white outline-none focus:border-primary resize-none"
+                className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card outline-none focus:border-primary resize-none"
               />
               <div className="flex gap-2">
                 <button onClick={handleSaveBio} disabled={savingBio}
-                  className="btn-kitschy bg-primary text-white text-xs py-1 px-3 disabled:opacity-50">
+                  className="btn-retro-primary text-xs py-1 px-3 disabled:opacity-50">
                   {savingBio ? '저장 중...' : '저장'}
                 </button>
                 <button onClick={() => { setEditingBio(false); setBioInput(profile?.bio || '') }}
-                  className="btn-kitschy bg-accent text-dark text-xs py-1 px-3">
+                  className="btn-retro text-xs py-1 px-3">
                   취소
                 </button>
               </div>
             </div>
           ) : (
             <div className="mt-2 flex items-start gap-2">
-              <p className="text-sm font-semibold text-dark/70 flex-1 min-w-0 break-words">
-                {profile?.bio || <span className="text-dark/30">자기소개가 없어요</span>}
+              <p className="text-sm font-semibold text-sub flex-1 min-w-0 break-words">
+                {profile?.bio || <span className="text-sub">자기소개가 없어요</span>}
               </p>
               <button onClick={() => setEditingBio(true)}
-                className="text-[10px] font-black text-dark/40 hover:text-primary flex-shrink-0">
+                className="text-[10px] font-black text-sub hover:text-primary flex-shrink-0">
                 수정
               </button>
             </div>
@@ -336,10 +337,10 @@ export default function MyPage() {
         </div>
       </div>
 
-      {/* Stats horizontal slider */}
+      {/* Stats horizontal slider — 정거장 모듈 */}
       {statCards.length > 0 && (
         <div>
-          <p className="text-xs font-black text-dark/40 uppercase tracking-wider mb-2 px-1">통계</p>
+          <p className="label-retro mx-1 mb-2">정거장 모듈 · 통계</p>
           <div
             ref={sliderDrag.ref}
             onPointerDown={sliderDrag.onPointerDown}
@@ -349,13 +350,17 @@ export default function MyPage() {
             className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none select-none cursor-grab"
             style={{ scrollBehavior: 'smooth' }}
           >
-            {statCards.map(({ label, value, bg, text, sub, icon }) => (
+            {statCards.map(({ theme, label, value, bg, text, sub, icon }) => (
               <div
                 key={label}
-                className={`snap-start flex-shrink-0 w-32 h-32 rounded-2xl border-2 border-dark shadow-kitschy ${bg} flex flex-col items-center justify-center gap-1 p-3 transition-transform duration-150 active:scale-95`}
+                className={`snap-start flex-shrink-0 w-32 h-32 rounded-2xl shadow-retro ${bg} flex flex-col items-center justify-center gap-1 p-3 transition-transform duration-150 active:scale-95`}
+                style={{ border: '1.5px solid var(--edge)' }}
               >
                 {icon && <img src={icon} alt="" className="w-6 h-6 object-contain mb-0.5" />}
-                <p className={`text-3xl font-black leading-none ${text}`}>{value}</p>
+                <p className={`font-dungeon text-3xl leading-none ${text}`}>{value}</p>
+                {theme && (
+                  <p className={`font-dungeon text-[10px] text-center leading-tight ${text}`}>{theme}</p>
+                )}
                 <p className={`text-[10px] font-black text-center leading-tight ${text} opacity-70`}>{label}</p>
                 {sub && <p className={`text-[9px] font-semibold ${text} opacity-50`}>{sub}</p>}
               </div>
@@ -364,12 +369,12 @@ export default function MyPage() {
         </div>
       )}
 
-      {/* GitHub-style heatmap */}
+      {/* 별빛 로그 — 완료량을 별 밝기로 */}
       {stats && (
-        <div className="card-kitschy !p-4 space-y-2">
+        <div className="card-retro !p-4 space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-black text-dark">완료 기록</p>
-            <span className="text-[10px] font-bold text-dark/40">최근 28주</span>
+            <p className="font-galmuri font-bold text-sm text-dark">별빛 로그 <span className="text-sub font-sans font-bold">· 완료 기록</span></p>
+            <span className="text-[10px] font-bold text-sub">최근 28주</span>
           </div>
           <HeatmapGrid heatmap={heatmap} />
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
@@ -381,7 +386,7 @@ export default function MyPage() {
             ].map(([label, count]) => (
               <div key={label} className="flex items-center gap-1.5">
                 <div className={`w-3 h-3 rounded-sm border ${heatmapColorClass(count)}`} />
-                <span className="text-[9px] text-dark/40">{label}</span>
+                <span className="text-[9px] text-sub">{label}</span>
               </div>
             ))}
           </div>
@@ -389,10 +394,10 @@ export default function MyPage() {
       )}
 
       {/* Pie chart */}
-      <div className="card-kitschy !p-4 space-y-3">
-        <p className="text-sm font-black text-dark">완료 태스크 카테고리 별 분포</p>
+      <div className="card-retro !p-4 space-y-3">
+        <p className="font-galmuri font-bold text-sm text-dark">완료 태스크 카테고리 별 분포</p>
         {pieData.length === 0 ? (
-          <p className="text-xs font-semibold text-dark/40 py-4 text-center">
+          <p className="text-xs font-semibold text-sub py-4 text-center">
             태스크를 완료하면 여기서 카테고리 분포를 볼 수 있어요.
           </p>
         ) : (
@@ -402,64 +407,65 @@ export default function MyPage() {
 
       {/* Overdue tasks */}
       {overdue.length > 0 && (
-        <div className="card-kitschy !p-4 space-y-3">
+        <div className="card-retro !p-4 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-black text-dark">기한 초과 태스크</p>
-            <span className="text-[10px] font-black text-red-500 bg-red-50 border border-red-300 rounded-full px-2 py-0.5">
+            <span className="text-[10px] font-black rounded-full px-2 py-0.5 chip-retro text-secondary">
               완료 시 5코인
             </span>
           </div>
           <div className="space-y-2">
             {overdue.map((task) => (
               <div key={task.taskId}
-                className="flex items-center gap-3 rounded-lg border-2 border-red-300 bg-red-50 p-3">
+                className="flex items-center gap-3 rounded-lg border-2 tone-overdue p-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-extrabold text-dark truncate">{task.title}</p>
-                  <p className="text-[11px] font-semibold text-red-500">마감 {formatDeadline(task.deadline)}</p>
+                  <p className="text-[11px] font-semibold text-primary">마감 {formatDeadline(task.deadline)}</p>
                 </div>
                 <button
                   onClick={() => handleCompleteOverdue(task.taskId)}
                   disabled={completingTask === task.taskId}
-                  className="btn-kitschy bg-red-500 text-white text-xs py-1 px-3 flex-shrink-0 disabled:opacity-50"
+                  className="btn-retro-primary text-xs py-1 px-3 flex-shrink-0"
                 >
                   {completingTask === task.taskId ? '...' : '완료'}
                 </button>
               </div>
             ))}
           </div>
-          <Link to="/dashboard" className="block text-center text-xs font-black text-dark/40 hover:text-primary pt-1">
+          <Link to="/dashboard" className="block text-center text-xs font-black text-sub hover:text-primary pt-1">
             대시보드에서 더 보기 →
           </Link>
         </div>
       )}
 
       {overdue.length === 0 && stats && (
-        <div className="card-kitschy !p-6 text-center">
+        <div className="card-retro !p-6 text-center">
           <p className="font-black text-dark">기한 초과 태스크가 없어요</p>
-          <p className="mt-1 text-xs font-semibold text-dark/50">훌륭해요! 모든 일정을 잘 지키고 있어요.</p>
+          <p className="mt-1 text-xs font-semibold text-sub">훌륭해요! 모든 일정을 잘 지키고 있어요.</p>
         </div>
       )}
 
-      <div className="flex justify-end border-t border-dark/10 pt-4">
+      <div className="flex justify-end border-t border-line pt-4">
         <button
           type="button"
           onClick={() => setShowWithdrawModal(true)}
-          className="text-[11px] font-bold text-dark/35 underline underline-offset-2 hover:text-red-600"
+          className="text-[11px] font-bold text-sub underline underline-offset-2 hover:text-primary"
         >
           회원 탈퇴
         </button>
       </div>
 
       {showWithdrawModal && createPortal(
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-dark/40 px-4" onClick={() => !withdrawing && setShowWithdrawModal(false)}>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center overlay-retro px-4" onClick={() => !withdrawing && setShowWithdrawModal(false)}>
           <div
-            className="card-kitschy w-full max-w-md"
+            className="card-retro w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="heading-kitschy text-xl">회원 탈퇴</h2>
-            <div className="mt-4 rounded-lg border-2 border-red-200 bg-red-50 px-4 py-3">
-              <p className="text-sm font-black text-red-600">탈퇴 전 확인해주세요.</p>
-              <p className="mt-2 text-xs font-semibold leading-relaxed text-red-500/80">
+            {/* 파괴적 액션 — 테마 카피 없이 조용하고 명확하게 (스펙 7.5) */}
+            <h2 className="text-xl font-bold text-dark">회원 탈퇴</h2>
+            <div className="mt-4 rounded-lg border-2 tone-danger px-4 py-3">
+              <p className="text-sm font-black" style={{ color: 'var(--danger)' }}>탈퇴 전 확인해주세요.</p>
+              <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
                 탈퇴하면 계정 개인정보는 비식별 처리되고, 작성한 할 일, 루틴, 아이디어, 브레인덤프 원문은 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
               </p>
             </div>
@@ -468,7 +474,7 @@ export default function MyPage() {
                 type="button"
                 onClick={() => setShowWithdrawModal(false)}
                 disabled={withdrawing}
-                className="btn-kitschy flex-1 bg-accent py-2 text-sm text-dark disabled:opacity-50"
+                className="btn-retro flex-1 py-2 text-sm"
               >
                 취소
               </button>
@@ -476,7 +482,8 @@ export default function MyPage() {
                 type="button"
                 onClick={handleWithdraw}
                 disabled={withdrawing}
-                className="btn-kitschy flex-1 bg-primary py-2 text-sm text-white disabled:opacity-50"
+                className="btn-retro flex-1 py-2 text-sm text-on-accent"
+                style={{ background: 'var(--danger)' }}
               >
                 {withdrawing ? '처리 중...' : '탈퇴'}
               </button>

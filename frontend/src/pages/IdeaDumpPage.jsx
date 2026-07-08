@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useBlocker } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES, getCategory } from '../constants/categories'
+import AiUsageBadge from '../components/AiUsageBadge'
+import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
-const EMPTY_QUICK = { rawText: '', category: 'OTHER', parentIdeaId: '' }
 const EMPTY_DETAIL = { title: '', content: '', category: 'OTHER', pinned: false, parentIdeaId: '' }
+const SCRATCH_KEY = 'dumpit:idea-scratch'
+const MAX_SCRATCH = 2000
 
 function parseDate(value) {
   if (!value) return null
@@ -46,12 +50,7 @@ function buildTreeRows(ideas, query, expandedIds) {
     if (!hasMatchingDescendant(idea)) return
     const children = byParent.get(idea.ideaId) || []
     const isExpanded = Boolean(keyword) || expandedIds.has(idea.ideaId)
-    rows.push({
-      idea,
-      depth,
-      childCount: children.length,
-      isExpanded,
-    })
+    rows.push({ idea, depth, childCount: children.length, isExpanded })
     if (isExpanded) children.forEach((child) => visit(child, depth + 1))
   }
 
@@ -63,16 +62,76 @@ function buildTreeRows(ideas, query, expandedIds) {
   return rows
 }
 
+function ExtractPreviewNode({ node, depth }) {
+  const category = getCategory(node.category)
+  return (
+    <div style={{ paddingLeft: `${depth * 16}px` }} className="mt-1.5">
+      <div className="rounded-lg border-2 border-line bg-card px-3 py-2">
+        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
+          {category.label}
+        </span>
+        <p className="mt-1 font-galmuri galmuri-semibold text-sm text-dark">{node.title}</p>
+        {node.content && <p className="mt-0.5 text-xs font-semibold text-sub">{node.content}</p>}
+      </div>
+      {node.children?.map((child, i) => (
+        <ExtractPreviewNode key={i} node={child} depth={depth + 1} />
+      ))}
+    </div>
+  )
+}
+
+function CategoryPills({ value, onChange, compact = false, iconOnly = false }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {CATEGORIES.map((category) => {
+        const isSelected = value === category.value
+        return (
+          <div key={category.value} className={iconOnly ? 'relative group' : ''}>
+            <button
+              type="button"
+              onClick={() => onChange(category.value)}
+              className={`rounded-full border-2 font-bold transition-all ${
+                iconOnly ? 'w-7 h-7 text-sm flex items-center justify-center' :
+                compact ? 'px-2 py-1 text-[11px]' : 'px-2.5 py-1 text-xs'
+              } ${
+                isSelected
+                  ? 'border-edge bg-primary text-on-accent shadow-retro'
+                  : 'border-line bg-accent text-dark hover:border-line'
+              }`}
+            >
+              {iconOnly ? category.emoji : <><span aria-hidden="true">{category.emoji}</span> {category.label}</>}
+            </button>
+            {iconOnly && (
+              <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-chip px-1.5 py-0.5 text-[10px] font-bold text-dark border border-line opacity-0 transition-opacity group-hover:opacity-100">
+                {category.label}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function IdeaDumpPage() {
   const [ideas, setIdeas] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
-  const [quickForm, setQuickForm] = useState(EMPTY_QUICK)
+  const [quickTitle, setQuickTitle] = useState('')
   const [detailForm, setDetailForm] = useState(EMPTY_DETAIL)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [scratchText, setScratchText] = useState(() => localStorage.getItem(SCRATCH_KEY) || '')
+  const [extracting, setExtracting] = useState(false)
+  const [extractResult, setExtractResult] = useState(null)
+  const [inputMode, setInputMode] = useState('dump')
+  const [newTitle, setNewTitle] = useState('')
+  const [newContent, setNewContent] = useState('')
+  const [newCategory, setNewCategory] = useState('OTHER')
+  const [newParentId, setNewParentId] = useState('')
+  const aiUsage = useAiUsage()
 
   const selectedIdea = useMemo(
     () => ideas.find((idea) => idea.ideaId === selectedId) || null,
@@ -98,6 +157,42 @@ export default function IdeaDumpPage() {
     () => ideas.filter((idea) => idea.ideaId !== selectedId),
     [ideas, selectedId]
   )
+
+  const isDirty = useMemo(() => {
+    if (!selectedIdea) return false
+    return (
+      detailForm.title !== (selectedIdea.title || '') ||
+      detailForm.content !== (selectedIdea.content || '') ||
+      detailForm.category !== (selectedIdea.category || 'OTHER') ||
+      detailForm.pinned !== Boolean(selectedIdea.pinned) ||
+      (detailForm.parentIdeaId || '') !== (selectedIdea.parentIdeaId || '')
+    )
+  }, [detailForm, selectedIdea])
+
+  const blocker = useBlocker(isDirty)
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return
+    if (window.confirm('저장하지 않은 변경사항이 있어요. 페이지를 이동할까요?')) {
+      blocker.proceed()
+    } else {
+      blocker.reset()
+    }
+  }, [blocker])
+
+  useEffect(() => {
+    if (!isDirty) return
+    const handler = (e) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
+
+  const handleSelectIdea = (ideaId) => {
+    if (isDirty && !window.confirm('저장하지 않은 변경사항이 있어요. 다른 아이디어로 이동할까요?')) return
+    setSelectedId(ideaId)
+  }
 
   const toggleExpanded = (ideaId) => {
     setExpandedIds((prev) => {
@@ -125,7 +220,6 @@ export default function IdeaDumpPage() {
       setDetailForm(EMPTY_DETAIL)
       return
     }
-
     setDetailForm({
       title: selectedIdea.title || '',
       content: selectedIdea.content || '',
@@ -135,34 +229,22 @@ export default function IdeaDumpPage() {
     })
   }, [selectedIdea])
 
-  const splitLines = (rawText) => rawText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
-
-  const handleQuickSubmit = async (event) => {
-    event.preventDefault()
-    const lines = splitLines(quickForm.rawText)
-    if (lines.length === 0 || saving) return
-
+  const handleNewIdeaKeyDown = async (e) => {
+    if (e.key !== 'Enter' || !newTitle.trim() || saving) return
     setSaving(true)
     setError(null)
-
     try {
-      if (lines.length === 1) {
-        const res = await api.post('/ideas', {
-          title: lines[0],
-          content: '',
-          category: quickForm.category,
-          parentIdeaId: quickForm.parentIdeaId || null,
-        })
-        setSelectedId(res.data.ideaId)
-      } else {
-        const res = await api.post('/ideas/bulk', {
-          rawText: quickForm.rawText,
-          category: quickForm.category,
-          parentIdeaId: quickForm.parentIdeaId || null,
-        })
-        if (res.data[0]) setSelectedId(res.data[0].ideaId)
-      }
-      setQuickForm(EMPTY_QUICK)
+      const res = await api.post('/ideas', {
+        title: newTitle.trim(),
+        content: newContent.trim(),
+        category: newCategory,
+        parentIdeaId: newParentId || null,
+      })
+      setNewTitle('')
+      setNewContent('')
+      setNewCategory('OTHER')
+      setNewParentId('')
+      setSelectedId(res.data.ideaId)
       fetchIdeas()
     } catch (err) {
       setError(getApiErrorMessage(err, '아이디어를 저장하지 못했어요.'))
@@ -171,12 +253,51 @@ export default function IdeaDumpPage() {
     }
   }
 
-  const saveDetail = async () => {
-    if (!selectedIdea || !detailForm.title.trim() || saving) return
+  const handleScratchChange = (value) => {
+    if (value.length > MAX_SCRATCH) return
+    setScratchText(value)
+    localStorage.setItem(SCRATCH_KEY, value)
+  }
 
+  const scratchTokenCost = 5 // 고정 5점 (브레인 덤프와 동일, 백엔드 IDEA_EXTRACT와 일치)
+
+  const handleExtract = async () => {
+    if (!scratchText.trim() || extracting) return
+    setExtracting(true)
+    setError(null)
+    setExtractResult(null)
+    try {
+      const res = await api.post('/ideas/ai-extract', { rawText: scratchText })
+      setExtractResult(res.data.ideas || [])
+      dispatchAiUsed()
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'AI 분석에 실패했어요.'))
+    } finally {
+      setExtracting(false)
+    }
+  }
+
+  const handleConfirmExtract = async () => {
+    if (!extractResult || saving) return
     setSaving(true)
     setError(null)
+    try {
+      await api.post('/ideas/ai-extract/confirm', { ideas: extractResult })
+      setScratchText('')
+      localStorage.removeItem(SCRATCH_KEY)
+      setExtractResult(null)
+      fetchIdeas()
+    } catch (err) {
+      setError(getApiErrorMessage(err, '아이디어 저장에 실패했어요.'))
+    } finally {
+      setSaving(false)
+    }
+  }
 
+  const saveDetail = async () => {
+    if (!selectedIdea || !detailForm.title.trim() || saving) return
+    setSaving(true)
+    setError(null)
     try {
       const res = await api.patch(`/ideas/${selectedIdea.ideaId}`, {
         title: detailForm.title.trim(),
@@ -196,10 +317,8 @@ export default function IdeaDumpPage() {
 
   const addChildIdea = async () => {
     if (!selectedIdea || saving) return
-
     setSaving(true)
     setError(null)
-
     try {
       const res = await api.post('/ideas', {
         title: '새 하위 아이디어',
@@ -219,12 +338,11 @@ export default function IdeaDumpPage() {
 
   const convertToTask = async () => {
     if (!selectedIdea || selectedIdea.convertedTaskId || saving) return
-
     setSaving(true)
     setError(null)
-
     try {
       await api.post(`/ideas/${selectedIdea.ideaId}/convert-to-task`)
+      dispatchAiUsed()
       fetchIdeas()
     } catch (err) {
       setError(getApiErrorMessage(err, '태스크로 전환하지 못했어요.'))
@@ -235,7 +353,6 @@ export default function IdeaDumpPage() {
 
   const deleteSelected = async () => {
     if (!selectedIdea || !window.confirm('이 아이디어를 삭제할까요?')) return
-
     try {
       await api.delete(`/ideas/${selectedIdea.ideaId}`)
       setSelectedId(null)
@@ -249,79 +366,158 @@ export default function IdeaDumpPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="heading-kitschy text-2xl">아이디어 덤프</h2>
-          <p className="mt-2 text-sm font-semibold text-dark/60">
-            할 일로 만들기 전의 생각을 모으고, 묶고, 필요할 때 태스크로 바꿔요.
+          <h2 className="font-dungeon text-dark text-2xl">아이디어 덤프</h2>
+          <p className="mt-2 text-sm font-semibold text-sub">
+            생각을 자유롭게 쏟아내고, AI가 맥락을 잡아 정리해줘요.
           </p>
         </div>
-        <div className="card-kitschy !py-3">
-          <p className="text-xs font-bold text-dark/50">저장한 아이디어</p>
+        <div className="card-retro !py-3">
+          <p className="text-xs font-bold text-sub">저장한 아이디어</p>
           <p className="text-xl font-black text-primary">{ideas.length}</p>
         </div>
       </div>
 
-      <form onSubmit={handleQuickSubmit} className="card-kitschy space-y-3">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_160px_200px] gap-3">
-          <textarea
-            value={quickForm.rawText}
-            onChange={(e) => setQuickForm((prev) => ({ ...prev, rawText: e.target.value }))}
-            rows={3}
-            maxLength={3000}
-            placeholder={'아이디어를 한 줄에 하나씩 적어보세요.\n여러 줄이면 각각 따로 저장됩니다.'}
-            className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
-          />
-          <select
-            value={quickForm.category}
-            onChange={(e) => setQuickForm((prev) => ({ ...prev, category: e.target.value }))}
-            className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
-          >
-            {CATEGORIES.map((category) => (
-              <option key={category.value} value={category.value}>{category.label}</option>
-            ))}
-          </select>
-          <select
-            value={quickForm.parentIdeaId}
-            onChange={(e) => setQuickForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
-            className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
-          >
-            <option value="">상위 없음</option>
-            {ideas.map((idea) => (
-              <option key={idea.ideaId} value={idea.ideaId}>{idea.title}</option>
-            ))}
-          </select>
+      <div className="card-retro space-y-4">
+        <div className="flex gap-2">
+          {[{ key: 'dump', label: '덤프' }, { key: 'new', label: '새 아이디어' }].map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setInputMode(key)}
+              className={`rounded-full border-2 px-3 py-1 text-xs font-black transition-all ${
+                inputMode === key
+                  ? 'border-edge bg-chip text-dark'
+                  : 'border-line text-sub hover:border-line'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
-        <button
-          type="submit"
-          disabled={!quickForm.rawText.trim() || saving}
-          className="btn-kitschy bg-primary text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          줄 단위로 저장
-        </button>
-      </form>
+
+        {inputMode === 'dump' ? (
+          <>
+            <textarea
+              value={scratchText}
+              onChange={(e) => handleScratchChange(e.target.value)}
+              rows={7}
+              placeholder={'생각나는 대로 자유롭게 적어보세요.\nAI가 맥락을 파악해 아이디어로 정리해줄 거예요.\n\n※ 분석 후 원본 텍스트는 보존되지 않아요.'}
+              className="w-full resize-none bg-transparent text-sm font-semibold leading-relaxed text-dark outline-none placeholder:text-sub"
+            />
+            <div className="border-t-2 border-line pt-4 flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-xs font-bold text-sub">
+                {scratchText.length} / {MAX_SCRATCH}자
+                {scratchText.trim() && (
+                  <span className="ml-2 text-sub">· AI 토큰 <span className="text-primary">{scratchTokenCost}</span>개 소모</span>
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={handleExtract}
+                disabled={!scratchText.trim() || extracting || !aiUsage.hasEnough(scratchTokenCost)}
+                className="btn-retro bg-chip text-dark text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {extracting ? 'AI 분석 중...' : 'AI로 아이디어 추출'}
+              </button>
+            </div>
+            <AiUsageBadge usage={aiUsage.usage} cost={scratchTokenCost} />
+            {extractResult && (
+              <div className="border-t-2 border-line pt-4 space-y-3">
+                <p className="text-xs font-black text-sub">분석 결과 — 확인 후 저장하세요</p>
+                <div className="stagger-in">
+                  {extractResult.map((node, i) => (
+                    <div key={i} style={{ '--i': i }}>
+                      <ExtractPreviewNode node={node} depth={0} />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleConfirmExtract}
+                    disabled={saving}
+                    className="btn-retro-primary text-sm py-2 disabled:opacity-50"
+                  >
+                    저장
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExtractResult(null)}
+                    className="btn-retro text-sm py-2"
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="space-y-3">
+            <input
+              autoFocus
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              onKeyDown={handleNewIdeaKeyDown}
+              placeholder="제목"
+              maxLength={200}
+              className="w-full bg-transparent text-sm font-black text-dark outline-none placeholder:text-sub"
+            />
+            <textarea
+              value={newContent}
+              onChange={(e) => setNewContent(e.target.value)}
+              rows={3}
+              maxLength={3000}
+              placeholder="내용 (선택)"
+              className="w-full resize-none rounded-lg border-2 border-line bg-accent px-3 py-2 text-sm font-semibold leading-relaxed text-dark outline-none focus:border-primary placeholder:text-sub"
+            />
+            <div className="border-t-2 border-line pt-3 flex flex-wrap items-center gap-2">
+              <CategoryPills value={newCategory} onChange={setNewCategory} iconOnly />
+              <select
+                value={newParentId}
+                onChange={(e) => setNewParentId(e.target.value)}
+                className="rounded-lg border border-line bg-card px-2 py-1.5 text-xs font-extrabold outline-none max-w-[180px]"
+              >
+                <option value="">상위 아이디어 없음</option>
+                {ideas.map((idea) => (
+                  <option key={idea.ideaId} value={idea.ideaId}>{idea.title}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => handleNewIdeaKeyDown({ key: 'Enter' })}
+                disabled={!newTitle.trim() || saving}
+                className="btn-retro-primary text-sm py-1.5 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {error && (
-        <div className="card-kitschy !py-3 bg-primary/10 border-primary">
+        <div className="card-retro !py-3 tone-overdue">
           <p className="text-sm font-bold text-primary">{error}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(0,1.1fr)] gap-6">
         <section className="space-y-3">
-          <div className="card-kitschy !p-3">
+          <div className="card-retro !p-3">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="아이디어 검색"
-              className="w-full bg-transparent px-1 py-1 text-sm font-bold outline-none placeholder:text-dark/30"
+              placeholder="검색"
+              className="w-full bg-transparent px-1 py-1 text-sm font-bold outline-none placeholder:text-sub"
             />
           </div>
 
           {loading ? (
-            <div className="card-kitschy text-center py-12">
-              <p className="font-bold text-dark/50">불러오는 중...</p>
+            <div className="card-retro text-center py-12">
+              <p className="font-bold text-sub">불러오는 중...</p>
             </div>
           ) : rows.length === 0 ? (
-            <div className="card-kitschy text-center py-12">
+            <div className="card-retro text-center py-12">
               <p className="font-extrabold text-dark">아이디어가 아직 없어요</p>
             </div>
           ) : (
@@ -332,8 +528,8 @@ export default function IdeaDumpPage() {
                 return (
                   <div
                     key={idea.ideaId}
-                    className={`flex items-start gap-2 rounded-lg border-2 bg-white p-3 transition-colors ${
-                      isSelected ? 'border-dark bg-white shadow-kitschy' : 'border-dark/10 bg-white hover:border-dark/30'
+                    className={`flex items-start gap-2 rounded-lg border-2 bg-card p-3 transition-colors ${
+                      isSelected ? 'border-edge bg-card shadow-retro' : 'border-line bg-card hover:border-edge'
                     }`}
                     style={{ paddingLeft: `${12 + depth * 18}px` }}
                   >
@@ -345,24 +541,24 @@ export default function IdeaDumpPage() {
                       }}
                       disabled={childCount === 0}
                       aria-label={isExpanded ? '하위 아이디어 접기' : '하위 아이디어 펼치기'}
-                      className="mt-0.5 h-6 w-6 shrink-0 text-[10px] font-black leading-none text-dark/50 hover:text-dark disabled:invisible"
+                      className="mt-0.5 h-6 w-6 shrink-0 text-[10px] font-black leading-none text-sub hover:text-dark disabled:invisible"
                     >
                       {isExpanded ? '▼' : '▶'}
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelectedId(idea.ideaId)}
+                      onClick={() => handleSelectIdea(idea.ideaId)}
                       className="min-w-0 flex-1 text-left"
                     >
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
                           {category.label}
                         </span>
-                        {idea.pinned && <span className="text-[10px] font-black text-yellow-600">고정</span>}
+                        {idea.pinned && <span className="text-[10px] font-black text-secondary">고정</span>}
                         {idea.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
-                        {childCount > 0 && <span className="text-[10px] font-black text-dark/40">하위 {childCount}</span>}
+                        {childCount > 0 && <span className="text-[10px] font-black text-sub">하위 {childCount}</span>}
                       </div>
-                      <p className="mt-1 truncate text-sm font-black text-dark">{idea.title}</p>
+                      <p className="mt-1 truncate font-galmuri galmuri-semibold text-sm text-dark">{idea.title}</p>
                     </button>
                   </div>
                 )
@@ -371,20 +567,20 @@ export default function IdeaDumpPage() {
           )}
         </section>
 
-        <section className="card-kitschy min-h-[28rem]">
+        <section className="card-retro min-h-[28rem]">
           {!selectedIdea ? (
             <div className="h-full min-h-[20rem] flex items-center justify-center text-center">
               <div>
                 <p className="font-extrabold text-dark">아이디어를 선택하세요</p>
-                <p className="mt-2 text-xs font-semibold text-dark/50">목록 제목을 누르면 세부 메모를 편집할 수 있어요.</p>
+                <p className="mt-2 text-xs font-semibold text-sub">목록에서 아이디어를 클릭하면 세부 내용을 편집할 수 있어요.</p>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-bold text-dark/40">수정 {formatDate(selectedIdea.updatedAt)}</p>
-                  <h3 className="mt-1 text-lg font-black text-dark">아이디어 상세</h3>
+                  <p className="text-[10px] font-bold text-sub">수정 {formatDate(selectedIdea.updatedAt)}</p>
+                  <h3 className="mt-1 font-galmuri font-bold text-lg text-dark">아이디어 상세</h3>
                 </div>
                 <label className="flex items-center gap-2 text-sm font-extrabold text-dark">
                   <input
@@ -401,29 +597,31 @@ export default function IdeaDumpPage() {
                 value={detailForm.title}
                 onChange={(e) => setDetailForm((prev) => ({ ...prev, title: e.target.value }))}
                 maxLength={200}
-                className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-base font-black outline-none focus:border-primary"
+                className="w-full rounded-lg border border-line bg-card px-3 py-2 text-base font-black outline-none focus:border-primary"
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <select
-                  value={detailForm.category}
-                  onChange={(e) => setDetailForm((prev) => ({ ...prev, category: e.target.value }))}
-                  className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
-                >
-                  {CATEGORIES.map((category) => (
-                    <option key={category.value} value={category.value}>{category.label}</option>
-                  ))}
-                </select>
-                <select
-                  value={detailForm.parentIdeaId}
-                  onChange={(e) => setDetailForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
-                  className="rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-extrabold outline-none"
-                >
-                  <option value="">상위 없음</option>
-                  {selectableParents.map((idea) => (
-                    <option key={idea.ideaId} value={idea.ideaId}>{idea.title}</option>
-                  ))}
-                </select>
+              <div className="space-y-3">
+                <div>
+                  <p className="mb-2 text-xs font-black text-sub">카테고리</p>
+                  <CategoryPills
+                    value={detailForm.category}
+                    onChange={(category) => setDetailForm((prev) => ({ ...prev, category }))}
+                    compact
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-black text-sub">상위 아이디어</label>
+                  <select
+                    value={detailForm.parentIdeaId}
+                    onChange={(e) => setDetailForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
+                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-extrabold outline-none"
+                  >
+                    <option value="">상위 아이디어 없음</option>
+                    {selectableParents.map((idea) => (
+                      <option key={idea.ideaId} value={idea.ideaId}>{idea.title}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <textarea
@@ -432,16 +630,16 @@ export default function IdeaDumpPage() {
                 maxLength={3000}
                 rows={12}
                 placeholder="이 아이디어의 세부 메모를 적어두세요."
-                className="w-full resize-none rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-semibold leading-relaxed outline-none focus:border-primary"
+                className="w-full resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold leading-relaxed outline-none focus:border-primary"
               />
 
-              <div className="rounded-lg border-2 border-dark/20 bg-white p-3">
+              <div className="rounded-lg border-2 border-line bg-card p-3">
                 <div className="flex items-center justify-between gap-3">
-                  <h4 className="text-sm font-black text-dark">하위 아이디어</h4>
-                  <span className="text-[10px] font-black text-dark/40">{selectedChildren.length}개</span>
+                  <h4 className="font-galmuri font-bold text-sm text-dark">하위 아이디어</h4>
+                  <span className="text-[10px] font-black text-sub">{selectedChildren.length}개</span>
                 </div>
                 {selectedChildren.length === 0 ? (
-                  <p className="mt-3 text-xs font-semibold text-dark/40">아직 연결된 하위 아이디어가 없어요.</p>
+                  <p className="mt-3 text-xs font-semibold text-sub">아직 연결된 하위 아이디어가 없어요.</p>
                 ) : (
                   <div className="mt-3 space-y-2">
                     {selectedChildren.map((child) => {
@@ -450,8 +648,8 @@ export default function IdeaDumpPage() {
                         <button
                           key={child.ideaId}
                           type="button"
-                          onClick={() => setSelectedId(child.ideaId)}
-                          className="w-full rounded-lg border-2 border-dark/10 bg-accent/40 px-3 py-2 text-left hover:border-dark/30"
+                          onClick={() => handleSelectIdea(child.ideaId)}
+                          className="w-full rounded-lg border-2 border-line bg-accent px-3 py-2 text-left hover:border-line"
                         >
                           <div className="flex items-center gap-2">
                             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
@@ -459,7 +657,7 @@ export default function IdeaDumpPage() {
                             </span>
                             {child.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
                           </div>
-                          <p className="mt-1 truncate text-sm font-black text-dark">{child.title}</p>
+                          <p className="mt-1 truncate font-galmuri galmuri-semibold text-sm text-dark">{child.title}</p>
                         </button>
                       )
                     })}
@@ -472,7 +670,7 @@ export default function IdeaDumpPage() {
                   type="button"
                   onClick={saveDetail}
                   disabled={!detailForm.title.trim() || saving}
-                  className="btn-kitschy bg-primary text-white text-sm py-2 disabled:opacity-50"
+                  className="btn-retro-primary text-sm py-2 disabled:opacity-50"
                 >
                   저장
                 </button>
@@ -480,7 +678,7 @@ export default function IdeaDumpPage() {
                   type="button"
                   onClick={addChildIdea}
                   disabled={saving}
-                  className="btn-kitschy bg-secondary text-white text-sm py-2 disabled:opacity-50"
+                  className="btn-retro-secondary text-sm py-2 disabled:opacity-50"
                 >
                   하위 아이디어
                 </button>
@@ -488,7 +686,7 @@ export default function IdeaDumpPage() {
                   type="button"
                   onClick={convertToTask}
                   disabled={saving || Boolean(selectedIdea.convertedTaskId)}
-                  className="btn-kitschy bg-dark text-white text-sm py-2 disabled:opacity-50"
+                  className="btn-retro bg-chip text-dark text-sm py-2 disabled:opacity-50"
                 >
                   {selectedIdea.convertedTaskId ? '태스크 전환됨' : '태스크로 전환'}
                 </button>
@@ -496,7 +694,7 @@ export default function IdeaDumpPage() {
                   type="button"
                   onClick={deleteSelected}
                   disabled={saving || childCounts.get(selectedIdea.ideaId) > 0}
-                  className="btn-kitschy bg-accent text-primary text-sm py-2 disabled:opacity-40"
+                  className="btn-retro bg-accent text-primary text-sm py-2 disabled:opacity-40"
                 >
                   삭제
                 </button>

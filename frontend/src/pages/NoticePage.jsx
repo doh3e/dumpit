@@ -25,25 +25,25 @@ export default function NoticePage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
       <div>
-        <h1 className="heading-kitschy text-2xl">공지사항</h1>
-        <p className="mt-2 text-sm font-semibold text-dark/60">업데이트와 운영 안내를 모아볼 수 있어요.</p>
+        <h1 className="font-dungeon text-dark text-2xl">공지사항</h1>
+        <p className="mt-2 text-sm font-semibold text-sub">업데이트와 운영 안내를 모아볼 수 있어요.</p>
       </div>
 
       {loading ? (
-        <div className="card-kitschy py-12 text-center">
-          <p className="font-bold text-dark/50">불러오는 중...</p>
+        <div className="card-retro py-12 text-center">
+          <p className="font-bold text-sub">불러오는 중...</p>
         </div>
       ) : notices.length === 0 ? (
-        <div className="card-kitschy py-12 text-center">
+        <div className="card-retro py-12 text-center">
           <p className="font-black text-dark">아직 공지가 없어요.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {notices.map((notice) => (
-            <article key={notice.noticeId} className="card-kitschy !p-5">
+            <article key={notice.noticeId} className="card-retro !p-5">
               <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                 <h2 className="text-lg font-black leading-tight text-dark">{notice.title}</h2>
-                <time className="text-xs font-bold text-dark/40">{formatDate(notice.publishAt)}</time>
+                <time className="text-xs font-bold text-sub">{formatDate(notice.publishAt)}</time>
               </div>
               <MarkdownRenderer content={notice.content} />
             </article>

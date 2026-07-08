@@ -1,5 +1,6 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.common.SnapshotText;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.exception.BadRequestException;
@@ -72,7 +73,7 @@ public class TaskServiceImpl implements TaskService {
         if (endTime != null) task.setEndTime(endTime);
         else if (schedule.deadline() != null && schedule.startTime() != null) task.setEndTime(schedule.deadline());
         if (isLocked != null) task.setIsLocked(isLocked);
-        else if (schedule.startTime() != null) task.setIsLocked(true);
+        else if (startTime != null) task.setIsLocked(true); // 사용자가 직접 입력한 시작시간만 고정 — 마감에서 파생된 슬롯은 잠그지 않는다
 
         aiUsageService.consume(email, AiUsageService.UsageType.TASK_PRIORITY);
         OpenAiService.PriorityResult priority =
@@ -148,7 +149,8 @@ public class TaskServiceImpl implements TaskService {
 
         Task saved = taskRepository.save(task);
         deadlineNudgeService.index(saved);
-        activityLogService.record(task.getUser(), "TASK_UPDATED", "TASK", saved.getTaskId(), before, snapshot(saved));
+        Map<String, Object> after = snapshot(saved);
+        activityLogService.record(task.getUser(), TaskChangeClassifier.classify(before, after), "TASK", saved.getTaskId(), before, after);
         return saved;
     }
 
@@ -254,7 +256,9 @@ public class TaskServiceImpl implements TaskService {
                                                  LocalDateTime deadline,
                                                  Integer estimatedMinutes) {
         if (startTime == null && deadline == null && estimatedMinutes == null) {
-            return new ScheduleFields(null, null, null);
+            OpenAiService.ScheduleInferenceResult inferred =
+                    openAiService.inferSchedule(title, description, null, null, null);
+            return new ScheduleFields(null, parseDateTime(inferred.deadline()), inferred.estimatedMinutes());
         }
 
         if (startTime != null && deadline != null) {
@@ -333,8 +337,8 @@ public class TaskServiceImpl implements TaskService {
     private Map<String, Object> snapshot(Task task) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("taskId", task.getTaskId());
-        values.put("title", task.getTitle());
-        values.put("description", task.getDescription());
+        SnapshotText.putMasked(values, "title", task.getTitle());
+        SnapshotText.putMasked(values, "description", task.getDescription());
         values.put("status", task.getStatus());
         values.put("category", task.getCategory());
         values.put("deadline", task.getDeadline());

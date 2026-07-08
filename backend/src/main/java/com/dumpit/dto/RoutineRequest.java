@@ -16,7 +16,12 @@ public record RoutineRequest(
         @NotNull Routine.RepeatType repeatType,
         Set<Integer> daysOfWeek,
         Set<Integer> daysOfMonth,
+        Integer monthlyWeekOrdinal,
+        Integer monthlyWeekDay,
+        Boolean runOnLastDayIfMissing,
         LocalTime createTime,
+        LocalTime routineStartTime,
+        LocalTime routineEndTime,
         @NotNull LocalDate startDate,
         LocalDate endDate
 ) {}

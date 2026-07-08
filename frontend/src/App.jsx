@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider, notifyToast } from './context/ToastContext'
@@ -43,59 +43,45 @@ function PublicOnlyRoute({ children }) {
   return user ? <Navigate to="/dashboard" replace /> : children
 }
 
-function AppRoutes() {
+function Root() {
   return (
-    <Routes>
-      <Route path="/" element={
-        <PublicOnlyRoute><HomePage /></PublicOnlyRoute>
-      } />
-
-      <Route element={<Layout />}>
-        <Route path="/dashboard" element={
-          <PrivateRoute><DashboardPage /></PrivateRoute>
-        } />
-        <Route path="/brain-dump" element={
-          <PrivateRoute><BrainDumpPage /></PrivateRoute>
-        } />
-        <Route path="/ideas" element={
-          <PrivateRoute><IdeaDumpPage /></PrivateRoute>
-        } />
-        <Route path="/routines" element={
-          <PrivateRoute><RoutinePage /></PrivateRoute>
-        } />
-        <Route path="/shop" element={
-          <PrivateRoute><ShopPage /></PrivateRoute>
-        } />
-        <Route path="/mypage" element={
-          <PrivateRoute><MyPage /></PrivateRoute>
-        } />
-        <Route path="/notices" element={
-          <PrivateRoute><NoticePage /></PrivateRoute>
-        } />
-        <Route path="/admin" element={
-          <AdminRoute><AdminPage /></AdminRoute>
-        } />
-      </Route>
-
-      <Route path="/privacy" element={<PrivacyPage />} />
-      <Route path="/terms" element={<TermsPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <AuthProvider>
+      <ToastProvider>
+        <Sentry.ErrorBoundary fallback={<div className="min-h-screen bg-accent" />}>
+          <Outlet />
+        </Sentry.ErrorBoundary>
+      </ToastProvider>
+    </AuthProvider>
   )
 }
 
+const router = createBrowserRouter([
+  {
+    element: <Root />,
+    children: [
+      { path: '/', element: <PublicOnlyRoute><HomePage /></PublicOnlyRoute> },
+      {
+        element: <Layout />,
+        children: [
+          { path: '/dashboard', element: <PrivateRoute><DashboardPage /></PrivateRoute> },
+          { path: '/brain-dump', element: <PrivateRoute><BrainDumpPage /></PrivateRoute> },
+          { path: '/ideas', element: <PrivateRoute><IdeaDumpPage /></PrivateRoute> },
+          { path: '/routines', element: <PrivateRoute><RoutinePage /></PrivateRoute> },
+          { path: '/shop', element: <PrivateRoute><ShopPage /></PrivateRoute> },
+          { path: '/mypage', element: <PrivateRoute><MyPage /></PrivateRoute> },
+          { path: '/notices', element: <PrivateRoute><NoticePage /></PrivateRoute> },
+          { path: '/admin', element: <AdminRoute><AdminPage /></AdminRoute> },
+        ],
+      },
+      { path: '/privacy', element: <PrivacyPage /> },
+      { path: '/terms', element: <TermsPage /> },
+      { path: '*', element: <Navigate to="/" replace /> },
+    ],
+  },
+])
+
 function App() {
-  return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ToastProvider>
-          <Sentry.ErrorBoundary fallback={<div className="min-h-screen bg-accent" />}>
-            <AppRoutes />
-          </Sentry.ErrorBoundary>
-        </ToastProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  )
+  return <RouterProvider router={router} />
 }
 
 export default App

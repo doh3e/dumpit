@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../services/api'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
+import { applyTheme, getThemePref } from '../utils/theme'
 
 const DEFAULT_START = 9
 const DEFAULT_END = 22
@@ -52,6 +53,7 @@ export default function SettingsModal({ onClose }) {
     const v = localStorage.getItem('dumpit_routine_end')
     return v ? Number(v) : DEFAULT_END
   })
+  const [themePref, setThemePref] = useState(getThemePref)
   const [permission, setPermission] = useState(getNotificationPermission)
   const [notificationsEnabled, setNotificationsEnabled] = useState(loadNotificationsEnabled)
   const [selectedThresholds, setSelectedThresholds] = useState(loadThresholds)
@@ -144,46 +146,68 @@ export default function SettingsModal({ onClose }) {
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-dark/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center overlay-retro" onClick={onClose}>
       <div
-        className="card-kitschy w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto"
+        className="card-retro w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="heading-kitschy text-xl">설정</h2>
+          <h2 className="font-dungeon text-dark text-xl">설정</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg border-2 border-dark font-black text-dark hover:bg-primary hover:text-white transition-colors"
+            className="w-8 h-8 rounded-lg border border-line font-black text-sub hover:bg-chip hover:text-dark transition-colors"
           >
             X
           </button>
         </div>
 
         <section className="mb-6">
-          <h3 className="font-extrabold text-dark text-sm mb-3">일과 시간</h3>
-          <p className="text-xs text-dark/50 font-medium mb-3">
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">테마</h3>
+          <div className="flex gap-2">
+            {[
+              { value: 'light', label: '라이트' },
+              { value: 'dark', label: '다크' },
+              { value: 'system', label: '시스템' },
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => { applyTheme(value); setThemePref(value) }}
+                className={`flex-1 text-xs ${themePref === value ? 'btn-retro-primary' : 'btn-retro'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <hr className="border-line mb-6" />
+
+        <section className="mb-6">
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">일과 시간</h3>
+          <p className="text-xs text-sub font-medium mb-3">
             시간표에 표시될 나의 일과 시간대를 설정하세요
           </p>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <label className="text-xs font-bold text-dark/60">시작</label>
+              <label className="text-xs font-bold text-sub">시작</label>
               <select
                 value={routineStart}
                 onChange={(e) => setRoutineStart(Number(e.target.value))}
-                className="text-sm font-bold border-2 border-dark rounded-lg px-2 py-1.5 bg-white"
+                className="text-sm font-bold border border-line rounded-lg px-2 py-1.5 bg-card"
               >
                 {Array.from({ length: 24 }, (_, h) => (
                   <option key={h} value={h}>{h}시</option>
                 ))}
               </select>
             </div>
-            <span className="font-bold text-dark/40">~</span>
+            <span className="font-bold text-sub">~</span>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-bold text-dark/60">종료</label>
+              <label className="text-xs font-bold text-sub">종료</label>
               <select
                 value={routineEnd}
                 onChange={(e) => setRoutineEnd(Number(e.target.value))}
-                className="text-sm font-bold border-2 border-dark rounded-lg px-2 py-1.5 bg-white"
+                className="text-sm font-bold border border-line rounded-lg px-2 py-1.5 bg-card"
               >
                 {Array.from({ length: 24 }, (_, h) => (
                   <option key={h} value={h}>{h}시</option>
@@ -193,14 +217,14 @@ export default function SettingsModal({ onClose }) {
           </div>
         </section>
 
-        <hr className="border-dark/10 mb-6" />
+        <hr className="border-line mb-6" />
 
         <section className="mb-6">
-          <h3 className="font-extrabold text-dark text-sm mb-3">알림</h3>
-          <div className="flex items-center justify-between gap-4 rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">알림</h3>
+          <div className="flex items-center justify-between gap-4 rounded-lg border-2 border-line bg-card px-4 py-3">
             <div className="min-w-0">
               <p className="text-sm font-bold text-dark">마감 임박 알림</p>
-              <p className="mt-0.5 text-xs font-medium text-dark/50">
+              <p className="mt-0.5 text-xs font-medium text-sub">
                 {permission === 'unsupported' && '이 브라우저에서는 지원하지 않아요.'}
                 {permission === 'denied' && '브라우저 설정에서 알림 차단을 해제해야 해요.'}
                 {permission === 'default' && '허용하면 마감 24시간 전에 팝업으로 알려드려요.'}
@@ -214,34 +238,34 @@ export default function SettingsModal({ onClose }) {
               className={`relative w-11 h-6 rounded-full border-2 transition-colors flex-shrink-0 ${
                 permission === 'granted' && notificationsEnabled
                   ? 'bg-primary border-primary'
-                  : 'bg-dark/20 border-dark/30'
+                  : 'bg-chip border-line'
               } disabled:opacity-40 disabled:cursor-not-allowed`}
               aria-label="마감 임박 알림 토글"
             >
-              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white border border-dark/20 transition-all ${
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-card border border-line transition-all ${
                 permission === 'granted' && notificationsEnabled ? 'left-[18px]' : 'left-0.5'
               }`} />
             </button>
           </div>
 
-          <div className="mt-3 rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
-            <p className="text-[11px] font-medium text-dark/50 leading-relaxed">
+          <div className="mt-3 rounded-lg border-2 border-line bg-card px-4 py-3">
+            <p className="text-[11px] font-medium text-sub leading-relaxed">
               {notificationNote}
             </p>
             <button
               type="button"
               onClick={sendTestNotification}
               disabled={permission === 'unsupported' || permission === 'denied'}
-              className="mt-3 w-full rounded-lg border-2 border-dark bg-accent px-3 py-2 text-xs font-black text-dark shadow-kitschy transition-transform active:translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="mt-3 w-full rounded-lg border border-line btn-retro w-auto px-3 py-2 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {testSent ? '테스트 알림을 보냈어요' : '테스트 알림 보내기'}
             </button>
           </div>
 
           {permission !== 'unsupported' && (
-            <div className="mt-3 rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
+            <div className="mt-3 rounded-lg border-2 border-line bg-card px-4 py-3">
               <p className="text-xs font-bold text-dark mb-2">알림 시점</p>
-              <p className="text-[11px] font-medium text-dark/50 mb-3">
+              <p className="text-[11px] font-medium text-sub mb-3">
                 처음 감지 시는 항상 알려드려요. 추가로 받을 시점을 선택하세요.
               </p>
               <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
@@ -253,7 +277,7 @@ export default function SettingsModal({ onClose }) {
                       onChange={() => toggleThreshold(min)}
                       className="w-4 h-4 accent-primary rounded"
                     />
-                    <span className="text-xs font-semibold text-dark/70">{label}</span>
+                    <span className="text-xs font-semibold text-sub">{label}</span>
                   </label>
                 ))}
               </div>
@@ -261,14 +285,14 @@ export default function SettingsModal({ onClose }) {
           )}
         </section>
 
-        <hr className="border-dark/10 mb-6" />
+        <hr className="border-line mb-6" />
 
         <section className="mb-6">
-          <h3 className="font-extrabold text-dark text-sm mb-3">보유 아이템</h3>
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">보유 아이템</h3>
           {loadingPurchases ? (
-            <p className="text-xs text-dark/40 font-medium">불러오는 중...</p>
+            <p className="text-xs text-sub font-medium">불러오는 중...</p>
           ) : purchases.length === 0 ? (
-            <p className="text-xs text-dark/40 font-medium">
+            <p className="text-xs text-sub font-medium">
               아직 구매한 아이템이 없어요. 코인샵에서 구매해보세요!
             </p>
           ) : (
@@ -276,10 +300,10 @@ export default function SettingsModal({ onClose }) {
               {purchases.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 border-dark/10 bg-accent"
+                  className="flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 border-line bg-accent"
                 >
                   <div
-                    className="w-10 h-10 rounded-lg border-2 border-dark"
+                    className="w-10 h-10 rounded-lg border border-line"
                     style={{ backgroundColor: item.color }}
                   />
                   <span className="text-[10px] font-bold text-dark text-center leading-tight">
@@ -293,15 +317,15 @@ export default function SettingsModal({ onClose }) {
 
         {isDesktop && (
           <>
-            <hr className="border-dark/10 mb-6" />
+            <hr className="border-line mb-6" />
 
             <section className="mb-6">
-              <h3 className="font-extrabold text-dark text-sm mb-3">앱 정보</h3>
-              <div className="rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
+              <h3 className="font-galmuri font-bold text-dark text-sm mb-3">앱 정보</h3>
+              <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-black text-dark">덤핏 데스크탑</p>
-                    <p className="mt-0.5 text-xs font-semibold text-dark/50">
+                    <p className="mt-0.5 text-xs font-semibold text-sub">
                       v{appInfo?.version || '-'}
                     </p>
                   </div>
@@ -309,7 +333,7 @@ export default function SettingsModal({ onClose }) {
                     type="button"
                     onClick={checkForUpdates}
                     disabled={checkingUpdate}
-                    className="rounded-lg border-2 border-dark bg-accent px-3 py-2 text-xs font-black text-dark shadow-kitschy transition-transform active:translate-y-0.5 disabled:opacity-50"
+                    className="rounded-lg border border-line btn-retro w-auto px-3 py-2 text-xs disabled:opacity-50"
                   >
                     {checkingUpdate ? '확인 중...' : '업데이트 확인'}
                   </button>
@@ -322,13 +346,13 @@ export default function SettingsModal({ onClose }) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="btn-kitschy flex-1 bg-accent text-dark text-sm"
+            className="btn-retro flex-1 text-sm"
           >
             취소
           </button>
           <button
             onClick={saveRoutine}
-            className="btn-kitschy flex-1 bg-primary text-white text-sm"
+            className="btn-retro-primary flex-1 text-sm"
           >
             저장
           </button>

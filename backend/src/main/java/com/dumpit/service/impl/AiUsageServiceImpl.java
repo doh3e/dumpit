@@ -103,6 +103,33 @@ public class AiUsageServiceImpl implements AiUsageService {
         return Duration.between(OffsetDateTime.now(ZONE), resetAt()).plusMinutes(5);
     }
 
+    @Override
+    public AiUsageStatus consumeVariable(String email, UsageType usageType, int cost) {
+        User user = findUser(email);
+        String key = key(user);
+
+        try {
+            Long used = redisTemplate.opsForValue().increment(key, cost);
+            if (used == null) return status(0);
+            redisTemplate.expire(key, ttlUntilReset());
+
+            if (used > DAILY_LIMIT) {
+                redisTemplate.opsForValue().decrement(key, cost);
+                aiUsageLogService.record(user, usageType.name(), cost, DAILY_LIMIT, false, "LIMIT_EXCEEDED");
+                throw new AiUsageLimitExceededException();
+            }
+
+            aiUsageLogService.record(user, usageType.name(), cost, used.intValue(), true, null);
+            return status(used.intValue());
+        } catch (AiUsageLimitExceededException ex) {
+            throw ex;
+        } catch (DataAccessException ex) {
+            log.warn("Allowing AI request because Redis usage limiter is unavailable: {}", ex.getMessage());
+            aiUsageLogService.record(user, usageType.name(), cost, 0, true, "REDIS_UNAVAILABLE");
+            return status(0);
+        }
+    }
+
     private void recordUsage(User user, UsageType usageType, int usedAfter, boolean allowed, String note) {
         aiUsageLogService.record(user, usageType, usedAfter, allowed, note);
     }

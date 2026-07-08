@@ -4,12 +4,14 @@ import { createPortal } from 'react-dom'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import Footer from './Footer'
+import StarField from '../StarField'
 import SettingsModal from '../SettingsModal'
 import HelpModal from '../HelpModal'
 import NoticeModal from '../NoticeModal'
 import PomodoroTimer from '../PomodoroTimer'
 import api from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
+import { watchSystemTheme } from '../../utils/theme'
 
 const HELP_SEEN_KEY = 'dumpit_help_seen'
 
@@ -71,6 +73,8 @@ export default function Layout() {
     }
   }, [])
 
+  useEffect(() => watchSystemTheme(), [])
+
   const handleCloseHelp = () => {
     localStorage.setItem(HELP_SEEN_KEY, '1')
     setShowHelp(false)
@@ -86,12 +90,20 @@ export default function Layout() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-accent">
+    <div
+      className="flex flex-col min-h-screen bg-accent"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
+      <StarField />
       <Header
         onOpenDrawer={() => setDrawerOpen(true)}
         onOpenHelp={() => setShowHelp(true)}
       />
-      <div className="flex flex-1">
+      <div className="relative z-10 flex flex-1">
         <Sidebar
           onOpenSettings={() => setShowSettings(true)}
           onOpenHelp={() => setShowHelp(true)}
@@ -110,7 +122,8 @@ export default function Layout() {
       {/* Mobile floating timer button - only visible below lg */}
       <button
         onClick={() => setShowMobileTimer(true)}
-        className="lg:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary border-2 border-dark shadow-kitschy flex items-center justify-center text-white font-black text-lg"
+        className="lg:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary text-on-accent font-dungeon text-lg flex items-center justify-center"
+        style={{ border: '1.5px solid var(--edge)', boxShadow: '3px 3px 0 var(--shadow-sm)' }}
       >
         25
       </button>
@@ -118,16 +131,16 @@ export default function Layout() {
       {/* Mobile timer popup */}
       {showMobileTimer && createPortal(
         <div className="fixed inset-0 z-[60] flex items-end justify-center lg:hidden" onClick={() => setShowMobileTimer(false)}>
-          <div className="absolute inset-0 bg-dark/40" />
+          <div className="absolute inset-0 overlay-retro" />
           <div
-            className="relative w-full max-w-sm mx-4 mb-6 card-kitschy"
+            className="relative w-full max-w-sm mx-4 mb-6 card-retro"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-black text-dark text-sm">Pomodoro Timer</h3>
+              <h3 className="font-dungeon text-dark text-sm">Pomodoro Timer</h3>
               <button
                 onClick={() => setShowMobileTimer(false)}
-                className="w-7 h-7 rounded-lg border-2 border-dark font-black text-dark text-xs hover:bg-primary hover:text-white transition-colors"
+                className="w-7 h-7 rounded-lg border border-line font-black text-sub text-xs hover:bg-chip transition-colors"
               >
                 X
               </button>

@@ -33,12 +33,13 @@ export function ToastProvider({ children }) {
       {children}
       {toast && (
         <div className="fixed left-1/2 top-4 z-[100] w-[calc(100%-2rem)] max-w-md -translate-x-1/2">
-          <div className={`rounded-lg border-2 px-4 py-3 shadow-kitschy ${
-            toast.type === 'success'
-              ? 'border-secondary bg-green-50 text-green-700'
-              : 'border-primary bg-red-50 text-primary'
-          }`}>
-            <p className="text-sm font-black">{toast.message}</p>
+          <div
+            className={`rounded-xl px-4 py-3 bg-card shadow-retro ${
+              toast.type === 'success' ? 'text-dark' : 'text-primary'
+            }`}
+            style={{ border: `1.5px solid ${toast.type === 'success' ? 'var(--accent2)' : 'var(--accent)'}` }}
+          >
+            <p className="text-sm font-bold">{toast.message}</p>
           </div>
         </div>
       )}

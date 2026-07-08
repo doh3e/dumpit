@@ -176,7 +176,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={prevMonth}
-          className="w-7 h-7 flex items-center justify-center rounded border-2 border-dark text-dark font-bold text-xs hover:bg-accent transition-colors"
+          className="w-7 h-7 flex items-center justify-center rounded border border-line text-sub font-bold text-xs hover:bg-chip hover:text-dark transition-colors"
         >
           &lt;
         </button>
@@ -185,7 +185,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
         </span>
         <button
           onClick={nextMonth}
-          className="w-7 h-7 flex items-center justify-center rounded border-2 border-dark text-dark font-bold text-xs hover:bg-accent transition-colors"
+          className="w-7 h-7 flex items-center justify-center rounded border border-line text-sub font-bold text-xs hover:bg-chip hover:text-dark transition-colors"
         >
           &gt;
         </button>
@@ -193,7 +193,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
 
       <div className="grid grid-cols-7 gap-0.5 mb-1">
         {DAYS.map((d) => (
-          <div key={d} className="text-center text-[10px] font-bold text-dark/40 py-1">
+          <div key={d} className="text-center text-[10px] font-bold text-sub py-1">
             {d}
           </div>
         ))}
@@ -221,44 +221,44 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
               <div
                 className={`text-center py-1.5 rounded text-xs font-bold transition-colors ${
                   isToday
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-on-accent'
                     : hasAny
-                    ? `text-dark hover:bg-dark/5 ${selectedDay === day ? 'bg-dark/5' : ''}`
+                    ? `text-dark hover:bg-chip ${selectedDay === day ? 'bg-chip' : ''}`
                     : 'text-dark hover:bg-accent'
                 } ${hasAny ? 'cursor-pointer' : 'cursor-default'}`}
               >
                 {day}
                 <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-0.5">
                   {hasDeadline && (
-                    <span className={`w-1 h-1 rounded-full ${isToday ? 'bg-white' : 'bg-secondary'}`} />
+                    <span className={`w-1 h-1 rounded-full ${isToday ? 'bg-card' : 'bg-secondary'}`} />
                   )}
                   {hasGoogle && (
-                    <span className={`w-1 h-1 rounded-full ${isToday ? 'bg-white/60' : 'bg-blue-500'}`} />
+                    <span className={`w-1 h-1 rounded-full ${isToday ? 'bg-card' : 'gcal-dot'}`} />
                   )}
                 </div>
               </div>
 
               {/* hover 미리보기 - 읽기 전용 */}
               {hoveredDay === day && !selectedDay && hasAny && (
-                <div className="absolute z-50 left-1/2 -translate-x-1/2 top-full mt-1 w-52 card-kitschy !p-3 space-y-2 pointer-events-none">
-                  <p className="text-[10px] font-bold text-dark/40">{month + 1}월 {day}일 · 클릭해서 고정</p>
+                <div className="absolute z-50 left-1/2 -translate-x-1/2 top-full mt-1 w-52 card-retro !p-3 space-y-2 pointer-events-none">
+                  <p className="text-[10px] font-bold text-sub">{month + 1}월 {day}일 · 클릭해서 고정</p>
                   {dayTasks?.map((t) => (
                     <div key={t.taskId} className="flex items-start gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-secondary mt-1 flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-[11px] font-bold text-dark truncate">{t.title}</p>
                         {t.deadline && (
-                          <p className="text-[9px] text-dark/40 font-medium">마감 {formatTime(t.deadline)}</p>
+                          <p className="text-[9px] text-sub font-medium">마감 {formatTime(t.deadline)}</p>
                         )}
                       </div>
                     </div>
                   ))}
                   {dayGoogle?.map((e) => (
                     <div key={e.id} className="flex items-start gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full gcal-dot mt-1 flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-[11px] font-bold text-dark truncate">{e.summary}</p>
-                        <p className="text-[9px] text-dark/40 font-medium">
+                        <p className="text-[9px] text-sub font-medium">
                           {formatTime(e.start)}{e.end && ` ~ ${formatTime(e.end)}`}
                         </p>
                       </div>
@@ -269,12 +269,12 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
 
               {/* 클릭 고정 모달 - 추가 버튼 있음 */}
               {selectedDay === day && hasAny && (
-                <div className="absolute z-50 left-1/2 -translate-x-1/2 top-full mt-1 w-52 card-kitschy !p-3 space-y-2">
+                <div className="absolute z-50 left-1/2 -translate-x-1/2 top-full mt-1 w-52 card-retro !p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-bold text-dark/40">{month + 1}월 {day}일</p>
+                    <p className="text-[10px] font-bold text-sub">{month + 1}월 {day}일</p>
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelectedDay(null) }}
-                      className="text-[10px] text-dark/30 hover:text-dark transition-colors leading-none"
+                      className="text-[10px] text-sub hover:text-dark transition-colors leading-none"
                     >✕</button>
                   </div>
                   {dayTasks?.map((t) => (
@@ -283,17 +283,17 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                       <div className="min-w-0">
                         <p className="text-[11px] font-bold text-dark truncate">{t.title}</p>
                         {t.deadline && (
-                          <p className="text-[9px] text-dark/40 font-medium">마감 {formatTime(t.deadline)}</p>
+                          <p className="text-[9px] text-sub font-medium">마감 {formatTime(t.deadline)}</p>
                         )}
                       </div>
                     </div>
                   ))}
                   {dayGoogle?.map((e) => (
                     <div key={e.id} className="flex items-start gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full gcal-dot mt-1 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-bold text-dark truncate">{e.summary}</p>
-                        <p className="text-[9px] text-dark/40 font-medium">
+                        <p className="text-[9px] text-sub font-medium">
                           {formatTime(e.start)}{e.end && ` ~ ${formatTime(e.end)}`}
                         </p>
                       </div>
@@ -314,7 +314,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
       </div>
 
       {calendarActionRequired && (
-        <div className="mt-3 rounded-lg border-2 border-blue-200 bg-blue-50 px-3 py-2">
+        <div className="mt-3 rounded-lg cat-chip cat-work border px-3 py-2">
           <p className="text-[11px] font-bold text-blue-900">
             {calendarActionRequired === 'GOOGLE_CALENDAR_RECONNECT_REQUIRED'
               ? 'Google Calendar 권한 갱신이 필요해요.'
@@ -323,7 +323,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
           <button
             type="button"
             onClick={requestCalendarPermission}
-            className="mt-2 rounded border-2 border-blue-500 bg-white px-2.5 py-1 text-[10px] font-black text-blue-600 hover:bg-blue-100 transition-colors"
+            className="mt-2 btn-retro px-2.5 py-1 text-[10px] min-h-0 transition-colors"
           >
             {calendarActionRequired === 'GOOGLE_CALENDAR_RECONNECT_REQUIRED' ? '권한 갱신하기' : '권한 허용하기'}
           </button>
@@ -333,11 +333,11 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
       <div className="flex items-center gap-4 mt-3 justify-center">
         <div className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-secondary" />
-          <span className="text-[10px] font-bold text-dark/50">태스크</span>
+          <span className="text-[10px] font-bold text-sub">태스크</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-blue-500" />
-          <span className="text-[10px] font-bold text-dark/50">구글 캘린더</span>
+          <span className="w-2 h-2 rounded-full gcal-dot" />
+          <span className="text-[10px] font-bold text-sub">구글 캘린더</span>
         </div>
       </div>
     </div>

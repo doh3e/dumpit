@@ -3,15 +3,15 @@ import api, { getApiErrorMessage } from '../services/api'
 import MarkdownRenderer from '../components/MarkdownRenderer'
 
 const STATUS_LABEL = {
-  PENDING: { label: '대기 중', color: 'bg-yellow-100 text-yellow-700 border-yellow-400' },
-  REPLIED: { label: '답변 완료', color: 'bg-green-100 text-green-700 border-green-400' },
-  CLOSED: { label: '종료', color: 'bg-gray-100 text-gray-600 border-gray-400' },
+  PENDING: { label: '대기 중', color: 'tone-urgent-soon text-warn' },
+  REPLIED: { label: '답변 완료', color: 'cat-chip cat-health' },
+  CLOSED: { label: '종료', color: 'bg-chip text-sub border-line' },
 }
 
 const USER_STATUS = {
-  ACTIVE: { label: '활성', color: 'bg-green-100 text-green-700 border-green-400' },
-  BANNED: { label: '밴', color: 'bg-red-100 text-red-700 border-red-400' },
-  WITHDRAWN: { label: '탈퇴', color: 'bg-gray-100 text-gray-600 border-gray-400' },
+  ACTIVE: { label: '활성', color: 'cat-chip cat-health' },
+  BANNED: { label: '밴', color: 'tone-danger' },
+  WITHDRAWN: { label: '탈퇴', color: 'bg-chip text-sub border-line' },
 }
 
 const USER_STATUS_FILTERS = [
@@ -70,8 +70,8 @@ function toTimestamp(value) {
 
 function StatPill({ label, value }) {
   return (
-    <div className="rounded-lg border-2 border-dark/10 bg-white px-3 py-2">
-      <p className="text-[10px] font-black text-dark/40">{label}</p>
+    <div className="rounded-lg border-2 border-line bg-card px-3 py-2">
+      <p className="text-[10px] font-black text-sub">{label}</p>
       <p className="mt-0.5 text-lg font-black text-dark">{value}</p>
     </div>
   )
@@ -293,12 +293,12 @@ export default function AdminPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="heading-kitschy text-2xl">관리자</h2>
-          <p className="mt-2 text-sm font-semibold text-dark/60">
+          <h2 className="font-dungeon text-dark text-2xl">관리자</h2>
+          <p className="mt-2 text-sm font-semibold text-sub">
             문의 {inquiries.length}건 · 대기 {pendingCount}건 · 회원 {users.length}명
           </p>
         </div>
-        <div className="inline-flex rounded-lg border-2 border-dark bg-white p-1">
+        <div className="inline-flex rounded-lg border border-line bg-card p-1">
           {[
             ['inquiries', '문의'],
             ['users', '회원'],
@@ -309,7 +309,7 @@ export default function AdminPage() {
               type="button"
               onClick={() => setTab(value)}
               className={`rounded-md px-4 py-2 text-sm font-black transition-colors ${
-                tab === value ? 'bg-primary text-white' : 'text-dark/60 hover:bg-accent'
+                tab === value ? 'bg-primary text-on-accent' : 'text-sub hover:bg-accent'
               }`}
             >
               {label}
@@ -329,17 +329,17 @@ export default function AdminPage() {
 
       {tab === 'inquiries' && (
         loadingInquiries ? (
-          <div className="card-kitschy py-12 text-center">
-            <p className="font-bold text-dark/50">불러오는 중...</p>
+          <div className="card-retro py-12 text-center">
+            <p className="font-bold text-sub">불러오는 중...</p>
           </div>
         ) : inquiries.length === 0 ? (
-          <div className="card-kitschy py-12 text-center">
+          <div className="card-retro py-12 text-center">
             <p className="text-base font-extrabold text-dark">접수된 문의가 없어요.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="card-kitschy">
-              <h3 className="mb-4 font-extrabold text-dark">문의 목록</h3>
+            <div className="card-retro">
+              <h3 className="mb-4 font-galmuri font-bold text-dark">문의 목록</h3>
               <div className="max-h-[600px] space-y-2 overflow-y-auto pr-1">
                 {inquiries.map((inquiry) => {
                   const status = STATUS_LABEL[inquiry.status] ?? STATUS_LABEL.PENDING
@@ -350,62 +350,62 @@ export default function AdminPage() {
                       type="button"
                       onClick={() => openInquiry(inquiry)}
                       className={`w-full rounded-lg border-2 p-3 text-left transition-colors ${
-                        isSelected ? 'border-primary bg-primary/10' : 'border-dark/10 hover:border-dark/30'
+                        isSelected ? 'tone-overdue' : 'border-line hover:border-line'
                       }`}
                     >
                       <div className="mb-1 flex flex-wrap items-center gap-2">
                         <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${status.color}`}>
                           {status.label}
                         </span>
-                        <span className="text-[10px] font-bold text-dark/50">{formatDate(inquiry.createdAt)}</span>
+                        <span className="text-[10px] font-bold text-sub">{formatDate(inquiry.createdAt)}</span>
                       </div>
                       <p className="truncate text-sm font-extrabold text-dark">{inquiry.subject}</p>
-                      <p className="truncate text-xs font-semibold text-dark/60">{inquiry.userEmail}</p>
+                      <p className="truncate text-xs font-semibold text-sub">{inquiry.userEmail}</p>
                     </button>
                   )
                 })}
               </div>
             </div>
 
-            <div className="card-kitschy">
-              <h3 className="mb-4 font-extrabold text-dark">상세 / 답변</h3>
+            <div className="card-retro">
+              <h3 className="mb-4 font-galmuri font-bold text-dark">상세 / 답변</h3>
               {!selected ? (
                 <div className="py-12 text-center">
-                  <p className="text-sm font-bold text-dark/50">왼쪽에서 문의를 선택해주세요.</p>
+                  <p className="text-sm font-bold text-sub">왼쪽에서 문의를 선택해주세요.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="space-y-2 rounded-lg border border-dark/10 bg-accent p-3">
+                  <div className="space-y-2 rounded-lg border border-line bg-accent p-3">
                     <p className="text-xs">
-                      <span className="font-bold text-dark/60">이메일:</span>{' '}
+                      <span className="font-bold text-sub">이메일:</span>{' '}
                       <a href={`mailto:${selected.userEmail}`} className="text-primary underline">
                         {selected.userEmail}
                       </a>
                     </p>
-                    <p className="text-xs"><span className="font-bold text-dark/60">접수:</span> {formatDate(selected.createdAt)}</p>
-                    <p className="text-xs"><span className="font-bold text-dark/60">제목:</span> <span className="font-extrabold text-dark">{selected.subject}</span></p>
+                    <p className="text-xs"><span className="font-bold text-sub">접수:</span> {formatDate(selected.createdAt)}</p>
+                    <p className="text-xs"><span className="font-bold text-sub">제목:</span> <span className="font-extrabold text-dark">{selected.subject}</span></p>
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-dark/60">문의 내용</label>
-                    <pre className="whitespace-pre-wrap rounded-lg border-2 border-dark/10 bg-white p-3 text-sm font-medium text-dark">
+                    <label className="mb-1 block text-xs font-bold text-sub">문의 내용</label>
+                    <pre className="whitespace-pre-wrap rounded-lg border-2 border-line bg-card p-3 text-sm font-medium text-dark">
                       {selected.message}
                     </pre>
                   </div>
 
                   {selected.status === 'REPLIED' && selected.adminReply && (
                     <div>
-                      <label className="mb-1 block text-xs font-bold text-dark/60">
+                      <label className="mb-1 block text-xs font-bold text-sub">
                         이전 답변 ({formatDate(selected.repliedAt)})
                       </label>
-                      <pre className="whitespace-pre-wrap rounded-lg border-2 border-green-200 bg-green-50 p-3 text-sm font-medium text-dark">
+                      <pre className="whitespace-pre-wrap rounded-lg border-2 cat-chip cat-health p-3 text-sm font-medium text-dark">
                         {selected.adminReply}
                       </pre>
                     </div>
                   )}
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-dark/60">
+                    <label className="mb-1 block text-xs font-bold text-sub">
                       {selected.status === 'REPLIED' ? '답변 다시 보내기' : '답변 작성'}
                     </label>
                     <textarea
@@ -414,20 +414,20 @@ export default function AdminPage() {
                       rows={6}
                       maxLength={3000}
                       placeholder="답변 내용을 입력해주세요."
-                      className="w-full resize-none rounded-lg border-2 border-dark bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                      className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
                     />
-                    <p className="mt-1 text-right text-[10px] font-bold text-dark/40">{reply.length} / 3000</p>
+                    <p className="mt-1 text-right text-[10px] font-bold text-sub">{reply.length} / 3000</p>
                   </div>
 
                   <div className="flex gap-3">
-                    <button type="button" onClick={() => setSelected(null)} className="btn-kitschy flex-1 bg-accent py-2 text-sm text-dark">
+                    <button type="button" onClick={() => setSelected(null)} className="btn-retro flex-1 bg-accent py-2 text-sm text-dark">
                       닫기
                     </button>
                     <button
                       type="button"
                       onClick={handleSendReply}
                       disabled={!reply.trim() || sending}
-                      className="btn-kitschy flex-1 bg-secondary py-2 text-sm text-white disabled:opacity-50"
+                      className="btn-retro-secondary flex-1 py-2 text-sm disabled:opacity-50"
                     >
                       {sending ? '전송 중...' : '답변 전송'}
                     </button>
@@ -448,23 +448,23 @@ export default function AdminPage() {
             <StatPill label="탈퇴" value={userStats.withdrawn} />
           </div>
 
-          <div className="rounded-lg border-2 border-dark bg-white p-3">
+          <div className="rounded-lg border border-line bg-card p-3">
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_160px_180px]">
               <div>
-                <label className="mb-1 block text-[10px] font-black text-dark/40">검색</label>
+                <label className="mb-1 block text-[10px] font-black text-sub">검색</label>
                 <input
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
                   placeholder="이메일, 닉네임, 밴 사유"
-                  className="w-full rounded-lg border-2 border-dark/20 bg-accent px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  className="w-full rounded-lg border-2 border-line bg-accent px-3 py-2 text-sm font-bold outline-none focus:border-primary"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-black text-dark/40">상태</label>
+                <label className="mb-1 block text-[10px] font-black text-sub">상태</label>
                 <select
                   value={userStatusFilter}
                   onChange={(e) => setUserStatusFilter(e.target.value)}
-                  className="w-full rounded-lg border-2 border-dark/20 bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  className="w-full rounded-lg border-2 border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
                 >
                   {USER_STATUS_FILTERS.map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
@@ -472,11 +472,11 @@ export default function AdminPage() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-black text-dark/40">정렬</label>
+                <label className="mb-1 block text-[10px] font-black text-sub">정렬</label>
                 <select
                   value={userSort}
                   onChange={(e) => setUserSort(e.target.value)}
-                  className="w-full rounded-lg border-2 border-dark/20 bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  className="w-full rounded-lg border-2 border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
                 >
                   {USER_SORT_OPTIONS.map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
@@ -484,23 +484,23 @@ export default function AdminPage() {
                 </select>
               </div>
             </div>
-            <p className="mt-2 text-right text-[10px] font-black text-dark/40">
+            <p className="mt-2 text-right text-[10px] font-black text-sub">
               {visibleUsers.length}명 표시
             </p>
           </div>
 
-          <div className="card-kitschy overflow-hidden !p-0">
+          <div className="card-retro overflow-hidden !p-0">
             {loadingUsers ? (
               <div className="py-12 text-center">
-                <p className="font-bold text-dark/50">불러오는 중...</p>
+                <p className="font-bold text-sub">불러오는 중...</p>
               </div>
             ) : users.length === 0 ? (
               <div className="py-12 text-center">
-                <p className="font-bold text-dark/50">회원이 없어요.</p>
+                <p className="font-bold text-sub">회원이 없어요.</p>
               </div>
             ) : visibleUsers.length === 0 ? (
               <div className="py-12 text-center">
-                <p className="font-bold text-dark/50">조건에 맞는 회원이 없어요.</p>
+                <p className="font-bold text-sub">조건에 맞는 회원이 없어요.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -514,7 +514,7 @@ export default function AdminPage() {
                     <col className="w-[8%]" />
                   </colgroup>
                   <thead className="bg-accent">
-                    <tr className="border-b-2 border-dark/10 text-xs font-black text-dark/50">
+                    <tr className="border-b-2 border-line text-xs font-black text-sub">
                       <th className="px-4 py-3">회원</th>
                       <th className="px-3 py-3">상태</th>
                       <th className="px-3 py-3">활동</th>
@@ -530,19 +530,19 @@ export default function AdminPage() {
                       const aiUsage = user.aiUsage
                       const activity = user.activity || {}
                       return (
-                        <tr key={user.userId} className="border-b border-dark/10 last:border-0">
+                        <tr key={user.userId} className="border-b border-line last:border-0">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               {user.picture ? (
-                                <img src={user.picture} alt="" className="h-9 w-9 flex-shrink-0 rounded-full border-2 border-dark object-cover" />
+                                <img src={user.picture} alt="" className="h-9 w-9 flex-shrink-0 rounded-full border border-line object-cover" />
                               ) : (
-                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-dark bg-accent text-sm font-black text-dark">
+                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-line bg-accent text-sm font-black text-dark">
                                   {(user.nickname || '?')[0]}
                                 </div>
                               )}
                               <div className="min-w-0">
                                 <p className="truncate text-sm font-black text-dark">{user.nickname || '이름 없음'}</p>
-                                <p className="truncate text-xs font-semibold text-dark/50">{user.email}</p>
+                                <p className="truncate text-xs font-semibold text-sub">{user.email}</p>
                               </div>
                             </div>
                           </td>
@@ -553,25 +553,25 @@ export default function AdminPage() {
                           </td>
                           <td className="px-3 py-3">
                             <div className="flex flex-wrap gap-1.5 text-[10px] font-black">
-                              <span className="whitespace-nowrap rounded-full border border-dark/10 bg-white px-2 py-0.5 text-dark">
+                              <span className="whitespace-nowrap rounded-full border border-line bg-card px-2 py-0.5 text-dark">
                                 코인 {user.coinBalance ?? 0}
                               </span>
-                              <span className="whitespace-nowrap rounded-full border border-dark/10 bg-white px-2 py-0.5 text-dark/60">
+                              <span className="whitespace-nowrap rounded-full border border-line bg-card px-2 py-0.5 text-sub">
                                 AI {aiUsage ? `${aiUsage.remaining}/${aiUsage.limit}` : '-'}
                               </span>
-                              <span className="whitespace-nowrap rounded-full border border-dark/10 bg-accent px-2 py-0.5 text-dark/60">
+                              <span className="whitespace-nowrap rounded-full border border-line bg-accent px-2 py-0.5 text-sub">
                                 할 일 {activity.taskCount ?? 0}
                               </span>
-                              <span className="whitespace-nowrap rounded-full border border-dark/10 bg-accent px-2 py-0.5 text-dark/60">
+                              <span className="whitespace-nowrap rounded-full border border-line bg-accent px-2 py-0.5 text-sub">
                                 루틴 {activity.routineCount ?? 0}
                               </span>
-                              <span className="whitespace-nowrap rounded-full border border-dark/10 bg-accent px-2 py-0.5 text-dark/60">
+                              <span className="whitespace-nowrap rounded-full border border-line bg-accent px-2 py-0.5 text-sub">
                                 아이디어 {activity.ideaCount ?? 0}
                               </span>
                             </div>
                           </td>
-                          <td className="px-3 py-3 text-xs font-semibold leading-relaxed text-dark/60">{formatDate(user.createdAt)}</td>
-                          <td className="max-w-[220px] px-4 py-3 text-xs font-semibold text-dark/60">
+                          <td className="px-3 py-3 text-xs font-semibold leading-relaxed text-sub">{formatDate(user.createdAt)}</td>
+                          <td className="max-w-[220px] px-4 py-3 text-xs font-semibold text-sub">
                             <span className="line-clamp-2">{user.banReason || '-'}</span>
                           </td>
                           <td className="px-3 py-3 text-right">
@@ -579,7 +579,7 @@ export default function AdminPage() {
                               type="button"
                               onClick={() => openUserManage(user)}
                               disabled={disabled}
-                              className="whitespace-nowrap rounded-lg border-2 border-dark bg-white px-3 py-1.5 text-xs font-black text-dark shadow-kitschy disabled:opacity-40"
+                              className="whitespace-nowrap rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-black text-dark shadow-retro disabled:opacity-40"
                             >
                               관리
                             </button>
@@ -597,31 +597,31 @@ export default function AdminPage() {
 
       {tab === 'notices' && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="card-kitschy">
-            <h3 className="mb-4 font-extrabold text-dark">
+          <div className="card-retro">
+            <h3 className="mb-4 font-galmuri font-bold text-dark">
               {editingNoticeId ? '공지 수정' : '공지 작성'}
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-bold text-dark/60">제목</label>
+                <label className="mb-1 block text-xs font-bold text-sub">제목</label>
                 <input
                   value={noticeForm.title}
                   onChange={(e) => setNoticeForm((prev) => ({ ...prev, title: e.target.value }))}
                   maxLength={200}
-                  className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
                   placeholder="공지 제목"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold text-dark/60">내용</label>
-                <div className="overflow-hidden rounded-lg border-2 border-dark bg-white">
-                  <div className="flex flex-wrap gap-1 border-b-2 border-dark/10 bg-accent px-2 py-2">
+                <label className="mb-1 block text-xs font-bold text-sub">내용</label>
+                <div className="overflow-hidden rounded-lg border border-line bg-card">
+                  <div className="flex flex-wrap gap-1 border-b-2 border-line bg-accent px-2 py-2">
                     {MARKDOWN_TOOLS.map((tool) => (
                       <button
                         key={tool.label}
                         type="button"
                         onClick={() => insertMarkdown(tool)}
-                        className="rounded-md border-2 border-dark/20 bg-white px-2 py-1 text-[10px] font-black text-dark hover:border-dark"
+                        className="rounded-md border-2 border-line bg-card px-2 py-1 text-[10px] font-black text-dark hover:border-edge"
                       >
                         {tool.label}
                       </button>
@@ -633,38 +633,38 @@ export default function AdminPage() {
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, content: e.target.value }))}
                     rows={10}
                     maxLength={5000}
-                    className="w-full resize-none bg-white px-3 py-2 text-sm font-semibold outline-none"
+                    className="w-full resize-none bg-card px-3 py-2 text-sm font-semibold outline-none"
                     placeholder="## 업데이트 안내&#10;- 새 기능&#10;- 수정 사항&#10;&#10;**중요한 내용**을 강조할 수 있어요."
                   />
                 </div>
-                <p className="mt-1 text-right text-[10px] font-bold text-dark/40">{noticeForm.content.length} / 5000</p>
+                <p className="mt-1 text-right text-[10px] font-bold text-sub">{noticeForm.content.length} / 5000</p>
               </div>
               <div>
-                <p className="mb-1 block text-xs font-bold text-dark/60">미리보기</p>
-                <div className="min-h-28 rounded-lg border-2 border-dark/10 bg-white p-3">
+                <p className="mb-1 block text-xs font-bold text-sub">미리보기</p>
+                <div className="min-h-28 rounded-lg border-2 border-line bg-card p-3">
                   {noticeForm.content.trim() ? (
                     <MarkdownRenderer content={noticeForm.content} />
                   ) : (
-                    <p className="text-xs font-bold text-dark/30">작성한 내용이 여기에 표시됩니다.</p>
+                    <p className="text-xs font-bold text-sub">작성한 내용이 여기에 표시됩니다.</p>
                   )}
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-bold text-dark/60">게시 시간</label>
+                  <label className="mb-1 block text-xs font-bold text-sub">게시 시간</label>
                   <input
                     type="datetime-local"
                     value={noticeForm.publishAt}
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, publishAt: e.target.value }))}
-                    className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-bold text-dark/60">상태</label>
+                  <label className="mb-1 block text-xs font-bold text-sub">상태</label>
                   <select
                     value={noticeForm.status}
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, status: e.target.value }))}
-                    className="w-full rounded-lg border-2 border-dark bg-white px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
                   >
                     <option value="PUBLISHED">게시</option>
                     <option value="DRAFT">초안</option>
@@ -674,7 +674,7 @@ export default function AdminPage() {
               </div>
               <div className="flex gap-3">
                 {editingNoticeId && (
-                  <button type="button" onClick={resetNoticeForm} className="btn-kitschy flex-1 bg-accent py-2 text-sm text-dark">
+                  <button type="button" onClick={resetNoticeForm} className="btn-retro flex-1 bg-accent py-2 text-sm text-dark">
                     새 공지
                   </button>
                 )}
@@ -682,7 +682,7 @@ export default function AdminPage() {
                   type="button"
                   onClick={saveNotice}
                   disabled={savingNotice || !noticeForm.title.trim() || !noticeForm.content.trim()}
-                  className="btn-kitschy flex-1 bg-primary py-2 text-sm text-white disabled:opacity-50"
+                  className="btn-retro-primary flex-1 py-2 text-sm disabled:opacity-50"
                 >
                   {savingNotice ? '저장 중...' : editingNoticeId ? '수정 저장' : '공지 저장'}
                 </button>
@@ -690,24 +690,24 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="card-kitschy">
-            <h3 className="mb-4 font-extrabold text-dark">공지 목록</h3>
+          <div className="card-retro">
+            <h3 className="mb-4 font-galmuri font-bold text-dark">공지 목록</h3>
             {loadingNotices ? (
               <div className="py-12 text-center">
-                <p className="font-bold text-dark/50">불러오는 중...</p>
+                <p className="font-bold text-sub">불러오는 중...</p>
               </div>
             ) : notices.length === 0 ? (
               <div className="py-12 text-center">
-                <p className="font-bold text-dark/50">등록된 공지가 없어요.</p>
+                <p className="font-bold text-sub">등록된 공지가 없어요.</p>
               </div>
             ) : (
               <div className="max-h-[680px] space-y-3 overflow-y-auto pr-1">
                 {notices.map((notice) => (
-                  <article key={notice.noticeId} className="rounded-lg border-2 border-dark/10 bg-white p-3">
+                  <article key={notice.noticeId} className="rounded-lg border-2 border-line bg-card p-3">
                     <div className="mb-2 flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-black text-dark">{notice.title}</p>
-                        <p className="mt-1 text-[10px] font-bold text-dark/40">
+                        <p className="mt-1 text-[10px] font-bold text-sub">
                           {notice.status} · {formatDate(notice.publishAt)}
                         </p>
                       </div>
@@ -715,20 +715,20 @@ export default function AdminPage() {
                         <button
                           type="button"
                           onClick={() => editNotice(notice)}
-                          className="rounded-lg border-2 border-dark bg-accent px-2 py-1 text-[10px] font-black text-dark"
+                          className="rounded-lg border border-line bg-accent px-2 py-1 text-[10px] font-black text-dark"
                         >
                           수정
                         </button>
                         <button
                           type="button"
                           onClick={() => archiveNotice(notice)}
-                          className="rounded-lg border-2 border-red-500 bg-white px-2 py-1 text-[10px] font-black text-red-600"
+                          className="rounded-lg border-2 border-red-500 bg-card px-2 py-1 text-[10px] font-black text-red-600"
                         >
                           보관
                         </button>
                       </div>
                     </div>
-                    <p className="line-clamp-3 whitespace-pre-wrap text-xs font-semibold leading-relaxed text-dark/60">
+                    <p className="line-clamp-3 whitespace-pre-wrap text-xs font-semibold leading-relaxed text-sub">
                       {notice.content}
                     </p>
                   </article>
@@ -740,17 +740,17 @@ export default function AdminPage() {
       )}
 
       {managingUser && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-dark/40 px-4" onClick={() => setManagingUser(null)}>
-          <div className="card-kitschy w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-chip px-4" onClick={() => setManagingUser(null)}>
+          <div className="card-retro w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="heading-kitschy text-xl">회원 관리</h3>
-                <p className="mt-2 truncate text-xs font-semibold text-dark/50">{managingUser.email}</p>
+                <h3 className="font-dungeon text-dark text-xl">회원 관리</h3>
+                <p className="mt-2 truncate text-xs font-semibold text-sub">{managingUser.email}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setManagingUser(null)}
-                className="h-8 w-8 rounded-lg border-2 border-dark text-sm font-black text-dark hover:bg-primary hover:text-white"
+                className="h-8 w-8 rounded-lg border border-line text-sm font-black text-dark hover:bg-chip hover:text-dark"
               >
                 X
               </button>
@@ -758,12 +758,12 @@ export default function AdminPage() {
 
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
-                  <p className="text-xs font-black text-dark/40">보유 코인</p>
+                <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+                  <p className="text-xs font-black text-sub">보유 코인</p>
                   <p className="mt-1 text-sm font-black text-dark">{managingUser.coinBalance ?? 0}</p>
                 </div>
-                <div className="rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
-                  <p className="text-xs font-black text-dark/40">오늘 AI 잔여</p>
+                <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+                  <p className="text-xs font-black text-sub">오늘 AI 잔여</p>
                   <p className="mt-1 text-sm font-black text-dark">
                     {managingUser.aiUsage ? `${managingUser.aiUsage.remaining} / ${managingUser.aiUsage.limit}` : '-'}
                   </p>
@@ -777,15 +777,15 @@ export default function AdminPage() {
                   ['아이디어', managingUser.activity?.ideaCount ?? 0],
                   ['브레인덤프', managingUser.activity?.brainDumpCount ?? 0],
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-lg border-2 border-dark/10 bg-accent px-3 py-2">
-                    <p className="text-[10px] font-black text-dark/40">{label}</p>
+                  <div key={label} className="rounded-lg border-2 border-line bg-accent px-3 py-2">
+                    <p className="text-[10px] font-black text-sub">{label}</p>
                     <p className="mt-1 text-sm font-black text-dark">{value}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="rounded-lg border-2 border-dark/10 bg-white px-4 py-3">
-                <p className="text-xs font-black text-dark/40">현재 상태</p>
+              <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+                <p className="text-xs font-black text-sub">현재 상태</p>
                 <p className="mt-1 text-sm font-black text-dark">
                   {managingUser.isAdmin ? '관리자' : USER_STATUS[managingUser.status]?.label || managingUser.status}
                 </p>
@@ -793,20 +793,20 @@ export default function AdminPage() {
 
               {managingUser.status !== 'BANNED' && (
                 <div>
-                  <label className="mb-1 block text-xs font-bold text-dark/60">밴 사유</label>
+                  <label className="mb-1 block text-xs font-bold text-sub">밴 사유</label>
                   <textarea
                     value={banReasonInput}
                     onChange={(e) => setBanReasonInput(e.target.value)}
                     rows={4}
                     maxLength={500}
                     placeholder="운영 메모로 남길 사유를 입력해주세요."
-                    className="w-full resize-none rounded-lg border-2 border-dark bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                    className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
                   />
                 </div>
               )}
 
               {managingUser.status === 'BANNED' && managingUser.banReason && (
-                <div className="rounded-lg border-2 border-red-200 bg-red-50 px-4 py-3">
+                <div className="rounded-lg border-2 tone-danger px-4 py-3">
                   <p className="text-xs font-black text-red-600">밴 사유</p>
                   <p className="mt-1 whitespace-pre-wrap text-xs font-semibold text-red-500/80">{managingUser.banReason}</p>
                 </div>
@@ -818,7 +818,7 @@ export default function AdminPage() {
                 type="button"
                 onClick={() => setManagingUser(null)}
                 disabled={workingUserId === managingUser.userId}
-                className="btn-kitschy flex-1 bg-accent py-2 text-sm text-dark disabled:opacity-50"
+                className="btn-retro flex-1 bg-accent py-2 text-sm text-dark disabled:opacity-50"
               >
                 닫기
               </button>
@@ -827,7 +827,7 @@ export default function AdminPage() {
                   type="button"
                   onClick={handleUnban}
                   disabled={workingUserId === managingUser.userId}
-                  className="btn-kitschy flex-1 bg-secondary py-2 text-sm text-white disabled:opacity-50"
+                  className="btn-retro-secondary flex-1 py-2 text-sm disabled:opacity-50"
                 >
                   {workingUserId === managingUser.userId ? '처리 중...' : '밴 해제'}
                 </button>
@@ -836,7 +836,7 @@ export default function AdminPage() {
                   type="button"
                   onClick={handleBan}
                   disabled={workingUserId === managingUser.userId || managingUser.isAdmin || managingUser.status === 'WITHDRAWN'}
-                  className="btn-kitschy flex-1 bg-primary py-2 text-sm text-white disabled:opacity-50"
+                  className="btn-retro-primary flex-1 py-2 text-sm disabled:opacity-50"
                 >
                   {workingUserId === managingUser.userId ? '처리 중...' : '밴 적용'}
                 </button>

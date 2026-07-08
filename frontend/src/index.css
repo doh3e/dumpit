@@ -1,10 +1,22 @@
-@import url("https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css");
-
 @font-face {
-  font-family: 'RoundedFixedsys';
+  font-family: 'DungGeunMo';
   src: url('/fonts/DungGeunMo.woff2') format('woff2'),
        url('/fonts/DungGeunMo.woff') format('woff');
   font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Galmuri11';
+  src: url('/fonts/Galmuri11.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Galmuri11';
+  src: url('/fonts/Galmuri11-Bold.woff2') format('woff2');
+  font-weight: 700;
   font-display: swap;
 }
 
@@ -13,12 +25,26 @@
 @tailwind utilities;
 
 :root {
-  --color-primary:   #E05D5D;
-  --color-secondary: #FF8C42;
-  --color-accent:    #F9F9F9;
-  --color-dark:      #1A1A1A;
-  --outline:         2px solid #1A1A1A;
-  --shadow-kitschy:  4px 4px 0px #1A1A1A;
+  --bg:#F7EFDF; --card:#FFFDF6; --fg:#33271E; --sub:#8C7C66;
+  --line:#E0D2B6; --edge:#3A2C21; --chip:#F0DFBB;
+  --accent:#D95F52; --accent2:#3E8E85; --on-accent:#FFFBF0;
+  --shadow-hero:#EBC0AC; --shadow-sm:#DCC5A0;
+  --overlay:rgba(58,44,33,.35);
+  --danger:#BE4B3D;
+  /* 색 역할: accent=주 포인트(빨강) accent2=보조 포인트(틸) warn=마감 임박(앰버) starlight=별·보상(골드) */
+  --warn:#D98E2B; --starlight:#E9B44C;
+  --p1:#4AA396; --p2:#8AD6C4; --p3:#2E6B60;
+}
+
+[data-theme="dark"] {
+  --bg:#1F1B2E; --card:#2B2442; --fg:#F2E9D8; --sub:#9D93A8;
+  --line:#413966; --edge:#141021; --chip:#3A3156;
+  --accent:#F09355; --accent2:#5FC4B4; --on-accent:#241E14;
+  --shadow-hero:#141021; --shadow-sm:#141021;
+  --overlay:rgba(10,8,20,.55);
+  --danger:#E57B67;
+  --warn:#E9B44C; --starlight:#E9B44C;
+  --p1:#4AA396; --p2:#8AD6C4; --p3:#27584F;
 }
 
 *, *::before, *::after {
@@ -27,30 +53,250 @@
 
 body {
   margin: 0;
-  font-family: 'Mona12', system-ui, sans-serif;
-  background-color: var(--color-accent);
-  color: var(--color-dark);
+  font-family: 'Pretendard Variable', Pretendard, 'Malgun Gothic', system-ui, sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+}
+
+/* 픽셀 폰트는 안티앨리어싱 없이 또렷하게 */
+.font-dungeon,
+.font-galmuri {
   -webkit-font-smoothing: none;
 }
 
-@layer components {
-  .btn-kitschy {
-    @apply font-extrabold px-6 py-3 border-2 border-dark rounded-lg;
-    box-shadow: var(--shadow-kitschy);
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
-  }
-  .btn-kitschy:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px #1A1A1A;
-  }
-
-  .card-kitschy {
-    @apply bg-white border-2 border-dark rounded-xl p-5;
-    box-shadow: var(--shadow-kitschy);
-  }
-
-  .heading-kitschy {
-    @apply font-black text-dark tracking-wide;
-    font-family: 'Press Start 2P', 'Mona12', sans-serif;
-  }
+/* 갈무리11 세미볼드 — Bold(700)뿐이라 Regular에 반픽셀 스트로크로 중간 굵기를 만든다 */
+.galmuri-semibold {
+  font-weight: 400;
+  text-shadow: 0.5px 0 0 currentColor;
 }
+
+@layer components {
+  .btn-retro {
+    @apply font-dungeon text-sm px-4 py-2.5 rounded-[11px] bg-card text-dark;
+    border: 1.5px solid var(--edge);
+    box-shadow: 3px 3px 0 var(--shadow-sm);
+    transition: transform .08s ease, box-shadow .08s ease;
+    min-height: 44px;
+  }
+  .btn-retro:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--shadow-sm); }
+  .btn-retro:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--shadow-sm); }
+  .btn-retro:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+  .btn-retro:disabled { opacity: .5; transform: none; box-shadow: 3px 3px 0 var(--shadow-sm); }
+  .btn-retro-primary { @apply btn-retro bg-primary text-on-accent; }
+  .btn-retro-secondary { @apply btn-retro bg-secondary text-on-accent; }
+
+  .card-retro {
+    @apply bg-card rounded-2xl p-5;
+    border: 1.5px solid var(--edge);
+    box-shadow: 3px 3px 0 var(--shadow-sm);
+  }
+  .card-retro-hero {
+    @apply card-retro;
+    box-shadow: 5px 5px 0 var(--shadow-hero);
+  }
+  [data-theme="dark"] .card-retro-hero {
+    box-shadow: 5px 5px 0 var(--shadow-hero), 0 0 28px rgba(240, 147, 85, .16);
+  }
+
+  .label-retro {
+    @apply font-dungeon text-xs text-sub inline-block;
+    letter-spacing: .05em;
+    border-bottom: 2px dotted var(--accent2);
+    padding-bottom: 4px;
+  }
+  .chip-retro { @apply font-dungeon text-[11px] bg-chip text-dark rounded-md px-2 py-0.5; }
+  .check-retro {
+    @apply w-3.5 h-3.5 rounded bg-card inline-flex items-center justify-center flex-none;
+    border: 1.5px solid var(--edge);
+  }
+  .check-retro.done { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .divider-retro { border-bottom: 1px dashed var(--line); }
+
+  .overlay-retro { background: var(--overlay); }
+
+  /* 섹션/카드 톤 변형 */
+  .tone-today { border-color: var(--accent); background: var(--card); }
+  .tone-soon { border-color: var(--warn); background: var(--card); }
+  .tone-chip { border-color: var(--warn); background: var(--chip); }
+  .tone-later { border-color: var(--line); background: var(--card); }
+  .tone-done { border-color: var(--line); background: var(--chip); }
+  .tone-overdue {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--card));
+  }
+  .tone-urgent-soon {
+    border-color: var(--warn);
+    background: color-mix(in srgb, var(--warn) 8%, var(--card));
+  }
+  .tone-danger {
+    border-color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 8%, var(--card));
+  }
+
+  /* 카테고리 칩 — --cat 색상 하나에서 배경/보더/텍스트 파생 (라이트/다크 자동 대응) */
+  .cat-chip {
+    background: color-mix(in srgb, var(--cat) 14%, var(--card));
+    border-color: color-mix(in srgb, var(--cat) 38%, var(--card));
+    color: color-mix(in srgb, var(--cat) 72%, var(--fg));
+  }
+  .cat-work { --cat: #5B84AE; }
+  .cat-study { --cat: #7A6FC0; }
+  .cat-appointment { --cat: #C4708F; }
+  .cat-chore { --cat: #D49E35; }
+  .cat-routine { --cat: #9A6FB8; }
+  .cat-health { --cat: #6E9E62; }
+  .cat-hobby { --cat: #C07862; }
+  .cat-other { --cat: #8A8578; }
+
+  /* 구글 캘린더 이벤트 식별 도트 — 브랜드 연상 위해 블루 유지, 테마별 채도만 조절 */
+  .gcal-dot { background: #5B84AE; }
+  [data-theme="dark"] .gcal-dot { background: #7FA8D0; }
+
+}
+
+/* ---- 픽셀 행성 궤도 (OrbitProgress) ---- */
+.pixel-planet {
+  position: absolute; top: 50%; left: 50%; width: 3px; height: 3px;
+  margin: -10.5px 0 0 -10.5px; background: var(--p2);
+  box-shadow:
+    6px 0 var(--p1), 9px 0 var(--p1), 12px 0 var(--p1),
+    3px 3px var(--p1), 6px 3px var(--p2), 9px 3px var(--p1), 12px 3px var(--p1), 15px 3px var(--p1),
+    0 6px var(--p1), 3px 6px var(--p2), 6px 6px var(--p1), 9px 6px var(--p1), 12px 6px var(--p1), 15px 6px var(--p1), 18px 6px var(--p1),
+    0 9px var(--p3), 3px 9px var(--p3), 6px 9px var(--p3), 9px 9px var(--p3), 12px 9px var(--p3), 15px 9px var(--p3), 18px 9px var(--p3),
+    0 12px var(--p1), 3px 12px var(--p1), 6px 12px var(--p1), 9px 12px var(--p1), 12px 12px var(--p1), 15px 12px var(--p1), 18px 12px var(--p1),
+    3px 15px var(--p1), 6px 15px var(--p1), 9px 15px var(--p1), 12px 15px var(--p1), 15px 15px var(--p1),
+    6px 18px var(--p1), 9px 18px var(--p1), 12px 18px var(--p1);
+}
+.orbit-sat {
+  position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; margin: -2.5px;
+  background: var(--accent); border-radius: 1px;
+  animation: orbit 9s linear infinite;
+}
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(var(--orbit-r, 29px)); }
+  to { transform: rotate(360deg) translateX(var(--orbit-r, 29px)); }
+}
+@media (prefers-reduced-motion: reduce) { .orbit-sat { animation: none; } }
+
+/* ---- 마이페이지 우주정거장 픽셀아트 ---- */
+.pixel-station {
+  width: 4px; height: 4px; position: relative;
+  margin-left: -40px; /* 전체 폭(80px)의 절반만큼 좌측 보정 */
+  background: transparent;
+  box-shadow:
+    /* 왼쪽 태양광 패널 */
+    0 4px var(--p1), 4px 4px var(--p3), 8px 4px var(--p1),
+    0 8px var(--p1), 4px 8px var(--p1), 8px 8px var(--p1),
+    0 12px var(--p1), 4px 12px var(--p3), 8px 12px var(--p1),
+    0 16px var(--p1), 4px 16px var(--p1), 8px 16px var(--p1),
+    0 20px var(--p1), 4px 20px var(--p3), 8px 20px var(--p1),
+    0 24px var(--p1), 4px 24px var(--p1), 8px 24px var(--p1),
+    /* 왼쪽 트러스 */
+    12px 12px var(--line), 16px 12px var(--line), 20px 12px var(--line), 24px 12px var(--line), 28px 12px var(--line),
+    12px 16px var(--line), 16px 16px var(--line), 20px 16px var(--line), 24px 16px var(--line), 28px 16px var(--line),
+    /* 안테나 */
+    36px -4px var(--accent2), 36px 0 var(--line), 40px -4px var(--line),
+    /* 허브 모듈 */
+    32px 8px var(--chip), 36px 8px var(--chip), 40px 8px var(--chip), 44px 8px var(--chip),
+    32px 12px var(--chip), 36px 12px var(--accent), 40px 12px var(--accent), 44px 12px var(--chip),
+    32px 16px var(--chip), 36px 16px var(--chip), 40px 16px var(--chip), 44px 16px var(--chip),
+    32px 20px var(--chip), 36px 20px var(--chip), 40px 20px var(--chip), 44px 20px var(--chip),
+    /* 도킹 포트 */
+    36px 24px var(--line), 40px 24px var(--line),
+    /* 오른쪽 트러스 */
+    48px 12px var(--line), 52px 12px var(--line), 56px 12px var(--line), 60px 12px var(--line), 64px 12px var(--line),
+    48px 16px var(--line), 52px 16px var(--line), 56px 16px var(--line), 60px 16px var(--line), 64px 16px var(--line),
+    /* 오른쪽 태양광 패널 */
+    68px 4px var(--p1), 72px 4px var(--p3), 76px 4px var(--p1),
+    68px 8px var(--p1), 72px 8px var(--p1), 76px 8px var(--p1),
+    68px 12px var(--p1), 72px 12px var(--p3), 76px 12px var(--p1),
+    68px 16px var(--p1), 72px 16px var(--p1), 76px 16px var(--p1),
+    68px 20px var(--p1), 72px 20px var(--p3), 76px 20px var(--p1),
+    68px 24px var(--p1), 72px 24px var(--p1), 76px 24px var(--p1);
+}
+
+/* ---- 별빛 로그 (마이페이지 히트맵) — 완료량을 별 밝기로 ---- */
+.star-log-0 { background: var(--chip); border-color: transparent; }
+.star-log-1 { background: color-mix(in srgb, var(--starlight) 35%, var(--chip)); border-color: transparent; }
+.star-log-2 { background: color-mix(in srgb, var(--starlight) 65%, var(--chip)); border-color: transparent; }
+.star-log-3 { background: var(--starlight); border-color: transparent; }
+[data-theme="dark"] .star-log-3 { box-shadow: 0 0 6px color-mix(in srgb, var(--starlight) 60%, transparent); }
+
+/* ---- 보상 모션 ---- */
+.pixel-spark {
+  position: absolute; width: 4px; height: 4px; background: var(--accent2);
+  animation: spark .3s ease-out forwards;
+}
+.pixel-spark:nth-child(odd) { background: var(--accent); }
+@keyframes spark {
+  from { transform: translate(0, 0); opacity: 1; }
+  to { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+}
+
+.rocket-overlay {
+  position: fixed; inset: 0; pointer-events: none; z-index: 80; overflow: hidden;
+}
+.rocket-body {
+  position: absolute; left: 50%; bottom: -12vh; width: 4px; height: 4px;
+  animation: rocket-up 1.4s ease-in forwards;
+  /* 픽셀 로켓: 노즈(accent) / 몸체(card+line) / 창(accent2) / 화염 */
+  box-shadow:
+    4px -20px var(--accent),
+    0 -16px var(--accent), 4px -16px var(--accent), 8px -16px var(--accent),
+    0 -12px var(--line), 4px -12px var(--card), 8px -12px var(--line),
+    0 -8px var(--line), 4px -8px var(--warn), 8px -8px var(--line),
+    0 -4px var(--line), 4px -4px var(--card), 8px -4px var(--line),
+    -4px 0 var(--accent), 0 0 var(--line), 4px 0 var(--line), 8px 0 var(--line), 12px 0 var(--accent),
+    0 4px var(--warn), 8px 4px var(--warn),
+    4px 8px var(--accent), 4px 12px var(--warn);
+}
+.rocket-trail {
+  position: absolute; left: 50%; bottom: -8vh; width: 3px; height: 3px; background: transparent;
+  animation: rocket-up 1.4s ease-in forwards;
+  box-shadow: -14px 28px var(--warn), 18px 44px var(--starlight), -6px 64px var(--line), 10px 84px var(--warn);
+}
+@keyframes rocket-up {
+  from { transform: translateY(0); opacity: 1; }
+  80% { opacity: 1; }
+  to { transform: translateY(-130vh); opacity: 0; }
+}
+
+.coin-bounce { animation: coin-pop .4s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes coin-pop { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+.px-blink { animation: blink .5s steps(2, jump-none) 3; }
+@keyframes blink { 50% { opacity: .2; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-spark { animation: none; opacity: 0; }
+  .rocket-body, .rocket-trail { animation: none; opacity: 0; }
+  .coin-bounce, .px-blink { animation: none; }
+}
+
+/* ---- 결과 도착 스태거 (브레인/아이디어 덤프) ---- */
+.stagger-in > * {
+  animation: rise-in .3s ease-out both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .stagger-in > * { animation: none; } }
+
+/* ---- 다크 모드 픽셀 별 배경 ---- */
+.starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; display: none; }
+[data-theme="dark"] .starfield { display: block; }
+.starfield::before, .starfield::after {
+  content: ""; position: absolute; top: 0; left: 0; width: 2px; height: 2px;
+  box-shadow: 8vw 12vh #E9B44C, 22vw 38vh #F2E9D8, 41vw 8vh #6E6488, 55vw 62vh #E9B44C,
+    68vw 24vh #F2E9D8, 82vw 74vh #B0672F, 91vw 15vh #6E6488, 15vw 82vh #F2E9D8,
+    35vw 91vh #E9B44C, 74vw 48vh #6E6488, 5vw 55vh #6E6488, 96vw 88vh #E9B44C;
+}
+.starfield::after {
+  box-shadow: 12vw 55vh #F2E9D8, 48vw 28vh #E9B44C, 63vw 85vh #6E6488, 88vw 42vh #F2E9D8,
+    28vw 68vh #E9B44C, 52vw 6vh #6E6488;
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle { from { opacity: .15; } to { opacity: .9; } }
+@media (prefers-reduced-motion: reduce) { .starfield::after { animation: none; } }

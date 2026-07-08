@@ -4,7 +4,10 @@ import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES } from '../constants/categories'
 import SubtaskProposalModal from './SubtaskProposalModal'
 import AiUsageBadge from './AiUsageBadge'
+import { EstimatedMinutesField, TaskDateTimeField } from './TaskTimeInputs'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
+
+const TASK_CATEGORIES = CATEGORIES.filter((category) => category.value !== 'ROUTINE')
 
 function formatDateTimeInput(d) {
   const pad = (value) => String(value).padStart(2, '0')
@@ -23,7 +26,9 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   const [title, setTitle] = useState(task.title || '')
   const [description, setDescription] = useState(task.description || '')
   const [deadline, setDeadline] = useState(initialDeadline)
+  const [useStartTime, setUseStartTime] = useState(!!initialStartTime)
   const [startTime, setStartTime] = useState(initialStartTime)
+  const [useEstimatedMinutes, setUseEstimatedMinutes] = useState(task.estimatedMinutes != null)
   const [estimatedMinutes, setEstimatedMinutes] = useState(
     task.estimatedMinutes ?? ''
   )
@@ -53,12 +58,13 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         title: title.trim(),
         description: description.trim() || null,
         deadline: deadline || null,
-        estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes) : null,
+        estimatedMinutes: useEstimatedMinutes && estimatedMinutes ? parseInt(estimatedMinutes) : null,
         userPriorityScore: priorityScore,
         category,
-        startTime: startTime || null,
+        startTime: useStartTime ? (startTime || null) : null,
       }
-      payload.isLocked = Boolean(startTime)
+      // 원래 고정이었거나 사용자가 시작시간을 바꾼 경우만 고정 — 마감에서 파생된 슬롯이 편집 저장으로 잠기지 않게
+      payload.isLocked = Boolean(useStartTime && startTime && (task.isLocked || startTime !== initialStartTime))
       const res = await api.patch(`/tasks/${task.taskId}`, payload)
       onUpdated(res.data)
     } catch (err) {
@@ -80,84 +86,100 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
 
   return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <div className="absolute inset-0 bg-dark/40" onClick={onClose} />
+      <div className="absolute inset-0 overlay-retro" onClick={onClose} />
 
       <form
         onSubmit={handleSubmit}
-        className="relative card-kitschy w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto space-y-4"
+        className="relative card-retro w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto space-y-4"
       >
-        <h3 className="heading-kitschy text-xl">일정 수정</h3>
+        <h3 className="font-dungeon text-dark text-xl">일정 수정</h3>
 
         <div>
-          <label className="block text-xs font-bold text-dark/60 mb-1">할 일 *</label>
+          <label className="block text-xs font-bold text-sub mb-1">할 일 *</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
-            className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
+            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
             autoFocus
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-dark/60 mb-1">메모 (선택)</label>
+          <label className="block text-xs font-bold text-sub mb-1">메모 (선택)</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             maxLength={1000}
-            className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary resize-none"
+            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary resize-none"
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">시작 시간 (선택)</label>
-            <input
-              type="datetime-local"
+        <div className="space-y-3">
+          <TaskDateTimeField
+            label="마감 시간 (비워두면 AI가 자동 설정)"
+            value={deadline}
+            min={!deadline || new Date(deadline) > new Date() ? getMinDeadlineInput() : undefined}
+            defaultTimeWhenEmpty="23:59"
+            onChange={(e) => setDeadline(e.target.value)}
+            onClear={() => setDeadline('')}
+          />
+
+          <div className="flex flex-wrap gap-3">
+            <label className="inline-flex items-center gap-2 text-xs font-bold text-sub">
+              <input
+                type="checkbox"
+                checked={useStartTime}
+                onChange={(e) => setUseStartTime(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              시작 시간 입력
+            </label>
+            <label className="inline-flex items-center gap-2 text-xs font-bold text-sub">
+              <input
+                type="checkbox"
+                checked={useEstimatedMinutes}
+                onChange={(e) => {
+                  setUseEstimatedMinutes(e.target.checked)
+                }}
+                className="h-4 w-4 accent-primary"
+              />
+              예상 시간 직접 입력
+            </label>
+          </div>
+
+          {useStartTime && (
+            <TaskDateTimeField
+              label="시작 시간 (선택)"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
+              onClear={() => setStartTime('')}
             />
-          </div>
+          )}
 
-          <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">마감 시간 (선택)</label>
-            <input
-              type="datetime-local"
-              value={deadline}
-              min={!deadline || new Date(deadline) > new Date() ? getMinDeadlineInput() : undefined}
-              onChange={(e) => setDeadline(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-dark/60 mb-1">예상 시간</label>
-            <input
-              type="number"
+          {useEstimatedMinutes && (
+            <EstimatedMinutesField
+              label="예상 시간 (선택)"
               value={estimatedMinutes}
               onChange={(e) => setEstimatedMinutes(e.target.value)}
-              placeholder="60"
-              min="1"
-              className="w-full px-3 py-2 border-2 border-dark rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
             />
-          </div>
+          )}
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-dark/60 mb-1">카테고리</label>
+          <label className="block text-xs font-bold text-sub mb-1">카테고리</label>
           <div className="flex flex-wrap gap-1.5">
-            {CATEGORIES.map((c) => (
+            {TASK_CATEGORIES.map((c) => (
               <button
                 key={c.value}
                 type="button"
                 onClick={() => setCategory(c.value)}
                 className={`px-2.5 py-1 rounded-full text-xs font-bold border-2 transition-all ${
                   category === c.value
-                    ? 'bg-primary text-white border-dark'
-                    : 'bg-accent text-dark border-dark/20 hover:border-dark'
+                    ? 'bg-primary text-on-accent border-edge'
+                    : 'bg-accent text-dark border-line hover:border-edge'
                 }`}
               >
                 {c.emoji} {c.label}
@@ -167,7 +189,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-dark/60 mb-1">
+          <label className="block text-xs font-bold text-sub mb-1">
             중요도 ({Math.round(priorityScore * 100)}점)
             {isUserOverridden && (
               <button
@@ -188,7 +210,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             onChange={(e) => setPriorityScore(parseFloat(e.target.value))}
             className="w-full accent-primary"
           />
-          <div className="flex justify-between text-[10px] text-dark/40 font-bold mt-1">
+          <div className="flex justify-between text-[10px] text-sub font-bold mt-1">
             <span>낮음</span>
             <span>보통</span>
             <span>높음</span>
@@ -208,7 +230,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
                 setReanalyzing(false)
               }
             }}
-            className="mt-2 w-full text-xs font-bold text-primary border-2 border-primary rounded-lg py-1.5 hover:bg-primary/10 transition-colors disabled:opacity-50"
+            className="mt-2 w-full text-xs font-bold text-primary border-2 border-primary rounded-lg py-1.5 hover:bg-chip transition-colors disabled:opacity-50"
           >
             {reanalyzing ? 'AI 분석 중...' : 'AI 우선순위 재분석'}
           </button>
@@ -222,7 +244,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             type="button"
             onClick={() => setShowSplit(true)}
             disabled={!aiUsage.hasEnough(3)}
-            className="w-full text-xs font-bold text-secondary border-2 border-secondary rounded-lg py-2 hover:bg-secondary/10 transition-colors disabled:opacity-50"
+            className="w-full text-xs font-bold text-secondary border-2 border-secondary rounded-lg py-2 hover:bg-chip transition-colors disabled:opacity-50"
           >
             ✂️ AI로 쪼개기 (3~5개 서브태스크)
           </button>
@@ -232,21 +254,21 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           <button
             type="button"
             onClick={handleDelete}
-            className="btn-kitschy bg-primary text-white text-sm py-2"
+            className="btn-retro bg-primary text-on-accent text-sm py-2"
           >
             삭제
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="btn-kitschy flex-1 bg-accent text-dark text-sm py-2"
+            className="btn-retro flex-1 text-sm py-2"
           >
             취소
           </button>
           <button
             type="submit"
             disabled={!title.trim() || saving}
-            className="btn-kitschy flex-1 bg-secondary text-white text-sm py-2 disabled:opacity-50"
+            className="btn-retro flex-1 bg-secondary text-on-accent text-sm py-2 disabled:opacity-50"
           >
             {saving ? '저장 중...' : '저장'}
           </button>

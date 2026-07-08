@@ -1,5 +1,7 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.common.SnapshotText;
+import com.dumpit.dto.IdeaExtractConfirmRequest;
 import com.dumpit.entity.Idea;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
@@ -127,6 +129,40 @@ public class IdeaServiceImpl implements IdeaService {
 
     @Override
     @Transactional
+    public OpenAiService.IdeaExtractResult extractIdeas(String email, String rawText) {
+        // 고정 5점 (브레인 덤프와 동일)
+        aiUsageService.consume(email, AiUsageService.UsageType.IDEA_EXTRACT);
+        return openAiService.extractIdeas(rawText);
+    }
+
+    @Override
+    @Transactional
+    public List<Idea> confirmExtractedIdeas(String email, List<IdeaExtractConfirmRequest.IdeaNodeInput> nodes) {
+        User user = findUser(email);
+        List<Idea> allSaved = new ArrayList<>();
+        for (IdeaExtractConfirmRequest.IdeaNodeInput node : nodes) {
+            saveNodeRecursive(user, node, null, allSaved);
+        }
+        return allSaved;
+    }
+
+    private void saveNodeRecursive(User user, IdeaExtractConfirmRequest.IdeaNodeInput node,
+                                   Idea parent, List<Idea> allSaved) {
+        if (node.title() == null || node.title().isBlank()) return;
+        Idea idea = Idea.of(user, node.title().trim(), trimToNull(node.content()));
+        idea.update(null, null, false, parseCategory(node.category()), parent);
+        Idea saved = ideaRepository.save(idea);
+        activityLogService.record(user, "IDEA_CREATED", "IDEA", saved.getIdeaId(), null, snapshot(saved));
+        allSaved.add(saved);
+        if (node.children() != null) {
+            for (IdeaExtractConfirmRequest.IdeaNodeInput child : node.children()) {
+                saveNodeRecursive(user, child, saved, allSaved);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
     public void deleteIdea(String email, UUID ideaId) {
         Idea idea = findOwnedIdea(email, ideaId);
         if (ideaRepository.existsByParentIdeaAndDeletedAtIsNull(idea)) {
@@ -206,8 +242,8 @@ public class IdeaServiceImpl implements IdeaService {
     private Map<String, Object> snapshot(Idea idea) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("ideaId", idea.getIdeaId());
-        values.put("title", idea.getTitle());
-        values.put("content", idea.getContent());
+        SnapshotText.putMasked(values, "title", idea.getTitle());
+        SnapshotText.putMasked(values, "content", idea.getContent());
         values.put("category", idea.getCategory());
         values.put("pinned", idea.getPinned());
         values.put("parentIdeaId", idea.getParentIdea() != null ? idea.getParentIdea().getIdeaId() : null);
@@ -220,8 +256,8 @@ public class IdeaServiceImpl implements IdeaService {
     private Map<String, Object> taskSnapshot(Task task) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("taskId", task.getTaskId());
-        values.put("title", task.getTitle());
-        values.put("description", task.getDescription());
+        SnapshotText.putMasked(values, "title", task.getTitle());
+        SnapshotText.putMasked(values, "description", task.getDescription());
         values.put("status", task.getStatus());
         values.put("category", task.getCategory());
         values.put("deadline", task.getDeadline());
