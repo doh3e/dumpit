@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import api from '../services/api'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
+import { applyTheme, getThemePref } from '../utils/theme'
 
 const DEFAULT_START = 9
 const DEFAULT_END = 22
@@ -52,6 +53,7 @@ export default function SettingsModal({ onClose }) {
     const v = localStorage.getItem('dumpit_routine_end')
     return v ? Number(v) : DEFAULT_END
   })
+  const [themePref, setThemePref] = useState(getThemePref)
   const [permission, setPermission] = useState(getNotificationPermission)
   const [notificationsEnabled, setNotificationsEnabled] = useState(loadNotificationsEnabled)
   const [selectedThresholds, setSelectedThresholds] = useState(loadThresholds)
@@ -158,6 +160,28 @@ export default function SettingsModal({ onClose }) {
             X
           </button>
         </div>
+
+        <section className="mb-6">
+          <h3 className="font-extrabold text-dark text-sm mb-3">테마</h3>
+          <div className="flex gap-2">
+            {[
+              { value: 'light', label: '라이트' },
+              { value: 'dark', label: '다크' },
+              { value: 'system', label: '시스템' },
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => { applyTheme(value); setThemePref(value) }}
+                className={`flex-1 text-xs ${themePref === value ? 'btn-retro-primary' : 'btn-retro'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <hr className="border-line mb-6" />
 
         <section className="mb-6">
           <h3 className="font-extrabold text-dark text-sm mb-3">일과 시간</h3>
