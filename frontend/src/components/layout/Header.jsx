@@ -43,30 +43,28 @@ export default function Header({ onOpenDrawer }) {
   }, [menuOpen])
 
   const aiColor = !usage
-    ? 'text-white/60'
+    ? 'text-sub'
     : usage.remaining >= 50
-    ? 'text-white'
+    ? 'text-dark'
     : usage.remaining >= 20
-    ? 'text-yellow-200'
-    : 'text-red-200'
+    ? 'text-secondary'
+    : 'text-primary'
 
   return (
-    <header className="sticky top-0 z-50 bg-primary border-b-2 border-dark shadow-kitschy">
+    <header className="sticky top-0 z-50 bg-card border-b border-line">
       <div className="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {/* Hamburger button - only below lg */}
           <button
             onClick={onOpenDrawer}
-            className="min-[1100px]:hidden w-9 h-9 rounded-lg border-2 border-white flex items-center justify-center hover:bg-white/10 transition-colors"
+            className="min-[1100px]:hidden w-9 h-9 rounded-lg border border-line flex items-center justify-center hover:bg-chip transition-colors"
             aria-label="메뉴 열기"
           >
             <img src={menuImage} alt="" className="h-5 w-5 object-contain" />
           </button>
           <Link to="/dashboard" className="flex items-center gap-2">
             <img src="/text_logo.png" alt="덤핏" className="h-24 w-auto" />
-            <span className="text-[10px] font-bold bg-secondary text-white px-2 py-0.5 rounded border border-dark">
-              BETA
-            </span>
+            <span className="chip-retro text-secondary">BETA</span>
           </Link>
         </div>
 
@@ -75,10 +73,10 @@ export default function Header({ onOpenDrawer }) {
             <Link
               key={path}
               to={path}
-              className={`px-4 py-2 rounded-lg text-sm font-bold border-2 transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                 pathname === path
-                  ? 'bg-dark text-white border-dark'
-                  : 'text-white border-transparent hover:border-white hover:bg-white/10'
+                  ? 'bg-chip text-dark'
+                  : 'text-sub hover:text-dark hover:bg-chip'
               }`}
             >
               {label}
@@ -94,19 +92,19 @@ export default function Header({ onOpenDrawer }) {
           {/* AI usage badge */}
           {usage && (
             <div
-              className="group relative hidden sm:flex items-center gap-1.5 bg-white/25 border-2 border-white/80 rounded-full px-3 py-1 cursor-default select-none"
+              className="group relative hidden sm:flex items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none"
               tabIndex={0}
               aria-label="AI 사용량 안내"
             >
               <img src={remainAiToken} alt="AI" className="w-4 h-4 object-contain" />
-              <span className={`text-sm font-extrabold leading-none ${aiColor}`}>
+              <span className={`font-dungeon text-sm leading-none ${aiColor}`}>
                 {usage.remaining}
               </span>
 
-              <div className="pointer-events-none absolute right-0 top-10 z-50 w-72 rounded-lg border-2 border-dark bg-white shadow-kitschy text-left opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
-                <div className="px-3 py-2.5 border-b border-dark/10">
+              <div className="pointer-events-none absolute right-0 top-10 z-50 w-72 rounded-lg card-retro p-0 text-left opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
+                <div className="px-3 py-2.5 border-b border-line">
                   <p className="text-xs font-black text-dark">AI 사용량 (오늘)</p>
-                  <p className="text-[11px] font-bold text-dark/50 mt-0.5">
+                  <p className="text-[11px] font-bold text-sub mt-0.5">
                     남은 사용량:{' '}
                     <span className={usage.remaining === 0 ? 'text-primary' : 'text-dark'}>
                       {usage.remaining}
@@ -114,8 +112,8 @@ export default function Header({ onOpenDrawer }) {
                     / {usage.limit}
                   </p>
                 </div>
-                <div className="px-3 py-2 border-b border-dark/10">
-                  <p className="text-[10px] font-semibold text-dark/50 leading-relaxed">
+                <div className="px-3 py-2 border-b border-line">
+                  <p className="text-[10px] font-semibold text-sub leading-relaxed">
                     Dumpit!은 베타 서비스 중이에요. 모든 활동이 무료인 대신
                     AI 기능에는 일일 사용량 제한이 있어요.
                   </p>
@@ -123,18 +121,18 @@ export default function Header({ onOpenDrawer }) {
                 {AI_COST_ROWS.map(([label, cost, isTotal]) => (
                   <div
                     key={label}
-                    className={`flex items-center justify-between px-3 py-1.5 border-b border-dark/5 last:border-0 ${
-                      isTotal ? 'bg-dark/5' : ''
+                    className={`flex items-center justify-between px-3 py-1.5 divider-retro last:border-0 ${
+                      isTotal ? 'bg-chip' : ''
                     }`}
                   >
-                    <span className={`text-xs ${isTotal ? 'font-black text-dark' : 'font-semibold text-dark/70'}`}>
+                    <span className={`text-xs ${isTotal ? 'font-black text-dark' : 'font-semibold text-sub'}`}>
                       {label}
                     </span>
                     <span className="text-xs font-black text-dark">{cost}</span>
                   </div>
                 ))}
-                <div className="px-3 py-2 border-t border-dark/10">
-                  <p className="text-[10px] font-semibold text-dark/40">매일 자정(KST)에 초기화돼요.</p>
+                <div className="px-3 py-2 border-t border-line">
+                  <p className="text-[10px] font-semibold text-sub">매일 자정(KST)에 초기화돼요.</p>
                 </div>
               </div>
             </div>
@@ -142,13 +140,13 @@ export default function Header({ onOpenDrawer }) {
 
           {/* Coin badge */}
           <div
-            className="group relative hidden sm:flex items-center gap-1.5 bg-white/25 border-2 border-white/80 rounded-full px-3 py-1 cursor-default select-none"
+            className="group relative hidden sm:flex items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none"
             tabIndex={0}
             aria-label="보유 코인 안내"
           >
             <img src={coinImage} alt="coin" className="w-4 h-4 object-contain" />
-            <span className="text-sm font-extrabold text-white leading-none">{user?.coins ?? 0}</span>
-            <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg border-2 border-dark bg-white px-3 py-2 text-left text-xs font-bold text-dark/70 opacity-0 shadow-kitschy transition-opacity group-hover:opacity-100 group-focus:opacity-100">
+            <span className="font-dungeon text-sm text-dark leading-none">{user?.coins ?? 0}</span>
+            <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg card-retro px-3 py-2 text-left text-xs font-bold text-sub opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100">
               추후 열릴 코인샵에서 다양한 테마와 스티커 등을 교환할 수 있어요.
             </div>
           </div>
@@ -160,12 +158,12 @@ export default function Header({ onOpenDrawer }) {
                 src={user.picture}
                 alt={user.name}
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="w-9 h-9 rounded-full border-2 border-dark shadow-kitschy object-cover cursor-pointer"
+                className="w-9 h-9 rounded-full border border-line object-cover cursor-pointer"
               />
             ) : (
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="w-9 h-9 rounded-full bg-accent border-2 border-dark shadow-kitschy font-bold text-dark text-sm"
+                className="w-9 h-9 rounded-full bg-chip border border-line font-bold text-dark text-sm"
               >
                 {user?.name?.[0] ?? '?'}
               </button>
@@ -173,41 +171,41 @@ export default function Header({ onOpenDrawer }) {
 
             {menuOpen && (
               <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1rem))] sm:w-auto">
-                <div className="card-kitschy py-2 sm:min-w-[160px]">
-                  <div className="sm:hidden px-3 pb-2 mb-2 border-b border-dark/10">
+                <div className="card-retro py-2 sm:min-w-[160px]">
+                  <div className="sm:hidden px-3 pb-2 mb-2 border-b border-line">
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="rounded-lg border-2 border-dark/10 bg-accent px-2 py-2 text-center">
+                      <div className="rounded-lg border border-line bg-accent px-2 py-2 text-center">
                         <img src={coinImage} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
-                        <p className="text-[10px] font-black text-dark/50">코인</p>
-                        <p className="text-sm font-black text-dark">{user?.coins ?? 0}</p>
+                        <p className="text-[10px] font-black text-sub">코인</p>
+                        <p className="font-dungeon text-sm text-dark">{user?.coins ?? 0}</p>
                       </div>
-                      <div className="rounded-lg border-2 border-dark/10 bg-blue-50 px-2 py-2 text-center">
+                      <div className="rounded-lg border border-line bg-chip px-2 py-2 text-center">
                         <img src={remainAiToken} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
-                        <p className="text-[10px] font-black text-dark/50">AI</p>
-                        <p className={`text-sm font-black ${usage?.remaining === 0 ? 'text-primary' : 'text-dark'}`}>
+                        <p className="text-[10px] font-black text-sub">AI</p>
+                        <p className={`font-dungeon text-sm ${usage?.remaining === 0 ? 'text-primary' : 'text-dark'}`}>
                           {usage ? usage.remaining : '-'}
                         </p>
                       </div>
                       <DeadlineNudgeMenu variant="mobile-card" />
                     </div>
                     {usage && (
-                      <p className="mt-2 text-[10px] font-semibold text-dark/40 text-right">
+                      <p className="mt-2 text-[10px] font-semibold text-sub text-right">
                         AI {usage.remaining} / {usage.limit} · 자정 초기화
                       </p>
                     )}
                   </div>
-                  <p className="px-4 py-1 text-xs font-bold text-dark/50 truncate">{user?.email}</p>
-                  <hr className="my-1 border-dark/10" />
+                  <p className="px-4 py-1 text-xs font-bold text-sub truncate">{user?.email}</p>
+                  <hr className="my-1 border-line" />
                   <Link
                     to="/mypage"
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2 text-sm font-bold text-dark hover:bg-accent rounded transition-colors"
+                    className="block px-4 py-2 text-sm font-bold text-dark hover:bg-chip rounded transition-colors"
                   >
                     마이페이지
                   </Link>
                   <button
                     onClick={() => { setMenuOpen(false); logout() }}
-                    className="w-full text-left px-4 py-2 text-sm font-bold text-dark hover:bg-primary hover:text-white rounded transition-colors"
+                    className="w-full text-left px-4 py-2 text-sm font-bold text-dark hover:bg-chip rounded transition-colors"
                   >
                     로그아웃
                   </button>

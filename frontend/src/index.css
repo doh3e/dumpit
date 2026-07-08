@@ -85,8 +85,27 @@ body {
   .check-retro.done { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
   .divider-retro { border-bottom: 1px dashed var(--line); }
 
+  .overlay-retro { background: var(--overlay); }
+
   /* 구 클래스 별칭 — 전 화면 즉시 전환용, 개명 완료 후 제거 예정 */
   .btn-kitschy { @apply btn-retro; }
   .card-kitschy { @apply card-retro; }
   .heading-kitschy { @apply font-dungeon text-dark tracking-wide; }
 }
+
+/* ---- 다크 모드 픽셀 별 배경 ---- */
+.starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; display: none; }
+[data-theme="dark"] .starfield { display: block; }
+.starfield::before, .starfield::after {
+  content: ""; position: absolute; top: 0; left: 0; width: 2px; height: 2px;
+  box-shadow: 8vw 12vh #E9B44C, 22vw 38vh #F2E9D8, 41vw 8vh #6E6488, 55vw 62vh #E9B44C,
+    68vw 24vh #F2E9D8, 82vw 74vh #B0672F, 91vw 15vh #6E6488, 15vw 82vh #F2E9D8,
+    35vw 91vh #E9B44C, 74vw 48vh #6E6488, 5vw 55vh #6E6488, 96vw 88vh #E9B44C;
+}
+.starfield::after {
+  box-shadow: 12vw 55vh #F2E9D8, 48vw 28vh #E9B44C, 63vw 85vh #6E6488, 88vw 42vh #F2E9D8,
+    28vw 68vh #E9B44C, 52vw 6vh #6E6488;
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle { from { opacity: .15; } to { opacity: .9; } }
+@media (prefers-reduced-motion: reduce) { .starfield::after { animation: none; } }
