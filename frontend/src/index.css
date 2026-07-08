@@ -13,12 +13,21 @@
 @tailwind utilities;
 
 :root {
-  --color-primary:   #E05D5D;
-  --color-secondary: #FF8C42;
-  --color-accent:    #F9F9F9;
-  --color-dark:      #1A1A1A;
-  --outline:         2px solid #1A1A1A;
-  --shadow-kitschy:  4px 4px 0px #1A1A1A;
+  --bg:#F7EFDF; --card:#FFFDF6; --fg:#33271E; --sub:#8C7C66;
+  --line:#E0D2B6; --edge:#3A2C21; --chip:#F0DFBB;
+  --accent:#D95F52; --accent2:#C98A2D; --on-accent:#FFFBF0;
+  --shadow-hero:#EBC0AC; --shadow-sm:#DCC5A0;
+  --overlay:rgba(58,44,33,.35);
+  --p1:#C98A2D; --p2:#E9B44C; --p3:#A66B22;
+}
+
+[data-theme="dark"] {
+  --bg:#1F1B2E; --card:#2B2442; --fg:#F2E9D8; --sub:#9D93A8;
+  --line:#413966; --edge:#141021; --chip:#3A3156;
+  --accent:#F09355; --accent2:#E9B44C; --on-accent:#241E14;
+  --shadow-hero:#141021; --shadow-sm:#141021;
+  --overlay:rgba(10,8,20,.55);
+  --p1:#C98A2D; --p2:#E9B44C; --p3:#8A5A1E;
 }
 
 *, *::before, *::after {
@@ -28,8 +37,8 @@
 body {
   margin: 0;
   font-family: 'Mona12', system-ui, sans-serif;
-  background-color: var(--color-accent);
-  color: var(--color-dark);
+  background-color: var(--bg);
+  color: var(--fg);
   -webkit-font-smoothing: none;
 }
 
