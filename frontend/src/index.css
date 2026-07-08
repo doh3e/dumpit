@@ -45,23 +45,48 @@ body {
 }
 
 @layer components {
-  .btn-kitschy {
-    @apply font-extrabold px-6 py-3 border-2 border-dark rounded-lg;
-    box-shadow: var(--shadow-kitschy);
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  .btn-retro {
+    @apply font-dungeon text-sm px-4 py-2.5 rounded-[11px] bg-card text-dark;
+    border: 1.5px solid var(--edge);
+    box-shadow: 3px 3px 0 var(--shadow-sm);
+    transition: transform .08s ease, box-shadow .08s ease;
+    min-height: 44px;
   }
-  .btn-kitschy:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px #1A1A1A;
+  .btn-retro:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--shadow-sm); }
+  .btn-retro:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--shadow-sm); }
+  .btn-retro:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+  .btn-retro:disabled { opacity: .5; transform: none; box-shadow: 3px 3px 0 var(--shadow-sm); }
+  .btn-retro-primary { @apply btn-retro bg-primary text-on-accent; }
+
+  .card-retro {
+    @apply bg-card rounded-2xl p-5;
+    border: 1.5px solid var(--edge);
+    box-shadow: 3px 3px 0 var(--shadow-sm);
+  }
+  .card-retro-hero {
+    @apply card-retro;
+    box-shadow: 5px 5px 0 var(--shadow-hero);
+  }
+  [data-theme="dark"] .card-retro-hero {
+    box-shadow: 5px 5px 0 var(--shadow-hero), 0 0 28px rgba(240, 147, 85, .16);
   }
 
-  .card-kitschy {
-    @apply bg-white border-2 border-dark rounded-xl p-5;
-    box-shadow: var(--shadow-kitschy);
+  .label-retro {
+    @apply font-dungeon text-xs text-sub inline-block;
+    letter-spacing: .05em;
+    border-bottom: 2px dotted var(--accent2);
+    padding-bottom: 4px;
   }
+  .chip-retro { @apply font-dungeon text-[11px] bg-chip text-dark rounded-md px-2 py-0.5; }
+  .check-retro {
+    @apply w-3.5 h-3.5 rounded bg-card inline-flex items-center justify-center flex-none;
+    border: 1.5px solid var(--edge);
+  }
+  .check-retro.done { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .divider-retro { border-bottom: 1px dashed var(--line); }
 
-  .heading-kitschy {
-    @apply font-black text-dark tracking-wide;
-    font-family: 'Press Start 2P', 'Mona12', sans-serif;
-  }
+  /* 구 클래스 별칭 — 전 화면 즉시 전환용, 개명 완료 후 제거 예정 */
+  .btn-kitschy { @apply btn-retro; }
+  .card-kitschy { @apply card-retro; }
+  .heading-kitschy { @apply font-dungeon text-dark tracking-wide; }
 }
