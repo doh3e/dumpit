@@ -16,6 +16,7 @@
   --accent:#D95F52; --accent2:#C98A2D; --on-accent:#FFFBF0;
   --shadow-hero:#EBC0AC; --shadow-sm:#DCC5A0;
   --overlay:rgba(58,44,33,.35);
+  --danger:#BE4B3D;
   --p1:#C98A2D; --p2:#E9B44C; --p3:#A66B22;
 }
 
@@ -25,6 +26,7 @@
   --accent:#F09355; --accent2:#E9B44C; --on-accent:#241E14;
   --shadow-hero:#141021; --shadow-sm:#141021;
   --overlay:rgba(10,8,20,.55);
+  --danger:#E57B67;
   --p1:#C98A2D; --p2:#E9B44C; --p3:#8A5A1E;
 }
 
@@ -102,6 +104,10 @@ body {
     border-color: var(--accent2);
     background: color-mix(in srgb, var(--accent2) 8%, var(--card));
   }
+  .tone-danger {
+    border-color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 8%, var(--card));
+  }
 
   /* 카테고리 칩 — --cat 색상 하나에서 배경/보더/텍스트 파생 (라이트/다크 자동 대응) */
   .cat-chip {
@@ -151,6 +157,50 @@ body {
   to { transform: rotate(360deg) translateX(var(--orbit-r, 29px)); }
 }
 @media (prefers-reduced-motion: reduce) { .orbit-sat { animation: none; } }
+
+/* ---- 마이페이지 우주정거장 픽셀아트 ---- */
+.pixel-station {
+  width: 4px; height: 4px; position: relative;
+  margin-left: -40px; /* 전체 폭(80px)의 절반만큼 좌측 보정 */
+  background: transparent;
+  box-shadow:
+    /* 왼쪽 태양광 패널 */
+    0 4px var(--p1), 4px 4px var(--p3), 8px 4px var(--p1),
+    0 8px var(--p1), 4px 8px var(--p1), 8px 8px var(--p1),
+    0 12px var(--p1), 4px 12px var(--p3), 8px 12px var(--p1),
+    0 16px var(--p1), 4px 16px var(--p1), 8px 16px var(--p1),
+    0 20px var(--p1), 4px 20px var(--p3), 8px 20px var(--p1),
+    0 24px var(--p1), 4px 24px var(--p1), 8px 24px var(--p1),
+    /* 왼쪽 트러스 */
+    12px 12px var(--line), 16px 12px var(--line), 20px 12px var(--line), 24px 12px var(--line), 28px 12px var(--line),
+    12px 16px var(--line), 16px 16px var(--line), 20px 16px var(--line), 24px 16px var(--line), 28px 16px var(--line),
+    /* 안테나 */
+    36px -4px var(--accent2), 36px 0 var(--line), 40px -4px var(--line),
+    /* 허브 모듈 */
+    32px 8px var(--chip), 36px 8px var(--chip), 40px 8px var(--chip), 44px 8px var(--chip),
+    32px 12px var(--chip), 36px 12px var(--accent), 40px 12px var(--accent), 44px 12px var(--chip),
+    32px 16px var(--chip), 36px 16px var(--chip), 40px 16px var(--chip), 44px 16px var(--chip),
+    32px 20px var(--chip), 36px 20px var(--chip), 40px 20px var(--chip), 44px 20px var(--chip),
+    /* 도킹 포트 */
+    36px 24px var(--line), 40px 24px var(--line),
+    /* 오른쪽 트러스 */
+    48px 12px var(--line), 52px 12px var(--line), 56px 12px var(--line), 60px 12px var(--line), 64px 12px var(--line),
+    48px 16px var(--line), 52px 16px var(--line), 56px 16px var(--line), 60px 16px var(--line), 64px 16px var(--line),
+    /* 오른쪽 태양광 패널 */
+    68px 4px var(--p1), 72px 4px var(--p3), 76px 4px var(--p1),
+    68px 8px var(--p1), 72px 8px var(--p1), 76px 8px var(--p1),
+    68px 12px var(--p1), 72px 12px var(--p3), 76px 12px var(--p1),
+    68px 16px var(--p1), 72px 16px var(--p1), 76px 16px var(--p1),
+    68px 20px var(--p1), 72px 20px var(--p3), 76px 20px var(--p1),
+    68px 24px var(--p1), 72px 24px var(--p1), 76px 24px var(--p1);
+}
+
+/* ---- 별빛 로그 (마이페이지 히트맵) — 완료량을 별 밝기로 ---- */
+.star-log-0 { background: var(--chip); border-color: transparent; }
+.star-log-1 { background: color-mix(in srgb, var(--accent2) 35%, var(--chip)); border-color: transparent; }
+.star-log-2 { background: color-mix(in srgb, var(--accent2) 65%, var(--chip)); border-color: transparent; }
+.star-log-3 { background: var(--accent2); border-color: transparent; }
+[data-theme="dark"] .star-log-3 { box-shadow: 0 0 6px color-mix(in srgb, var(--accent2) 60%, transparent); }
 
 /* ---- 결과 도착 스태거 (브레인/아이디어 덤프) ---- */
 .stagger-in > * {
