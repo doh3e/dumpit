@@ -31,6 +31,32 @@ export default function Header({ onOpenDrawer }) {
   const menuRef = useRef(null)
   const { usage } = useAiUsage()
 
+  // 코인 증가 시 배지 바운스 + 숫자 카운트업 (보상 모션 2)
+  const coins = user?.coins ?? 0
+  const prevCoins = useRef(coins)
+  const [displayCoins, setDisplayCoins] = useState(coins)
+  const [coinPop, setCoinPop] = useState(false)
+  useEffect(() => {
+    const from = prevCoins.current
+    prevCoins.current = coins
+    if (coins === from) { setDisplayCoins(coins); return undefined }
+    if (coins < from || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplayCoins(coins)
+      return undefined
+    }
+    setCoinPop(true)
+    const start = performance.now()
+    let raf
+    const tick = (now) => {
+      const p = Math.min((now - start) / 300, 1)
+      setDisplayCoins(Math.round(from + (coins - from) * p))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    const t = setTimeout(() => setCoinPop(false), 450)
+    return () => { cancelAnimationFrame(raf); clearTimeout(t) }
+  }, [coins])
+
   useEffect(() => {
     if (!menuOpen) return
     const handleClick = (e) => {
@@ -140,12 +166,12 @@ export default function Header({ onOpenDrawer }) {
 
           {/* Coin badge */}
           <div
-            className="group relative hidden sm:flex items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none"
+            className={`group relative hidden sm:flex items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none ${coinPop ? 'coin-bounce' : ''}`}
             tabIndex={0}
             aria-label="보유 코인 안내"
           >
             <img src={coinImage} alt="coin" className="w-4 h-4 object-contain" />
-            <span className="font-dungeon text-sm text-dark leading-none">{user?.coins ?? 0}</span>
+            <span className="font-dungeon text-sm text-dark leading-none">{displayCoins}</span>
             <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg card-retro px-3 py-2 text-left text-xs font-bold text-sub opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100">
               추후 열릴 코인샵에서 다양한 테마와 스티커 등을 교환할 수 있어요.
             </div>

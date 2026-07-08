@@ -43,6 +43,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
   const [running, setRunning] = useState(false)
   const [selectedTaskId, setSelectedTaskId] = useState('')
   const [completedCount, setCompletedCount] = useState(0)
+  const [blinking, setBlinking] = useState(false)
   const [coinToast, setCoinToast] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
   const intervalRef = useRef(null)
@@ -124,6 +125,8 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     playAlarm()
     notifyDesktopPomodoroComplete(MODE.FOCUS)
     setCompletedCount((c) => c + 1)
+    setBlinking(true)
+    setTimeout(() => setBlinking(false), 1600)
     try {
       const res = await api.post('/pomodoro/complete', { focusMinutes: focusMin })
       refreshCoins()
@@ -338,7 +341,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-dungeon text-xl text-dark tracking-wider">
+          <span className={`font-dungeon text-xl text-dark tracking-wider ${blinking ? 'px-blink' : ''}`}>
             {min}:{sec}
           </span>
         </div>

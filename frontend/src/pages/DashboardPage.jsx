@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -8,6 +8,8 @@ import AddTaskModal from '../components/AddTaskModal'
 import EditTaskModal from '../components/EditTaskModal'
 import TaskBoardModal from '../components/TaskBoardModal'
 import OrbitProgress from '../components/OrbitProgress'
+import PixelBurst from '../components/PixelBurst'
+import RocketLaunch from '../components/RocketLaunch'
 import { getCategory } from '../constants/categories'
 import { calcCompletionCoins } from '../utils/taskRewards'
 
@@ -259,6 +261,8 @@ export default function DashboardPage() {
   const [editingTask, setEditingTask] = useState(null)
   const [coinToast, setCoinToast] = useState(null)
   const [planning, setPlanning] = useState(null)
+  const [bursts, setBursts] = useState([])
+  const [showRocket, setShowRocket] = useState(false)
 
   const fetchTasks = useCallback(() => {
     return api.get('/dashboard/planning')
@@ -286,14 +290,20 @@ export default function DashboardPage() {
     fetchTasks()
   }, [fetchTasks])
 
-  const toggleStatus = async (task) => {
+  const toggleStatus = async (task, event) => {
     const next = task.status === 'DONE' ? 'TODO' : 'DONE'
+    const clickX = event?.clientX
+    const clickY = event?.clientY
     try {
       await api.patch(`/tasks/${task.taskId}`, { status: next })
       fetchTasks()
       refreshCoins()
 
       if (next === 'DONE') {
+        // 픽셀 버스트 — 체크 위치에서, 연타 시 동시 3개까지만
+        if (clickX != null) {
+          setBursts((prev) => prev.length >= 3 ? prev : [...prev, { id: Date.now(), x: clickX, y: clickY }])
+        }
         const coins = calcCompletionCoins(task)
         if (coins > 0) {
           setCoinToast({ coins, taskTitle: task.title })
@@ -365,6 +375,20 @@ export default function DashboardPage() {
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   }, [nowSuggestion])
 
+  // 하루 전체 완료 → 로켓 발사 (거짓→참 전환 시 1회, 하루 1번)
+  const allDoneToday = todayTotal > 0 && todayDone === todayTotal
+  const prevAllDone = useRef(allDoneToday)
+  useEffect(() => {
+    if (allDoneToday && !prevAllDone.current && !loading) {
+      const key = `dumpit-rocket-${new Date().toISOString().slice(0, 10)}`
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1')
+        setShowRocket(true)
+      }
+    }
+    prevAllDone.current = allDoneToday
+  }, [allDoneToday, loading])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -408,7 +432,19 @@ export default function DashboardPage() {
               <h3 className="font-extrabold text-dark">오늘 일과표</h3>
               <span className="text-[10px] font-bold text-sub">시간이 정해진 일과 오늘의 흐름을 보여줘요.</span>
             </div>
-            {nowSuggestion?.task && (
+            {allDoneToday && (
+              <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
+                <div className="flex-1 min-w-[180px]">
+                  <p className="label-retro mb-2">지금 할 일</p>
+                  <p className="text-[22px] max-sm:text-[19px] font-extrabold leading-tight text-dark">
+                    오늘 다 비웠어요 🚀
+                  </p>
+                  <p className="text-xs text-sub mt-1">머릿속이 가벼워졌네요. 내일 또 만나요.</p>
+                </div>
+                <OrbitProgress done={todayDone} total={todayTotal} />
+              </div>
+            )}
+            {!allDoneToday && nowSuggestion?.task && (
               <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
                 <div className="flex-1 min-w-[180px]">
                   <p className="label-retro mb-2">지금 할 일</p>
@@ -469,7 +505,7 @@ export default function DashboardPage() {
                       } ${isChild ? 'ml-6 border-l-4 border-l-secondary' : ''}`}
                     >
                       <button
-                        onClick={() => toggleStatus(task)}
+                        onClick={(e) => toggleStatus(task, e)}
                         aria-label="완료 처리"
                         className="mt-0.5 w-5 h-5 rounded bg-card flex-shrink-0 hover:bg-primary transition-colors"
                         style={{ border: '1.5px solid var(--edge)' }}
@@ -605,6 +641,17 @@ export default function DashboardPage() {
           onUpdated={handleTaskUpdated}
         />
       )}
+
+      {bursts.map((b) => (
+        <PixelBurst
+          key={b.id}
+          x={b.x}
+          y={b.y}
+          onDone={() => setBursts((prev) => prev.filter((p) => p.id !== b.id))}
+        />
+      ))}
+
+      {showRocket && <RocketLaunch onDone={() => setShowRocket(false)} />}
 
       {coinToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] animate-bounce">

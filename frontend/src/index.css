@@ -202,6 +202,57 @@ body {
 .star-log-3 { background: var(--accent2); border-color: transparent; }
 [data-theme="dark"] .star-log-3 { box-shadow: 0 0 6px color-mix(in srgb, var(--accent2) 60%, transparent); }
 
+/* ---- 보상 모션 ---- */
+.pixel-spark {
+  position: absolute; width: 4px; height: 4px; background: var(--accent2);
+  animation: spark .3s ease-out forwards;
+}
+.pixel-spark:nth-child(odd) { background: var(--accent); }
+@keyframes spark {
+  from { transform: translate(0, 0); opacity: 1; }
+  to { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+}
+
+.rocket-overlay {
+  position: fixed; inset: 0; pointer-events: none; z-index: 80; overflow: hidden;
+}
+.rocket-body {
+  position: absolute; left: 50%; bottom: -12vh; width: 4px; height: 4px;
+  animation: rocket-up 1.4s ease-in forwards;
+  /* 픽셀 로켓: 노즈(accent) / 몸체(card+line) / 창(accent2) / 화염 */
+  box-shadow:
+    4px -20px var(--accent),
+    0 -16px var(--accent), 4px -16px var(--accent), 8px -16px var(--accent),
+    0 -12px var(--line), 4px -12px var(--card), 8px -12px var(--line),
+    0 -8px var(--line), 4px -8px var(--accent2), 8px -8px var(--line),
+    0 -4px var(--line), 4px -4px var(--card), 8px -4px var(--line),
+    -4px 0 var(--accent), 0 0 var(--line), 4px 0 var(--line), 8px 0 var(--line), 12px 0 var(--accent),
+    0 4px var(--accent2), 8px 4px var(--accent2),
+    4px 8px var(--accent), 4px 12px var(--accent2);
+}
+.rocket-trail {
+  position: absolute; left: 50%; bottom: -8vh; width: 3px; height: 3px; background: transparent;
+  animation: rocket-up 1.4s ease-in forwards;
+  box-shadow: -14px 28px var(--accent2), 18px 44px var(--p2), -6px 64px var(--line), 10px 84px var(--accent2);
+}
+@keyframes rocket-up {
+  from { transform: translateY(0); opacity: 1; }
+  80% { opacity: 1; }
+  to { transform: translateY(-130vh); opacity: 0; }
+}
+
+.coin-bounce { animation: coin-pop .4s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes coin-pop { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+.px-blink { animation: blink .5s steps(2, jump-none) 3; }
+@keyframes blink { 50% { opacity: .2; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-spark { animation: none; opacity: 0; }
+  .rocket-body, .rocket-trail { animation: none; opacity: 0; }
+  .coin-bounce, .px-blink { animation: none; }
+}
+
 /* ---- 결과 도착 스태거 (브레인/아이디어 덤프) ---- */
 .stagger-in > * {
   animation: rise-in .3s ease-out both;
