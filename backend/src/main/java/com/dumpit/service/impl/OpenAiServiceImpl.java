@@ -284,8 +284,10 @@ public class OpenAiServiceImpl implements OpenAiService {
 
             HIERARCHY RULES:
             - Nest a child under a parent ONLY when the text clearly signals subordination: indentation, sub-bullets, "~에 대해서", "예를 들면", or an explicit topic followed by its details.
+            - HEADING PATTERN (very common): a standalone heading line — wrapped in <> or [], starting with #, ending with ':', or a short title-like line directly followed by a list — is a PARENT idea. Every list item (1. / 1) / - / •) that follows it is that heading's child.
+            - Lines wrapped in angle brackets such as <덤핏 개선안> inside the input are user-written headings, NOT markup or tags. Never drop them. Use the inner text (without the brackets) as the parent idea's title.
             - If the input opens with one overarching theme or project and everything after it elaborates on it, use that as the single root and nest the rest under it.
-            - If thoughts are separate and unrelated, keep them as separate root-level ideas. A flat list of roots is perfectly fine — do NOT invent a parent grouping that the user never wrote.
+            - If thoughts are separate and unrelated, keep them as separate root-level ideas. A flat list of roots is perfectly fine — do NOT invent a parent grouping that the user never wrote. A heading line the user explicitly wrote is NOT an invented grouping: you MUST use it as the parent.
             - Children can have children (maximum 3 levels deep total).
 
             TITLE AND CONTENT RULES:
@@ -306,6 +308,20 @@ public class OpenAiServiceImpl implements OpenAiService {
               {"title":"내일 치과 예약","content":"","category":"HEALTH","children":[]}
             ]}
             (Note: "치과 예약" is unrelated to the project, so it stays a separate root.)
+
+            EXAMPLE 2 (heading + numbered list):
+            Input: "<덤핏 개선안>
+            1. 위젯 추가
+            2. 다크모드 지원
+            3. 알림 개선"
+            Output: {"ideas":[
+              {"title":"덤핏 개선안","content":"덤핏 개선 아이디어 모음","category":"WORK","children":[
+                {"title":"위젯 추가","content":"","category":"WORK","children":[]},
+                {"title":"다크모드 지원","content":"","category":"WORK","children":[]},
+                {"title":"알림 개선","content":"","category":"WORK","children":[]}
+              ]}
+            ]}
+            (Note: the user wrote the heading themselves, so it becomes the single parent and every numbered item is its child.)
 
             <user_input>
             %s
