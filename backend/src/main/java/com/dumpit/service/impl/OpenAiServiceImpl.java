@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +39,7 @@ public class OpenAiServiceImpl implements OpenAiService {
 
     public OpenAiServiceImpl(
             @Value("${openai.api-key:}") String apiKey,
-            @Value("${openai.model:gpt-4o-mini}") String model,
+            @Value("${openai.model:gpt-5-mini}") String model,
             ObjectMapper objectMapper) {
 
         log.info("Initializing OpenAI service with model [{}], api key configured: [{}]", model, !apiKey.isBlank());
@@ -361,20 +362,30 @@ public class OpenAiServiceImpl implements OpenAiService {
         );
     }
 
+    static Map<String, Object> chatRequestBody(String model, String systemPrompt, String userPrompt,
+                                               Map<String, Object> responseFormat) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", model);
+        body.put("messages", List.of(
+                Map.of("role", "system", "content", systemPrompt),
+                Map.of("role", "user", "content", userPrompt)
+        ));
+        if (model.startsWith("gpt-5")) {
+            // gpt-5 계열은 temperature 커스텀 값을 지원하지 않음
+            body.put("reasoning_effort", "minimal");
+        } else {
+            body.put("temperature", 0.3);
+        }
+        body.put("response_format", responseFormat);
+        return body;
+    }
+
     private String callChatApi(String userPrompt, String systemPrompt) {
         return callChatApi(userPrompt, systemPrompt, Map.of("type", "json_object"));
     }
 
     private String callChatApi(String userPrompt, String systemPrompt, Map<String, Object> responseFormat) {
-        Map<String, Object> body = Map.of(
-                "model", model,
-                "messages", List.of(
-                        Map.of("role", "system", "content", systemPrompt),
-                        Map.of("role", "user", "content", userPrompt)
-                ),
-                "temperature", 0.3,
-                "response_format", responseFormat
-        );
+        Map<String, Object> body = chatRequestBody(model, systemPrompt, userPrompt, responseFormat);
 
         try {
             String raw = restClient.post()

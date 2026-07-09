@@ -27,4 +27,23 @@ class OpenAiServiceImplTest {
         assertThat((List<String>) category.get("enum")).containsExactlyInAnyOrder(
                 "WORK", "STUDY", "APPOINTMENT", "CHORE", "ROUTINE", "HEALTH", "HOBBY", "OTHER");
     }
+
+    @Test
+    void gpt5_계열은_temperature_대신_reasoning_effort_minimal을_쓴다() {
+        Map<String, Object> body = OpenAiServiceImpl.chatRequestBody(
+                "gpt-5-mini", "system prompt", "user prompt", Map.of("type", "json_object"));
+
+        assertThat(body).doesNotContainKey("temperature");
+        assertThat(body.get("reasoning_effort")).isEqualTo("minimal");
+        assertThat(body.get("model")).isEqualTo("gpt-5-mini");
+    }
+
+    @Test
+    void gpt4_계열은_기존대로_temperature_0_3을_쓴다() {
+        Map<String, Object> body = OpenAiServiceImpl.chatRequestBody(
+                "gpt-4o-mini", "system prompt", "user prompt", Map.of("type", "json_object"));
+
+        assertThat(body.get("temperature")).isEqualTo(0.3);
+        assertThat(body).doesNotContainKey("reasoning_effort");
+    }
 }
