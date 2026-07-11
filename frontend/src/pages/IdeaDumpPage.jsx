@@ -110,7 +110,6 @@ export default function IdeaDumpPage() {
   const [ideas, setIdeas] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
-  const [quickTitle, setQuickTitle] = useState('')
   const [detailForm, setDetailForm] = useState(EMPTY_DETAIL)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)

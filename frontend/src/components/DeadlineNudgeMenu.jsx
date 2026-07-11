@@ -73,16 +73,6 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
       .catch(() => setNudges([]))
   }, [])
 
-  const requestPermission = async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      setPermission('unsupported')
-      return
-    }
-
-    const result = await window.Notification.requestPermission()
-    setPermission(result)
-  }
-
   useEffect(() => {
     if (!open) return
 
