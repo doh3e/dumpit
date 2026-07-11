@@ -24,9 +24,12 @@ function replacePlanningTask(planning, updatedTask) {
   if (!planning || !updatedTask?.taskId) return planning
 
   const nextSections = planning.sections
-    ? Object.fromEntries(
-        SECTION_KEYS.map((key) => [key, replaceTask(planning.sections[key], updatedTask)])
-      )
+    ? {
+        ...planning.sections,
+        ...Object.fromEntries(
+          SECTION_KEYS.map((key) => [key, replaceTask(planning.sections[key], updatedTask)])
+        ),
+      }
     : planning.sections
 
   const nowSuggestion = planning.nowSuggestion?.task?.taskId === updatedTask.taskId
@@ -164,7 +167,11 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setShowTaskBoard(true)} className="btn-retro text-sm">
+          <button
+            onClick={() => setShowTaskBoard(true)}
+            disabled={!sections}
+            className="btn-retro text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             태스크 전체 보기
           </button>
           <button onClick={() => setShowAddModal(true)} className="btn-retro-secondary text-sm">

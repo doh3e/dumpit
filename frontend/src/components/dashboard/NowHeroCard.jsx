@@ -1,5 +1,5 @@
 import OrbitProgress from '../OrbitProgress'
-import { formatTime } from '../../utils/dates'
+import { formatDeadline, formatTime, isToday } from '../../utils/dates'
 
 const QUEUE_BUCKET_LABEL = {
   OVERDUE: '마감 지남',
@@ -20,7 +20,9 @@ export default function NowHeroCard({
   onEdit,
 }) {
   const task = allDone ? null : nowSuggestion?.task || null
-  const heroTime = task ? formatTime(task.deadline) : null
+  const heroTime = task
+    ? (isToday(task.deadline) ? formatTime(task.deadline) : formatDeadline(task.deadline))
+    : null
 
   return (
     <div className="card-retro-hero p-4 sm:p-5">

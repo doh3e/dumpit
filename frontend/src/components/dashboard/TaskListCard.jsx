@@ -208,7 +208,9 @@ export default function TaskListCard({ sections, onToggle, onEdit }) {
         {isEmpty && (
           <div className="text-center py-8">
             <p className="font-extrabold text-dark text-base">
-              {activeCount === 0 ? '모든 할 일 완료!' : '이 탭엔 할 일이 없어요'}
+              {activeCount > 0
+                ? '이 탭엔 할 일이 없어요'
+                : (sections?.recentDone?.length ? '모든 할 일 완료!' : '아직 할 일이 없어요!')}
             </p>
             <p className="text-xs text-sub mt-2">브레인 덤프나 직접 추가로 시작해보세요</p>
           </div>

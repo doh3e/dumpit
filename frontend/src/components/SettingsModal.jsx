@@ -183,6 +183,8 @@ export default function SettingsModal({ onClose }) {
 
         <hr className="border-line mb-6" />
 
+        {/* 루틴 시작/끝: 현재 localStorage 전용(소비처 없음). 후속 작업에서 서버 저장으로 이전해
+            추천 개인화·하루 용량 경고·AI 시간 배정 제약에 사용할 예정. */}
         <section className="mb-6">
           <h3 className="font-galmuri font-bold text-dark text-sm mb-3">일과 시간</h3>
           <p className="text-xs text-sub font-medium mb-3">
