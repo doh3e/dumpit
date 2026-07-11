@@ -1,11 +1,4 @@
-function parseDate(value) {
-  if (!value) return null
-  if (Array.isArray(value)) {
-    return new Date(value[0], (value[1] || 1) - 1, value[2] || 1, value[3] || 0, value[4] || 0, value[5] || 0)
-  }
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? null : date
-}
+import { parseDate } from './dates'
 
 export function calcCompletionCoins(task) {
   if (task.parentTaskId) return 0
