@@ -25,7 +25,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
         onClick={handleNavClick}
         className="flex items-center justify-center mb-4 px-2"
       >
-        <img src="/logo.png" alt="덤핏" className="h-36 w-auto" />
+        <img src="/logo.webp" alt="덤핏" className="h-36 w-auto" />
       </Link>
 
       {MENU.map(({ label, path }) => (
