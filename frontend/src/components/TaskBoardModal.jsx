@@ -1,35 +1,7 @@
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { getCategory } from '../constants/categories'
-
-function parseDate(value) {
-  if (!value) return null
-  if (Array.isArray(value)) {
-    return new Date(value[0], (value[1] || 1) - 1, value[2] || 1, value[3] || 0, value[4] || 0, value[5] || 0)
-  }
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
-function startOfDay(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
-}
-
-function endOfDay(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999)
-}
-
-function addDays(date, days) {
-  const next = new Date(date)
-  next.setDate(next.getDate() + days)
-  return next
-}
-
-function formatDeadline(value) {
-  const date = parseDate(value)
-  if (!date) return '마감 없음'
-  return date.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
+import { parseDate, formatDeadline } from '../utils/dates'
 
 function formatPriority(task) {
   if (task.effectivePriority == null) return 'P -'
@@ -53,58 +25,15 @@ function sortTasks(tasks, sortMode) {
   })
 }
 
-function buildSections(tasks, sortMode) {
-  const now = new Date()
-  const todayStart = startOfDay(now)
-  const todayEnd = endOfDay(now)
-  const threeDaysEnd = endOfDay(addDays(now, 3))
-  const weekEnd = endOfDay(addDays(now, 7))
-  const threeDaysAgo = startOfDay(addDays(now, -3))
-
-  const active = tasks.filter((task) => task.status !== 'DONE' && task.status !== 'CANCELLED')
-  const done = tasks.filter((task) => task.status === 'DONE')
-
-  const overdue = []
-  const today = []
-  const threeDays = []
-  const week = []
-  const later = []
-
-  for (const task of active) {
-    const deadline = parseDate(task.deadline)
-    if (deadline && deadline < now) overdue.push(task)
-    else if (deadline && deadline <= todayEnd) today.push(task)
-    else if (deadline && deadline <= threeDaysEnd) threeDays.push(task)
-    else if (deadline && deadline <= weekEnd) week.push(task)
-    else later.push(task)
-  }
-
-  const recentDone = done.filter((task) => {
-    const completedAt = parseDate(task.completedAt)
-    if (completedAt) return completedAt >= threeDaysAgo
-    const deadline = parseDate(task.deadline)
-    return !deadline || deadline >= threeDaysAgo
-  })
-
+function buildSections(sections, sortMode) {
   return [
-    { id: 'today', title: '오늘 할 일', tone: 'tone-today', tasks: sortTasks(today, sortMode) },
-    { id: 'three', title: '3일 내로 할 일', tone: 'tone-soon', tasks: sortTasks(threeDays, sortMode) },
-    { id: 'week', title: '일주일 내로 할 일', tone: 'tone-chip', tasks: sortTasks(week, sortMode) },
-    { id: 'later', title: '그 외', tone: 'tone-later', tasks: sortTasks(later, sortMode) },
-    { id: 'overdue', title: '마감기한 지난 일', tone: 'tone-overdue', tasks: sortTasks(overdue, 'deadline') },
-    { id: 'done', title: '완료된 일 (최근 3일)', tone: 'tone-done', tasks: sortTasks(recentDone, sortMode) },
-  ]
-}
-
-function buildSectionsFromPlanning(sections, sortMode) {
-  if (!sections) return null
-  return [
-    { id: 'today', title: '오늘 할 일', tone: 'tone-today', tasks: sortTasks(sections.today || [], sortMode) },
-    { id: 'three', title: '3일 내로 할 일', tone: 'tone-soon', tasks: sortTasks(sections.next3Days || [], sortMode) },
-    { id: 'week', title: '일주일 내로 할 일', tone: 'tone-chip', tasks: sortTasks(sections.next7Days || [], sortMode) },
+    { id: 'overdue', title: '마감 지남', tone: 'tone-overdue', tasks: sortTasks(sections.overdue || [], 'deadline') },
+    { id: 'today', title: '오늘', tone: 'tone-today', tasks: sortTasks(sections.today || [], sortMode) },
+    { id: 'tomorrow', title: '내일', tone: 'tone-soon', tasks: sortTasks(sections.tomorrow || [], sortMode) },
+    { id: 'week', title: '일주일 내', tone: 'tone-chip', tasks: sortTasks(sections.next7Days || [], sortMode) },
     { id: 'later', title: '그 외', tone: 'tone-later', tasks: sortTasks(sections.later || [], sortMode) },
-    { id: 'overdue', title: '마감기한 지난 일', tone: 'tone-overdue', tasks: sortTasks(sections.overdue || [], 'deadline') },
-    { id: 'done', title: '완료된 일 (최근 3일)', tone: 'tone-done', tasks: sortTasks(sections.recentDone || [], sortMode) },
+    { id: 'someday', title: '언젠가', tone: 'tone-later', tasks: sortTasks(sections.someday || [], sortMode) },
+    { id: 'done', title: '완료 (최근 3일)', tone: 'tone-done', tasks: sortTasks(sections.recentDone || [], sortMode) },
   ]
 }
 
@@ -142,7 +71,7 @@ function TaskRow({ task, onEdit, onToggle }) {
           </div>
           <p className={`truncate text-sm font-black text-dark ${isDone ? 'line-through' : ''}`}>{task.title}</p>
           <p className="mt-0.5 truncate text-[11px] font-semibold text-sub">
-            {formatDeadline(task.deadline)}
+            {formatDeadline(task.deadline) || '마감 없음'}
             {task.estimatedMinutes ? ` · ${task.estimatedMinutes}분` : ''}
           </p>
         </button>
@@ -151,11 +80,11 @@ function TaskRow({ task, onEdit, onToggle }) {
   )
 }
 
-export default function TaskBoardModal({ tasks, sections: planningSections, onClose, onEditTask, onToggleTask }) {
+export default function TaskBoardModal({ sections: planningSections, onClose, onEditTask, onToggleTask }) {
   const [sortMode, setSortMode] = useState('priority')
   const sections = useMemo(
-    () => buildSectionsFromPlanning(planningSections, sortMode) || buildSections(tasks, sortMode),
-    [tasks, planningSections, sortMode]
+    () => buildSections(planningSections || {}, sortMode),
+    [planningSections, sortMode]
   )
 
   return createPortal(
