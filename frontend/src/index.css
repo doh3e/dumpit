@@ -1,21 +1,21 @@
+/* 픽셀 폰트는 KS X 1001 상용 한글 2,350자 + ASCII 서브셋 — 비상용 음절은 폴백 폰트로 렌더링됨 */
 @font-face {
   font-family: 'DungGeunMo';
-  src: url('/fonts/DungGeunMo.woff2') format('woff2'),
-       url('/fonts/DungGeunMo.woff') format('woff');
+  src: url('/fonts/DungGeunMo.subset.woff2') format('woff2');
   font-weight: normal;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'Galmuri11';
-  src: url('/fonts/Galmuri11.woff2') format('woff2');
+  src: url('/fonts/Galmuri11.subset.woff2') format('woff2');
   font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'Galmuri11';
-  src: url('/fonts/Galmuri11-Bold.woff2') format('woff2');
+  src: url('/fonts/Galmuri11-Bold.subset.woff2') format('woff2');
   font-weight: 700;
   font-display: swap;
 }
