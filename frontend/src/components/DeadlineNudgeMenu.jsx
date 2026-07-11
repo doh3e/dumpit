@@ -27,7 +27,6 @@ function getSelectedThresholds() {
   return DEFAULT_THRESHOLDS
 }
 
-
 function formatDeadline(value) {
   const date = parseDate(value)
   if (!date || Number.isNaN(date.getTime())) return ''

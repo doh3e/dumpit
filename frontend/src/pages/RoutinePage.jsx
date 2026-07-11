@@ -38,7 +38,6 @@ const EMPTY_FORM = {
   endDate: '',
 }
 
-
 function formatDate(value) {
   const date = parseDate(value)
   if (!date || Number.isNaN(date.getTime())) return '-'
