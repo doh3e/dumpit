@@ -21,7 +21,11 @@ class AppErrorBoundary extends Component {
   state = { hasError: false }
   static getDerivedStateFromError() { return { hasError: true } }
   componentDidCatch(error) {
-    import('@sentry/react').then((Sentry) => Sentry.captureException(error)).catch(() => {})
+    // sentry.js를 먼저 로드해 init 사이드이펙트를 보장한 뒤 전송 (load 이벤트 전 에러 유실 방지)
+    import('./sentry.js')
+      .then(() => import('@sentry/react'))
+      .then((Sentry) => Sentry.captureException(error))
+      .catch(() => {})
   }
   render() {
     if (this.state.hasError) return <div className="min-h-screen bg-accent" />
