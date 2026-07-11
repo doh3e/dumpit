@@ -127,10 +127,10 @@ public class OpenAiServiceImpl implements OpenAiService {
             - If both deadline and estimatedMinutes are known, startTime should usually be deadline - estimatedMinutes.
             - If both startTime and deadline are known, estimatedMinutes should be the duration in minutes.
             - If only one schedule field is known, infer the missing fields from the task title and description.
-            - If ALL three fields are unknown, infer all of them from the task title and description:
+            - If ALL three fields are unknown:
               * Estimate estimatedMinutes based on task type (e.g. 운동/exercise→60, 회의/meeting→30-60, 공부/study→60-120, 장보기/shopping→30-60, 독서/reading→30-60, 식사/meal→30, 청소/cleaning→30-60).
-              * For simple, urgent, or routine tasks (errands, admin, chores) set deadline to today at 23:59 (%s).
-              * For tasks that need preparation or are moderately complex set deadline to tomorrow at 23:59 (%s).
+              * Set deadline from the title/description ONLY when they contain an explicit or relative time cue (e.g. 오늘, 내일, 금요일까지, 5월 1일 → today ends at %s, tomorrow ends at %s).
+              * If there is NO time cue, deadline MUST be null. Never invent a deadline from urgency or task type alone — the user keeps open-ended tasks without deadlines on purpose.
               * Return null for startTime when all fields are unknown.
             - deadline means the end/due time of the task. All deadlines must be strictly in the future.
             - estimatedMinutes must be between 1 and 1440.
@@ -219,18 +219,15 @@ public class OpenAiServiceImpl implements OpenAiService {
         String prompt = """
             You analyze a brain dump for the Dumpit productivity app.
             Extract actionable tasks and return only valid JSON in this shape:
-            {"tasks":[{"title":"...", "description":"...", "deadline":"YYYY-MM-DDTHH:mm:ss", "estimatedMinutes":60, "priorityScore":0.8, "category":"WORK"}]}
+            {"tasks":[{"title":"...", "description":"...", "deadline":"YYYY-MM-DDTHH:mm:ss|null", "estimatedMinutes":60, "priorityScore":0.8, "category":"WORK"}]}
 
             Rules:
             - Current time is %s. ALL deadlines must be in the future relative to this time.
             - When the user mentions a date like "5월 1일" without a year, use the upcoming occurrence: same year if still ahead, next year otherwise.
             - Never use a year earlier than the current year.
             - Prefer explicit due dates/times, relative due dates/times, or well-known fixed event dates from the user's text.
-            - If a task has no explicit deadline, assign a reasonable soft deadline between today and 3 days from now based on urgency, effort, and task type.
-            - Use today 23:59:00 for urgent, quick, administrative, or clearly immediate tasks.
-            - Use tomorrow or 2 days from now for errands, preparation, chores, and tasks that should be handled soon.
-            - Use 3 days from now for flexible low-urgency tasks.
-            - Do not assign a deadline later than 3 days from now unless the user explicitly gives a later date or a fixed event implies it.
+            - If a task has NO time cue in the user's text — no explicit date/time, no relative expression (e.g. 오늘, 내일, 이번 주, ~까지, 곧), and no fixed event implying a date — deadline MUST be null. Never invent a deadline from urgency, effort, or task type.
+            - Open-ended wishes and someday items (e.g. "언젠가 기타 배우기", "시간 나면 책 읽기") must have deadline null.
             - Date-only deadlines must use 23:59:00 unless the user gives a specific time.
             - Expressions that describe quantity or duration, such as "일주일 치", "한 달치", or "3시간짜리", are NOT deadlines by themselves.
             - If one global due date clearly applies to multiple tasks, apply the same deadline to those tasks.
