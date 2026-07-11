@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { getCategory } from '../../constants/categories'
 import { calcCompletionCoins } from '../../utils/taskRewards'
 import { parseDate, formatDeadline, formatTime, isToday } from '../../utils/dates'
+import coinImage from '../../assets/coin_image.png'
 
 const TABS = [
   { id: 'today', label: '오늘' },
@@ -91,7 +92,11 @@ function TaskRow({ task, overdue = false, onToggle, onEdit }) {
           {task.estimatedMinutes && ` · ${task.estimatedMinutes}분`}
           {task.effectivePriority != null && ` · P ${Math.round(task.effectivePriority * 100)}`}
           {coins > 0 && (
-            <span className="font-bold" style={{ color: 'var(--starlight)' }}>{` · ☆+${coins}C`}</span>
+            <>
+              {' · '}
+              <img src={coinImage} alt="코인" className="inline-block w-3 h-3 object-contain align-text-bottom" />
+              <span className="font-bold text-dark">{` +${coins}`}</span>
+            </>
           )}
         </p>
       </div>
@@ -122,7 +127,13 @@ function DoneRow({ task, onToggle, onEdit }) {
         <p className="font-galmuri galmuri-semibold text-dark text-sm line-through truncate">{task.title}</p>
         <p className="text-[10px] text-sub font-medium">
           {doneAt && `${doneAt} 완료`}
-          {coins > 0 && ` · +${coins}C`}
+          {coins > 0 && (
+            <>
+              {' · '}
+              <img src={coinImage} alt="코인" className="inline-block w-3 h-3 object-contain align-text-bottom" />
+              <span className="font-bold">{` +${coins}`}</span>
+            </>
+          )}
         </p>
       </div>
       <button
