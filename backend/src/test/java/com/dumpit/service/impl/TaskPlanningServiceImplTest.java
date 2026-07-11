@@ -143,4 +143,36 @@ class TaskPlanningServiceImplTest {
         assertThat(sections.tomorrow()).extracting("title").containsExactly("내일 자정 일");
         assertThat(sections.next7Days()).extracting("title").containsExactly("모레 일");
     }
+
+    @Test
+    void 칠일째_마감은_일주일_버킷_팔일째_마감은_그외_버킷이다() {
+        LocalDateTime now = LocalDateTime.of(2026, 7, 11, 10, 0);
+        Task seventh = task("칠일째 일", Task.Category.WORK);
+        seventh.setDeadline(LocalDateTime.of(2026, 7, 18, 23, 59));
+        Task eighth = task("팔일째 일", Task.Category.WORK);
+        eighth.setDeadline(LocalDateTime.of(2026, 7, 19, 0, 0));
+        givenTasks(seventh, eighth);
+
+        TaskPlanningResponse.TaskPlanningSections sections =
+                planningService.getPlanning(EMAIL, now).sections();
+
+        assertThat(sections.next7Days()).extracting("title").containsExactly("칠일째 일");
+        assertThat(sections.later()).extracting("title").containsExactly("팔일째 일");
+    }
+
+    @Test
+    void 언젠가_버킷은_중요도_내림차순으로_정렬된다() {
+        LocalDateTime now = LocalDateTime.of(2026, 7, 11, 10, 0);
+        Task low = task("덜 중요한 언젠가", Task.Category.HOBBY);
+        low.setAiPriorityScore(0.2);
+        Task high = task("더 중요한 언젠가", Task.Category.WORK);
+        high.setAiPriorityScore(0.9);
+        givenTasks(low, high);
+
+        TaskPlanningResponse.TaskPlanningSections sections =
+                planningService.getPlanning(EMAIL, now).sections();
+
+        assertThat(sections.someday()).extracting("title")
+                .containsExactly("더 중요한 언젠가", "덜 중요한 언젠가");
+    }
 }
