@@ -122,12 +122,29 @@ export default function DashboardPage() {
   const sections = planning?.sections || null
 
   const heroTaskId = planning?.nowSuggestion?.task?.taskId ?? null
-  const heroQueue = useMemo(
-    () => (planning?.focusRecommendations || [])
-      .filter((recommendation) => recommendation.task && recommendation.task.taskId !== heroTaskId)
-      .slice(0, 2),
-    [planning, heroTaskId]
-  )
+  // 미니 큐: 오늘 남은 일(마감순) 우선, 모자라면 추천 상위로 채움
+  const heroQueue = useMemo(() => {
+    const seen = new Set(heroTaskId != null ? [heroTaskId] : [])
+    const queue = []
+    const todayByDeadline = [...(planning?.sections?.today || [])].sort((a, b) => {
+      const ad = parseDate(a.deadline)?.getTime() ?? Number.MAX_SAFE_INTEGER
+      const bd = parseDate(b.deadline)?.getTime() ?? Number.MAX_SAFE_INTEGER
+      return ad - bd
+    })
+    for (const task of todayByDeadline) {
+      if (queue.length >= 2) break
+      if (seen.has(task.taskId)) continue
+      seen.add(task.taskId)
+      queue.push({ task, bucket: 'TODAY' })
+    }
+    for (const recommendation of planning?.focusRecommendations || []) {
+      if (queue.length >= 2) break
+      if (!recommendation.task || seen.has(recommendation.task.taskId)) continue
+      seen.add(recommendation.task.taskId)
+      queue.push(recommendation)
+    }
+    return queue
+  }, [planning, heroTaskId])
 
   // 오늘 진행률 (궤도 링) — 마감이 오늘인 태스크 기준
   const { todayDone, todayTotal } = useMemo(() => {

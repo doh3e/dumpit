@@ -51,6 +51,7 @@ function sortByDeadline(list) {
 function TaskRow({ task, overdue = false, onToggle, onEdit }) {
   const cat = getCategory(task.category)
   const isChild = !!task.parentTaskId
+  const coins = calcCompletionCoins(task)
   return (
     <div
       className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-colors ${
@@ -88,6 +89,10 @@ function TaskRow({ task, overdue = false, onToggle, onEdit }) {
         <p className="text-[10px] text-sub font-medium mt-0.5">
           {task.deadline && `마감 ${formatDeadline(task.deadline)}`}
           {task.estimatedMinutes && ` · ${task.estimatedMinutes}분`}
+          {task.effectivePriority != null && ` · P ${Math.round(task.effectivePriority * 100)}`}
+          {coins > 0 && (
+            <span className="font-bold" style={{ color: 'var(--starlight)' }}>{` · ☆+${coins}C`}</span>
+          )}
         </p>
       </div>
       <button
