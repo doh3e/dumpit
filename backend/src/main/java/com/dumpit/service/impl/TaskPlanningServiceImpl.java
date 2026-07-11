@@ -51,11 +51,12 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
                 .toList();
 
         TaskPlanningResponse.TaskPlanningSections sections = new TaskPlanningResponse.TaskPlanningSections(
+                section(active, Bucket.OVERDUE, now),
                 section(active, Bucket.TODAY, now),
-                section(active, Bucket.NEXT_3_DAYS, now),
+                section(active, Bucket.TOMORROW, now),
                 section(active, Bucket.NEXT_7_DAYS, now),
                 section(active, Bucket.LATER, now),
-                section(active, Bucket.OVERDUE, now),
+                section(active, Bucket.SOMEDAY, now),
                 recentDone(tasks, now)
         );
 
@@ -72,12 +73,7 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
                                 recommendation.reasons()
                         ))
                         .toList(),
-                sections,
-                active.stream()
-                        .filter(this::isTimedTask)
-                        .sorted(Comparator.comparing(Task::getStartTime, Comparator.nullsLast(Comparator.naturalOrder())))
-                        .map(TaskResponse::from)
-                        .toList()
+                sections
         );
     }
 
@@ -204,19 +200,16 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
                 score += 40;
                 reasons.add("오늘 마감이라 시간 압박이 커요.");
             }
-            case NEXT_3_DAYS -> {
+            case TOMORROW -> {
                 score += 28;
-                reasons.add("3일 안에 마감돼서 미리 시작하기 좋아요.");
+                reasons.add("내일 마감이라 미리 시작하기 좋아요.");
             }
             case NEXT_7_DAYS -> {
                 score += 16;
                 reasons.add("일주일 안에 마감되는 일이에요.");
             }
-            case LATER -> {
-                if (task.getDeadline() == null) {
-                    reasons.add("마감은 없지만 중요도를 기준으로 후보에 올렸어요.");
-                }
-            }
+            case LATER -> { }
+            case SOMEDAY -> reasons.add("마감은 없지만 중요도를 기준으로 후보에 올렸어요.");
         }
 
         if (effectivePriority(task) >= 0.75) {
@@ -291,10 +284,10 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
 
     private Bucket bucketOf(Task task, LocalDateTime now) {
         LocalDateTime deadline = task.getDeadline();
-        if (deadline == null) return Bucket.LATER;
+        if (deadline == null) return Bucket.SOMEDAY;
         if (deadline.isBefore(now)) return Bucket.OVERDUE;
         if (!deadline.isAfter(endOfDay(now.toLocalDate()))) return Bucket.TODAY;
-        if (!deadline.isAfter(endOfDay(now.toLocalDate().plusDays(3)))) return Bucket.NEXT_3_DAYS;
+        if (!deadline.isAfter(endOfDay(now.toLocalDate().plusDays(1)))) return Bucket.TOMORROW;
         if (!deadline.isAfter(endOfDay(now.toLocalDate().plusDays(7)))) return Bucket.NEXT_7_DAYS;
         return Bucket.LATER;
     }
@@ -355,9 +348,10 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
     private enum Bucket {
         OVERDUE(0),
         TODAY(1),
-        NEXT_3_DAYS(2),
+        TOMORROW(2),
         NEXT_7_DAYS(3),
-        LATER(4);
+        LATER(4),
+        SOMEDAY(5);
 
         private final int sortOrder;
 

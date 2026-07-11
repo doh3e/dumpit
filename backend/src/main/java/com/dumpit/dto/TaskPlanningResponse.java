@@ -9,8 +9,7 @@ public record TaskPlanningResponse(
         List<TaskResponse> tasks,
         NowSuggestionResponse nowSuggestion,
         List<TaskRecommendationResponse> focusRecommendations,
-        TaskPlanningSections sections,
-        List<TaskResponse> timedTasks
+        TaskPlanningSections sections
 ) {
     public record TaskRecommendationResponse(
             TaskResponse task,
@@ -28,11 +27,12 @@ public record TaskPlanningResponse(
     ) {}
 
     public record TaskPlanningSections(
+            List<TaskResponse> overdue,
             List<TaskResponse> today,
-            List<TaskResponse> next3Days,
+            List<TaskResponse> tomorrow,
             List<TaskResponse> next7Days,
             List<TaskResponse> later,
-            List<TaskResponse> overdue,
+            List<TaskResponse> someday,
             List<TaskResponse> recentDone
     ) {}
 }
