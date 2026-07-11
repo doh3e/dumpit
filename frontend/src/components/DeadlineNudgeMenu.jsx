@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
+import { parseDate } from '../utils/dates'
 
 const NOTIFIED_KEY = 'dumpit.deadlineNudges.notified'
 const THRESHOLDS_KEY = 'dumpit_notification_thresholds'
@@ -26,13 +27,6 @@ function getSelectedThresholds() {
   return DEFAULT_THRESHOLDS
 }
 
-function parseDate(value) {
-  if (!value) return null
-  if (Array.isArray(value)) {
-    return new Date(value[0], (value[1] || 1) - 1, value[2] || 1, value[3] || 0, value[4] || 0, value[5] || 0)
-  }
-  return new Date(value)
-}
 
 function formatDeadline(value) {
   const date = parseDate(value)

@@ -4,18 +4,11 @@ import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES, getCategory } from '../constants/categories'
 import AiUsageBadge from '../components/AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
+import { parseDate } from '../utils/dates'
 
 const EMPTY_DETAIL = { title: '', content: '', category: 'OTHER', pinned: false, parentIdeaId: '' }
 const SCRATCH_KEY = 'dumpit:idea-scratch'
 const MAX_SCRATCH = 2000
-
-function parseDate(value) {
-  if (!value) return null
-  if (Array.isArray(value)) {
-    return new Date(value[0], (value[1] || 1) - 1, value[2] || 1, value[3] || 0, value[4] || 0, value[5] || 0)
-  }
-  return new Date(value)
-}
 
 function formatDate(value) {
   const date = parseDate(value)

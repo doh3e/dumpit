@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
+import { parseDate } from '../utils/dates'
 
 const WEEK_DAYS = [
   { value: 1, label: '월' },
@@ -37,11 +38,6 @@ const EMPTY_FORM = {
   endDate: '',
 }
 
-function parseDate(value) {
-  if (!value) return null
-  if (Array.isArray(value)) return new Date(value[0], (value[1] || 1) - 1, value[2] || 1)
-  return new Date(value)
-}
 
 function formatDate(value) {
   const date = parseDate(value)
