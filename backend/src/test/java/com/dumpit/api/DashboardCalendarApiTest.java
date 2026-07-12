@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -74,9 +75,15 @@ class DashboardCalendarApiTest extends ApiIntegrationTestBase {
 
     @Test
     void 플래닝_마감구간별_구획배치() throws Exception {
-        Task today = seedTask(userA, "오늘 마감", LocalDateTime.now().plusHours(3));
-        Task tomorrow = seedTask(userA, "내일 마감", LocalDateTime.now().plusDays(1));
-        Task in8Days = seedTask(userA, "팔일후 마감", LocalDateTime.now().plusDays(8));
+        // 시각(time-of-day)이 아니라 날짜로 앵커를 고정한다. now()+3h처럼 시각 오프셋으로 시드하면
+        // 벽시계가 KST 21~24시 구간일 때 자정을 넘겨 다른 버킷으로 떨어지는 랜덤 실패가 있었다
+        // (TaskPlanningServiceImpl.bucketOf: deadline <= endOfDay(today) → TODAY 등 날짜 경계 판정).
+        // 주의: LocalTime.MAX(23:59:59.999999999)는 Postgres timestamp의 마이크로초(6자리) 정밀도로
+        // 저장되며 나노초 9자리 반올림 시 다음 날 00:00:00으로 자정을 넘어버린다(실측 확인) —
+        // 그래서 초 단위(23:59:59, 반올림 안전)로 앵커를 잡는다.
+        Task today = seedTask(userA, "오늘 마감", LocalDate.now().atTime(23, 59, 59));
+        Task tomorrow = seedTask(userA, "내일 마감", LocalDate.now().plusDays(1).atTime(12, 0));
+        Task in8Days = seedTask(userA, "팔일후 마감", LocalDate.now().plusDays(8).atTime(12, 0));
         Task someday = seedTask(userA, "언젠가 할 일", null);
 
         mockMvc.perform(get("/dashboard/planning").with(asUser(USER_A)))
