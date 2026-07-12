@@ -128,7 +128,7 @@ public class TaskServiceImpl implements TaskService {
 
         if (fields.title() != null) task.setTitle(fields.title());
         if (fields.hasDescription()) task.setDescription(fields.description());
-        if (fields.status() != null) task.setStatus(Task.Status.valueOf(fields.status()));
+        if (fields.status() != null) task.setStatus(parseStatus(fields.status()));
         if (scheduleTouched) {
             validateSchedule(nextSchedule.startTime(), nextSchedule.deadline(), nextSchedule.estimatedMinutes());
             task.setStartTime(nextSchedule.startTime());
@@ -334,6 +334,14 @@ public class TaskServiceImpl implements TaskService {
     private void validateFutureDeadline(LocalDateTime deadline) {
         if (deadline != null && !deadline.isAfter(LocalDateTime.now())) {
             throw new BadRequestException("마감일시는 현재 시간 이후로 설정해야 합니다.");
+        }
+    }
+
+    private Task.Status parseStatus(String raw) {
+        try {
+            return Task.Status.valueOf(raw);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("상태 값을 확인해주세요.");
         }
     }
 

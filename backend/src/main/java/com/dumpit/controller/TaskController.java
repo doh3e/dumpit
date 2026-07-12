@@ -9,6 +9,7 @@ import com.dumpit.service.TaskService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -149,7 +150,7 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.CREATED).body(children.stream().map(TaskResponse::from).toList());
     }
 
-    public record SplitRequest(List<@Valid SubtaskRequest> subtasks) {}
+    public record SplitRequest(@NotEmpty List<@Valid SubtaskRequest> subtasks) {}
 
     public record SubtaskRequest(
             @NotBlank @Size(max = 200) String title,
