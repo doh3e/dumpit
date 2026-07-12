@@ -122,18 +122,13 @@ public class OpenAiServiceImpl implements OpenAiService {
 
             Rules:
             - Current time is %s.
-            - Preserve provided values exactly unless they are logically impossible.
-            - If both startTime and estimatedMinutes are known, deadline should usually be startTime + estimatedMinutes.
-            - If both deadline and estimatedMinutes are known, startTime should usually be deadline - estimatedMinutes.
-            - If both startTime and deadline are known, estimatedMinutes should be the duration in minutes.
-            - If only one schedule field is known, infer the missing fields from the task title and description.
-            - If ALL three fields are unknown:
-              * Estimate estimatedMinutes based on task type (e.g. 운동/exercise→60, 회의/meeting→30-60, 공부/study→60-120, 장보기/shopping→30-60, 독서/reading→30-60, 식사/meal→30, 청소/cleaning→30-60).
-              * Set deadline from the title/description ONLY when they contain an explicit or relative time cue (e.g. 오늘, 내일, 금요일까지, 5월 1일 → today ends at %s, tomorrow ends at %s).
-              * If there is NO time cue, deadline MUST be null. Never invent a deadline from urgency or task type alone — the user keeps open-ended tasks without deadlines on purpose.
-              * Return null for startTime when all fields are unknown.
+            - Preserve provided values exactly. Never change or overwrite a provided field.
+            - Fill a missing startTime or deadline ONLY from an explicit or relative time cue in the title/description (e.g. 오늘, 내일, 금요일까지, 5월 1일, 오후 3시 → today ends at %s, tomorrow ends at %s).
+            - If there is NO time cue for a field, that field MUST be null. Never invent startTime or deadline from urgency, effort, or task type alone — the user keeps open-ended tasks without deadlines on purpose.
+            - Do NOT derive one time field from another with arithmetic (no startTime + estimatedMinutes = deadline, no deadline - estimatedMinutes = startTime).
             - deadline means the end/due time of the task. All deadlines must be strictly in the future.
-            - estimatedMinutes must be between 1 and 1440.
+            - If estimatedMinutes is missing, estimate it from the task type (e.g. 운동/exercise→60, 회의/meeting→30-60, 공부/study→60-120, 장보기/shopping→30-60, 독서/reading→30-60, 식사/meal→30, 청소/cleaning→30-60).
+            - estimatedMinutes means focused working time, NOT the gap between startTime and deadline. It must be between 1 and 1440.
 
             <user_input>
             Title: %s
