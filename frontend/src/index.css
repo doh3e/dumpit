@@ -270,19 +270,33 @@ body {
   --accent:#8FBF6F; --accent2:#D98BA6; --on-accent:#131C0E;
   --shadow-hero:#0E150B; --shadow-sm:#0E150B; --overlay:rgba(6,10,4,.55);
 }
+[data-skin-bg="rose"] {
+  --bg:#F5E9EA; --card:#FEFCFC; --chip:#EDD8DB; --line:#DDBCC2; --edge:#43282E;
+  --accent:#C25B6E; --accent2:#6E9E62; --on-accent:#FFF7F8;
+  --shadow-hero:#E3C2C8; --shadow-sm:#E9CFD4; --overlay:rgba(67,40,46,.35);
+}
+[data-skin-bg="rose"][data-theme="dark"] {
+  --bg:#2A1B20; --card:#3A282E; --chip:#48333A; --line:#5C424B; --edge:#170D10;
+  --accent:#E8899B; --accent2:#8FBF6F; --on-accent:#251318;
+  --shadow-hero:#170D10; --shadow-sm:#170D10; --overlay:rgba(10,5,7,.55);
+}
 
 /* ==== 상점 스킨: 사이드바&상단바 — bg 스킨보다 뒤에 위치할 것 ==== */
-[data-skin-chrome="mint"] { --chrome-bg:#E9F4F0; --chrome-line:#BFDCD3; }
-[data-skin-chrome="mint"][data-theme="dark"] { --chrome-bg:#1D3029; --chrome-line:#35544A; }
-[data-skin-chrome="rose"] { --chrome-bg:#F6EAEA; --chrome-line:#E3C4C4; }
-[data-skin-chrome="rose"][data-theme="dark"] { --chrome-bg:#2E2028; --chrome-line:#503846; }
+[data-skin-chrome="ocean"] { --chrome-bg:#E4EFEC; --chrome-line:#B7D4CD; }
+[data-skin-chrome="ocean"][data-theme="dark"] { --chrome-bg:#1E3240; --chrome-line:#375366; }
+[data-skin-chrome="lavender"] { --chrome-bg:#EEEAF4; --chrome-line:#CBBEDC; }
+[data-skin-chrome="lavender"][data-theme="dark"] { --chrome-bg:#32294E; --chrome-line:#4F4373; }
+[data-skin-chrome="rose"] { --chrome-bg:#F5E9EA; --chrome-line:#DDBCC2; }
+[data-skin-chrome="rose"][data-theme="dark"] { --chrome-bg:#3A282E; --chrome-line:#5C424B; }
 [data-skin-chrome="wood"] { --chrome-bg:#F1E5D2; --chrome-line:#D6BE97; }
 [data-skin-chrome="wood"][data-theme="dark"] { --chrome-bg:#2A2118; --chrome-line:#4A3A28; }
 
 /* ==== 상점 스킨: 뽀모도로 ==== */
-[data-skin-pomodoro="teal"] { --pomo-focus:#3E8E85; --pomo-break:#D98E2B; }
-[data-skin-pomodoro="teal"][data-theme="dark"] { --pomo-focus:#5FC4B4; --pomo-break:#E9B44C; }
-[data-skin-pomodoro="sunset"] { --pomo-focus:#E0703C; --pomo-break:#8A63C4; }
-[data-skin-pomodoro="sunset"][data-theme="dark"] { --pomo-focus:#F09355; --pomo-break:#B79CE8; }
+[data-skin-pomodoro="ocean"] { --pomo-focus:#2E7D8A; --pomo-break:#D97757; }
+[data-skin-pomodoro="ocean"][data-theme="dark"] { --pomo-focus:#5FB8C9; --pomo-break:#F09355; }
+[data-skin-pomodoro="lavender"] { --pomo-focus:#8A63C4; --pomo-break:#3E8E85; }
+[data-skin-pomodoro="lavender"][data-theme="dark"] { --pomo-focus:#B79CE8; --pomo-break:#5FC4B4; }
+[data-skin-pomodoro="rose"] { --pomo-focus:#C25B6E; --pomo-break:#6E9E62; }
+[data-skin-pomodoro="rose"][data-theme="dark"] { --pomo-focus:#E8899B; --pomo-break:#8FBF6F; }
 [data-skin-pomodoro="candy"] { --pomo-focus:#E05C8A; --pomo-break:#5CA8E0; --pomo-ring:#F0C4D8; }
 [data-skin-pomodoro="candy"][data-theme="dark"] { --pomo-focus:#F08CAE; --pomo-break:#7FB8E8; --pomo-ring:#5A3A48; }

@@ -16,12 +16,15 @@ import {
 const SKIN_PREVIEWS = {
   'bg.ocean': ['#E4EFEC', '#2E7D8A', '#D3E6E1'],
   'bg.lavender': ['#EEEAF4', '#8A63C4', '#E2DAEC'],
+  'bg.rose': ['#F5E9EA', '#C25B6E', '#EDD8DB'],
   'bg.sprout': ['#EAF2E3', '#5C8A3C', '#DCEBCE'],
-  'chrome.mint': ['#E9F4F0', '#BFDCD3'],
-  'chrome.rose': ['#F6EAEA', '#E3C4C4'],
+  'chrome.ocean': ['#E4EFEC', '#B7D4CD'],
+  'chrome.lavender': ['#EEEAF4', '#CBBEDC'],
+  'chrome.rose': ['#F5E9EA', '#DDBCC2'],
   'chrome.wood': ['#F1E5D2', '#D6BE97'],
-  'pomo.teal': ['#3E8E85', '#D98E2B'],
-  'pomo.sunset': ['#E0703C', '#8A63C4'],
+  'pomo.ocean': ['#2E7D8A', '#D97757'],
+  'pomo.lavender': ['#8A63C4', '#3E8E85'],
+  'pomo.rose': ['#C25B6E', '#6E9E62'],
   'pomo.candy': ['#E05C8A', '#5CA8E0'],
 }
 
