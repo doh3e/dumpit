@@ -201,7 +201,7 @@ export default function DashboardPage() {
             오늘의 할 일을 확인하고 시간을 효율적으로 관리해보세요
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setShowTaskBoard(true)}
             disabled={!sections}
