@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import coinImage from '../assets/coin_image.png'
 import { useAuth } from '../context/AuthContext'
+import RocketLaunch from '../components/RocketLaunch'
 import {
   PLANET_SPRITES,
   CELEBRATION_SPRITES,
@@ -92,7 +93,7 @@ function ItemPreview({ item }) {
   )
 }
 
-function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUnequip }) {
+function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUnequip, onPreview, previewBusy }) {
   const insufficientCoins = !item.owned && coinBalance < item.price
   const isBusy = busyCode === item.code
 
@@ -112,9 +113,21 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
       </div>
 
       <div className="flex items-center justify-between gap-2 mt-auto pt-1">
-        <div className="flex items-center gap-1">
-          <img src={coinImage} alt="" className="w-4 h-4 object-contain" />
-          <span className="font-dungeon text-sm text-dark">{item.price}</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <img src={coinImage} alt="" className="w-4 h-4 object-contain" />
+            <span className="font-dungeon text-sm text-dark">{item.price}</span>
+          </div>
+          {item.slot === 'CELEBRATION' && onPreview && (
+            <button
+              type="button"
+              onClick={() => onPreview(item)}
+              disabled={previewBusy}
+              className="text-[11px] font-bold underline text-sub hover:text-dark disabled:opacity-50 disabled:no-underline"
+            >
+              미리보기
+            </button>
+          )}
         </div>
 
         {!item.owned && (
@@ -236,6 +249,7 @@ export default function ShopPage() {
   const [confirmItem, setConfirmItem] = useState(null)
   const [confirmSubmitting, setConfirmSubmitting] = useState(false)
   const [confirmError, setConfirmError] = useState(null)
+  const [previewCode, setPreviewCode] = useState(null)
 
   const fetchCatalog = useCallback(() => {
     return api.get('/shop/catalog')
@@ -301,6 +315,11 @@ export default function ShopPage() {
     }
   }
 
+  const handlePreview = (item) => {
+    if (previewCode) return // 재생 중이면 연타 무시
+    setPreviewCode(item.code)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -337,6 +356,8 @@ export default function ShopPage() {
     onBuyClick: handleBuyClick,
     onEquip: handleEquip,
     onUnequip: handleUnequip,
+    onPreview: handlePreview,
+    previewBusy: Boolean(previewCode),
   }
 
   return (
@@ -395,6 +416,10 @@ export default function ShopPage() {
           setConfirmError(null)
         }}
       />
+
+      {previewCode && (
+        <RocketLaunch codeOverride={previewCode} onDone={() => setPreviewCode(null)} />
+      )}
     </div>
   )
 }

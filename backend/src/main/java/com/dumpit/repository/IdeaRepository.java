@@ -35,4 +35,9 @@ public interface IdeaRepository extends JpaRepository<Idea, UUID> {
           AND i.deletedAt IS NULL
     """)
     int softDeleteByUser(@Param("user") User user, @Param("deletedAt") LocalDateTime deletedAt);
+
+    // 스티커만 바꾸는 벌크 업데이트 — @UpdateTimestamp(updatedAt)를 우회해 목록 정렬 점프를 막는다.
+    @Modifying(clearAutomatically = true)
+    @Query("update Idea i set i.stickerCode = :code where i.ideaId = :ideaId")
+    void updateStickerCode(@Param("ideaId") UUID ideaId, @Param("code") String code);
 }

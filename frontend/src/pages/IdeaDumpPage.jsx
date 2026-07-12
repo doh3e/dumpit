@@ -362,8 +362,11 @@ export default function IdeaDumpPage() {
   const handleStickerSelect = async (idea, code) => {
     setError(null)
     try {
-      await api.put(`/ideas/${idea.ideaId}/sticker`, { code })
-      fetchIdeas()
+      const res = await api.put(`/ideas/${idea.ideaId}/sticker`, { code })
+      // 목록 재조회 대신 제자리 갱신 — updatedAt이 바뀌지 않으므로 순서도 그대로 유지된다.
+      setIdeas((prev) =>
+        prev.map((it) => (it.ideaId === idea.ideaId ? { ...it, stickerCode: res.data.stickerCode } : it))
+      )
     } catch (err) {
       setError(getApiErrorMessage(err, '스티커를 변경하지 못했어요.'))
     }

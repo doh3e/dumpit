@@ -108,11 +108,20 @@ public class IdeaServiceImpl implements IdeaService {
         if (code != null) {
             shopService.assertOwnsSticker(idea.getUser(), code);
         }
+        // before 스냅샷까지는 idea가 아직 영속 상태 — parentIdea/convertedTask 지연 프록시가
+        // 여기서 미리 초기화되어야 컨텍스트 클리어 후에도 LazyInitializationException 없이 읽힌다.
         Map<String, Object> before = snapshot(idea);
+
+        // 벌크 업데이트로 sticker_code만 갱신 (updated_at은 건드리지 않음).
+        // idea는 이 시점까지 dirty 상태가 아니므로 auto-flush가 걸려도 no-op.
+        // clearAutomatically=true라 실행 후 영속성 컨텍스트가 비워지고 idea는 detach된다.
+        ideaRepository.updateStickerCode(idea.getIdeaId(), code);
+
+        // idea는 이제 detach 상태 — 필드만 메모리에서 맞춰서 응답/로그에 반영 (save 호출 없음 = updated_at 불변).
         idea.updateSticker(code);
-        Idea saved = ideaRepository.save(idea);
-        activityLogService.record(idea.getUser(), "IDEA_STICKER_UPDATED", "IDEA", saved.getIdeaId(), before, snapshot(saved));
-        return saved;
+        Map<String, Object> after = snapshot(idea);
+        activityLogService.record(idea.getUser(), "IDEA_STICKER_UPDATED", "IDEA", idea.getIdeaId(), before, after);
+        return idea;
     }
 
     @Override
