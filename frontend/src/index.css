@@ -33,7 +33,6 @@
   --danger:#BE4B3D;
   /* 색 역할: accent=주 포인트(빨강) accent2=보조 포인트(틸) warn=마감 임박(앰버) starlight=별·보상(골드) */
   --warn:#D98E2B; --starlight:#E9B44C;
-  --p1:#4AA396; --p2:#8AD6C4; --p3:#2E6B60;
   --chrome-bg:var(--card); --chrome-line:var(--line);
   --pomo-focus:var(--accent); --pomo-break:var(--accent2); --pomo-ring:var(--line);
 }
@@ -46,7 +45,6 @@
   --overlay:rgba(10,8,20,.55);
   --danger:#E57B67;
   --warn:#E9B44C; --starlight:#E9B44C;
-  --p1:#4AA396; --p2:#8AD6C4; --p3:#27584F;
 }
 
 *, *::before, *::after {
@@ -157,18 +155,6 @@ body {
 }
 
 /* ---- 픽셀 행성 궤도 (OrbitProgress) ---- */
-.pixel-planet {
-  position: absolute; top: 50%; left: 50%; width: 3px; height: 3px;
-  margin: -10.5px 0 0 -10.5px; background: var(--p2);
-  box-shadow:
-    6px 0 var(--p1), 9px 0 var(--p1), 12px 0 var(--p1),
-    3px 3px var(--p1), 6px 3px var(--p2), 9px 3px var(--p1), 12px 3px var(--p1), 15px 3px var(--p1),
-    0 6px var(--p1), 3px 6px var(--p2), 6px 6px var(--p1), 9px 6px var(--p1), 12px 6px var(--p1), 15px 6px var(--p1), 18px 6px var(--p1),
-    0 9px var(--p3), 3px 9px var(--p3), 6px 9px var(--p3), 9px 9px var(--p3), 12px 9px var(--p3), 15px 9px var(--p3), 18px 9px var(--p3),
-    0 12px var(--p1), 3px 12px var(--p1), 6px 12px var(--p1), 9px 12px var(--p1), 12px 12px var(--p1), 15px 12px var(--p1), 18px 12px var(--p1),
-    3px 15px var(--p1), 6px 15px var(--p1), 9px 15px var(--p1), 12px 15px var(--p1), 15px 15px var(--p1),
-    6px 18px var(--p1), 9px 18px var(--p1), 12px 18px var(--p1);
-}
 .orbit-sat {
   position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; margin: -2.5px;
   background: var(--accent); border-radius: 1px;
@@ -181,42 +167,6 @@ body {
 @media (prefers-reduced-motion: reduce) { .orbit-sat { animation: none; } }
 
 /* ---- 마이페이지 우주정거장 픽셀아트 ---- */
-.pixel-station {
-  width: 4px; height: 4px; position: relative;
-  margin-left: -40px; /* 전체 폭(80px)의 절반만큼 좌측 보정 */
-  background: transparent;
-  box-shadow:
-    /* 왼쪽 태양광 패널 */
-    0 4px var(--p1), 4px 4px var(--p3), 8px 4px var(--p1),
-    0 8px var(--p1), 4px 8px var(--p1), 8px 8px var(--p1),
-    0 12px var(--p1), 4px 12px var(--p3), 8px 12px var(--p1),
-    0 16px var(--p1), 4px 16px var(--p1), 8px 16px var(--p1),
-    0 20px var(--p1), 4px 20px var(--p3), 8px 20px var(--p1),
-    0 24px var(--p1), 4px 24px var(--p1), 8px 24px var(--p1),
-    /* 왼쪽 트러스 */
-    12px 12px var(--line), 16px 12px var(--line), 20px 12px var(--line), 24px 12px var(--line), 28px 12px var(--line),
-    12px 16px var(--line), 16px 16px var(--line), 20px 16px var(--line), 24px 16px var(--line), 28px 16px var(--line),
-    /* 안테나 */
-    36px -4px var(--accent2), 36px 0 var(--line), 40px -4px var(--line),
-    /* 허브 모듈 */
-    32px 8px var(--chip), 36px 8px var(--chip), 40px 8px var(--chip), 44px 8px var(--chip),
-    32px 12px var(--chip), 36px 12px var(--accent), 40px 12px var(--accent), 44px 12px var(--chip),
-    32px 16px var(--chip), 36px 16px var(--chip), 40px 16px var(--chip), 44px 16px var(--chip),
-    32px 20px var(--chip), 36px 20px var(--chip), 40px 20px var(--chip), 44px 20px var(--chip),
-    /* 도킹 포트 */
-    36px 24px var(--line), 40px 24px var(--line),
-    /* 오른쪽 트러스 */
-    48px 12px var(--line), 52px 12px var(--line), 56px 12px var(--line), 60px 12px var(--line), 64px 12px var(--line),
-    48px 16px var(--line), 52px 16px var(--line), 56px 16px var(--line), 60px 16px var(--line), 64px 16px var(--line),
-    /* 오른쪽 태양광 패널 */
-    68px 4px var(--p1), 72px 4px var(--p3), 76px 4px var(--p1),
-    68px 8px var(--p1), 72px 8px var(--p1), 76px 8px var(--p1),
-    68px 12px var(--p1), 72px 12px var(--p3), 76px 12px var(--p1),
-    68px 16px var(--p1), 72px 16px var(--p1), 76px 16px var(--p1),
-    68px 20px var(--p1), 72px 20px var(--p3), 76px 20px var(--p1),
-    68px 24px var(--p1), 72px 24px var(--p1), 76px 24px var(--p1);
-}
-
 /* ---- 별빛 로그 (마이페이지 히트맵) — 완료량을 별 밝기로 ---- */
 .star-log-0 { background: var(--chip); border-color: transparent; }
 .star-log-1 { background: color-mix(in srgb, var(--starlight) 35%, var(--chip)); border-color: transparent; }
@@ -238,29 +188,15 @@ body {
 .rocket-overlay {
   position: fixed; inset: 0; pointer-events: none; z-index: 80; overflow: hidden;
 }
-.rocket-body {
-  position: absolute; left: 50%; bottom: -12vh; width: 4px; height: 4px;
+.celebration-sprite {
+  position: absolute; left: 50%; bottom: -12vh; width: 44px; height: auto;
+  image-rendering: pixelated; transform: translateX(-50%);
   animation: rocket-up 1.4s ease-in forwards;
-  /* 픽셀 로켓: 노즈(accent) / 몸체(card+line) / 창(accent2) / 화염 */
-  box-shadow:
-    4px -20px var(--accent),
-    0 -16px var(--accent), 4px -16px var(--accent), 8px -16px var(--accent),
-    0 -12px var(--line), 4px -12px var(--card), 8px -12px var(--line),
-    0 -8px var(--line), 4px -8px var(--warn), 8px -8px var(--line),
-    0 -4px var(--line), 4px -4px var(--card), 8px -4px var(--line),
-    -4px 0 var(--accent), 0 0 var(--line), 4px 0 var(--line), 8px 0 var(--line), 12px 0 var(--accent),
-    0 4px var(--warn), 8px 4px var(--warn),
-    4px 8px var(--accent), 4px 12px var(--warn);
-}
-.rocket-trail {
-  position: absolute; left: 50%; bottom: -8vh; width: 3px; height: 3px; background: transparent;
-  animation: rocket-up 1.4s ease-in forwards;
-  box-shadow: -14px 28px var(--warn), 18px 44px var(--starlight), -6px 64px var(--line), 10px 84px var(--warn);
 }
 @keyframes rocket-up {
-  from { transform: translateY(0); opacity: 1; }
+  from { transform: translate(-50%, 0); opacity: 1; }
   80% { opacity: 1; }
-  to { transform: translateY(-130vh); opacity: 0; }
+  to { transform: translate(-50%, -130vh); opacity: 0; }
 }
 
 .coin-bounce { animation: coin-pop .4s cubic-bezier(.3, 1.6, .5, 1); }
@@ -271,7 +207,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .pixel-spark { animation: none; opacity: 0; }
-  .rocket-body, .rocket-trail { animation: none; opacity: 0; }
+  .celebration-sprite { animation: none; opacity: 0; }
   .coin-bounce, .px-blink { animation: none; }
 }
 
