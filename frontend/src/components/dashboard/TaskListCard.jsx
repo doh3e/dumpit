@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { getCategory } from '../../constants/categories'
 import { calcCompletionCoins } from '../../utils/taskRewards'
 import { parseDate, formatDeadline, formatTime, isToday } from '../../utils/dates'
+import { STICKER_SPRITES } from '../../shop/registry'
+import StickerPicker from '../StickerPicker'
 import coinImage from '../../assets/coin_image.png'
 
 const TABS = [
@@ -49,7 +51,21 @@ function sortByDeadline(list) {
   })
 }
 
-function TaskRow({ task, overdue = false, onToggle, onEdit }) {
+function StickerBadge({ stickerCode }) {
+  const sprite = stickerCode ? STICKER_SPRITES[stickerCode] : null
+  if (!sprite) return null
+  return (
+    <img
+      src={sprite.img}
+      alt={sprite.name}
+      title={sprite.name}
+      className="h-4 w-4 flex-shrink-0 object-contain"
+      style={{ imageRendering: 'pixelated' }}
+    />
+  )
+}
+
+function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
   const cat = getCategory(task.category)
   const isChild = !!task.parentTaskId
   const coins = calcCompletionCoins(task)
@@ -86,7 +102,10 @@ function TaskRow({ task, overdue = false, onToggle, onEdit }) {
             </span>
           )}
         </div>
-        <p className="mt-1 font-galmuri galmuri-semibold text-dark text-sm truncate">{task.title}</p>
+        <div className="mt-1 flex min-w-0 items-center gap-1.5">
+          <p className="font-galmuri galmuri-semibold text-dark text-sm truncate">{task.title}</p>
+          <StickerBadge stickerCode={task.stickerCode} />
+        </div>
         <p className="text-[10px] text-sub font-medium mt-0.5">
           {task.deadline && `마감 ${formatDeadline(task.deadline)}`}
           {task.estimatedMinutes && ` · ${task.estimatedMinutes}분`}
@@ -100,12 +119,15 @@ function TaskRow({ task, overdue = false, onToggle, onEdit }) {
           )}
         </p>
       </div>
-      <button
-        onClick={() => onEdit(task)}
-        className="mt-0.5 text-xs font-bold text-sub hover:text-primary transition-colors flex-shrink-0"
-      >
-        수정
-      </button>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <StickerPicker current={task.stickerCode} onSelect={(code) => onStickerChange(task, code)} />
+        <button
+          onClick={() => onEdit(task)}
+          className="mt-0.5 text-xs font-bold text-sub hover:text-primary transition-colors"
+        >
+          수정
+        </button>
+      </div>
     </div>
   )
 }
@@ -124,7 +146,10 @@ function DoneRow({ task, onToggle, onEdit }) {
         <span className="text-on-accent text-[10px] font-bold">V</span>
       </button>
       <div className="flex-1 min-w-0">
-        <p className="font-galmuri galmuri-semibold text-dark text-sm line-through truncate">{task.title}</p>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <p className="font-galmuri galmuri-semibold text-dark text-sm line-through truncate">{task.title}</p>
+          <StickerBadge stickerCode={task.stickerCode} />
+        </div>
         <p className="text-[10px] text-sub font-medium">
           {doneAt && `${doneAt} 완료`}
           {coins > 0 && (
@@ -146,7 +171,7 @@ function DoneRow({ task, onToggle, onEdit }) {
   )
 }
 
-export default function TaskListCard({ sections, onToggle, onEdit }) {
+export default function TaskListCard({ sections, onToggle, onEdit, onStickerChange }) {
   const [tab, setTab] = useState('today')
   const [doneOpen, setDoneOpen] = useState(false)
 
@@ -199,11 +224,11 @@ export default function TaskListCard({ sections, onToggle, onEdit }) {
 
       <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
         {overdue.map((task) => (
-          <TaskRow key={task.taskId} task={task} overdue onToggle={onToggle} onEdit={onEdit} />
+          <TaskRow key={task.taskId} task={task} overdue onToggle={onToggle} onEdit={onEdit} onStickerChange={onStickerChange} />
         ))}
 
         {tab !== 'all' && tabTasks.map((task) => (
-          <TaskRow key={task.taskId} task={task} onToggle={onToggle} onEdit={onEdit} />
+          <TaskRow key={task.taskId} task={task} onToggle={onToggle} onEdit={onEdit} onStickerChange={onStickerChange} />
         ))}
 
         {tab === 'all' && ALL_TAB_SECTIONS.map(({ key, title }) => {
@@ -214,7 +239,7 @@ export default function TaskListCard({ sections, onToggle, onEdit }) {
               <p className="label-retro mt-3 mb-2">{title} ({list.length})</p>
               <div className="space-y-2">
                 {list.map((task) => (
-                  <TaskRow key={task.taskId} task={task} onToggle={onToggle} onEdit={onEdit} />
+                  <TaskRow key={task.taskId} task={task} onToggle={onToggle} onEdit={onEdit} onStickerChange={onStickerChange} />
                 ))}
               </div>
             </div>

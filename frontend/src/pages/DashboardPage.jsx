@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
+import { notifyToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
 import MiniCalendar from '../components/MiniCalendar'
 import AddTaskModal from '../components/AddTaskModal'
@@ -94,6 +95,24 @@ export default function DashboardPage() {
     }
     fetchTasks()
   }, [fetchTasks])
+
+  const handleStickerChange = useCallback(async (task, code) => {
+    const previousCode = task.stickerCode ?? null
+    const optimisticTask = { ...task, stickerCode: code }
+    setTasks((prev) => replaceTask(prev, optimisticTask))
+    setPlanning((prev) => replacePlanningTask(prev, optimisticTask))
+    try {
+      const res = await api.put(`/tasks/${task.taskId}/sticker`, { code })
+      setTasks((prev) => replaceTask(prev, res.data))
+      setPlanning((prev) => replacePlanningTask(prev, res.data))
+      window.dispatchEvent(new CustomEvent('dumpit:tasks-updated'))
+    } catch (err) {
+      const rollbackTask = { ...task, stickerCode: previousCode }
+      setTasks((prev) => replaceTask(prev, rollbackTask))
+      setPlanning((prev) => replacePlanningTask(prev, rollbackTask))
+      notifyToast(getApiErrorMessage(err, '스티커를 변경하지 못했어요.'))
+    }
+  }, [])
 
   const toggleStatus = async (task, event) => {
     const next = task.status === 'DONE' ? 'TODO' : 'DONE'
@@ -222,7 +241,12 @@ export default function DashboardPage() {
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TaskListCard sections={sections} onToggle={toggleStatus} onEdit={setEditingTask} />
+            <TaskListCard
+              sections={sections}
+              onToggle={toggleStatus}
+              onEdit={setEditingTask}
+              onStickerChange={handleStickerChange}
+            />
 
             <div className="card-retro">
               <div className="flex items-baseline gap-2 mb-4">

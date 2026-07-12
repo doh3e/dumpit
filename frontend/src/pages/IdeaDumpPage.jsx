@@ -3,8 +3,10 @@ import { useBlocker } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES, getCategory } from '../constants/categories'
 import AiUsageBadge from '../components/AiUsageBadge'
+import StickerPicker from '../components/StickerPicker'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 import { parseDate } from '../utils/dates'
+import { STICKER_SPRITES } from '../shop/registry'
 
 const EMPTY_DETAIL = { title: '', content: '', category: 'OTHER', pinned: false, parentIdeaId: '' }
 const SCRATCH_KEY = 'dumpit:idea-scratch'
@@ -70,6 +72,20 @@ function ExtractPreviewNode({ node, depth }) {
         <ExtractPreviewNode key={i} node={child} depth={depth + 1} />
       ))}
     </div>
+  )
+}
+
+function StickerBadge({ stickerCode }) {
+  const sprite = stickerCode ? STICKER_SPRITES[stickerCode] : null
+  if (!sprite) return null
+  return (
+    <img
+      src={sprite.img}
+      alt={sprite.name}
+      title={sprite.name}
+      className="h-4 w-4 flex-shrink-0 object-contain"
+      style={{ imageRendering: 'pixelated' }}
+    />
   )
 }
 
@@ -343,6 +359,16 @@ export default function IdeaDumpPage() {
     }
   }
 
+  const handleStickerSelect = async (idea, code) => {
+    setError(null)
+    try {
+      await api.put(`/ideas/${idea.ideaId}/sticker`, { code })
+      fetchIdeas()
+    } catch (err) {
+      setError(getApiErrorMessage(err, '스티커를 변경하지 못했어요.'))
+    }
+  }
+
   const deleteSelected = async () => {
     if (!selectedIdea || !window.confirm('이 아이디어를 삭제할까요?')) return
     try {
@@ -550,8 +576,15 @@ export default function IdeaDumpPage() {
                         {idea.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
                         {childCount > 0 && <span className="text-[10px] font-black text-sub">하위 {childCount}</span>}
                       </div>
-                      <p className="mt-1 truncate font-galmuri galmuri-semibold text-sm text-dark">{idea.title}</p>
+                      <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                        <p className="truncate font-galmuri galmuri-semibold text-sm text-dark">{idea.title}</p>
+                        <StickerBadge stickerCode={idea.stickerCode} />
+                      </div>
                     </button>
+                    <StickerPicker
+                      current={idea.stickerCode}
+                      onSelect={(code) => handleStickerSelect(idea, code)}
+                    />
                   </div>
                 )
               })}
