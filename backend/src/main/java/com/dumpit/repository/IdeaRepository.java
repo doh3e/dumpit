@@ -20,6 +20,14 @@ public interface IdeaRepository extends JpaRepository<Idea, UUID> {
 
     long countByUserAndDeletedAtIsNull(User user);
 
+    // Admin 유저 목록에서 유저당 1쿼리씩 도는 N+1을 피하기 위한 집계 쿼리 — AdminUserController 참고
+    @Query("""
+        SELECT i.user.userId, COUNT(i) FROM Idea i
+        WHERE i.deletedAt IS NULL
+        GROUP BY i.user.userId
+    """)
+    List<Object[]> countActiveGroupedByUser();
+
     @Query("""
         SELECT i FROM Idea i
         WHERE i.ideaId = :ideaId
