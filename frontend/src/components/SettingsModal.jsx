@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
 import { applyTheme, getThemePref } from '../utils/theme'
@@ -114,8 +115,8 @@ export default function SettingsModal({ onClose }) {
   }
 
   useEffect(() => {
-    api.get('/shop/items')
-      .then((res) => setPurchases(res.data.filter((i) => i.isOwned)))
+    api.get('/shop/catalog')
+      .then((res) => setPurchases(res.data.items.filter((i) => i.owned)))
       .catch(() => setPurchases([]))
       .finally(() => setLoadingPurchases(false))
   }, [])
@@ -295,23 +296,17 @@ export default function SettingsModal({ onClose }) {
             <p className="text-xs text-sub font-medium">불러오는 중...</p>
           ) : purchases.length === 0 ? (
             <p className="text-xs text-sub font-medium">
-              아직 구매한 아이템이 없어요. 코인샵에서 구매해보세요!
+              아직 구매한 아이템이 없어요.{' '}
+              <Link to="/shop" onClick={onClose} className="font-bold text-primary hover:underline">
+                코인샵에서 구매해보세요!
+              </Link>
             </p>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {purchases.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 border-line bg-accent"
-                >
-                  <div
-                    className="w-10 h-10 rounded-lg border border-line"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-[10px] font-bold text-dark text-center leading-tight">
-                    {item.name}
-                  </span>
-                </div>
+                <span key={item.code} className="chip-retro">
+                  {item.name}
+                </span>
               ))}
             </div>
           )}

@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { label: '브레인 덤프', path: '/brain-dump' },
   { label: '아이디어 덤프', path: '/ideas' },
   { label: '루틴', path: '/routines' },
+  { label: '상점', path: '/shop' },
   { label: '마이페이지', path: '/mypage' },
 ]
 
@@ -175,7 +176,7 @@ export default function Header({ onOpenDrawer }) {
             <img src={coinImage} alt="coin" className="w-4 h-4 object-contain" />
             <span className="font-dungeon text-sm text-dark leading-none">{displayCoins}</span>
             <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg card-retro px-3 py-2 text-left text-xs font-bold text-sub opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100">
-              추후 열릴 코인샵에서 다양한 테마와 스티커 등을 교환할 수 있어요.
+              코인샵에서 테마와 스티커로 교환할 수 있어요.
             </div>
           </div>
 

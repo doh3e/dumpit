@@ -9,6 +9,7 @@ const MENU = [
   { label: '브레인 덤프', path: '/brain-dump' },
   { label: '아이디어 덤프', path: '/ideas' },
   { label: '루틴', path: '/routines' },
+  { label: '상점', path: '/shop' },
   { label: '마이페이지', path: '/mypage' },
 ]
 
