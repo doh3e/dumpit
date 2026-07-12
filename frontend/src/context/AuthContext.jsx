@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import api from '../services/api'
+import { applySkins, clearSkins } from '../shop/applySkins.js'
 
 const AuthContext = createContext(null)
 const INACTIVE_LOGOUT_MS = 60 * 60 * 1000
@@ -8,15 +9,20 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  const applyMeResponse = useCallback((res) => {
+    const nextUser = res?.data
+    const validUser = nextUser && typeof nextUser === 'object' && nextUser.email ? nextUser : null
+    setUser(validUser)
+    if (validUser) applySkins(validUser.equipments)
+    else clearSkins()
+  }, [])
+
   const fetchUser = useCallback(() => {
     api.get('/auth/me')
-      .then((res) => {
-        const nextUser = res.data
-        setUser(nextUser && typeof nextUser === 'object' && nextUser.email ? nextUser : null)
-      })
-      .catch(() => setUser(null))
+      .then(applyMeResponse)
+      .catch(() => applyMeResponse(null))
       .finally(() => setLoading(false))
-  }, [])
+  }, [applyMeResponse])
 
   useEffect(() => { fetchUser() }, [fetchUser])
 
@@ -89,10 +95,7 @@ export function AuthProvider({ children }) {
 
   const refreshCoins = () => {
     api.get('/auth/me')
-      .then((res) => {
-        const nextUser = res.data
-        setUser(nextUser && typeof nextUser === 'object' && nextUser.email ? nextUser : null)
-      })
+      .then(applyMeResponse)
       .catch(() => {})
   }
 
@@ -101,6 +104,7 @@ export function AuthProvider({ children }) {
       await api.post('/auth/logout')
     } finally {
       setUser(null)
+      clearSkins()
       window.location.href = '/'
     }
   }
