@@ -10,6 +10,7 @@ const TABS = [
   { id: 'today', label: '오늘' },
   { id: 'tomorrow', label: '내일' },
   { id: 'week', label: '일주일' },
+  { id: 'someday', label: '언젠가' },
   { id: 'all', label: '전부' },
 ]
 
@@ -186,6 +187,7 @@ export default function TaskListCard({ sections, onToggle, onEdit, onStickerChan
     if (!sections || tab === 'all') return []
     if (tab === 'today') return groupByParent(sections.today || [])
     if (tab === 'tomorrow') return groupByParent(sections.tomorrow || [])
+    if (tab === 'someday') return groupByParent(sections.someday || [])
     return groupByParent(sortByDeadline([
       ...(sections.today || []),
       ...(sections.tomorrow || []),
