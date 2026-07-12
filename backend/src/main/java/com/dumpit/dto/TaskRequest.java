@@ -14,5 +14,6 @@ public record TaskRequest(
         LocalDateTime startTime,
         LocalDateTime endTime,
         Boolean isLocked,
-        Task.Category category
+        Task.Category category,
+        Boolean noDeadline
 ) {}

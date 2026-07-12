@@ -15,7 +15,7 @@ public interface TaskService {
     Task createTask(String email, String title, String description,
                     LocalDateTime deadline, Integer estimatedMinutes,
                     LocalDateTime startTime, LocalDateTime endTime,
-                    Boolean isLocked, Task.Category category);
+                    Boolean isLocked, Task.Category category, boolean noDeadline);
 
     Task updateTask(String email, UUID taskId, TaskUpdateFields fields);
 
@@ -52,6 +52,7 @@ public interface TaskService {
             boolean hasEndTime,
             Boolean isLocked,
             boolean hasIsLocked,
-            Task.Category category
+            Task.Category category,
+            boolean noDeadline
     ) {}
 }

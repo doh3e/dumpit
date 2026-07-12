@@ -48,7 +48,8 @@ public class TaskController {
                 req.title(), req.description(),
                 req.deadline(), req.estimatedMinutes(),
                 req.startTime(), req.endTime(), req.isLocked(),
-                req.category()
+                req.category(),
+                Boolean.TRUE.equals(req.noDeadline())
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(TaskResponse.from(task));
     }
@@ -87,7 +88,8 @@ public class TaskController {
                         req.containsKey("endTime"),
                         value(req, "isLocked", Boolean.class),
                         req.containsKey("isLocked"),
-                        value(req, "category", Task.Category.class)
+                        value(req, "category", Task.Category.class),
+                        Boolean.TRUE.equals(value(req, "noDeadline", Boolean.class))
                 )
         );
         return ResponseEntity.ok(TaskResponse.from(task));

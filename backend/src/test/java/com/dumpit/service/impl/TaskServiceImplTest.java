@@ -10,6 +10,7 @@ import com.dumpit.service.AiUsageService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.ShopService;
+import com.dumpit.service.TaskService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -58,7 +59,7 @@ class TaskServiceImplTest {
         LocalDateTime deadline = LocalDateTime.now().plusHours(8);
 
         Task saved = taskService.createTask(EMAIL, "보고서 쓰기", null,
-                deadline, null, null, null, null, Task.Category.WORK);
+                deadline, null, null, null, null, Task.Category.WORK, false);
 
         assertThat(saved.getStartTime()).isNull();
         assertThat(saved.getEndTime()).isNull();
@@ -73,7 +74,7 @@ class TaskServiceImplTest {
         LocalDateTime deadline = LocalDateTime.now().plusDays(3);
 
         Task saved = taskService.createTask(EMAIL, "제주 여행", null,
-                deadline, null, start, null, null, Task.Category.OTHER);
+                deadline, null, start, null, null, Task.Category.OTHER, false);
 
         assertThat(saved.getEstimatedMinutes()).isNull();
         assertThat(saved.getStartTime()).isEqualTo(start);
@@ -86,7 +87,7 @@ class TaskServiceImplTest {
         LocalDateTime deadline = LocalDateTime.now().plusHours(8);
 
         Task saved = taskService.createTask(EMAIL, "보고서 쓰기", null,
-                deadline, 90, null, null, null, Task.Category.WORK);
+                deadline, 90, null, null, null, Task.Category.WORK, false);
 
         assertThat(saved.getStartTime()).isNull();
         assertThat(saved.getEndTime()).isNull();
@@ -99,7 +100,7 @@ class TaskServiceImplTest {
                 .thenReturn(new OpenAiService.ScheduleInferenceResult(null, null, null, "단서 없음"));
 
         Task saved = taskService.createTask(EMAIL, "기타 연습", null,
-                null, 60, null, null, null, Task.Category.OTHER);
+                null, 60, null, null, null, Task.Category.OTHER, false);
 
         assertThat(saved.getDeadline()).isNull();
         assertThat(saved.getStartTime()).isNull();
@@ -112,7 +113,7 @@ class TaskServiceImplTest {
         LocalDateTime deadline = LocalDateTime.now().plusHours(4);
 
         Task saved = taskService.createTask(EMAIL, "회의", null,
-                deadline, null, start, null, null, Task.Category.WORK);
+                deadline, null, start, null, null, Task.Category.WORK, false);
 
         assertThat(saved.getStartTime()).isEqualTo(start);
         assertThat(saved.getIsLocked()).isTrue();
@@ -145,5 +146,73 @@ class TaskServiceImplTest {
                 () -> taskService.updateSticker(EMAIL, taskId, "sticker.cat"));
 
         verify(taskRepository, never()).save(any());
+    }
+
+    @Test
+    void 언젠가_선언시_AI가_마감을_돌려줘도_버린다() {
+        when(openAiService.inferSchedule(any(), any(), any(), any(), any()))
+                .thenReturn(new OpenAiService.ScheduleInferenceResult(
+                        "2099-01-01T10:00:00", "2099-01-01T12:00:00", 45, "추론"));
+
+        Task saved = taskService.createTask(EMAIL, "언젠가 기타 배우기", null,
+                null, null, null, null, null, Task.Category.OTHER, true);
+
+        assertThat(saved.getDeadline()).isNull();
+        assertThat(saved.getStartTime()).isNull();
+        assertThat(saved.getEstimatedMinutes()).isEqualTo(45);
+    }
+
+    @Test
+    void 언젠가_선언시_예상시간이_있으면_AI를_호출하지_않는다() {
+        Task saved = taskService.createTask(EMAIL, "책 읽기", null,
+                null, 30, null, null, null, Task.Category.OTHER, true);
+
+        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any());
+        assertThat(saved.getDeadline()).isNull();
+        assertThat(saved.getEstimatedMinutes()).isEqualTo(30);
+    }
+
+    @Test
+    void 언젠가_선언시_직접_입력한_시작시간은_보존된다() {
+        LocalDateTime start = LocalDateTime.now().plusDays(2);
+
+        Task saved = taskService.createTask(EMAIL, "동창 모임", null,
+                null, 90, start, null, null, Task.Category.OTHER, true);
+
+        assertThat(saved.getStartTime()).isEqualTo(start);
+        assertThat(saved.getDeadline()).isNull();
+        assertThat(saved.getIsLocked()).isTrue();
+    }
+
+    @Test
+    void 언젠가와_마감을_동시에_보내면_예외() {
+        assertThrows(BadRequestException.class, () ->
+                taskService.createTask(EMAIL, "모순", null,
+                        LocalDateTime.now().plusDays(1), null, null, null, null, Task.Category.OTHER, true));
+        verify(taskRepository, never()).save(any());
+    }
+
+    @Test
+    void 수정에서_언젠가로_전환하면_재추론이_마감을_되살리지_않는다() {
+        User user = User.of(EMAIL, "tester", "google", "pid");
+        Task task = Task.of(user, "보고서", null, LocalDateTime.now().plusDays(1), 60);
+        UUID taskId = UUID.randomUUID();
+        when(taskRepository.findActiveById(taskId)).thenReturn(Optional.of(task));
+
+        Task saved = taskService.updateTask(EMAIL, taskId, new TaskService.TaskUpdateFields(
+                null, null, false,      // title, description, hasDescription
+                null, null, false,      // status, userPriorityScore, hasUserPriorityScore
+                null, true,             // deadline(null 명시), hasDeadline
+                null, false,            // estimatedMinutes, hasEstimatedMinutes
+                null, false,            // startTime, hasStartTime
+                null, false,            // endTime, hasEndTime
+                null, false,            // isLocked, hasIsLocked
+                null,                   // category
+                true                    // noDeadline
+        ));
+
+        assertThat(saved.getDeadline()).isNull();
+        // 기존 예상시간(60분)이 있으므로 AI 재추론 자체가 불필요
+        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any());
     }
 }
