@@ -1,1 +1,2 @@
 - [태스크3][Low] IllegalStateException 핸들러가 전역 범위 — RedisOAuth2AuthorizedClientRepository의 영어 메시지 IllegalStateException이 이론상 4xx로 노출 가능(현재는 필터 체인 단계라 미도달). 다음 IllegalStateException 추가 시 주의.
+- [태스크4][Medium] Bean Validation 메시지 JVM 로케일 의존 — 프로덕션 Dockerfile(alpine)에 로케일 미설정이라 배포 환경에서 영어 노출 가능성 있었음. translateValidationMessage에 Size 패턴 변환 추가로 해소(픽스 완료). 다른 표준 제약(@Email 등) 추가 시 같은 함정 주의.

@@ -152,6 +152,8 @@ class TaskApiTest extends ApiIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(Map.of("title", longTitle))))
                 .andExpect(status().isBadRequest())
+                // @Size 기본 메시지는 JVM 로케일 의존 — 어떤 로케일에서든 통일 문구로 변환되는지 정확히 고정
+                .andExpect(jsonPath("$.error").value("제목: 200자 이하로 입력해주세요."))
                 .andReturn();
         assertKoreanError(result);
     }
@@ -165,6 +167,7 @@ class TaskApiTest extends ApiIntegrationTestBase {
                                 "title", "제목",
                                 "description", longDescription))))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("입력값: 1000자 이하로 입력해주세요."))
                 .andReturn();
         assertKoreanError(result);
     }

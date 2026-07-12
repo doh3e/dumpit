@@ -93,6 +93,7 @@ public abstract class ApiIntegrationTestBase {
         assertThat(message.toLowerCase())
                 .as("영어 원문 노출: " + message)
                 .doesNotContain("not found").doesNotContain("must not")
+                .doesNotContain("must be").doesNotContain("size must")
                 .doesNotContain("cannot").doesNotContain("exception");
     }
 
