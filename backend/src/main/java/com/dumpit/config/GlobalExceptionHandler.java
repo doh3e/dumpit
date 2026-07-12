@@ -35,6 +35,11 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", koreanBadRequestMessage(ex.getMessage()));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", koreanBadRequestMessage(ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
@@ -89,6 +94,10 @@ public class GlobalExceptionHandler {
             case "Monthly routines need at least one day between 1 and 31." -> "월간 루틴은 1~31 사이의 날짜를 하나 이상 선택해야 합니다.";
             case "Monthly weekday routines need an ordinal between 1 and 5." -> "월간 요일 루틴은 1~5 사이의 주차를 선택해야 합니다.";
             case "Monthly weekday routines need a day between 1 and 7." -> "월간 요일 루틴은 1~7 사이의 요일을 선택해야 합니다.";
+            case "Nickname must not be blank." -> "닉네임을 입력해주세요.";
+            case "Bio must be 500 characters or less." -> "자기소개는 500자 이내로 입력해주세요.";
+            case "Admin users cannot withdraw through this flow." -> "관리자 계정은 이 방법으로 탈퇴할 수 없습니다.";
+            case "Admin users cannot be banned." -> "관리자 계정은 정지할 수 없습니다.";
             default -> message;
         };
     }

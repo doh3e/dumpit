@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -44,6 +45,8 @@ public abstract class ApiIntegrationTestBase {
     @MockBean protected GoogleCalendarService googleCalendarService;
     @MockBean protected EmailService emailService;
     @MockBean protected OAuthRevocationService oauthRevocationService;
+    // Redis 기반 실구현(RedisOAuth2AuthorizedClientRepository)이 테스트 환경 Redis에 연결을 시도하는 것을 막는다
+    @MockBean protected OAuth2AuthorizedClientRepository authorizedClientRepository;
 
     protected static final String USER_A = "usera@test.dumpit.local";
     protected static final String USER_B = "userb@test.dumpit.local";
