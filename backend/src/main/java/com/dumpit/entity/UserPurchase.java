@@ -10,7 +10,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "user_purchases",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "item_id"}))
+       uniqueConstraints = @UniqueConstraint(name = "uk_user_purchases_user_item",
+                                             columnNames = {"user_id", "item_code"}))
 @Getter
 @NoArgsConstructor
 public class UserPurchase {
@@ -24,8 +25,8 @@ public class UserPurchase {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "item_id", nullable = false)
-    private Integer itemId;
+    @Column(name = "item_code", nullable = false, length = 64)
+    private String itemCode;
 
     @Column(nullable = false)
     private Integer price;
@@ -33,10 +34,10 @@ public class UserPurchase {
     @CreationTimestamp
     private LocalDateTime purchasedAt;
 
-    public static UserPurchase of(User user, int itemId, int price) {
+    public static UserPurchase of(User user, String itemCode, int price) {
         UserPurchase p = new UserPurchase();
         p.user = user;
-        p.itemId = itemId;
+        p.itemCode = itemCode;
         p.price = price;
         return p;
     }

@@ -11,5 +11,5 @@ public interface PurchaseRepository extends JpaRepository<UserPurchase, UUID> {
 
     List<UserPurchase> findByUser(User user);
 
-    boolean existsByUserAndItemId(User user, int itemId);
+    boolean existsByUserAndItemCode(User user, String itemCode);
 }

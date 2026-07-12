@@ -58,6 +58,10 @@ public class Task {
     @Setter
     private String description;
 
+    @Column(name = "sticker_code", length = 64)
+    @Setter
+    private String stickerCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Setter
