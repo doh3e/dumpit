@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -54,6 +55,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleUnreadable(HttpMessageNotReadableException ex) {
         return error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST_BODY", "요청 본문 형식이 올바르지 않습니다.");
+    }
+
+    // 경로/쿼리 파라미터가 enum·UUID 등으로 바인딩되지 못하는 경우(예: DELETE /shop/equip/NOPE) —
+    // 과거엔 핸들러가 없어 catch-all(500)로 새던 것을 400으로 고정. 앱 전역(@RestControllerAdvice)에
+    // 적용되므로 다른 도메인의 잘못된 UUID 경로 파라미터도 함께 400으로 바뀐다.
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "요청값이 올바르지 않습니다.");
     }
 
     @ExceptionHandler(AiUsageLimitExceededException.class)
