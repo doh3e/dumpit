@@ -2,6 +2,7 @@ package com.dumpit.service.impl;
 
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
+import com.dumpit.exception.BadRequestException;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
 import com.dumpit.service.ActivityLogService;
@@ -14,10 +15,15 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class TaskServiceImplTest {
@@ -69,5 +75,34 @@ class TaskServiceImplTest {
 
         assertThat(saved.getStartTime()).isEqualTo(start);
         assertThat(saved.getIsLocked()).isTrue();
+    }
+
+    @Test
+    void updateSticker_null코드는_검증없이_해제한다() {
+        User user = User.of(EMAIL, "tester", "google", "pid");
+        Task task = Task.of(user, "할 일", null, null, null);
+        task.setStickerCode("sticker.cat");
+        UUID taskId = UUID.randomUUID();
+        when(taskRepository.findActiveById(taskId)).thenReturn(Optional.of(task));
+
+        Task saved = taskService.updateSticker(EMAIL, taskId, null);
+
+        verify(shopService, never()).assertOwnsSticker(any(), any());
+        assertThat(saved.getStickerCode()).isNull();
+    }
+
+    @Test
+    void updateSticker_미보유_스티커는_예외이고_저장하지_않는다() {
+        User user = User.of(EMAIL, "tester", "google", "pid");
+        Task task = Task.of(user, "할 일", null, null, null);
+        UUID taskId = UUID.randomUUID();
+        when(taskRepository.findActiveById(taskId)).thenReturn(Optional.of(task));
+        doThrow(new BadRequestException("보유하지 않은 스티커입니다."))
+                .when(shopService).assertOwnsSticker(any(), any());
+
+        assertThrows(BadRequestException.class,
+                () -> taskService.updateSticker(EMAIL, taskId, "sticker.cat"));
+
+        verify(taskRepository, never()).save(any());
     }
 }

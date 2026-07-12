@@ -265,6 +265,7 @@ public class IdeaServiceImpl implements IdeaService {
         values.put("parentIdeaId", idea.getParentIdea() != null ? idea.getParentIdea().getIdeaId() : null);
         values.put("convertedTaskId", idea.getConvertedTask() != null ? idea.getConvertedTask().getTaskId() : null);
         values.put("convertedAt", idea.getConvertedAt());
+        values.put("stickerCode", idea.getStickerCode());
         values.put("deletedAt", idea.getDeletedAt());
         return values;
     }

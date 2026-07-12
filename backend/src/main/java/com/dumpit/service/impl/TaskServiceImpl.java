@@ -373,6 +373,7 @@ public class TaskServiceImpl implements TaskService {
         values.put("parentTaskId", task.getParentTask() != null ? task.getParentTask().getTaskId() : null);
         values.put("routineId", task.getRoutineId());
         values.put("routineScheduledDate", task.getRoutineScheduledDate());
+        values.put("stickerCode", task.getStickerCode());
         values.put("deletedAt", task.getDeletedAt());
         return values;
     }

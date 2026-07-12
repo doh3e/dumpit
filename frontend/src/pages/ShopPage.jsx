@@ -249,6 +249,7 @@ export default function ShopPage() {
   }, [fetchCatalog])
 
   const afterAction = async () => {
+    setActionError(null)
     await fetchCatalog()
     refreshCoins()
     window.dispatchEvent(new CustomEvent('dumpit:catalog-updated'))

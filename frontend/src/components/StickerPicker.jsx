@@ -190,6 +190,15 @@ export default function StickerPicker({ current, onSelect }) {
                     떼기
                   </button>
                 )}
+                <div className="mt-2 text-center">
+                  <Link
+                    to="/shop"
+                    onClick={(event) => { event.stopPropagation(); setOpen(false) }}
+                    className="text-[11px] text-sub hover:text-dark"
+                  >
+                    상점에서 더 보기
+                  </Link>
+                </div>
               </>
             )}
           </div>

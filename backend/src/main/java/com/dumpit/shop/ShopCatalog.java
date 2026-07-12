@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import static com.dumpit.shop.ShopItem.Slot.*;
 import static com.dumpit.shop.ShopItem.Tier.*;
 
+// 카탈로그의 유일한 원본. 다른 곳에서 아이템 목록을 하드코딩하지 말 것.
+// (추후 DB 카탈로그로 전환 시 이 클래스만 JPA 구현으로 교체한다)
 @Service
 public class ShopCatalog {
 
