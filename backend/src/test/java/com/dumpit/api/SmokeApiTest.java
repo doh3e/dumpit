@@ -1,6 +1,7 @@
 package com.dumpit.api;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -15,9 +16,10 @@ class SmokeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void 미인증_authMe는_401_JSON() throws Exception {
-        mockMvc.perform(get("/auth/me"))
-                .andExpect(status().isUnauthorized());
-        // 한글 메시지 검증은 Task 2(SecurityConfig 픽스) 후 추가
+        MvcResult result = mockMvc.perform(get("/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andReturn();
+        assertKoreanError(result);
     }
 
     @Test
