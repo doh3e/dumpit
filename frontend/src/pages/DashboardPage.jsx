@@ -179,17 +179,16 @@ export default function DashboardPage() {
     }
   }, [taskList])
 
-  // 하루 전체 완료 → 로켓 발사 (거짓→참 전환 시 1회, 하루 1번)
+  // 하루 전체 완료 → 로켓 발사 (거짓→참 전환마다 매번, 페이지 로드 시 이미 전체 완료 상태면 재생 안 함)
   const allDoneToday = todayTotal > 0 && todayDone === todayTotal
-  const prevAllDone = useRef(allDoneToday)
+  const prevAllDone = useRef(null)
   useEffect(() => {
-    if (allDoneToday && !prevAllDone.current && !loading) {
-      const key = `dumpit-rocket-${new Date().toISOString().slice(0, 10)}`
-      if (!sessionStorage.getItem(key)) {
-        sessionStorage.setItem(key, '1')
-        setShowRocket(true)
-      }
+    if (loading) return
+    if (prevAllDone.current === null) {
+      prevAllDone.current = allDoneToday
+      return
     }
+    if (allDoneToday && !prevAllDone.current) setShowRocket(true)
     prevAllDone.current = allDoneToday
   }, [allDoneToday, loading])
 
