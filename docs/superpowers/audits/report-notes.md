@@ -1,0 +1,1 @@
+- [태스크3][Low] IllegalStateException 핸들러가 전역 범위 — RedisOAuth2AuthorizedClientRepository의 영어 메시지 IllegalStateException이 이론상 4xx로 노출 가능(현재는 필터 체인 단계라 미도달). 다음 IllegalStateException 추가 시 주의.

@@ -18,6 +18,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -63,10 +64,14 @@ class AuthProfileApiTest extends ApiIntegrationTestBase {
 
     @Test
     void 프로필조회_인증되면_필드_반환() throws Exception {
+        userA.updatePicture("https://cdn.test.dumpit.local/a.png");
+        userRepository.save(userA);
+
         mockMvc.perform(get("/me/profile").with(asUser(USER_A)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(USER_A))
                 .andExpect(jsonPath("$.nickname").value("테스트A"))
+                .andExpect(jsonPath("$.picture").value("https://cdn.test.dumpit.local/a.png"))
                 .andExpect(jsonPath("$.bio").doesNotExist())
                 .andExpect(jsonPath("$.coinBalance").value(0));
     }
@@ -214,6 +219,8 @@ class AuthProfileApiTest extends ApiIntegrationTestBase {
         User stillAdmin = userRepository.findById(admin.getUserId()).orElseThrow();
         assertThat(stillAdmin.getStatus()).isEqualTo(User.Status.ACTIVE);
         assertThat(stillAdmin.getEmail()).isEqualTo(ADMIN);
+        // 탈퇴가 거부되면 OAuth 연결도 해지되면 안 된다 (회귀 방지)
+        verifyNoInteractions(oauthRevocationService);
     }
 
     private Task seedTask(User user, Task.Status status, Task.Category category,

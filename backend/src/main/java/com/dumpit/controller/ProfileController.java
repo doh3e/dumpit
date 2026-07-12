@@ -76,13 +76,15 @@ public class ProfileController {
         User user = resolveUser(principal);
         if (user == null) return ResponseEntity.status(401).build();
 
+        // 탈퇴 검증·확정이 먼저다 — admin 거부(IllegalStateException) 시 OAuth 연결이 해지되면 안 된다.
+        // OAuth 해지는 세션 principal 기반(Redis)이라 DB 탈퇴 후에도 동작한다.
+        accountService.withdraw(user.getEmail());
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         OAuth2AuthorizedClient client = authorizedClientRepository
                 .loadAuthorizedClient("google", authentication, request);
         oAuthRevocationService.revokeGoogle(client);
         authorizedClientRepository.removeAuthorizedClient("google", authentication, request, response);
-
-        accountService.withdraw(user.getEmail());
         if (request.getSession(false) != null) {
             request.getSession(false).invalidate();
         }
