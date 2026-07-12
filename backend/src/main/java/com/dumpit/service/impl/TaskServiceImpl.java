@@ -301,9 +301,14 @@ public class TaskServiceImpl implements TaskService {
         }
         OpenAiService.ScheduleInferenceResult inferred =
                 openAiService.inferSchedule(title, description, startTime, deadline, estimatedMinutes);
-        return new ScheduleFields(
-                startTime != null ? startTime : parseDateTime(inferred.startTime()),
-                deadline != null ? deadline : parseDateTime(inferred.deadline()),
+        LocalDateTime nextStart = startTime != null ? startTime : parseDateTime(inferred.startTime());
+        LocalDateTime nextDeadline = deadline != null ? deadline : parseDateTime(inferred.deadline());
+        // AI 추론값이 시작≥마감 쌍을 만들면 추론된 쪽을 버린다 — 유저 입력은 보존
+        if (nextStart != null && nextDeadline != null && !nextDeadline.isAfter(nextStart)) {
+            if (startTime == null) nextStart = null;
+            else nextDeadline = null;
+        }
+        return new ScheduleFields(nextStart, nextDeadline,
                 estimatedMinutes != null ? estimatedMinutes : inferred.estimatedMinutes());
     }
 

@@ -215,4 +215,33 @@ class TaskServiceImplTest {
         // 기존 예상시간(60분)이 있으므로 AI 재추론 자체가 불필요
         verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any());
     }
+
+    @Test
+    void AI가_시작과_마감을_같은_시각으로_추론하면_시작시간을_버린다() {
+        when(openAiService.inferSchedule(any(), any(), any(), any(), any()))
+                .thenReturn(new OpenAiService.ScheduleInferenceResult(
+                        "2099-01-02T15:00:00", "2099-01-02T15:00:00", 60, "회의 추론"));
+
+        Task saved = taskService.createTask(EMAIL, "내일 3시 회의", null,
+                null, null, null, null, null, Task.Category.WORK, false);
+
+        assertThat(saved.getStartTime()).isNull();
+        assertThat(saved.getDeadline()).isEqualTo(LocalDateTime.parse("2099-01-02T15:00:00"));
+        assertThat(saved.getEstimatedMinutes()).isEqualTo(60);
+    }
+
+    @Test
+    void 유저_시작시간과_모순되는_추론_마감은_버린다() {
+        when(openAiService.inferSchedule(any(), any(), any(), any(), any()))
+                .thenReturn(new OpenAiService.ScheduleInferenceResult(
+                        null, "2099-01-01T09:00:00", 30, "모순 추론"));
+        LocalDateTime start = LocalDateTime.parse("2099-01-02T10:00:00");
+
+        Task saved = taskService.createTask(EMAIL, "발표 준비", null,
+                null, null, start, null, null, Task.Category.WORK, false);
+
+        assertThat(saved.getStartTime()).isEqualTo(start);
+        assertThat(saved.getDeadline()).isNull();
+        assertThat(saved.getIsLocked()).isTrue();
+    }
 }
