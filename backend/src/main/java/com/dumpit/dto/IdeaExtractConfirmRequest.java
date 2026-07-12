@@ -1,10 +1,10 @@
 package com.dumpit.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 public record IdeaExtractConfirmRequest(
-        @NotNull List<IdeaNodeInput> ideas
+        @NotEmpty List<IdeaNodeInput> ideas
 ) {
     public record IdeaNodeInput(
             String title,
