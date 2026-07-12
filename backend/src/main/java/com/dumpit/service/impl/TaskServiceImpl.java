@@ -169,8 +169,11 @@ public class TaskServiceImpl implements TaskService {
         if (code != null) {
             shopService.assertOwnsSticker(task.getUser(), code);
         }
+        Map<String, Object> before = snapshot(task);
         task.setStickerCode(code);
-        return taskRepository.save(task);
+        Task saved = taskRepository.save(task);
+        activityLogService.record(task.getUser(), "TASK_STICKER_UPDATED", "TASK", saved.getTaskId(), before, snapshot(saved));
+        return saved;
     }
 
     @Override

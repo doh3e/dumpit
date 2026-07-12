@@ -108,8 +108,11 @@ public class IdeaServiceImpl implements IdeaService {
         if (code != null) {
             shopService.assertOwnsSticker(idea.getUser(), code);
         }
+        Map<String, Object> before = snapshot(idea);
         idea.updateSticker(code);
-        return ideaRepository.save(idea);
+        Idea saved = ideaRepository.save(idea);
+        activityLogService.record(idea.getUser(), "IDEA_STICKER_UPDATED", "IDEA", saved.getIdeaId(), before, snapshot(saved));
+        return saved;
     }
 
     @Override
