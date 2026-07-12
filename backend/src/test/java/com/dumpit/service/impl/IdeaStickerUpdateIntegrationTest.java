@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 테스트 트랜잭션은 종료 시 자동 롤백되어 DB에 흔적을 남기지 않는다.
  */
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @Transactional
 class IdeaStickerUpdateIntegrationTest {
 
