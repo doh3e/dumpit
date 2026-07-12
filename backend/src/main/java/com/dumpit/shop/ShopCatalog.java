@@ -21,6 +21,7 @@ public class ShopCatalog {
         ShopItem.theme("bg.lavender", BACKGROUND, "라벤더",   "은은한 보랏빛 팔레트예요.",        200, COLOR),
         ShopItem.theme("bg.rose",     BACKGROUND, "로즈",     "포근한 장밋빛 팔레트예요.",        200, COLOR),
         ShopItem.theme("bg.sprout",   BACKGROUND, "새싹 정원", "초록이 가득한 정원 테마예요.",      600, CONCEPT),
+        ShopItem.theme("bg.galaxy",   BACKGROUND, "은하수",   "별이 흐르는 밤하늘 테마예요.",      800, CONCEPT),
         ShopItem.theme("chrome.ocean",    CHROME, "오션",     "메뉴가 바다빛으로 물들어요.",       150, COLOR),
         ShopItem.theme("chrome.lavender", CHROME, "라벤더",   "메뉴가 보랏빛으로 물들어요.",       150, COLOR),
         ShopItem.theme("chrome.rose",     CHROME, "로즈",     "메뉴가 장밋빛으로 물들어요.",       150, COLOR),

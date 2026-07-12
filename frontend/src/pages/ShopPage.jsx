@@ -18,6 +18,7 @@ const SKIN_PREVIEWS = {
   'bg.lavender': ['#EEEAF4', '#8A63C4', '#E2DAEC'],
   'bg.rose': ['#F5E9EA', '#C25B6E', '#EDD8DB'],
   'bg.sprout': ['#EAF2E3', '#5C8A3C', '#DCEBCE'],
+  'bg.galaxy': ['#E9EAF6', '#6D74C9', '#DBDDF0'],
   'chrome.ocean': ['#E4EFEC', '#B7D4CD'],
   'chrome.lavender': ['#EEEAF4', '#CBBEDC'],
   'chrome.rose': ['#F5E9EA', '#DDBCC2'],

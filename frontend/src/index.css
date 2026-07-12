@@ -55,6 +55,7 @@ body {
   margin: 0;
   font-family: 'Pretendard Variable', Pretendard, 'Malgun Gothic', system-ui, sans-serif;
   background-color: var(--bg);
+  background-image: var(--bg-pattern, none);
   color: var(--fg);
 }
 
@@ -264,11 +265,25 @@ body {
   --bg:#EAF2E3; --card:#FBFEF7; --chip:#DCEBCE; --line:#C2DBAA; --edge:#2F4224;
   --accent:#5C8A3C; --accent2:#C4708F; --on-accent:#F7FCF0;
   --shadow-hero:#BFD8A6; --shadow-sm:#CFE2BA; --overlay:rgba(47,66,36,.35);
+  --bg-pattern:url('./assets/shop/pattern_sprout_light.png');
 }
 [data-skin-bg="sprout"][data-theme="dark"] {
   --bg:#1B2617; --card:#26351F; --chip:#31452A; --line:#40573A; --edge:#0E150B;
   --accent:#8FBF6F; --accent2:#D98BA6; --on-accent:#131C0E;
   --shadow-hero:#0E150B; --shadow-sm:#0E150B; --overlay:rgba(6,10,4,.55);
+  --bg-pattern:url('./assets/shop/pattern_sprout_dark.png');
+}
+[data-skin-bg="galaxy"] {
+  --bg:#E9EAF6; --card:#FDFDFF; --chip:#DBDDF0; --line:#C2C5E4; --edge:#2E3050;
+  --accent:#6D74C9; --accent2:#C9922E; --on-accent:#F8F9FF;
+  --shadow-hero:#C6C9E8; --shadow-sm:#D2D5EC; --overlay:rgba(46,48,80,.35);
+  --bg-pattern:url('./assets/shop/pattern_galaxy_light.png');
+}
+[data-skin-bg="galaxy"][data-theme="dark"] {
+  --bg:#151329; --card:#201D3D; --chip:#2B2750; --line:#3D3866; --edge:#0A0918;
+  --accent:#8F97E8; --accent2:#E9B44C; --on-accent:#12102A;
+  --shadow-hero:#0A0918; --shadow-sm:#0A0918; --overlay:rgba(5,4,16,.55);
+  --bg-pattern:url('./assets/shop/pattern_galaxy_dark.png');
 }
 [data-skin-bg="rose"] {
   --bg:#F5E9EA; --card:#FEFCFC; --chip:#EDD8DB; --line:#DDBCC2; --edge:#43282E;
