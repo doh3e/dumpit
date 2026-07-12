@@ -126,7 +126,7 @@ ALTER TABLE ideas ADD COLUMN sticker_code varchar(64);
 
 ## 5. 에셋 전략
 
-- **CC0 라이선스만 사용** — Kenney(전부 CC0), OpenGameArt·itch.io의 CC0 픽셀아트 팩에서 행성·로켓·UFO·우주정거장·스티커 아이콘 선별.
+- **CC0 우선, CC-BY는 출처 표기 조건으로 허용** (2026-07-12 사용자 확정 — 순수 CC0만으로는 스타일 통일된 픽셀 스페이스 팩이 없어 완화). OpenGameArt 픽셀아트 팩에서 행성·로켓·UFO·우주정거장·스티커 아이콘 선별. CC-BY 준수: `docs/ATTRIBUTIONS.md` 기록 + 상점 페이지 하단 크레딧 한 줄.
 - 저장 위치: `frontend/src/assets/shop/` (빌드 해시 포함되도록 src 쪽). 픽셀 스프라이트는 `image-rendering: pixelated`로 업스케일, 필요 시 WebP 변환.
 - 출처·라이선스는 `docs/ATTRIBUTIONS.md`에 기록(CC0라 표기 의무는 없으나 관리 목적).
 - 색상 테마(팔레트)는 에셋이 아니라 CSS 변수 값 — 기존 라이트/다크 팔레트와 같은 감성(레트로, 채도 낮음)으로 슬롯당 2벌씩 설계.
