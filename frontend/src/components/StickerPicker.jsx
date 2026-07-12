@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { STICKER_SPRITES, spriteFor } from '../shop/registry'
@@ -39,19 +40,25 @@ function fetchOwnedStickers() {
   return ownedPromise
 }
 
+const POPOVER_WIDTH = 224 // w-56
+const POPOVER_EST_HEIGHT = 170 // 플립 판단용 추정치 (한 줄 격자 + 떼기 버튼 + 패딩)
+const VIEWPORT_MARGIN = 8
+
 export default function StickerPicker({ current, onSelect }) {
   const [open, setOpen] = useState(false)
   const [owned, setOwned] = useState(ownedCache || [])
   const [loading, setLoading] = useState(false)
-  const wrapperRef = useRef(null)
+  const [popoverPos, setPopoverPos] = useState(null)
+  const triggerRef = useRef(null)
+  const popoverRef = useRef(null)
 
   useEffect(() => {
     if (!open) return
 
     const handleClick = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setOpen(false)
-      }
+      if (triggerRef.current?.contains(event.target)) return
+      if (popoverRef.current?.contains(event.target)) return
+      setOpen(false)
     }
 
     document.addEventListener('mousedown', handleClick)
@@ -59,19 +66,43 @@ export default function StickerPicker({ current, onSelect }) {
   }, [open])
 
   const loadOwned = useCallback(() => {
+    if (ownedCache) {
+      // 캐시가 따뜻하면 로딩 플래시 없이 바로 반영
+      setOwned(ownedCache)
+      return
+    }
     setLoading(true)
     fetchOwnedStickers()
       .then(setOwned)
       .finally(() => setLoading(false))
   }, [])
 
+  const computePosition = () => {
+    const rect = triggerRef.current?.getBoundingClientRect()
+    if (!rect) return null
+
+    let left = rect.right - POPOVER_WIDTH
+    left = Math.min(left, window.innerWidth - POPOVER_WIDTH - VIEWPORT_MARGIN)
+    left = Math.max(left, VIEWPORT_MARGIN)
+
+    // 아래 공간이 모자라고 위 공간이 충분하면 트리거 위로 플립
+    const flipUp = rect.bottom + POPOVER_EST_HEIGHT > window.innerHeight - VIEWPORT_MARGIN
+      && rect.top > POPOVER_EST_HEIGHT + VIEWPORT_MARGIN
+    if (flipUp) {
+      return { left, bottom: window.innerHeight - rect.top + 4 }
+    }
+    return { left, top: rect.bottom + 4 }
+  }
+
   const handleTriggerClick = (event) => {
     event.stopPropagation()
-    setOpen((value) => {
-      const next = !value
-      if (next) loadOwned()
-      return next
-    })
+    if (open) {
+      setOpen(false)
+      return
+    }
+    setPopoverPos(computePosition())
+    loadOwned()
+    setOpen(true)
   }
 
   const handleChoose = (event, code) => {
@@ -83,7 +114,7 @@ export default function StickerPicker({ current, onSelect }) {
   const currentSprite = current ? spriteFor(STICKER_SPRITES, current) : null
 
   return (
-    <div className="relative inline-block" ref={wrapperRef} onClick={(e) => e.stopPropagation()}>
+    <div className="inline-block" ref={triggerRef} onClick={(e) => e.stopPropagation()}>
       <button
         type="button"
         onClick={handleTriggerClick}
@@ -107,8 +138,13 @@ export default function StickerPicker({ current, onSelect }) {
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-6 z-50 w-56">
+      {open && popoverPos && createPortal(
+        <div
+          ref={popoverRef}
+          className="fixed z-50 w-56"
+          style={popoverPos}
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="card-retro !p-3 bg-card">
             {loading ? (
               <p className="py-3 text-center text-xs font-bold text-sub">불러오는 중...</p>
@@ -157,7 +193,8 @@ export default function StickerPicker({ current, onSelect }) {
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
