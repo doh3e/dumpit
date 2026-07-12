@@ -26,7 +26,8 @@ public record TaskResponse(
         LocalDate routineScheduledDate,
         String syncSource,
         LocalDateTime createdAt,
-        LocalDateTime completedAt
+        LocalDateTime completedAt,
+        String stickerCode
 ) {
     public static TaskResponse from(Task t) {
         return new TaskResponse(
@@ -44,7 +45,8 @@ public record TaskResponse(
                 t.getRoutineScheduledDate(),
                 t.getSyncSource().name(),
                 t.getCreatedAt(),
-                t.getCompletedAt()
+                t.getCompletedAt(),
+                t.getStickerCode()
         );
     }
 }

@@ -19,6 +19,8 @@ public interface TaskService {
 
     Task updateTask(String email, UUID taskId, TaskUpdateFields fields);
 
+    Task updateSticker(String email, UUID taskId, String code);
+
     Task reanalyzePriority(String email, UUID taskId);
 
     OpenAiService.SubtaskResult proposeSubtasks(String email, UUID taskId);

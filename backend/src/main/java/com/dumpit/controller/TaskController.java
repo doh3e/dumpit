@@ -93,6 +93,17 @@ public class TaskController {
         return ResponseEntity.ok(TaskResponse.from(task));
     }
 
+    @PutMapping("/{taskId}/sticker")
+    public ResponseEntity<TaskResponse> updateSticker(
+            @AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("taskId") UUID taskId,
+            @RequestBody StickerRequest req) {
+        Task task = taskService.updateSticker(principal.getAttribute("email"), taskId, req.code());
+        return ResponseEntity.ok(TaskResponse.from(task));
+    }
+
+    public record StickerRequest(String code) {}
+
     private <T> T value(Map<String, Object> req, String key, Class<T> type) {
         if (!req.containsKey(key) || req.get(key) == null) {
             return null;

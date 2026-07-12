@@ -8,6 +8,7 @@ import com.dumpit.service.ActivityLogService;
 import com.dumpit.service.AiUsageService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
+import com.dumpit.service.ShopService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,10 +30,11 @@ class TaskServiceImplTest {
     private final DeadlineNudgeService deadlineNudgeService = mock(DeadlineNudgeService.class);
     private final AiUsageService aiUsageService = mock(AiUsageService.class);
     private final ActivityLogService activityLogService = mock(ActivityLogService.class);
+    private final ShopService shopService = mock(ShopService.class);
 
     private final TaskServiceImpl taskService = new TaskServiceImpl(
             taskRepository, userRepository, openAiService,
-            deadlineNudgeService, aiUsageService, activityLogService);
+            deadlineNudgeService, aiUsageService, activityLogService, shopService);
 
     @BeforeEach
     void setUp() {

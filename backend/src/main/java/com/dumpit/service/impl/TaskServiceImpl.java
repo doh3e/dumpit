@@ -12,6 +12,7 @@ import com.dumpit.service.ActivityLogService;
 import com.dumpit.service.AiUsageService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
+import com.dumpit.service.ShopService;
 import com.dumpit.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class TaskServiceImpl implements TaskService {
     private final DeadlineNudgeService deadlineNudgeService;
     private final AiUsageService aiUsageService;
     private final ActivityLogService activityLogService;
+    private final ShopService shopService;
 
     @Override
     @Transactional(readOnly = true)
@@ -152,6 +154,23 @@ public class TaskServiceImpl implements TaskService {
         Map<String, Object> after = snapshot(saved);
         activityLogService.record(task.getUser(), TaskChangeClassifier.classify(before, after), "TASK", saved.getTaskId(), before, after);
         return saved;
+    }
+
+    @Override
+    @Transactional
+    public Task updateSticker(String email, UUID taskId, String code) {
+        Task task = taskRepository.findActiveById(taskId)
+                .orElseThrow(() -> new NotFoundException("태스크를 찾을 수 없습니다."));
+
+        if (!task.getUser().getEmail().equals(email)) {
+            throw new ForbiddenException("이 태스크에 접근할 권한이 없습니다.");
+        }
+
+        if (code != null) {
+            shopService.assertOwnsSticker(task.getUser(), code);
+        }
+        task.setStickerCode(code);
+        return taskRepository.save(task);
     }
 
     @Override

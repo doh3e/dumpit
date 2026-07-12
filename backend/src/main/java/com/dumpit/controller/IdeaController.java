@@ -79,6 +79,17 @@ public class IdeaController {
         return ResponseEntity.ok(IdeaResponse.from(idea));
     }
 
+    @PutMapping("/{ideaId}/sticker")
+    public ResponseEntity<IdeaResponse> updateSticker(
+            @AuthenticationPrincipal OAuth2User principal,
+            @PathVariable UUID ideaId,
+            @RequestBody StickerRequest request) {
+        Idea idea = ideaService.updateSticker(principal.getAttribute("email"), ideaId, request.code());
+        return ResponseEntity.ok(IdeaResponse.from(idea));
+    }
+
+    public record StickerRequest(String code) {}
+
     @PostMapping("/{ideaId}/convert-to-task")
     public ResponseEntity<?> convertToTask(
             @AuthenticationPrincipal OAuth2User principal,

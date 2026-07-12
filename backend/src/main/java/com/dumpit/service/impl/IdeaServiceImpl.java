@@ -16,6 +16,7 @@ import com.dumpit.service.AiUsageService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.IdeaService;
 import com.dumpit.service.OpenAiService;
+import com.dumpit.service.ShopService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,7 @@ public class IdeaServiceImpl implements IdeaService {
     private final ActivityLogService activityLogService;
     private final AiUsageService aiUsageService;
     private final OpenAiService openAiService;
+    private final ShopService shopService;
 
     @Override
     @Transactional(readOnly = true)
@@ -97,6 +99,17 @@ public class IdeaServiceImpl implements IdeaService {
         Idea saved = ideaRepository.save(idea);
         activityLogService.record(idea.getUser(), "IDEA_UPDATED", "IDEA", saved.getIdeaId(), before, snapshot(saved));
         return saved;
+    }
+
+    @Override
+    @Transactional
+    public Idea updateSticker(String email, UUID ideaId, String code) {
+        Idea idea = findOwnedIdea(email, ideaId);
+        if (code != null) {
+            shopService.assertOwnsSticker(idea.getUser(), code);
+        }
+        idea.updateSticker(code);
+        return ideaRepository.save(idea);
     }
 
     @Override

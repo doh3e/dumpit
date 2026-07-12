@@ -15,7 +15,8 @@ public record IdeaResponse(
         Boolean pinned,
         LocalDateTime convertedAt,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        String stickerCode
 ) {
     public static IdeaResponse from(Idea idea) {
         return new IdeaResponse(
@@ -28,7 +29,8 @@ public record IdeaResponse(
                 idea.getPinned(),
                 idea.getConvertedAt(),
                 idea.getCreatedAt(),
-                idea.getUpdatedAt()
+                idea.getUpdatedAt(),
+                idea.getStickerCode()
         );
     }
 }
