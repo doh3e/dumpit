@@ -495,6 +495,38 @@ class IdeaApiTest extends ApiIntegrationTestBase {
         assertKoreanError(result);
     }
 
+    // [태스크13] IdeaExtractConfirmRequest.IdeaNodeInput은 title/content/category에 @Size가 없고
+    // 최상위 ideas 리스트에도 @Valid가 빠져 있어(중첩 children 포함) 대용량 문자열이 검증 없이
+    // 그대로 저장될 수 있었다. IdeaRequest(@Size(max=200)/(max=3000))와 동일 상한을 적용하고
+    // ideas/children 양쪽에 @Valid를 추가해 재귀적으로 걸러지는지 확인(최상위/자식 노드 각각).
+    @Test
+    void AI추출확정_title_길이초과면_400_한글() throws Exception {
+        String tooLongTitle = "가".repeat(201);
+        MvcResult result = mockMvc.perform(post("/ideas/ai-extract/confirm").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"ideas\":[{\"title\":\"" + tooLongTitle + "\"}]}"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        assertKoreanError(result);
+    }
+
+    @Test
+    void AI추출확정_자식노드_title_길이초과면_400_한글() throws Exception {
+        String tooLongTitle = "가".repeat(201);
+        MvcResult result = mockMvc.perform(post("/ideas/ai-extract/confirm").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"ideas":[
+                                  {"title":"정상 제목","content":null,"category":null,"children":[
+                                    {"title":"%s","content":null,"category":null,"children":null}
+                                  ]}
+                                ]}
+                                """.formatted(tooLongTitle)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        assertKoreanError(result);
+    }
+
     // ---------- DELETE /ideas/{id} ----------
 
     @Test

@@ -1,15 +1,17 @@
 package com.dumpit.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record IdeaExtractConfirmRequest(
-        @NotEmpty List<IdeaNodeInput> ideas
+        @NotEmpty List<@Valid IdeaNodeInput> ideas
 ) {
     public record IdeaNodeInput(
-            String title,
-            String content,
-            String category,
-            List<IdeaNodeInput> children
+            @Size(max = 200) String title,
+            @Size(max = 3000) String content,
+            @Size(max = 50) String category,
+            List<@Valid IdeaNodeInput> children
     ) {}
 }

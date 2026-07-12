@@ -145,6 +145,23 @@ class BrainDumpAiApiTest extends ApiIntegrationTestBase {
         assertKoreanError(result);
     }
 
+    // [태스크13] DumpConfirmRequest.TaskInput은 title/description/category에 @Size가 없어
+    // 대용량 문자열(예: 100만자 title)이 검증 없이 그대로 Task 엔티티(TEXT 컬럼)에 저장될 수 있었다.
+    // TaskRequest(@Size(max=200)/(max=1000))와 동일한 상한을 적용해 400으로 걸러지는지 확인.
+    @Test
+    void 확정_title_길이초과면_400_한글() throws Exception {
+        BrainDump dump = seedDump(userA, "원문");
+        String tooLongTitle = "가".repeat(201);
+
+        MvcResult result = mockMvc.perform(post("/brain-dump/" + dump.getDumpId() + "/confirm").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of(
+                                "tasks", List.of(Map.of("title", tooLongTitle))))))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        assertKoreanError(result);
+    }
+
     // ---------- GET /ai-usage ----------
 
     @Test
