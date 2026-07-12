@@ -224,6 +224,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .pixel-spark { animation: none; opacity: 0; }
+  /* 비행 스프라이트는 JS(matchMedia)에서 렌더링 자체를 건너뛰고 배너 안 정적 3개로 대체 — 아래는 안전망 */
   .celebration-sprite { animation: none; opacity: 0; }
   .celebration-banner { animation: none; opacity: 1; transform: translate(-50%, -50%) scale(1); }
   .coin-bounce, .px-blink { animation: none; }
