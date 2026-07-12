@@ -52,7 +52,7 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void 마감만_입력한_태스크는_시작시간이_파생되어도_고정되지_않는다() {
+    void 마감만_입력하면_시작시간을_역산하지_않는다() {
         when(openAiService.inferSchedule(any(), any(), any(), any(), any()))
                 .thenReturn(new OpenAiService.ScheduleInferenceResult(null, null, 120, "추론"));
         LocalDateTime deadline = LocalDateTime.now().plusHours(8);
@@ -60,9 +60,50 @@ class TaskServiceImplTest {
         Task saved = taskService.createTask(EMAIL, "보고서 쓰기", null,
                 deadline, null, null, null, null, Task.Category.WORK);
 
-        assertThat(saved.getStartTime()).isEqualTo(deadline.minusMinutes(120));
-        assertThat(saved.getEndTime()).isEqualTo(deadline);
+        assertThat(saved.getStartTime()).isNull();
+        assertThat(saved.getEndTime()).isNull();
+        assertThat(saved.getEstimatedMinutes()).isEqualTo(120);
         assertThat(saved.getIsLocked()).isFalse();
+    }
+
+    @Test
+    void 시작과_마감이_모두_있으면_예상시간을_간격으로_파생하지_않는다() {
+        // n박 일정: 파생이 있으면 4320분이 계산돼 1440분 검증에서 BadRequest가 터진다
+        LocalDateTime start = LocalDateTime.now().plusHours(1);
+        LocalDateTime deadline = LocalDateTime.now().plusDays(3);
+
+        Task saved = taskService.createTask(EMAIL, "제주 여행", null,
+                deadline, null, start, null, null, Task.Category.OTHER);
+
+        assertThat(saved.getEstimatedMinutes()).isNull();
+        assertThat(saved.getStartTime()).isEqualTo(start);
+        assertThat(saved.getDeadline()).isEqualTo(deadline);
+        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void 마감과_예상시간이_있으면_시작시간을_역산하지_않는다() {
+        LocalDateTime deadline = LocalDateTime.now().plusHours(8);
+
+        Task saved = taskService.createTask(EMAIL, "보고서 쓰기", null,
+                deadline, 90, null, null, null, Task.Category.WORK);
+
+        assertThat(saved.getStartTime()).isNull();
+        assertThat(saved.getEndTime()).isNull();
+        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void 예상시간만_입력하면_단서_없을때_마감이_생기지_않는다() {
+        when(openAiService.inferSchedule(any(), any(), any(), any(), any()))
+                .thenReturn(new OpenAiService.ScheduleInferenceResult(null, null, null, "단서 없음"));
+
+        Task saved = taskService.createTask(EMAIL, "기타 연습", null,
+                null, 60, null, null, null, Task.Category.OTHER);
+
+        assertThat(saved.getDeadline()).isNull();
+        assertThat(saved.getStartTime()).isNull();
+        assertThat(saved.getEstimatedMinutes()).isEqualTo(60);
     }
 
     @Test

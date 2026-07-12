@@ -277,44 +277,17 @@ public class TaskServiceImpl implements TaskService {
                                                  LocalDateTime startTime,
                                                  LocalDateTime deadline,
                                                  Integer estimatedMinutes) {
-        if (startTime == null && deadline == null && estimatedMinutes == null) {
-            OpenAiService.ScheduleInferenceResult inferred =
-                    openAiService.inferSchedule(title, description, null, null, null);
-            return new ScheduleFields(null, parseDateTime(inferred.deadline()), inferred.estimatedMinutes());
+        // 마감이 확정돼 있고 다른 시간 정보도 있으면 AI 호출 없이 그대로 사용.
+        // 시작~마감 간격을 예상시간으로 환산하던 슬롯 파생은 하지 않는다 — 예상시간은 집중 작업량 의미
+        if (deadline != null && (startTime != null || estimatedMinutes != null)) {
+            return new ScheduleFields(startTime, deadline, estimatedMinutes);
         }
-
-        if (startTime != null && deadline != null) {
-            return new ScheduleFields(startTime, deadline,
-                    estimatedMinutes != null ? estimatedMinutes : (int) java.time.Duration.between(startTime, deadline).toMinutes());
-        }
-        if (startTime != null && estimatedMinutes != null) {
-            return new ScheduleFields(startTime, startTime.plusMinutes(estimatedMinutes), estimatedMinutes);
-        }
-        if (deadline != null && estimatedMinutes != null) {
-            return new ScheduleFields(deadline.minusMinutes(estimatedMinutes), deadline, estimatedMinutes);
-        }
-
         OpenAiService.ScheduleInferenceResult inferred =
                 openAiService.inferSchedule(title, description, startTime, deadline, estimatedMinutes);
-        LocalDateTime inferredStart = parseDateTime(inferred.startTime());
-        LocalDateTime inferredDeadline = parseDateTime(inferred.deadline());
-        Integer inferredMinutes = inferred.estimatedMinutes();
-
-        LocalDateTime nextStart = startTime != null ? startTime : inferredStart;
-        LocalDateTime nextDeadline = deadline != null ? deadline : inferredDeadline;
-        Integer nextEstimated = estimatedMinutes != null ? estimatedMinutes : inferredMinutes;
-
-        if (nextStart != null && nextDeadline != null && nextEstimated == null) {
-            nextEstimated = (int) java.time.Duration.between(nextStart, nextDeadline).toMinutes();
-        }
-        if (nextStart != null && nextEstimated != null && nextDeadline == null) {
-            nextDeadline = nextStart.plusMinutes(nextEstimated);
-        }
-        if (nextDeadline != null && nextEstimated != null && nextStart == null) {
-            nextStart = nextDeadline.minusMinutes(nextEstimated);
-        }
-
-        return new ScheduleFields(nextStart, nextDeadline, nextEstimated);
+        return new ScheduleFields(
+                startTime != null ? startTime : parseDateTime(inferred.startTime()),
+                deadline != null ? deadline : parseDateTime(inferred.deadline()),
+                estimatedMinutes != null ? estimatedMinutes : inferred.estimatedMinutes());
     }
 
     private LocalDateTime parseDateTime(String value) {
