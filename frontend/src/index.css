@@ -34,6 +34,8 @@
   /* 색 역할: accent=주 포인트(빨강) accent2=보조 포인트(틸) warn=마감 임박(앰버) starlight=별·보상(골드) */
   --warn:#D98E2B; --starlight:#E9B44C;
   --p1:#4AA396; --p2:#8AD6C4; --p3:#2E6B60;
+  --chrome-bg:var(--card); --chrome-line:var(--line);
+  --pomo-focus:var(--accent); --pomo-break:var(--accent2); --pomo-ring:var(--line);
 }
 
 [data-theme="dark"] {

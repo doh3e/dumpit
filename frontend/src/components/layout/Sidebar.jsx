@@ -122,7 +122,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
   return (
     <>
       {/* Desktop sidebar (lg+) */}
-      <aside className="hidden lg:flex flex-col w-56 min-h-full bg-card border-r border-line pt-6 pb-10 px-3 gap-1">
+      <aside className="hidden lg:flex flex-col w-56 min-h-full bg-chrome border-r border-chrome-line pt-6 pb-10 px-3 gap-1">
         {sidebarContent}
       </aside>
 
@@ -131,7 +131,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
         <div className="lg:hidden fixed inset-0 z-[55]" onClick={onCloseDrawer}>
           <div className="absolute inset-0 overlay-retro" />
           <aside
-            className="absolute left-0 top-0 bottom-0 w-64 bg-card border-r border-line pt-6 pb-10 px-3 flex flex-col gap-1 overflow-y-auto"
+            className="absolute left-0 top-0 bottom-0 w-64 bg-chrome border-r border-chrome-line pt-6 pb-10 px-3 flex flex-col gap-1 overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarContent}

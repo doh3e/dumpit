@@ -259,11 +259,10 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     <div className={`flex flex-col items-center gap-2 ${compact ? 'p-2' : 'p-3'}`}>
       {/* Mode label + settings button */}
       <div className="flex items-center gap-2">
-        <div className={`text-[10px] font-black px-3 py-1 rounded-full border border-edge ${
-          isFocus
-            ? 'bg-primary text-on-accent'
-            : 'bg-secondary text-on-accent'
-        }`}>
+        <div
+          className="text-[10px] font-black px-3 py-1 rounded-full border border-edge text-on-accent"
+          style={{ background: isFocus ? 'var(--pomo-focus)' : 'var(--pomo-break)' }}
+        >
           {isFocus ? 'FOCUS' : 'BREAK'}
         </div>
         {isDesktop && (
@@ -326,13 +325,13 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           <circle
             cx="50" cy="50" r="42"
             fill="none"
-            stroke="var(--line)"
+            stroke="var(--pomo-ring)"
             strokeWidth="6"
           />
           <circle
             cx="50" cy="50" r="42"
             fill="none"
-            stroke={isFocus ? 'var(--accent)' : 'var(--accent2)'}
+            stroke={isFocus ? 'var(--pomo-focus)' : 'var(--pomo-break)'}
             strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 42}`}
@@ -367,10 +366,11 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       <div className="flex items-center gap-2 w-full">
         <button
           onClick={toggle}
+          style={{ background: running ? undefined : 'var(--pomo-focus)' }}
           className={`btn-retro flex-1 text-xs py-2 ${
             running
               ? 'bg-accent text-dark'
-              : 'bg-primary text-on-accent'
+              : 'text-on-accent'
           }`}
         >
           {running ? '일시정지' : isFocus ? '집중시작' : '쉬기시작'}
