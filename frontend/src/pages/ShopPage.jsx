@@ -47,6 +47,12 @@ const SLOT_SECTIONS = [
   { slot: 'STATION', title: '우주정거장' },
 ]
 
+// 카탈로그 45종을 한 화면에 다 펼치면 스크롤이 지나치게 길다 — 섹션별 탭 분리
+const SHOP_TABS = [
+  ...SLOT_SECTIONS.map(({ slot, title }) => ({ id: slot, label: title })),
+  { id: 'STICKER', label: '스티커' },
+]
+
 const SPRITE_MAP_BY_SLOT = {
   PLANET: PLANET_SPRITES,
   CELEBRATION: CELEBRATION_SPRITES,
@@ -122,7 +128,13 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
             <img src={coinImage} alt="" className="w-4 h-4 object-contain" />
-            <span className="font-dungeon text-sm text-dark">{item.price}</span>
+            {/* 아직 안 산 아이템의 가격은 테마와 무관하게 붉은색 고정 — 지불할 금액이 한눈에 띄게 */}
+            <span
+              className="font-dungeon text-sm text-dark"
+              style={item.owned ? undefined : { color: 'var(--danger)' }}
+            >
+              {item.price}
+            </span>
           </div>
           {item.slot === 'CELEBRATION' && onPreview && (
             <button
@@ -161,7 +173,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
             type="button"
             onClick={() => onEquip(item)}
             disabled={isBusy}
-            className="btn-retro-secondary text-xs px-3 py-2"
+            className="btn-retro-outline text-xs px-3 py-2"
           >
             {isBusy ? '...' : '장착하기'}
           </button>
@@ -213,7 +225,7 @@ function PurchaseConfirmModal({ item, coinBalance, submitting, error, onConfirm,
       <div className="card-retro w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
         <h2 className="font-dungeon text-dark text-lg">{item.name}</h2>
         <p className="mt-3 text-sm font-bold text-dark">
-          <span className="font-dungeon text-secondary">{item.price}</span>코인으로 구매할까요?
+          <span className="font-dungeon" style={{ color: 'var(--danger)' }}>{item.price}</span>코인으로 구매할까요?
         </p>
         <p className="mt-1 text-xs font-semibold text-sub">구매 후 잔액 {remaining}코인</p>
 
@@ -256,6 +268,7 @@ export default function ShopPage() {
   const [confirmSubmitting, setConfirmSubmitting] = useState(false)
   const [confirmError, setConfirmError] = useState(null)
   const [previewCode, setPreviewCode] = useState(null)
+  const [activeTab, setActiveTab] = useState(SHOP_TABS[0].id)
 
   const fetchCatalog = useCallback(() => {
     return api.get('/shop/catalog')
@@ -356,7 +369,13 @@ export default function ShopPage() {
   const coinBalance = catalog?.coinBalance ?? 0
   // 섹션 내 정렬: 가격 오름차순 → 이름 오름차순 (같은 컨셉 테마가 슬롯마다 흩어져 보이는 문제 방지)
   const byPriceThenName = (a, b) => (a.price - b.price) || a.name.localeCompare(b.name, 'ko')
-  const stickers = items.filter((item) => item.type === 'STICKER').sort(byPriceThenName)
+  const activeItems = items
+    .filter((item) => (activeTab === 'STICKER' ? item.type === 'STICKER' : item.slot === activeTab))
+    .sort(byPriceThenName)
+  // 탭 안에서 보유중을 위, 미구매를 아래로 — 각 그룹은 가격·이름순 유지
+  const ownedItems = activeItems.filter((item) => item.owned)
+  const unownedItems = activeItems.filter((item) => !item.owned)
+  const showOwnedSplit = ownedItems.length > 0 && unownedItems.length > 0
 
   const cardProps = {
     coinBalance,
@@ -378,35 +397,51 @@ export default function ShopPage() {
         </div>
       </div>
 
+      <div role="tablist" className="flex flex-wrap gap-2">
+        {SHOP_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`font-dungeon text-sm px-3.5 py-2 rounded-full border-[1.5px] transition-colors ${
+              activeTab === tab.id
+                ? 'bg-primary text-on-accent border-edge shadow-retro'
+                : 'bg-card text-dark border-line hover:border-edge'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {actionError && (
         <p className="text-xs font-bold text-center" style={{ color: 'var(--danger)' }}>{actionError}</p>
       )}
 
-      {SLOT_SECTIONS.map(({ slot, title }) => {
-        const slotItems = items.filter((item) => item.slot === slot).sort(byPriceThenName)
-        if (slotItems.length === 0) return null
-        return (
-          <section key={slot}>
-            <h3 className="label-retro mb-3">{title}</h3>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {slotItems.map((item) => (
-                <ShopItemCard key={item.code} item={item} {...cardProps} />
-              ))}
+      {(showOwnedSplit
+        ? [
+            { key: 'owned', label: '보유중', list: ownedItems },
+            { key: 'unowned', label: '구매 가능', list: unownedItems },
+          ]
+        : [{ key: 'all', label: null, list: activeItems }]
+      ).map(({ key, label, list }) => (
+        <section key={key}>
+          {label && (
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-dungeon text-sm text-dark">{label}</h3>
+              <span className="chip-retro">{list.length}</span>
+              <span aria-hidden className="flex-1 divider-retro" />
             </div>
-          </section>
-        )
-      })}
-
-      {stickers.length > 0 && (
-        <section>
-          <h3 className="label-retro mb-3">스티커</h3>
+          )}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {stickers.map((item) => (
+            {list.map((item) => (
               <ShopItemCard key={item.code} item={item} {...cardProps} />
             ))}
           </div>
         </section>
-      )}
+      ))}
 
       <p className="text-[0.6875rem] text-sub text-center pt-4 border-t border-line">
         픽셀 아트: peony (CC-BY 4.0) · Master484 · Dizzy Crow · stealthix · KerteX_
