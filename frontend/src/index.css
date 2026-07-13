@@ -334,6 +334,30 @@ body {
   --accent:#E8899B; --accent2:#8FBF6F; --on-accent:#251318;
   --shadow-hero:#170D10; --shadow-sm:#170D10; --overlay:rgba(10,5,7,.55);
 }
+[data-skin-bg="wood"] {
+  --bg:#F1E5D2; --card:#FDF8EE; --chip:#E7D5B8; --line:#D6BE97; --edge:#3E2E1C;
+  --accent:#A8763E; --accent2:#5C8A6E; --on-accent:#FFF9EC;
+  --shadow-hero:#D9C29B; --shadow-sm:#E3D2B2; --overlay:rgba(62,46,28,.35);
+  --bg-pattern:url('./assets/shop/pattern_wood_light.png');
+}
+[data-skin-bg="wood"][data-theme="dark"] {
+  --bg:#241B10; --card:#2F2517; --chip:#3B2F1E; --line:#4E3F2A; --edge:#120C06;
+  --accent:#C99B5C; --accent2:#7FAF8F; --on-accent:#1D150A;
+  --shadow-hero:#120C06; --shadow-sm:#120C06; --overlay:rgba(8,5,2,.55);
+  --bg-pattern:url('./assets/shop/pattern_wood_dark.png');
+}
+[data-skin-bg="candy"] {
+  --bg:#F7E7EE; --card:#FEFAFC; --chip:#F2D7E2; --line:#E5BCCE; --edge:#46243A;
+  --accent:#E05C8A; --accent2:#3E93B8; --on-accent:#FFF6FA;
+  --shadow-hero:#EBC4D4; --shadow-sm:#F0D2DE; --overlay:rgba(70,36,58,.35);
+  --bg-pattern:url('./assets/shop/pattern_candy_light.png');
+}
+[data-skin-bg="candy"][data-theme="dark"] {
+  --bg:#2A1722; --card:#3A2230; --chip:#482C3D; --line:#5E3B50; --edge:#160A11;
+  --accent:#F08CAE; --accent2:#7FB8E8; --on-accent:#2A1220;
+  --shadow-hero:#160A11; --shadow-sm:#160A11; --overlay:rgba(12,4,9,.55);
+  --bg-pattern:url('./assets/shop/pattern_candy_dark.png');
+}
 
 /* ==== 상점 스킨: 사이드바&상단바 — bg 스킨보다 뒤에 위치할 것 ==== */
 [data-skin-chrome="ocean"] { --chrome-bg:#E4EFEC; --chrome-line:#B7D4CD; }
@@ -344,6 +368,37 @@ body {
 [data-skin-chrome="rose"][data-theme="dark"] { --chrome-bg:#3A282E; --chrome-line:#5C424B; }
 [data-skin-chrome="wood"] { --chrome-bg:#F1E5D2; --chrome-line:#D6BE97; }
 [data-skin-chrome="wood"][data-theme="dark"] { --chrome-bg:#2A2118; --chrome-line:#4A3A28; }
+[data-skin-chrome="sprout"] { --chrome-bg:#EAF2E3; --chrome-line:#C2DBAA; }
+[data-skin-chrome="sprout"][data-theme="dark"] { --chrome-bg:#26351F; --chrome-line:#40573A; }
+[data-skin-chrome="galaxy"] { --chrome-bg:#E9EAF6; --chrome-line:#C2C5E4; }
+[data-skin-chrome="galaxy"][data-theme="dark"] { --chrome-bg:#201D3D; --chrome-line:#3D3866; }
+[data-skin-chrome="candy"] { --chrome-bg:#F7E7EE; --chrome-line:#E5BCCE; }
+[data-skin-chrome="candy"][data-theme="dark"] { --chrome-bg:#3A2230; --chrome-line:#5E3B50; }
+
+/* 컨셉 크롬 도트 엣지 장식 — 사이드바 안쪽 세로 + 상단바 하단 가로 (COLOR 크롬은 장식 없음) */
+.app-sidebar, .app-header { position: relative; }
+.app-sidebar::after, .app-header::after {
+  content: none; position: absolute; pointer-events: none;
+  image-rendering: pixelated; background-repeat: repeat;
+}
+.app-sidebar::after { top: 0; bottom: 0; right: 0; width: 24px; background-size: 24px 24px; }
+.app-header::after { left: 0; right: 0; bottom: 0; height: 24px; background-size: 24px 24px; }
+[data-skin-chrome="sprout"] .app-sidebar::after,
+[data-skin-chrome="sprout"] .app-header::after { content: ""; background-image: url('./assets/shop/deco_sprout_light.png'); }
+[data-skin-chrome="sprout"][data-theme="dark"] .app-sidebar::after,
+[data-skin-chrome="sprout"][data-theme="dark"] .app-header::after { background-image: url('./assets/shop/deco_sprout_dark.png'); }
+[data-skin-chrome="galaxy"] .app-sidebar::after,
+[data-skin-chrome="galaxy"] .app-header::after { content: ""; background-image: url('./assets/shop/deco_galaxy_light.png'); }
+[data-skin-chrome="galaxy"][data-theme="dark"] .app-sidebar::after,
+[data-skin-chrome="galaxy"][data-theme="dark"] .app-header::after { background-image: url('./assets/shop/deco_galaxy_dark.png'); }
+[data-skin-chrome="wood"] .app-sidebar::after,
+[data-skin-chrome="wood"] .app-header::after { content: ""; background-image: url('./assets/shop/deco_wood_light.png'); }
+[data-skin-chrome="wood"][data-theme="dark"] .app-sidebar::after,
+[data-skin-chrome="wood"][data-theme="dark"] .app-header::after { background-image: url('./assets/shop/deco_wood_dark.png'); }
+[data-skin-chrome="candy"] .app-sidebar::after,
+[data-skin-chrome="candy"] .app-header::after { content: ""; background-image: url('./assets/shop/deco_candy_light.png'); }
+[data-skin-chrome="candy"][data-theme="dark"] .app-sidebar::after,
+[data-skin-chrome="candy"][data-theme="dark"] .app-header::after { background-image: url('./assets/shop/deco_candy_dark.png'); }
 
 /* ==== 상점 스킨: 뽀모도로 ==== */
 [data-skin-pomodoro="ocean"] { --pomo-focus:#2E7D8A; --pomo-break:#D97757; --pomo-soft:#E4EFEC; }
@@ -354,3 +409,9 @@ body {
 [data-skin-pomodoro="rose"][data-theme="dark"] { --pomo-focus:#E8899B; --pomo-break:#8FBF6F; --pomo-soft:#3A282E; }
 [data-skin-pomodoro="candy"] { --pomo-focus:#E05C8A; --pomo-break:#5CA8E0; --pomo-ring:#F0C4D8; --pomo-soft:#FBE4EE; }
 [data-skin-pomodoro="candy"][data-theme="dark"] { --pomo-focus:#F08CAE; --pomo-break:#7FB8E8; --pomo-ring:#5A3A48; --pomo-soft:#402832; }
+[data-skin-pomodoro="sprout"] { --pomo-focus:#5C8A3C; --pomo-break:#C4708F; --pomo-soft:#EAF2E3; }
+[data-skin-pomodoro="sprout"][data-theme="dark"] { --pomo-focus:#8FBF6F; --pomo-break:#D98BA6; --pomo-soft:#1B2617; }
+[data-skin-pomodoro="galaxy"] { --pomo-focus:#6D74C9; --pomo-break:#C9922E; --pomo-soft:#E9EAF6; }
+[data-skin-pomodoro="galaxy"][data-theme="dark"] { --pomo-focus:#8F97E8; --pomo-break:#E9B44C; --pomo-soft:#151329; }
+[data-skin-pomodoro="wood"] { --pomo-focus:#A8763E; --pomo-break:#5C8A6E; --pomo-soft:#F1E5D2; }
+[data-skin-pomodoro="wood"][data-theme="dark"] { --pomo-focus:#C99B5C; --pomo-break:#7FAF8F; --pomo-soft:#241B10; }

@@ -80,7 +80,7 @@ export default function Header({ onOpenDrawer }) {
     : 'text-primary'
 
   return (
-    <header className="sticky top-0 z-50 bg-chrome border-b border-chrome-line">
+    <header className="app-header sticky top-0 z-50 bg-chrome border-b border-chrome-line">
       <div className="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {/* Hamburger button - only below lg */}
