@@ -20,14 +20,22 @@ const SKIN_PREVIEWS = {
   'bg.rose': ['#F5E9EA', '#C25B6E', '#EDD8DB'],
   'bg.sprout': ['#EAF2E3', '#5C8A3C', '#DCEBCE'],
   'bg.galaxy': ['#E9EAF6', '#6D74C9', '#DBDDF0'],
+  'bg.wood': ['#F1E5D2', '#A8763E', '#E7D5B8'],
+  'bg.candy': ['#F7E7EE', '#E05C8A', '#F2D7E2'],
   'chrome.ocean': ['#E4EFEC', '#B7D4CD'],
   'chrome.lavender': ['#EEEAF4', '#CBBEDC'],
   'chrome.rose': ['#F5E9EA', '#DDBCC2'],
   'chrome.wood': ['#F1E5D2', '#D6BE97'],
+  'chrome.sprout': ['#EAF2E3', '#C2DBAA'],
+  'chrome.galaxy': ['#E9EAF6', '#C2C5E4'],
+  'chrome.candy': ['#F7E7EE', '#E5BCCE'],
   'pomo.ocean': ['#2E7D8A', '#D97757'],
   'pomo.lavender': ['#8A63C4', '#3E8E85'],
   'pomo.rose': ['#C25B6E', '#6E9E62'],
   'pomo.candy': ['#E05C8A', '#5CA8E0'],
+  'pomo.sprout': ['#5C8A3C', '#C4708F'],
+  'pomo.galaxy': ['#6D74C9', '#C9922E'],
+  'pomo.wood': ['#A8763E', '#5C8A6E'],
 }
 
 const SLOT_SECTIONS = [
