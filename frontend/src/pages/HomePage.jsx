@@ -25,6 +25,8 @@ export default function HomePage() {
         <div className="mb-8">
           <img
             src="/logo.webp"
+            srcSet="/logo_144.webp 144w, /logo_180.webp 180w, /logo_216.webp 216w, /logo_288.webp 288w, /logo_432.webp 432w, /logo.webp 576w"
+            sizes="288px"
             alt="덤핏 로고"
             width={288}
             height={288}

@@ -292,6 +292,88 @@ class TaskApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.coins").value(30));
     }
 
+    // ---------- 코인 지급·회수·점감 (docs/superpowers/specs/2026-07-14-coin-anti-farming-design.md) ----------
+
+    private void completeTask(Task task, int expectedCoins) throws Exception {
+        mockMvc.perform(patch("/tasks/" + task.getTaskId()).with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("status", "DONE"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coinsGranted").value(expectedCoins));
+    }
+
+    private void assertCoinBalance(int expected) throws Exception {
+        mockMvc.perform(get("/auth/me").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(expected));
+    }
+
+    @Test
+    void 완료_해제하면_지급액_그대로_회수_마감조작해도_무효() throws Exception {
+        Task task = seedTask(userA, "완료 후 해제");
+        completeTask(task, 30);
+
+        // 완료 후 마감을 과거로 조작 — 회수액이 재계산(마감지남 5코인)되면 +25 증식 구멍
+        jdbcTemplate.update("UPDATE tasks SET deadline = ? WHERE task_id = ?",
+                LocalDateTime.now().minusDays(1), task.getTaskId());
+
+        mockMvc.perform(patch("/tasks/" + task.getTaskId()).with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("status", "TODO"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coinsGranted").value(0));
+
+        assertCoinBalance(0);
+    }
+
+    @Test
+    void 오늘_완료한_태스크_삭제하면_코인회수() throws Exception {
+        Task task = seedTask(userA, "완료 후 삭제");
+        completeTask(task, 30);
+
+        mockMvc.perform(delete("/tasks/" + task.getTaskId()).with(asUser(USER_A)))
+                .andExpect(status().isNoContent());
+
+        assertCoinBalance(0);
+    }
+
+    @Test
+    void 어제_완료한_태스크_삭제는_회수하지_않는다() throws Exception {
+        Task task = seedTask(userA, "어제 완료분 정리");
+        completeTask(task, 30);
+        jdbcTemplate.update("UPDATE tasks SET completed_at = ? WHERE task_id = ?",
+                LocalDateTime.now().minusDays(1), task.getTaskId());
+
+        mockMvc.perform(delete("/tasks/" + task.getTaskId()).with(asUser(USER_A)))
+                .andExpect(status().isNoContent());
+
+        assertCoinBalance(30);
+    }
+
+    @Test
+    void 점감_하루_10개_초과_완료부터_5코인() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            completeTask(seedTask(userA, "할일 " + i), 30);
+        }
+        completeTask(seedTask(userA, "11번째"), 5);
+        assertCoinBalance(10 * 30 + 5);
+    }
+
+    @Test
+    void 잔액부족해도_해제_회수는_그대로_차감_음수허용() throws Exception {
+        Task task = seedTask(userA, "벌고 쓰고 해제");
+        completeTask(task, 30);
+        // 지급받은 코인을 써버린 상황 재현 — 회수를 잔액에서 클램프하면 무한 증식 구멍
+        jdbcTemplate.update("UPDATE users SET coin_balance = 10 WHERE email = ?", USER_A);
+
+        mockMvc.perform(patch("/tasks/" + task.getTaskId()).with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("status", "TODO"))))
+                .andExpect(status().isOk());
+
+        assertCoinBalance(-20);
+    }
+
     @Test
     void 수정_미인증이면_401_한글() throws Exception {
         Task task = seedTask(userA, "제목");

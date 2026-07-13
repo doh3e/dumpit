@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -145,16 +146,19 @@ public class TaskServiceImpl implements TaskService {
         if (fields.category() != null) task.setCategory(fields.category());
 
         if (prevStatus != Task.Status.DONE && task.getStatus() == Task.Status.DONE) {
+            // 점감 카운트는 completedAt 설정 전에 계산 — 지금 완료하는 이 태스크가 스스로를 세지 않게
+            int coins = calcGrantCoins(task);
             task.setCompletedAt(LocalDateTime.now());
-            int coins = calcCompletionCoins(task);
+            task.setCoinsGranted(coins);
             task.getUser().addCoins(coins);
             userRepository.save(task.getUser());
         }
 
         if (prevStatus == Task.Status.DONE && task.getStatus() != Task.Status.DONE) {
             task.setCompletedAt(null);
-            int coins = calcCompletionCoins(task);
-            task.getUser().spendCoins(coins);
+            // 재계산하지 않고 지급했던 금액을 그대로 회수 — 마감·우선순위를 바꾼 뒤 해제하는 증식 차단
+            task.getUser().reclaimCoins(task.getCoinsGranted());
+            task.setCoinsGranted(0);
             userRepository.save(task.getUser());
         }
 
@@ -264,10 +268,38 @@ public class TaskServiceImpl implements TaskService {
         }
 
         Map<String, Object> before = snapshot(task);
+
+        // 오늘 완료한 태스크를 지우면 지급 코인도 반납 — 완료→삭제 반복 파밍 차단.
+        // 어제 이전 완료분 삭제는 히스토리 정리로 보고 회수하지 않는다.
+        if (task.getStatus() == Task.Status.DONE
+                && task.getCoinsGranted() > 0
+                && task.getCompletedAt() != null
+                && !task.getCompletedAt().isBefore(LocalDate.now().atStartOfDay())) {
+            task.getUser().reclaimCoins(task.getCoinsGranted());
+            task.setCoinsGranted(0);
+            userRepository.save(task.getUser());
+        }
+
         deadlineNudgeService.remove(task);
         task.setDeletedAt(LocalDateTime.now());
         Task saved = taskRepository.save(task);
         activityLogService.record(task.getUser(), "TASK_DELETED", "TASK", saved.getTaskId(), before, snapshot(saved));
+    }
+
+    // 하루 10개까지 풀지급, 이후 5코인 고정 — 파밍의 기대수익을 꾸준함의 페이스로 묶는다
+    private static final int DAILY_FULL_REWARD_LIMIT = 10;
+    private static final int TAPERED_COINS = 5;
+
+    private int calcGrantCoins(Task task) {
+        int base = calcCompletionCoins(task);
+        if (base == 0) {
+            return 0;
+        }
+        long completedToday = taskRepository.countCompletedSince(task.getUser(), LocalDate.now().atStartOfDay());
+        if (completedToday >= DAILY_FULL_REWARD_LIMIT) {
+            return Math.min(base, TAPERED_COINS);
+        }
+        return base;
     }
 
     private int calcCompletionCoins(Task task) {

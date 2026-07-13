@@ -86,7 +86,14 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
           <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
             {/* 투명 여백 트리밍된 로고 — 바(h-20)를 넘지 않게. h-24 시절엔 오버플로+비대칭 여백으로 바가 어긋나 보였음 */}
             {/* 서비스명은 모든 폭에서 보여야 하므로 유체 축소 대신 md 기준 두 단계 고정 크기 */}
-            <img src="/text_logo.webp" alt="덤핏" className="h-9 md:h-12 w-auto" />
+            {/* srcset: 표시 크기별 사전 리사이즈본 — 브라우저 대비율 축소로 생기던 계단 현상 방지 (scripts/gen_logo_sizes.py) */}
+            <img
+              src="/text_logo.webp"
+              srcSet="/text_logo_106.webp 106w, /text_logo_141.webp 141w, /text_logo_176.webp 176w, /text_logo_212.webp 212w, /text_logo_282.webp 282w, /text_logo_423.webp 423w"
+              sizes="(min-width: 768px) 141px, 106px"
+              alt="덤핏"
+              className="h-9 md:h-12 w-auto"
+            />
             <span className="chip-retro text-secondary shrink-0 hidden md:inline-block">BETA</span>
           </Link>
         </div>

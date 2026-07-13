@@ -14,7 +14,8 @@
         if (scales[f]) document.documentElement.style.fontSize = scales[f];
       })();
     </script>
-    <link rel="preload" as="image" href="/logo.webp" />
+    <!-- 랜딩 히어로(LCP, 288px) 기준 preload — img srcset과 동일 후보라 홈에서 중복 요청 없음 -->
+    <link rel="preload" as="image" href="/logo.webp" imagesrcset="/logo_144.webp 144w, /logo_180.webp 180w, /logo_216.webp 216w, /logo_288.webp 288w, /logo_432.webp 432w, /logo.webp 576w" imagesizes="288px" />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/Galmuri11.subset.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/DungGeunMo.subset.woff2" crossorigin />
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />

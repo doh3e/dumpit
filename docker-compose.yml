@@ -22,6 +22,8 @@ services:
     depends_on:
       - redis
     environment:
+      # JVM 시간대를 KST로 고정 — 프론트가 벽시계(LocalDateTime)를 그대로 보내는 관례와 일치시킴
+      TZ: Asia/Seoul
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SPRING_DATASOURCE_URL: ${DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}

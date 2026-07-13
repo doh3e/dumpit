@@ -10,6 +10,8 @@ public record NoticeResponse(
         String title,
         String content,
         String status,
+        boolean pinned,
+        boolean popup,
         LocalDateTime publishAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
@@ -20,6 +22,8 @@ public record NoticeResponse(
                 notice.getTitle(),
                 notice.getContent(),
                 notice.getStatus().name(),
+                notice.isPinned(),
+                notice.isPopup(),
                 notice.getPublishAt(),
                 notice.getCreatedAt(),
                 notice.getUpdatedAt()

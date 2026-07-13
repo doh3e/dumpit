@@ -44,19 +44,36 @@ public class Notice {
     @Setter
     private LocalDateTime publishAt;
 
+    @Column(nullable = false)
+    @Setter
+    private boolean pinned = false;
+
+    @Column(nullable = false)
+    @Setter
+    private boolean popup = false;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    public static Notice of(User author, String title, String content, LocalDateTime publishAt, Status status) {
+    public static Notice of(
+            User author,
+            String title,
+            String content,
+            LocalDateTime publishAt,
+            Status status,
+            boolean pinned,
+            boolean popup) {
         Notice notice = new Notice();
         notice.author = author;
         notice.title = title;
         notice.content = content;
         notice.publishAt = publishAt;
         notice.status = status;
+        notice.pinned = pinned;
+        notice.popup = popup;
         return notice;
     }
 

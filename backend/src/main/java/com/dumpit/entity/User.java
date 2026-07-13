@@ -55,6 +55,9 @@ public class User {
 
     private LocalDateTime withdrawnAt;
 
+    // 진행 중인 뽀모도로 집중 세션 시작 시각 — 완료 시 경과시간 검증 후 소거 (동시 1세션)
+    private LocalDateTime pomodoroStartedAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -90,6 +93,21 @@ public class User {
         if (this.coinBalance < coins) return false;
         this.coinBalance -= coins;
         return true;
+    }
+
+    // 회수(완료 해제·오늘 완료분 삭제)용: 잔액이 모자라도 그대로 차감한다 — 음수 허용.
+    // spendCoins처럼 부족하면 포기하거나 0에서 클램프하면
+    // "벌고 → 상점에서 쓰고 → 해제 → 재완료" 사이클로 무한 증식이 가능하다.
+    public void reclaimCoins(int coins) {
+        this.coinBalance -= Math.max(0, coins);
+    }
+
+    public void startPomodoro(LocalDateTime startedAt) {
+        this.pomodoroStartedAt = startedAt;
+    }
+
+    public void clearPomodoro() {
+        this.pomodoroStartedAt = null;
     }
 
     public boolean isActive() {

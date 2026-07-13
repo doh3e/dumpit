@@ -88,6 +88,18 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
 
     long countByUserAndStatusAndDeletedAtIsNull(User user, Task.Status status);
 
+    // 완료 코인 점감 기준 카운트 — 현재 완료 상태인 오늘의 부모 태스크 수.
+    // 서브태스크는 지급 0이라 제외. (docs/superpowers/specs/2026-07-14-coin-anti-farming-design.md)
+    @Query("""
+        SELECT COUNT(t) FROM Task t
+        WHERE t.user = :user
+          AND t.deletedAt IS NULL
+          AND t.parentTask IS NULL
+          AND t.status = 'DONE'
+          AND t.completedAt >= :startOfDay
+    """)
+    long countCompletedSince(@Param("user") User user, @Param("startOfDay") LocalDateTime startOfDay);
+
     long countByUserAndDeletedAtIsNull(User user);
 
     long countByCreatedAtGreaterThanEqual(LocalDateTime since);

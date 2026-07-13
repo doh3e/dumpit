@@ -216,14 +216,23 @@ class AdminApiTest extends ApiIntegrationTestBase {
         MvcResult createResult = mockMvc.perform(post("/admin/notices").with(asUser(ADMIN))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(Map.of(
-                                "title", "공지 제목", "content", "공지 내용"))))
+                                "title", "공지 제목",
+                                "content", "공지 내용",
+                                "pinned", true,
+                                "popup", true))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.noticeId").exists())
                 .andExpect(jsonPath("$.title").value("공지 제목"))
                 .andExpect(jsonPath("$.content").value("공지 내용"))
                 .andExpect(jsonPath("$.status").value("PUBLISHED"))
+                .andExpect(jsonPath("$.pinned").value(true))
+                .andExpect(jsonPath("$.popup").value(true))
                 .andReturn();
         UUID noticeId = extractUuid(createResult, "noticeId");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT pinned FROM notices WHERE notice_id = ?", Boolean.class, noticeId)).isTrue();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT popup FROM notices WHERE notice_id = ?", Boolean.class, noticeId)).isTrue();
 
         mockMvc.perform(get("/admin/notices").with(asUser(ADMIN)))
                 .andExpect(status().isOk())
@@ -233,10 +242,19 @@ class AdminApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(patch("/admin/notices/" + noticeId).with(asUser(ADMIN))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(Map.of(
-                                "title", "수정된 제목", "content", "수정된 내용"))))
+                                "title", "수정된 제목",
+                                "content", "수정된 내용",
+                                "pinned", false,
+                                "popup", false))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("수정된 제목"))
-                .andExpect(jsonPath("$.content").value("수정된 내용"));
+                .andExpect(jsonPath("$.content").value("수정된 내용"))
+                .andExpect(jsonPath("$.pinned").value(false))
+                .andExpect(jsonPath("$.popup").value(false));
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT pinned FROM notices WHERE notice_id = ?", Boolean.class, noticeId)).isFalse();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT popup FROM notices WHERE notice_id = ?", Boolean.class, noticeId)).isFalse();
 
         mockMvc.perform(delete("/admin/notices/" + noticeId).with(asUser(ADMIN)))
                 .andExpect(status().isNoContent());
@@ -245,6 +263,24 @@ class AdminApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].status").value("ARCHIVED"));
+    }
+
+    @Test
+    void 공지_생성_pinned_popup_미포함이면_false() throws Exception {
+        MvcResult result = mockMvc.perform(post("/admin/notices").with(asUser(ADMIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of(
+                                "title", "기본 공지", "content", "기본 내용"))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.pinned").value(false))
+                .andExpect(jsonPath("$.popup").value(false))
+                .andReturn();
+        UUID noticeId = extractUuid(result, "noticeId");
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT pinned FROM notices WHERE notice_id = ?", Boolean.class, noticeId)).isFalse();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT popup FROM notices WHERE notice_id = ?", Boolean.class, noticeId)).isFalse();
     }
 
     @Test

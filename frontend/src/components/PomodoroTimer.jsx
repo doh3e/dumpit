@@ -48,6 +48,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
   const [showSettings, setShowSettings] = useState(false)
   const intervalRef = useRef(null)
   const targetEndAtRef = useRef(null)
+  const sessionOpenRef = useRef(false)
 
   const taskList = useMemo(() => (Array.isArray(tasks) ? tasks : []), [tasks])
   const activeTasks = useMemo(() => {
@@ -127,6 +128,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     setCompletedCount((c) => c + 1)
     setBlinking(true)
     setTimeout(() => setBlinking(false), 1600)
+    sessionOpenRef.current = false // 세션은 완료로 소비 — 다음 집중은 새로 시작 신호를 보낸다
     try {
       const res = await api.post('/pomodoro/complete', { focusMinutes: focusMin })
       refreshCoins()
@@ -187,12 +189,21 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     }
   }, [remaining, running, mode, handleFocusComplete, handleBreakComplete])
 
+  // 집중 세션 시작을 서버에 알림 — 완료 시 경과시간 검증용. 일시정지→재개는 같은 세션이라 재호출 없음
+  useEffect(() => {
+    if (running && mode === MODE.FOCUS && !sessionOpenRef.current) {
+      sessionOpenRef.current = true
+      api.post('/pomodoro/start').catch(() => { sessionOpenRef.current = false })
+    }
+  }, [running, mode])
+
   const toggle = useCallback(() => setRunning((value) => !value), [])
 
   const reset = useCallback(() => {
     setRunning(false)
     setMode(MODE.FOCUS)
     setRemaining(focusMin * 60)
+    sessionOpenRef.current = false // 진행 중 세션 폐기 — 다음 시작이 새 세션
   }, [focusMin])
 
   const saveSettings = (newFocus, newBreak) => {
@@ -206,6 +217,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     setMode(MODE.FOCUS)
     setRemaining(f * 60)
     setShowSettings(false)
+    sessionOpenRef.current = false
   }
 
   const min = String(Math.floor(remaining / 60)).padStart(2, '0')
