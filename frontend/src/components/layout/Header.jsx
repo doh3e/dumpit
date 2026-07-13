@@ -81,8 +81,8 @@ export default function Header({ onOpenDrawer }) {
 
   return (
     <header className="app-header sticky top-0 z-50 bg-chrome border-b border-chrome-line">
-      <div className="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="max-w-screen-2xl mx-auto px-6 h-16 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Hamburger button - only below lg */}
           <button
             onClick={onOpenDrawer}
@@ -97,12 +97,13 @@ export default function Header({ onOpenDrawer }) {
           </Link>
         </div>
 
-        <nav className="hidden min-[1100px]:flex items-center gap-1">
+        {/* 글자 크기 확대 설정에서도 라벨이 줄바꿈되지 않게: 내비가 가운데 가변 영역을 차지 + nowrap */}
+        <nav className="hidden min-[1100px]:flex items-center justify-center gap-1 flex-1 min-w-0">
           {NAV_ITEMS.map(({ label, path }) => (
             <Link
               key={path}
               to={path}
-              className={`px-4 py-2 rounded-lg font-galmuri font-bold text-sm transition-all ${
+              className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-lg font-galmuri font-bold text-sm transition-all ${
                 pathname === path
                   ? 'bg-chip text-dark'
                   : 'text-sub hover:text-dark hover:bg-chip'
@@ -113,7 +114,7 @@ export default function Header({ onOpenDrawer }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <div className="hidden sm:block">
             <DeadlineNudgeMenu />
           </div>
