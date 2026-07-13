@@ -278,6 +278,10 @@ body {
 }
 @keyframes twinkle { from { opacity: .15; } to { opacity: .9; } }
 @media (prefers-reduced-motion: reduce) { .starfield::after { animation: none; } }
+/* 우주 컨셉이 아닌 배경 테마에서는 다크모드 별 배경을 끈다 (기본·컬러 틴트·은하수만 유지) */
+[data-skin-bg="sprout"] .starfield,
+[data-skin-bg="wood"] .starfield,
+[data-skin-bg="candy"] .starfield { display: none; }
 
 /* ==== 상점 스킨: 배경&주요색상 (라이트+다크 각 1벌) ==== */
 [data-skin-bg="ocean"] {
