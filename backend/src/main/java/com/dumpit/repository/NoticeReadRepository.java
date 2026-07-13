@@ -19,6 +19,7 @@ public interface NoticeReadRepository extends JpaRepository<NoticeRead, UUID> {
         SELECT n FROM Notice n
         WHERE n.status = 'PUBLISHED'
           AND n.publishAt <= :now
+          AND n.popup = true
           AND NOT EXISTS (
               SELECT r FROM NoticeRead r
               WHERE r.notice = n

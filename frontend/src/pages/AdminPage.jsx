@@ -102,6 +102,8 @@ export default function AdminPage() {
     content: '',
     publishAt: toLocalInputValue(),
     status: 'PUBLISHED',
+    pinned: false,
+    popup: false,
   })
   const noticeEditorRef = useRef(null)
 
@@ -227,7 +229,7 @@ export default function AdminPage() {
 
   const resetNoticeForm = () => {
     setEditingNoticeId(null)
-    setNoticeForm({ title: '', content: '', publishAt: toLocalInputValue(), status: 'PUBLISHED' })
+    setNoticeForm({ title: '', content: '', publishAt: toLocalInputValue(), status: 'PUBLISHED', pinned: false, popup: false })
   }
 
   const editNotice = (notice) => {
@@ -237,6 +239,8 @@ export default function AdminPage() {
       content: notice.content || '',
       publishAt: toLocalInputValue(notice.publishAt),
       status: notice.status || 'PUBLISHED',
+      pinned: Boolean(notice.pinned),
+      popup: Boolean(notice.popup),
     })
   }
 
@@ -248,6 +252,8 @@ export default function AdminPage() {
       content: noticeForm.content.trim(),
       publishAt: noticeForm.publishAt ? new Date(noticeForm.publishAt).toISOString().slice(0, 19) : null,
       status: noticeForm.status,
+      pinned: noticeForm.pinned,
+      popup: noticeForm.popup,
     }
     try {
       if (editingNoticeId) await api.patch(`/admin/notices/${editingNoticeId}`, payload)
@@ -672,6 +678,26 @@ export default function AdminPage() {
                   </select>
                 </div>
               </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-card px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={noticeForm.pinned}
+                    onChange={(e) => setNoticeForm((prev) => ({ ...prev, pinned: e.target.checked }))}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span className="text-xs font-bold text-dark">📌 상단 고정</span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-card px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={noticeForm.popup}
+                    onChange={(e) => setNoticeForm((prev) => ({ ...prev, popup: e.target.checked }))}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span className="text-xs font-bold text-dark">팝업 노출</span>
+                </label>
+              </div>
               <div className="flex gap-3">
                 {editingNoticeId && (
                   <button type="button" onClick={resetNoticeForm} className="btn-retro flex-1 bg-accent py-2 text-sm text-dark">
@@ -706,7 +732,19 @@ export default function AdminPage() {
                   <article key={notice.noticeId} className="rounded-lg border-2 border-line bg-card p-3">
                     <div className="mb-2 flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-dark">{notice.title}</p>
+                        <div className="flex items-center gap-1.5">
+                          {notice.pinned && (
+                            <span className="flex-shrink-0 rounded border border-line bg-accent px-1 py-0.5 text-[0.5625rem] font-black text-dark">
+                              📌 고정
+                            </span>
+                          )}
+                          {notice.popup && (
+                            <span className="flex-shrink-0 rounded border border-line bg-chip px-1 py-0.5 text-[0.5625rem] font-black text-primary">
+                              팝업
+                            </span>
+                          )}
+                          <p className="truncate text-sm font-black text-dark">{notice.title}</p>
+                        </div>
                         <p className="mt-1 text-[0.625rem] font-bold text-sub">
                           {notice.status} · {formatDate(notice.publishAt)}
                         </p>

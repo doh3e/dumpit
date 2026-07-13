@@ -48,7 +48,9 @@ public class AdminNoticeController {
                 normalizeTitle(request.title()),
                 request.content().trim(),
                 request.publishAt() != null ? request.publishAt() : LocalDateTime.now(),
-                parseStatus(request.status())
+                parseStatus(request.status()),
+                Boolean.TRUE.equals(request.pinned()),
+                Boolean.TRUE.equals(request.popup())
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(NoticeResponse.from(noticeRepository.save(notice)));
     }
@@ -66,6 +68,8 @@ public class AdminNoticeController {
         notice.setContent(request.content().trim());
         notice.setPublishAt(request.publishAt() != null ? request.publishAt() : notice.getPublishAt());
         notice.setStatus(parseStatus(request.status()));
+        notice.setPinned(Boolean.TRUE.equals(request.pinned()));
+        notice.setPopup(Boolean.TRUE.equals(request.popup()));
         return ResponseEntity.ok(NoticeResponse.from(noticeRepository.save(notice)));
     }
 

@@ -1,0 +1,2 @@
+ALTER TABLE notices ADD COLUMN IF NOT EXISTS pinned boolean NOT NULL DEFAULT false;
+ALTER TABLE notices ADD COLUMN IF NOT EXISTS popup boolean NOT NULL DEFAULT false;

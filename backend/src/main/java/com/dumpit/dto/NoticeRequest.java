@@ -9,5 +9,7 @@ public record NoticeRequest(
         @NotBlank @Size(max = 200) String title,
         @NotBlank @Size(max = 5000) String content,
         LocalDateTime publishAt,
-        String status
+        String status,
+        Boolean pinned,
+        Boolean popup
 ) {}

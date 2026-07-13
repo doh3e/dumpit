@@ -1,5 +1,6 @@
 package com.dumpit.controller;
 
+import com.dumpit.dto.NoticePageResponse;
 import com.dumpit.dto.NoticeResponse;
 import com.dumpit.entity.Notice;
 import com.dumpit.entity.NoticeRead;
@@ -9,6 +10,8 @@ import com.dumpit.repository.NoticeReadRepository;
 import com.dumpit.repository.NoticeRepository;
 import com.dumpit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,12 +32,26 @@ public class NoticeController {
     private final UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<List<NoticeResponse>> list(@AuthenticationPrincipal OAuth2User principal) {
+    public ResponseEntity<NoticePageResponse> list(
+            @AuthenticationPrincipal OAuth2User principal,
+            @RequestParam(defaultValue = "0") int page) {
         User user = resolveUser(principal);
         if (user == null) return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(noticeRepository.findPublished(LocalDateTime.now()).stream()
+
+        int safePage = Math.max(page, 0);
+        LocalDateTime now = LocalDateTime.now();
+        List<NoticeResponse> pinned = noticeRepository.findPinnedPublished(now).stream()
                 .map(NoticeResponse::from)
-                .toList());
+                .toList();
+        Page<Notice> notices = noticeRepository.findRegularPublished(now, PageRequest.of(safePage, 3));
+
+        return ResponseEntity.ok(new NoticePageResponse(
+                pinned,
+                notices.getContent().stream().map(NoticeResponse::from).toList(),
+                safePage,
+                notices.getTotalPages(),
+                notices.getTotalElements()
+        ));
     }
 
     @GetMapping("/unread")
