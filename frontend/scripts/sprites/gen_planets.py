@@ -78,6 +78,35 @@ def darker_step(pal, color, step=1):
     return pal[min(pal.index(color) + step, len(pal) - 1)]
 
 
+def tri(img, p0, p1, p2, color):
+    """삼각형 채움 (고래 꼬리·지느러미용)."""
+    def edge(a, b, px, py):
+        return (b[0] - a[0]) * (py - a[1]) - (b[1] - a[1]) * (px - a[0])
+
+    xs = [p[0] for p in (p0, p1, p2)]
+    ys = [p[1] for p in (p0, p1, p2)]
+    for y in range(min(ys), max(ys) + 1):
+        for x in range(min(xs), max(xs) + 1):
+            d0 = edge(p0, p1, x, y)
+            d1 = edge(p1, p2, x, y)
+            d2 = edge(p2, p0, x, y)
+            if (d0 >= 0 and d1 >= 0 and d2 >= 0) or (d0 <= 0 and d1 <= 0 and d2 <= 0):
+                put(img, x, y, color)
+
+
+def crater(img, cx, cy, r, fill, shadow, rim):
+    """크레이터 — 내부 채움 + 좌상단 안쪽 그늘 + 우하단 바깥 림 하이라이트."""
+    for y in range(SIZE):
+        for x in range(SIZE):
+            dx, dy = x + 0.5 - cx, y + 0.5 - cy
+            d2 = dx * dx + dy * dy
+            if d2 <= r * r:
+                inner_edge = d2 > (r - 1.2) ** 2 and dx + dy < 0
+                put(img, x, y, shadow if inner_edge else fill)
+            elif d2 <= (r + 1.1) ** 2 and dx + dy > 0:
+                put(img, x, y, rim)
+
+
 # ---- 스프라이트별 draw 함수 (반환: RGBA Image) ----
 
 def draw_default():
@@ -163,11 +192,221 @@ def draw_ringed():
     return img
 
 
+def draw_moon():
+    # 회백 구체 + 크레이터 4개
+    img = new_canvas()
+    pal = [hx('#E8E8EE'), hx('#C8C8D0'), hx('#9A9AA6'), hx('#75757F')]
+    disc(img, 16, 16, 14, sphere_shade(pal))
+    fill, shadow, rim = hx('#9A9AA6'), hx('#75757F'), hx('#E8E8EE')
+    crater(img, 11, 12, 2.6, fill, shadow, rim)
+    crater(img, 20, 9, 1.8, fill, shadow, rim)
+    crater(img, 19, 21, 3.0, fill, shadow, rim)
+    crater(img, 9, 20, 1.6, fill, shadow, rim)
+    return img
+
+
+def draw_ocean():
+    # 물의 행성 — 파도 갈매기 무늬(포말)
+    img = new_canvas()
+    pal = [hx('#7FB8E8'), hx('#4E8FD0'), hx('#3E7FC1'), hx('#2C5F96')]
+    disc(img, 16, 16, 14, sphere_shade(pal))
+    mask = lambda x, y: in_disc(x, y, 16, 16, 13)
+    foam = hx('#EAF4FC')
+    polyline(img, [(7, 13), (10, 11), (13, 13)], foam, 1, mask)
+    polyline(img, [(15, 18), (18, 16), (21, 18)], foam, 1, mask)
+    polyline(img, [(9, 22), (12, 20), (15, 22)], foam, 1, mask)
+    polyline(img, [(19, 24), (22, 22), (25, 24)], foam, 1, mask)
+    return img
+
+
+def draw_sprout():
+    # 초록 행성 + 정수리에서 돋아난 새싹 (새싹 정원 테마 세트감)
+    img = new_canvas()
+    pal = [hx('#8CD084'), hx('#5FA85A'), hx('#3F7F42')]
+    disc(img, 16, 18, 12, sphere_shade(pal))
+    mask = lambda x, y: in_disc(x, y, 16, 18, 11)
+    # 짙은 수풀 패치
+    for (bx, by, w, h) in [(11, 16, 3, 2), (18, 21, 4, 2), (13, 24, 3, 2)]:
+        block(img, bx, by, hx('#3F7F42'), w, h, mask)
+    # 흙 + 줄기 + 좌우로 벌어진 떡잎 한 쌍
+    block(img, 14, 7, hx('#8A6A4A'), 4, 2)
+    block(img, 15, 2, hx('#3F7F42'), 2, 6)
+    block(img, 11, 3, hx('#8CD084'), 4, 2)
+    put(img, 10, 4, hx('#8CD084'))
+    block(img, 17, 3, hx('#8CD084'), 4, 2)
+    put(img, 21, 4, hx('#8CD084'))
+    return img
+
+
+def draw_earth():
+    # 푸른 구체 + 대륙 + 구름 띠
+    img = new_canvas()
+    pal = [hx('#6FA0E0'), hx('#3E6FB8'), hx('#2A4E8A')]
+    disc(img, 16, 16, 14, sphere_shade(pal))
+    mask = lambda x, y: in_disc(x, y, 16, 16, 13)
+
+    def land(bx, by, w, h):
+        # 음영 쪽 대륙은 어두운 초록
+        for ox in range(w):
+            for oy in range(h):
+                x, y = bx + ox, by + oy
+                if not mask(x, y):
+                    continue
+                d = math.hypot((x + 0.5 - 16) / 14 + 0.45, (y + 0.5 - 16) / 14 + 0.45)
+                put(img, x, y, hx('#3F7F42') if d > 1.0 else hx('#57A05B'))
+
+    # 대륙 A (좌상 대형) — 계단식으로 흘러내리는 유기적 실루엣
+    land(8, 8, 4, 2); land(6, 9, 6, 3); land(8, 12, 5, 3); land(7, 15, 3, 2); land(11, 14, 2, 2)
+    # 대륙 B (우중)
+    land(21, 10, 3, 2); land(19, 12, 4, 3); land(22, 15, 2, 2)
+    # 대륙 C (하단 소형)
+    land(13, 22, 4, 2); land(16, 24, 2, 1)
+    cloud = hx('#F2F6F8')
+    block(img, 16, 5, cloud, 4, 1, mask); block(img, 17, 6, cloud, 4, 1, mask)
+    block(img, 7, 18, cloud, 4, 1, mask); block(img, 8, 19, cloud, 3, 1, mask)
+    block(img, 20, 16, cloud, 4, 1, mask); block(img, 21, 17, cloud, 3, 1, mask)
+    return img
+
+
+def draw_jupiter():
+    # 가로 밴드 + 대적점
+    img = new_canvas()
+    bands = [hx('#E8D5A8'), hx('#C9955C'), hx('#A86B3C'), hx('#7A4A28')]
+
+    def band_color(y):
+        if y < 8: return bands[0]
+        if y < 12: return bands[1]
+        if y < 16: return bands[0]
+        if y < 21: return bands[2]
+        if y < 25: return bands[1]
+        return bands[3]
+
+    def shader(x, y, nx, ny):
+        wob = 1 if (x // 5) % 2 == 0 else 0
+        c = band_color(y + wob)
+        d = math.hypot(nx + 0.45, ny + 0.45)
+        if d > 1.05:
+            c = bands[min(bands.index(c) + 1, len(bands) - 1)]
+        return c
+
+    disc(img, 16, 16, 14, shader)
+    # 대적점 — 타원 + 어두운 림
+    for y in range(SIZE):
+        for x in range(SIZE):
+            ex, ey = (x + 0.5 - 20.5) / 3.4, (y + 0.5 - 19.0) / 2.3
+            e = ex * ex + ey * ey
+            if e <= 1 and in_disc(x, y, 16, 16, 13.5):
+                put(img, x, y, hx('#8A3226') if e > 0.55 else hx('#C14F3A'))
+    return img
+
+
+def draw_blossom():
+    # 분홍 구체 + 5도트 꽃 클러스터 (로즈 톤)
+    img = new_canvas()
+    pal = [hx('#F5D0E0'), hx('#E8A8C8'), hx('#C86488')]
+    disc(img, 16, 16, 14, sphere_shade(pal))
+    petal, center = hx('#FDF3F6'), hx('#C14F7A')
+
+    def flower_big(fx, fy):
+        # 2x2 중심 + 상하좌우 2x2 꽃잎 — 데이지
+        for (ox, oy) in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
+            block(img, fx + ox, fy + oy, petal, 2, 2)
+        block(img, fx, fy, center, 2, 2)
+
+    def flower_small(fx, fy):
+        for (ox, oy) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            put(img, fx + ox, fy + oy, petal)
+        put(img, fx, fy, center)
+
+    flower_big(10, 11); flower_big(19, 20)
+    flower_small(21, 11); flower_small(12, 22); flower_small(16, 6)
+    return img
+
+
+def draw_candy():
+    # 소용돌이 3색 캔디 — 구체 셰이딩 대신 우하단 다크 변형
+    img = new_canvas()
+    stripes = [hx('#F08CB4'), hx('#FDF3F6'), hx('#7FD1C8')]
+    dark = [hx('#C4648E'), hx('#D8C4CE'), hx('#57A69E')]
+
+    def shader(x, y, nx, ny):
+        ang = math.atan2(ny, nx) / (2 * math.pi)
+        rr = math.hypot(nx, ny)
+        idx = int((ang + 0.5 + rr * 0.9) * 6) % 3
+        light_d = math.hypot(nx + 0.45, ny + 0.45)
+        return dark[idx] if light_d > 1.25 else stripes[idx]
+
+    disc(img, 16, 16, 14, shader)
+    return img
+
+
+def draw_galaxy():
+    # 나선 은하 — 코어 + 로그 나선팔 2개 + 골드 별
+    img = new_canvas()
+    arm, arm_dark = hx('#8A63C4'), hx('#6A4A9C')
+    for theta0 in (0.0, math.pi):
+        for i in range(100):
+            t = i / 99
+            r = 4 + 10.5 * t
+            th = theta0 + t * 3.6
+            x = 16 + r * math.cos(th)
+            y = 16 + r * math.sin(th) * 0.85  # 살짝 눌린 원반
+            block(img, round(x), round(y), arm if t < 0.55 else arm_dark, 2, 2)
+    disc(img, 16, 16, 4.5, lambda x, y, nx, ny: hx('#E8C170'))
+    disc(img, 16, 16, 2.8, lambda x, y, nx, ny: hx('#F5EDE0'))
+    star = hx('#E8C170')
+    for (sx, sy) in [(7, 9), (24, 7), (26, 21), (9, 25)]:
+        for (ox, oy) in [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)]:
+            put(img, sx + ox, sy + oy, star)
+    return img
+
+
+def draw_whale():
+    # 옆모습 우주 고래 (왼쪽 보기) — 뭉툭한 머리 슈퍼타원 몸통 + 치켜든 꼬리 + 물뿜기
+    img = new_canvas()
+    back, backd, belly, eye = hx('#5B7FBF'), hx('#43619C'), hx('#C8D8F0'), hx('#1E2A44')
+    # 꼬리 지느러미 — 위로 크게 치켜든 형태 (몸통이 접합부를 덮음)
+    tri(img, (21, 14), (29, 8), (24, 18), backd)
+    tri(img, (21, 18), (28, 22), (24, 15), backd)
+    # 몸통 — 슈퍼타원(지수 2.5)이라 머리가 뭉툭
+    for y in range(SIZE):
+        for x in range(SIZE):
+            ex, ey = (x + 0.5 - 13.0) / 10.0, (y + 0.5 - 17.0) / 6.0
+            if abs(ex) ** 2.5 + abs(ey) ** 2.5 <= 1:
+                if ey > 0.35:
+                    put(img, x, y, belly)
+                elif ey > 0.05:
+                    put(img, x, y, backd)
+                else:
+                    put(img, x, y, back)
+    # 배 주름 1줄
+    for x in range(6, 20):
+        ex = (x + 0.5 - 13.0) / 10.0
+        if abs(ex) ** 2.5 + abs((21.5 - 17.0) / 6.0) ** 2.5 <= 1:
+            put(img, x, 21, hx('#9FB6D8'))
+    # 가슴 지느러미 + 눈 + 물뿜기
+    tri(img, (12, 21), (17, 21), (13, 26), backd)
+    block(img, 6, 15, eye, 2, 2)
+    put(img, 7, 9, belly); put(img, 7, 8, belly)
+    put(img, 5, 7, belly); put(img, 6, 6, belly)
+    put(img, 9, 7, belly); put(img, 10, 6, belly)
+    return img
+
+
 SPRITES = {
     'planet_default': draw_default,
     'planet_crimson': draw_crimson,
     'planet_ice': draw_ice,
     'planet_ringed': draw_ringed,
+    'planet_moon': draw_moon,
+    'planet_ocean': draw_ocean,
+    'planet_sprout': draw_sprout,
+    'planet_earth': draw_earth,
+    'planet_jupiter': draw_jupiter,
+    'planet_blossom': draw_blossom,
+    'planet_candy': draw_candy,
+    'planet_galaxy': draw_galaxy,
+    'planet_whale': draw_whale,
 }
 
 
