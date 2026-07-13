@@ -11,6 +11,8 @@
       --line: #E0D2B6; --edge: #3A2C21; --chip: #F0DFBB;
       --accent: #D95F52; --accent2: #3E8E85; --on-accent: #FFFBF0;
       --shadow-sm: #DCC5A0;
+      /* 뽀모 색 — 웹이 state 페이로드 colors로 덮어씀 (미수신 시 기본 토큰) */
+      --pomo-focus: var(--accent); --pomo-break: var(--accent2); --pomo-ring: var(--line);
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -90,7 +92,7 @@
       justify-content: center;
       border: 1.5px solid var(--edge);
       border-radius: 999px;
-      background: var(--accent);
+      background: var(--pomo-focus);
       color: var(--on-accent);
       font-family: 'DGM', monospace;
       font-size: 10px;
@@ -156,11 +158,11 @@
     }
 
     .track {
-      stroke: var(--line);
+      stroke: var(--pomo-ring);
     }
 
     .progress {
-      stroke: var(--accent);
+      stroke: var(--pomo-focus);
       stroke-dasharray: 263.89;
       stroke-dashoffset: 263.89;
       transition: stroke-dashoffset 0.4s linear, stroke 0.2s ease;
@@ -225,7 +227,7 @@
     }
 
     .action.primary {
-      background: var(--accent);
+      background: var(--pomo-focus);
       color: var(--on-accent);
     }
 
@@ -241,12 +243,12 @@
 
     body.break .mode,
     body.break .action.primary {
-      background: var(--accent2);
+      background: var(--pomo-break);
       color: var(--on-accent);
     }
 
     body.break .progress {
-      stroke: var(--accent2);
+      stroke: var(--pomo-break);
     }
 
     body.idle .mode {
@@ -255,11 +257,11 @@
     }
 
     body.idle .progress {
-      stroke: var(--line);
+      stroke: var(--pomo-ring);
     }
 
     body.idle .action.primary {
-      background: var(--accent);
+      background: var(--pomo-focus);
     }
 
     @media (prefers-reduced-motion: reduce) {

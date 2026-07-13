@@ -33,6 +33,12 @@ const AUTH_NAVIGATION_HOSTS = new Set([
   'accounts.google.com',
   'oauth2.googleapis.com',
 ])
+// 로컬 API 모드 — dev 스택(백엔드 localhost:8080) 대상 테스트용.
+// 사용: frontend를 VITE_API_URL=http://localhost:8080/api 로 빌드 후 DUMPIT_DESKTOP_LOCAL_API=1 로 실행.
+const LOCAL_API = process.env.DUMPIT_DESKTOP_LOCAL_API === '1'
+const API_ORIGIN = LOCAL_API ? 'http://localhost:8080' : 'https://api.dumpit.kr'
+const API_URL_FILTER = [`${API_ORIGIN}/api/*`]
+const WEB_ORIGIN_FOR_API = LOCAL_API ? 'http://localhost:5173' : 'https://dumpit.kr'
 const isDev = !app.isPackaged
 const isDebug = process.env.DUMPIT_DESKTOP_DEBUG === '1'
 let mainWindow
@@ -128,6 +134,7 @@ function toAppUrl(url) {
 
 function shouldKeepAuthNavigationInApp(url) {
   const parsed = new URL(url)
+  if (LOCAL_API && parsed.origin === API_ORIGIN) return true
   return parsed.protocol === 'https:' && AUTH_NAVIGATION_HOSTS.has(parsed.hostname)
 }
 
@@ -710,14 +717,14 @@ function debugApiCookieHeaders() {
   if (!isDebug) return
 
   session.defaultSession.webRequest.onCompleted(
-    { urls: ['https://api.dumpit.kr/api/*'] },
+    { urls: API_URL_FILTER },
     (details) => {
       debugLog(`[desktop] api response ${details.statusCode} ${details.method} ${details.url}`)
     }
   )
 
   session.defaultSession.webRequest.onErrorOccurred(
-    { urls: ['https://api.dumpit.kr/api/*'] },
+    { urls: API_URL_FILTER },
     (details) => {
       debugLog(`[desktop] api error ${details.error} ${details.method} ${details.url}`)
     }
@@ -730,7 +737,7 @@ function isOAuthUrl(url) {
 
 function allowApiCorsForDesktopApp() {
   session.defaultSession.webRequest.onBeforeSendHeaders(
-    { urls: ['https://api.dumpit.kr/api/*'] },
+    { urls: API_URL_FILTER },
     (details, callback) => {
       if (isOAuthUrl(details.url)) {
         callback({ requestHeaders: details.requestHeaders })
@@ -739,8 +746,22 @@ function allowApiCorsForDesktopApp() {
 
       const requestHeaders = {
         ...details.requestHeaders,
-        Origin: 'https://dumpit.kr',
-        Referer: 'https://dumpit.kr/',
+        Origin: WEB_ORIGIN_FOR_API,
+        Referer: `${WEB_ORIGIN_FOR_API}/`,
+      }
+
+      if (LOCAL_API) {
+        // localhost 세션 쿠키는 SameSite(Lax) 때문에 app:// 발 XHR에 자동 첨부되지 않음 — 쿠키 저장소에서 직접 주입
+        session.defaultSession.cookies.get({ url: `${API_ORIGIN}/api` })
+          .then((cookies) => {
+            const sessionCookies = cookies.filter((cookie) => SESSION_COOKIE_NAMES.has(cookie.name))
+            if (sessionCookies.length > 0) {
+              requestHeaders.Cookie = sessionCookies.map((cookie) => `${cookie.name}=${cookie.value}`).join('; ')
+            }
+            callback({ requestHeaders })
+          })
+          .catch(() => callback({ requestHeaders }))
+        return
       }
 
       const cookieHeader = requestHeaders.Cookie || requestHeaders.cookie || ''
@@ -754,7 +775,7 @@ function allowApiCorsForDesktopApp() {
   )
 
   session.defaultSession.webRequest.onHeadersReceived(
-    { urls: ['https://api.dumpit.kr/api/*'] },
+    { urls: API_URL_FILTER },
     (details, callback) => {
       if (isOAuthUrl(details.url)) {
         callback({ responseHeaders: details.responseHeaders })
