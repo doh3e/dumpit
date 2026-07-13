@@ -84,6 +84,10 @@ body {
   .scrollbar-none { scrollbar-width: none; }
   .scrollbar-none::-webkit-scrollbar { display: none; }
 
+  /* 숨긴 스크롤바 대신 가려진 메뉴가 있음을 알리는 가장자리 페이드 (사이드바) */
+  .sidebar-fade-top { background: linear-gradient(to bottom, var(--chrome-bg) 15%, transparent); }
+  .sidebar-fade-bottom { background: linear-gradient(to top, var(--chrome-bg) 15%, transparent); }
+
   .btn-retro {
     @apply font-dungeon text-sm px-4 py-2.5 rounded-[11px] bg-card text-dark inline-flex items-center justify-center whitespace-nowrap;
     border: 1.5px solid var(--edge);

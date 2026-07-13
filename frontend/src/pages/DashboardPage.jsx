@@ -239,7 +239,8 @@ export default function DashboardPage() {
             onEdit={setEditingTask}
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 사이드바 몫을 빼면 lg에선 칸이 너무 좁아 달력이 비좁다 — xl부터 2열 */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <TaskListCard
               sections={sections}
               onToggle={toggleStatus}

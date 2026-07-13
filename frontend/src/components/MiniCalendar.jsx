@@ -209,6 +209,13 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
           const hasDeadline = !!dayTasks
           const hasGoogle = !!dayGoogle
           const hasAny = hasDeadline || hasGoogle
+          // 팝오버(w-52)가 달력 카드 밖으로 잘리지 않게 요일 열에 따라 정렬 방향 전환
+          const col = i % 7
+          const popAlign = col <= 1
+            ? 'left-0'
+            : col >= 5
+            ? 'right-0'
+            : 'left-1/2 -translate-x-1/2'
 
           return (
             <div
@@ -240,7 +247,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
 
               {/* hover 미리보기 - 읽기 전용 */}
               {hoveredDay === day && !selectedDay && hasAny && (
-                <div className="absolute z-50 left-1/2 -translate-x-1/2 top-full mt-1 w-52 card-retro !p-3 space-y-2 pointer-events-none">
+                <div className={`absolute z-50 ${popAlign} top-full mt-1 w-52 card-retro !p-3 space-y-2 pointer-events-none`}>
                   <p className="text-[0.625rem] font-bold text-sub">{month + 1}월 {day}일 · 클릭해서 고정</p>
                   {dayTasks?.map((t) => (
                     <div key={t.taskId} className="flex items-start gap-1.5">
@@ -269,7 +276,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
 
               {/* 클릭 고정 모달 - 추가 버튼 있음 */}
               {selectedDay === day && hasAny && (
-                <div className="absolute z-50 left-1/2 -translate-x-1/2 top-full mt-1 w-52 card-retro !p-3 space-y-2">
+                <div className={`absolute z-50 ${popAlign} top-full mt-1 w-52 card-retro !p-3 space-y-2`}>
                   <div className="flex items-center justify-between">
                     <p className="text-[0.625rem] font-bold text-sub">{month + 1}월 {day}일</p>
                     <button

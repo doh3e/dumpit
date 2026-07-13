@@ -102,6 +102,7 @@ export default function Layout() {
       <Header
         onOpenDrawer={() => setDrawerOpen(true)}
         onOpenHelp={() => setShowHelp(true)}
+        onOpenSettings={() => setShowSettings(true)}
       />
       <div className="relative z-10 flex flex-1">
         <Sidebar
