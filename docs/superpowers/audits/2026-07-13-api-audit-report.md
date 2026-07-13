@@ -6,11 +6,11 @@
 
 ## 요약
 
-- **테스트 자산**: MockMvc 인프로세스 통합 테스트 **269개** 신규 구축(spring-security-test `oauth2Login`으로 OAuth 세션 재현, 전용 `dumpit_test` DB, OpenAI·구글 캘린더·메일 목). 전 엔드포인트에 정상 동작·미인증(401)·IDOR(403)·없는 리소스(404)·잘못된 입력(400)·admin 경계(403)를 표준 검증 세트로 적용. 모든 4xx/5xx가 한글 오류 메시지를 반환하는지 `assertKoreanError`로 통일 검증.
-- **즉시 픽스**: 감사 중 발견한 **명백한 버그 9종을 이번 사이클에서 수정**(각각 회귀 테스트 포함, per-task 리뷰 + 최종 리뷰 통과).
+- **테스트 자산**: MockMvc 인프로세스 통합 테스트 **278개** 신규 구축(spring-security-test `oauth2Login`으로 OAuth 세션 재현, 전용 `dumpit_test` DB, OpenAI·구글 캘린더·메일 목). 전 엔드포인트에 정상 동작·미인증(401)·IDOR(403)·없는 리소스(404)·잘못된 입력(400)·admin 경계(403)를 표준 검증 세트로 적용. 모든 4xx/5xx가 한글 오류 메시지를 반환하는지 `assertKoreanError`로 통일 검증.
+- **픽스**: 감사 중 발견한 **명백한 버그 10종 + 보안 [High] 2건을 이번 사이클에서 수정**(각각 회귀 테스트 포함, per-task 리뷰 + 최종 리뷰 + 보안 전문 리뷰 통과). [High] 2건(밴/탈퇴 세션 게이트·CSRF 커스텀 헤더)은 사용자 지시로 이번 사이클에 포함.
 - **N+1**: 목록성 API 7종에 쿼리 카운트 회귀 테스트 고정. `GET /admin/users`의 N+1(요청당 14쿼리)을 GROUP BY 집계로 6쿼리로 축소. 그 외 신규 N+1 없음(SQL 전수 로그 3중 검증).
-- **보안**: 인가·입력검증·시크릿·의존성·설정 5개 영역 스윕. **커밋된 시크릿 없음**(305커밋 전체 히스토리). 배포 전 처리 권고 **[High] 2건**을 아래에 정리.
-- **CI**: `ci.yml`에 postgres 서비스 컨테이너 추가 + `-x test` 제거로 push마다 전체 테스트 실행하도록 전환(로컬 269개 그린, CI 실행 검증은 `gh` 인증 대기 중).
+- **보안**: 인가·입력검증·시크릿·의존성·설정 5개 영역 스윕. **커밋된 시크릿 없음**(305커밋 전체 히스토리). 발견 [High] 2건은 픽스 완료, 잔여 Medium(설계 변경)은 §2에 정리.
+- **CI**: `ci.yml`에 postgres 서비스 컨테이너 추가 + `-x test` 제거로 push마다 전체 테스트 실행하도록 전환(로컬 278개 그린, CI 실행 검증은 `gh` 인증 대기 중).
 
 ---
 
@@ -28,28 +28,18 @@
 | 8 | 경로 파라미터 바인딩 실패(잘못된 slot enum·UUID 오형식)가 catch-all로 **500** | 클라이언트 입력 오류가 500 (코인샵 사이클서 이연됐던 부채) | `d9ade78` |
 | 9 | 확정 요청 DTO(브레인덤프/아이디어 AI추출)에 `@Size`·재귀 `@Valid` 누락 → 대용량 body 무제한 저장 | 입력 검증 누락 | `d70626e` |
 | 10 | `GET /admin/users` N+1 (요청당 14쿼리, 유저별 통계 per-user 조회) | 성능 | `659e79c` |
+| 11 | **[High] 밴/탈퇴 유저가 세션 유지 중 API 계속 사용 가능** (Broken Access Control) | 보안 | `c2d69fc`/`e94716d` |
+| 12 | **[High] CSRF 비활성+SameSite=None으로 본문 없는 POST 크로스사이트 위조** | 보안 | `c2d69fc`/`e94716d` |
+
+**11·12 — 배포 전 처리 요청(사용자 지시)으로 이번 사이클에서 픽스:** 인증 필터 뒤에 `AuthenticatedRequestGuardFilter`(단일 `OncePerRequestFilter`)를 두어 (1) 인증된 요청의 유저 status가 BANNED/WITHDRAWN이거나 식별 불가면 **401 한글 JSON(fail-closed)**, (2) 상태변경 메서드(POST/PUT/PATCH/DELETE)에 `X-Requested-With` 헤더 없으면 **403 한글 JSON**. 프론트 axios가 기본으로 `X-Requested-With`를 전송(desktop은 프론트 빌드 재사용). `#11`은 [태스크8 Medium] 본문 없는 401까지 동시 해소. 보안 전문 리뷰(opus)에서 **익스플로잇 가능한 우회 없음**으로 통과, 권한 하드닝 3건(필터 이중 등록 제거·예외 경로 정확매칭·null principal fail-closed) 추가 적용. 테스트 278개 그린(밴/탈퇴/CSRF 게이트 전용 `SessionGuardApiTest` 포함).
+
+> **남은 CSRF 잔여(Low·비차단)**: `csrf.disable()` + `/auth/**` 예외로 `POST /auth/logout` 자체는 여전히 CSRF 미방어(강제 로그아웃 = 불편함 수준, 데이터 노출 아님). 필요 시 후속.
 
 ---
 
 ## 2. 배포 전 처리 권고 (설계 변경 — 사용자 결정 필요)
 
-이 항목들은 **기존 코드의 취약점**으로, 감사가 발견했으나 진짜 설계 변경이 필요해 이번 사이클에서 픽스하지 않았다. **테스트 브랜치 머지는 막지 않지만, main 배포 전 처리 권장.**
-
-### [High] 밴/탈퇴 유저가 세션 유지 중 API를 계속 사용 가능 — Broken Access Control
-
-- **현상**: 관리자가 userB를 밴한 뒤, userB의 살아있는 세션으로 `GET /tasks` → **200 OK**(정상 사용). 실증: `AdminApiTest.밴된유저_세션유지중_GET_tasks_차단여부_실증`.
-- **원인**: Spring Security의 `OAuth2User` principal은 로그인 시점에 세션 캐시되고 이후 요청마다 DB 재조회를 안 한다. 유저 상태(BANNED/WITHDRAWN) 검증이 컨트롤러/서비스마다 제각각(`AuthController.me()`·`ProfileController`는 `.filter(User::isActive)` 있으나 `TaskServiceImpl.findUser()`는 없음 — 이미 누락 발생).
-- **연결**: 같은 근본 원인의 다른 얼굴이 [태스크8 Medium] — 밴/탈퇴 세션에서 `NoticeController` 등이 본문 없는 401을 반환(한글 오류 바디 계약 위반).
-- **제안(저비용 fast-follow)**: OAuth 인증 필터 뒤에 "유저 상태가 BANNED/WITHDRAWN이면 즉시 401 한글 JSON"을 내리는 **공통 게이트(필터/인터셉터)** 하나 도입. 개별 서비스에 `isActive()`를 산발하는 방식은 누락되기 쉬움(이미 전례). 이 게이트 하나로 [태스크8 Medium]까지 동시 해소.
-
-### [High] CSRF 비활성 + 세션 쿠키 SameSite=None → 본문 없는 POST의 크로스사이트 위조
-
-- **현상**: 프로덕션 세션 쿠키가 코드 기본값 `Lax`가 아니라 `docker-compose.yml`의 `SERVER_SERVLET_SESSION_COOKIE_SAME_SITE: none`으로 오버라이드(데스크톱 Electron `app://` 스킴이 다른 site라 쿠키 전송 위해 불가피하게 None 추정). `SecurityConfig`는 `csrf.disable()` 상태.
-- **분석**: 대부분의 상태변경 엔드포인트는 `@RequestBody` JSON을 요구해 CORS preflight가 강제되므로 외부 오리진 폼 위조로는 도달 불가. 하지만 **본문이 전혀 없어 "simple request"로 분류돼 preflight를 건너뛰는 POST 5개**가 노출:
-  - `POST /notices/{id}/read` — 영향 낮음(읽음 표시 조작만)
-  - `POST /tasks/{id}/reanalyze`, `POST /tasks/{id}/split/propose`, `POST /ideas/{id}/convert-to-task` — **피해자의 AI 일일 한도/비용 소모**(단 id가 비공개 UUID라 사전 인지 필요)
-  - `POST /pomodoro/complete` — 코인이 피해자 본인에게 적립돼 공격자 이득 없음(사실상 무해)
-- **제안**: CSRF 토큰 재도입, 또는 상태변경 요청에 **커스텀 헤더 필수화**(모든 크로스사이트 요청에 preflight 강제 → 단순 폼 위조 무력화). 단 `app://` Electron 클라이언트도 해당 헤더를 보내도록 수정 필요(완전 무비용 아님).
+이 항목들은 **기존 코드의 취약점**으로, 감사가 발견했으나 진짜 설계 변경이 필요해 이번 사이클에서 픽스하지 않았다(위 [High] 2건은 사용자 지시로 §1에서 이미 픽스 완료). **테스트 브랜치 머지는 막지 않지만, main 배포 전 처리 권장.**
 
 ### [Medium] AI 사용량 한도가 Redis 장애 시 fail-open
 
