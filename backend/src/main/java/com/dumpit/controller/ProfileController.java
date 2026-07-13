@@ -52,11 +52,17 @@ public class ProfileController {
         User user = resolveUser(principal);
         if (user == null) return ResponseEntity.status(401).build();
 
-        if (req.bio() != null) {
-            user.updateBio(req.bio().length() > 500 ? req.bio().substring(0, 500) : req.bio());
-        }
-        if (req.nickname() != null && !req.nickname().isBlank()) {
+        if (req.nickname() != null) {
+            if (req.nickname().isBlank()) {
+                throw new IllegalArgumentException("Nickname must not be blank.");
+            }
             user.updateNickname(req.nickname().length() > 50 ? req.nickname().substring(0, 50) : req.nickname());
+        }
+        if (req.bio() != null) {
+            if (req.bio().length() > 500) {
+                throw new IllegalArgumentException("Bio must be 500 characters or less.");
+            }
+            user.updateBio(req.bio());
         }
         userRepository.save(user);
         return ResponseEntity.ok(toProfileResponse(user));
@@ -70,13 +76,15 @@ public class ProfileController {
         User user = resolveUser(principal);
         if (user == null) return ResponseEntity.status(401).build();
 
+        // 탈퇴 검증·확정이 먼저다 — admin 거부(IllegalStateException) 시 OAuth 연결이 해지되면 안 된다.
+        // OAuth 해지는 세션 principal 기반(Redis)이라 DB 탈퇴 후에도 동작한다.
+        accountService.withdraw(user.getEmail());
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         OAuth2AuthorizedClient client = authorizedClientRepository
                 .loadAuthorizedClient("google", authentication, request);
         oAuthRevocationService.revokeGoogle(client);
         authorizedClientRepository.removeAuthorizedClient("google", authentication, request, response);
-
-        accountService.withdraw(user.getEmail());
         if (request.getSession(false) != null) {
             request.getSession(false).invalidate();
         }

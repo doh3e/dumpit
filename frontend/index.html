@@ -8,8 +8,15 @@
         var t = (p === 'light' || p === 'dark') ? p
           : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.dataset.theme = t;
+        // 글자 크기 부트 적용 — utils/fontScale.js의 FONT_SCALES와 값 동기화 유지
+        var f = localStorage.getItem('dumpit-font-scale');
+        var scales = { sm: '90%', lg: '112.5%', xl: '125%' };
+        if (scales[f]) document.documentElement.style.fontSize = scales[f];
       })();
     </script>
+    <link rel="preload" as="image" href="/logo.webp" />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/Galmuri11.subset.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/DungGeunMo.subset.woff2" crossorigin />
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />

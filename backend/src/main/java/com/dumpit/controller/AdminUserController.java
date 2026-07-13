@@ -23,7 +23,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -42,9 +44,29 @@ public class AdminUserController {
     @GetMapping
     public ResponseEntity<List<AdminUserResponse>> list(@AuthenticationPrincipal OAuth2User principal) {
         requireAdmin(principal);
-        return ResponseEntity.ok(accountService.getUsersForAdmin().stream()
-                .map(this::toResponse)
+        List<User> users = accountService.getUsersForAdmin();
+        // 유저별로 4개 리포지토리에 개별 count 쿼리를 날리면 N+1이 되므로,
+        // 전체 유저에 대해 한 번씩만 GROUP BY 집계 쿼리를 돌려 메모리에서 매칭한다.
+        Map<UUID, Long> taskCounts = groupCounts(taskRepository.countActiveGroupedByUser());
+        Map<UUID, Long> routineCounts = groupCounts(routineRepository.countActiveGroupedByUser());
+        Map<UUID, Long> ideaCounts = groupCounts(ideaRepository.countActiveGroupedByUser());
+        Map<UUID, Long> brainDumpCounts = groupCounts(brainDumpRepository.countActiveGroupedByUser());
+        return ResponseEntity.ok(users.stream()
+                .map(user -> toResponse(user, new AdminUserActivitySummary(
+                        taskCounts.getOrDefault(user.getUserId(), 0L),
+                        routineCounts.getOrDefault(user.getUserId(), 0L),
+                        ideaCounts.getOrDefault(user.getUserId(), 0L),
+                        brainDumpCounts.getOrDefault(user.getUserId(), 0L)
+                )))
                 .toList());
+    }
+
+    private Map<UUID, Long> groupCounts(List<Object[]> rows) {
+        Map<UUID, Long> counts = new HashMap<>();
+        for (Object[] row : rows) {
+            counts.put((UUID) row[0], (Long) row[1]);
+        }
+        return counts;
     }
 
     @PatchMapping("/{userId}/ban")
@@ -64,18 +86,20 @@ public class AdminUserController {
         return ResponseEntity.ok(toResponse(accountService.unbanUser(userId)));
     }
 
+    // ban/unban은 유저 1명분 응답만 만들면 되므로 개별 count 쿼리 그대로 사용(N+1 우려 없음)
     private AdminUserResponse toResponse(User user) {
+        return toResponse(user, new AdminUserActivitySummary(
+                taskRepository.countByUserAndDeletedAtIsNull(user),
+                routineRepository.countByUserAndDeletedAtIsNull(user),
+                ideaRepository.countByUserAndDeletedAtIsNull(user),
+                brainDumpRepository.countByUserAndDeletedAtIsNull(user)
+        ));
+    }
+
+    private AdminUserResponse toResponse(User user, AdminUserActivitySummary activity) {
         AiUsageService.AiUsageStatus aiUsage = aiUsageService.getStatusForUser(user);
-        return AdminUserResponse.from(
-                user,
-                new AdminUserActivitySummary(
-                        taskRepository.countByUserAndDeletedAtIsNull(user),
-                        routineRepository.countByUserAndDeletedAtIsNull(user),
-                        ideaRepository.countByUserAndDeletedAtIsNull(user),
-                        brainDumpRepository.countByUserAndDeletedAtIsNull(user)
-                ),
-                new AdminAiUsageSummary(aiUsage.used(), aiUsage.limit(), aiUsage.remaining())
-        );
+        return AdminUserResponse.from(user, activity,
+                new AdminAiUsageSummary(aiUsage.used(), aiUsage.limit(), aiUsage.remaining()));
     }
 
     private void requireAdmin(OAuth2User principal) {

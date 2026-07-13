@@ -23,7 +23,7 @@ export function TaskDateTimeField({ label, value, onChange, onClear, min, defaul
           <button
             type="button"
             onClick={handleClear}
-            className="text-[11px] font-bold text-sub hover:text-primary transition-colors"
+            className="text-[0.6875rem] font-bold text-sub hover:text-primary transition-colors"
           >
             ✕ 지우기
           </button>

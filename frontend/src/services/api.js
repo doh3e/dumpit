@@ -6,6 +6,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
+  headers: { 'X-Requested-With': 'XMLHttpRequest' },
 })
 
 export function getApiErrorMessage(error, fallback = '요청을 처리하지 못했어요. 잠시 후 다시 시도해주세요.') {

@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.1'
+    id 'org.springframework.boot' version '4.1.0'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'io.sentry.jvm.gradle' version '6.5.0'
 }
@@ -33,15 +33,16 @@ sentry {
 }
 
 dependencies {
-    // Spring Web
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Spring Web (MVC)
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-restclient'
 
     // Spring Data JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
     // Spring Security + OAuth2 (구글 로그인)
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
 
     // Spring Data Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -49,12 +50,13 @@ dependencies {
 
     // Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    runtimeOnly 'javax.xml.bind:jaxb-api:2.3.1'
 
     // Sentry error monitoring
-    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.40.0'
+    implementation 'io.sentry:sentry-spring-boot-4:8.44.1'
 
     // Flyway (DB 스키마 마이그레이션) — Postgres 15+는 flyway-database-postgresql 필요
-    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.flywaydb:flyway-database-postgresql'
 
     // PostgreSQL Driver
@@ -66,7 +68,8 @@ dependencies {
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
 }
 
 tasks.named('test') {

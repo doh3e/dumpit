@@ -1,19 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import DeadlineNudgeMenu from '../DeadlineNudgeMenu'
 import useAiUsage from '../../hooks/useAiUsage'
 import remainAiToken from '../../assets/remain_ai_token.png'
 import coinImage from '../../assets/coin_image.png'
 import menuImage from '../../assets/menu.png'
-
-const NAV_ITEMS = [
-  { label: '대시보드', path: '/dashboard' },
-  { label: '브레인 덤프', path: '/brain-dump' },
-  { label: '아이디어 덤프', path: '/ideas' },
-  { label: '루틴', path: '/routines' },
-  { label: '마이페이지', path: '/mypage' },
-]
+import settingImage from '../../assets/setting_image.png'
 
 const AI_COST_ROWS = [
   ['일일 총 한도', '100점', true],
@@ -26,8 +19,7 @@ const AI_COST_ROWS = [
   ['그 외 모든 활동', '무료', false],
 ]
 
-export default function Header({ onOpenDrawer }) {
-  const { pathname } = useLocation()
+export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
@@ -79,48 +71,36 @@ export default function Header({ onOpenDrawer }) {
     : 'text-primary'
 
   return (
-    <header className="sticky top-0 z-50 bg-card border-b border-line">
-      <div className="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+    <header className="app-header sticky top-0 z-50 bg-chrome border-b border-chrome-line">
+      {/* 페이지 내비는 사이드바 전담 — 상단바는 로고·배지·도움말·설정·프사만 양끝 정렬 */}
+      <div className="w-full px-6 h-20 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Hamburger button - only below lg */}
           <button
             onClick={onOpenDrawer}
-            className="min-[1100px]:hidden w-9 h-9 rounded-lg border border-line flex items-center justify-center hover:bg-chip transition-colors"
+            className="lg:hidden w-9 h-9 shrink-0 rounded-lg border border-chrome-line flex items-center justify-center hover:bg-chrome-line transition-colors"
             aria-label="메뉴 열기"
           >
             <img src={menuImage} alt="" className="h-5 w-5 object-contain" />
           </button>
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <img src="/text_logo.png" alt="덤핏" className="h-24 w-auto" />
-            <span className="chip-retro text-secondary">BETA</span>
+          <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
+            {/* 투명 여백 트리밍된 로고 — 바(h-20)를 넘지 않게. h-24 시절엔 오버플로+비대칭 여백으로 바가 어긋나 보였음 */}
+            {/* 서비스명은 모든 폭에서 보여야 하므로 유체 축소 대신 md 기준 두 단계 고정 크기 */}
+            <img src="/text_logo.webp" alt="덤핏" className="h-9 md:h-12 w-auto" />
+            <span className="chip-retro text-secondary shrink-0 hidden md:inline-block">BETA</span>
           </Link>
         </div>
 
-        <nav className="hidden min-[1100px]:flex items-center gap-1">
-          {NAV_ITEMS.map(({ label, path }) => (
-            <Link
-              key={path}
-              to={path}
-              className={`px-4 py-2 rounded-lg font-galmuri font-bold text-sm transition-all ${
-                pathname === path
-                  ? 'bg-chip text-dark'
-                  : 'text-sub hover:text-dark hover:bg-chip'
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:block">
+        {/* 배지들은 shrink-0 — 좁아져도 알약이 찌그러지며 숫자가 새어나오지 않게 */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="hidden sm:block shrink-0">
             <DeadlineNudgeMenu />
           </div>
 
           {/* AI usage badge */}
           {usage && (
             <div
-              className="group relative hidden sm:flex items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none"
+              className="group relative hidden sm:flex shrink-0 items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none"
               tabIndex={0}
               aria-label="AI 사용량 안내"
             >
@@ -132,7 +112,7 @@ export default function Header({ onOpenDrawer }) {
               <div className="pointer-events-none absolute right-0 top-10 z-50 w-72 rounded-lg card-retro p-0 text-left opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
                 <div className="px-3 py-2.5 border-b border-line">
                   <p className="text-xs font-black text-dark">AI 사용량 (오늘)</p>
-                  <p className="text-[11px] font-bold text-sub mt-0.5">
+                  <p className="text-[0.6875rem] font-bold text-sub mt-0.5">
                     남은 사용량:{' '}
                     <span className={usage.remaining === 0 ? 'text-primary' : 'text-dark'}>
                       {usage.remaining}
@@ -141,7 +121,7 @@ export default function Header({ onOpenDrawer }) {
                   </p>
                 </div>
                 <div className="px-3 py-2 border-b border-line">
-                  <p className="text-[10px] font-semibold text-sub leading-relaxed">
+                  <p className="text-[0.625rem] font-semibold text-sub leading-relaxed">
                     Dumpit!은 베타 서비스 중이에요. 모든 활동이 무료인 대신
                     AI 기능에는 일일 사용량 제한이 있어요.
                   </p>
@@ -160,7 +140,7 @@ export default function Header({ onOpenDrawer }) {
                   </div>
                 ))}
                 <div className="px-3 py-2 border-t border-line">
-                  <p className="text-[10px] font-semibold text-sub">매일 자정(KST)에 초기화돼요.</p>
+                  <p className="text-[0.625rem] font-semibold text-sub">매일 자정(KST)에 초기화돼요.</p>
                 </div>
               </div>
             </div>
@@ -168,19 +148,37 @@ export default function Header({ onOpenDrawer }) {
 
           {/* Coin badge */}
           <div
-            className={`group relative hidden sm:flex items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none ${coinPop ? 'coin-bounce' : ''}`}
+            className={`group relative hidden sm:flex shrink-0 items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none ${coinPop ? 'coin-bounce' : ''}`}
             tabIndex={0}
             aria-label="보유 코인 안내"
           >
             <img src={coinImage} alt="coin" className="w-4 h-4 object-contain" />
             <span className="font-dungeon text-sm text-dark leading-none">{displayCoins}</span>
             <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg card-retro px-3 py-2 text-left text-xs font-bold text-sub opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100">
-              추후 열릴 코인샵에서 다양한 테마와 스티커 등을 교환할 수 있어요.
+              코인샵에서 각종 테마와 꾸미기 용품, 스티커로 교환할 수 있어요.
             </div>
           </div>
 
+          {/* 도움말·설정 — lg 미만은 드로어 하단 메뉴가 담당하므로 상단바에선 숨김 (폭 확보) */}
+          <button
+            onClick={() => onOpenHelp?.()}
+            className="hidden lg:flex w-9 h-9 shrink-0 rounded-lg border border-line items-center justify-center font-black text-sm text-sub hover:text-dark hover:bg-chip transition-colors"
+            aria-label="도움말"
+            title="도움말"
+          >
+            ?
+          </button>
+          <button
+            onClick={() => onOpenSettings?.()}
+            className="hidden lg:flex w-9 h-9 shrink-0 rounded-lg border border-line items-center justify-center hover:bg-chip transition-colors"
+            aria-label="설정"
+            title="설정"
+          >
+            <img src={settingImage} alt="" className="h-5 w-5 object-contain" />
+          </button>
+
           {/* User menu */}
-          <div className="relative" ref={menuRef}>
+          <div className="relative shrink-0" ref={menuRef}>
             {user?.picture ? (
               <img
                 src={user.picture}
@@ -201,23 +199,24 @@ export default function Header({ onOpenDrawer }) {
               <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1rem))] sm:w-auto">
                 <div className="card-retro py-2 sm:min-w-[160px]">
                   <div className="sm:hidden px-3 pb-2 mb-2 border-b border-line">
+                    {/* 데스크톱 상단바 배지와 동일한 순서: 마감 → AI → 코인 */}
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="rounded-lg border border-line bg-accent px-2 py-2 text-center">
-                        <img src={coinImage} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
-                        <p className="text-[10px] font-black text-sub">코인</p>
-                        <p className="font-dungeon text-sm text-dark">{user?.coins ?? 0}</p>
-                      </div>
+                      <DeadlineNudgeMenu variant="mobile-card" />
                       <div className="rounded-lg border border-line bg-chip px-2 py-2 text-center">
                         <img src={remainAiToken} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
-                        <p className="text-[10px] font-black text-sub">AI</p>
+                        <p className="text-[0.625rem] font-black text-sub">AI</p>
                         <p className={`font-dungeon text-sm ${usage?.remaining === 0 ? 'text-primary' : 'text-dark'}`}>
                           {usage ? usage.remaining : '-'}
                         </p>
                       </div>
-                      <DeadlineNudgeMenu variant="mobile-card" />
+                      <div className="rounded-lg border border-line bg-accent px-2 py-2 text-center">
+                        <img src={coinImage} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
+                        <p className="text-[0.625rem] font-black text-sub">코인</p>
+                        <p className="font-dungeon text-sm text-dark">{user?.coins ?? 0}</p>
+                      </div>
                     </div>
                     {usage && (
-                      <p className="mt-2 text-[10px] font-semibold text-sub text-right">
+                      <p className="mt-2 text-[0.625rem] font-semibold text-sub text-right">
                         AI {usage.remaining} / {usage.limit} · 자정 초기화
                       </p>
                     )}

@@ -20,6 +20,14 @@ public interface RoutineRepository extends JpaRepository<Routine, UUID> {
 
     long countByCreatedAtGreaterThanEqual(LocalDateTime since);
 
+    // Admin 유저 목록에서 유저당 1쿼리씩 도는 N+1을 피하기 위한 집계 쿼리 — AdminUserController 참고
+    @Query("""
+        SELECT r.user.userId, COUNT(r) FROM Routine r
+        WHERE r.deletedAt IS NULL
+        GROUP BY r.user.userId
+    """)
+    List<Object[]> countActiveGroupedByUser();
+
     @Query("""
         SELECT r FROM Routine r
         WHERE r.routineId = :routineId

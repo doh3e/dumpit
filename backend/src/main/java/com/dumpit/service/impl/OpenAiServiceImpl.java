@@ -2,11 +2,11 @@ package com.dumpit.service.impl;
 
 import com.dumpit.service.OpenAiService;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
-import org.springframework.boot.http.client.ClientHttpRequestFactorySettings;
+import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -49,7 +49,7 @@ public class OpenAiServiceImpl implements OpenAiService {
         this.restClient = RestClient.builder()
                 .baseUrl("https://api.openai.com/v1")
                 .requestFactory(ClientHttpRequestFactoryBuilder.detect()
-                        .build(ClientHttpRequestFactorySettings.defaults()
+                        .build(HttpClientSettings.defaults()
                                 .withConnectTimeout(Duration.ofSeconds(5))
                                 .withReadTimeout(Duration.ofSeconds(30))))
                 .defaultHeader("Authorization", "Bearer " + apiKey)
@@ -122,18 +122,13 @@ public class OpenAiServiceImpl implements OpenAiService {
 
             Rules:
             - Current time is %s.
-            - Preserve provided values exactly unless they are logically impossible.
-            - If both startTime and estimatedMinutes are known, deadline should usually be startTime + estimatedMinutes.
-            - If both deadline and estimatedMinutes are known, startTime should usually be deadline - estimatedMinutes.
-            - If both startTime and deadline are known, estimatedMinutes should be the duration in minutes.
-            - If only one schedule field is known, infer the missing fields from the task title and description.
-            - If ALL three fields are unknown, infer all of them from the task title and description:
-              * Estimate estimatedMinutes based on task type (e.g. 운동/exercise→60, 회의/meeting→30-60, 공부/study→60-120, 장보기/shopping→30-60, 독서/reading→30-60, 식사/meal→30, 청소/cleaning→30-60).
-              * For simple, urgent, or routine tasks (errands, admin, chores) set deadline to today at 23:59 (%s).
-              * For tasks that need preparation or are moderately complex set deadline to tomorrow at 23:59 (%s).
-              * Return null for startTime when all fields are unknown.
+            - Preserve provided values exactly. Never change or overwrite a provided field.
+            - Fill a missing startTime or deadline ONLY from an explicit or relative time cue in the title/description (e.g. 오늘, 내일, 금요일까지, 5월 1일, 오후 3시 → today ends at %s, tomorrow ends at %s).
+            - If there is NO time cue for a field, that field MUST be null. Never invent startTime or deadline from urgency, effort, or task type alone — the user keeps open-ended tasks without deadlines on purpose.
+            - Do NOT derive one time field from another with arithmetic (no startTime + estimatedMinutes = deadline, no deadline - estimatedMinutes = startTime).
             - deadline means the end/due time of the task. All deadlines must be strictly in the future.
-            - estimatedMinutes must be between 1 and 1440.
+            - If estimatedMinutes is missing, estimate it from the task type (e.g. 운동/exercise→60, 회의/meeting→30-60, 공부/study→60-120, 장보기/shopping→30-60, 독서/reading→30-60, 식사/meal→30, 청소/cleaning→30-60).
+            - estimatedMinutes means focused working time, NOT the gap between startTime and deadline. It must be between 1 and 1440.
 
             <user_input>
             Title: %s
@@ -219,21 +214,19 @@ public class OpenAiServiceImpl implements OpenAiService {
         String prompt = """
             You analyze a brain dump for the Dumpit productivity app.
             Extract actionable tasks and return only valid JSON in this shape:
-            {"tasks":[{"title":"...", "description":"...", "deadline":"YYYY-MM-DDTHH:mm:ss", "estimatedMinutes":60, "priorityScore":0.8, "category":"WORK"}]}
+            {"tasks":[{"title":"...", "description":"...", "deadline":"YYYY-MM-DDTHH:mm:ss|null", "estimatedMinutes":60, "priorityScore":0.8, "category":"WORK"}]}
 
             Rules:
             - Current time is %s. ALL deadlines must be in the future relative to this time.
             - When the user mentions a date like "5월 1일" without a year, use the upcoming occurrence: same year if still ahead, next year otherwise.
             - Never use a year earlier than the current year.
             - Prefer explicit due dates/times, relative due dates/times, or well-known fixed event dates from the user's text.
-            - If a task has no explicit deadline, assign a reasonable soft deadline between today and 3 days from now based on urgency, effort, and task type.
-            - Use today 23:59:00 for urgent, quick, administrative, or clearly immediate tasks.
-            - Use tomorrow or 2 days from now for errands, preparation, chores, and tasks that should be handled soon.
-            - Use 3 days from now for flexible low-urgency tasks.
-            - Do not assign a deadline later than 3 days from now unless the user explicitly gives a later date or a fixed event implies it.
+            - If a task has NO time cue in the user's text — no explicit date/time, no relative expression (e.g. 오늘, 내일, 이번 주, ~까지, 곧), and no fixed event implying a date — deadline MUST be null. Never invent a deadline from urgency, effort, or task type.
+            - Open-ended wishes and someday items (e.g. "언젠가 기타 배우기", "시간 나면 책 읽기") must have deadline null.
             - Date-only deadlines must use 23:59:00 unless the user gives a specific time.
             - Expressions that describe quantity or duration, such as "일주일 치", "한 달치", or "3시간짜리", are NOT deadlines by themselves.
             - If one global due date clearly applies to multiple tasks, apply the same deadline to those tasks.
+            - A leading time expression (오늘, 내일, 이번 주, 이번 주말 등) at the start of a sentence or run-on list applies to EVERY task chained in that same sentence (connected by ~하고, ~고, ~며, or commas), until a NEW time expression or a clear sentence break introduces a different time context. Do NOT let it leak past a sentence boundary onto tasks that have their own or no time context.
             - For Korean fixed-date events, infer the correct upcoming date only when it is directly relevant to the task. Example: "어버이날 선물" is due by May 8 at 23:59.
             - Split large or vague thoughts into practical tasks.
             - Use null or omit meaningfully impossible values, but keep valid JSON.
@@ -241,6 +234,15 @@ public class OpenAiServiceImpl implements OpenAiService {
             - category must be one of WORK, STUDY, APPOINTMENT, CHORE, ROUTINE, HEALTH, HOBBY, OTHER.
             - Focus on tasks that a user can actually execute.
             - All title and description fields MUST be written in Korean (한국어).
+
+            EXAMPLE (assume current time is 2026-03-10T09:00:00):
+            Input: "오늘 약선반 정리하고 베란다 청소하고 화장실 청소해야해. 내일은 장보기"
+            Output: {"tasks":[
+              {"title":"약선반 정리","description":"약선반 정리하기","deadline":"2026-03-10T23:59:00","estimatedMinutes":20,"priorityScore":0.6,"category":"CHORE"},
+              {"title":"베란다 청소","description":"베란다 청소하기","deadline":"2026-03-10T23:59:00","estimatedMinutes":30,"priorityScore":0.6,"category":"CHORE"},
+              {"title":"화장실 청소","description":"화장실 청소하기","deadline":"2026-03-10T23:59:00","estimatedMinutes":30,"priorityScore":0.6,"category":"CHORE"},
+              {"title":"장보기","description":"장보기","deadline":"2026-03-11T23:59:00","estimatedMinutes":40,"priorityScore":0.5,"category":"CHORE"}
+            ]}
 
             <user_input>
             Brain dump:

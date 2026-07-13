@@ -6,6 +6,8 @@ import com.dumpit.repository.UserRepository;
 import com.dumpit.service.AiUsageLimitExceededException;
 import com.dumpit.service.AiUsageLogService;
 import com.dumpit.service.AiUsageService;
+import io.sentry.Sentry;
+import io.sentry.SentryLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -63,7 +65,7 @@ public class AiUsageServiceImpl implements AiUsageService {
         } catch (AiUsageLimitExceededException ex) {
             throw ex;
         } catch (DataAccessException ex) {
-            log.warn("Allowing AI request because Redis usage limiter is unavailable: {}", ex.getMessage());
+            reportLimiterUnavailable(ex);
             recordUsage(user, usageType, 0, true, "REDIS_UNAVAILABLE");
             return status(0);
         }
@@ -124,7 +126,7 @@ public class AiUsageServiceImpl implements AiUsageService {
         } catch (AiUsageLimitExceededException ex) {
             throw ex;
         } catch (DataAccessException ex) {
-            log.warn("Allowing AI request because Redis usage limiter is unavailable: {}", ex.getMessage());
+            reportLimiterUnavailable(ex);
             aiUsageLogService.record(user, usageType.name(), cost, 0, true, "REDIS_UNAVAILABLE");
             return status(0);
         }
@@ -132,6 +134,19 @@ public class AiUsageServiceImpl implements AiUsageService {
 
     private void recordUsage(User user, UsageType usageType, int usedAfter, boolean allowed, String note) {
         aiUsageLogService.record(user, usageType, usedAfter, allowed, note);
+    }
+
+    /**
+     * Redis 사용량 리미터 장애 시 요청은 그대로 허용(fail-open)하되, 장애를 놓치지 않도록
+     * 로그와 함께 Sentry로 보고한다. 장애가 길어지면 AI 한도가 무제한으로 풀려 비용이 샐 수
+     * 있으므로 즉시 인지가 목적이다. (동일 예외는 Sentry가 스택트레이스로 그룹핑하므로 알림 폭주 없음.)
+     */
+    private void reportLimiterUnavailable(DataAccessException ex) {
+        log.warn("Allowing AI request because Redis usage limiter is unavailable: {}", ex.getMessage());
+        Sentry.captureException(ex, scope -> {
+            scope.setLevel(SentryLevel.WARNING);
+            scope.setTag("degradation", "ai_usage_limiter_redis_unavailable");
+        });
     }
 
     private User findUser(String email) {

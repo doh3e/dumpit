@@ -20,6 +20,8 @@ public interface IdeaService {
     Idea updateIdea(String email, UUID ideaId, String title, String content, Boolean pinned,
                     Task.Category category, UUID parentIdeaId);
 
+    Idea updateSticker(String email, UUID ideaId, String code);
+
     Task convertToTask(String email, UUID ideaId);
 
     void deleteIdea(String email, UUID ideaId);

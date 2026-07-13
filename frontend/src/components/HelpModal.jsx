@@ -55,7 +55,7 @@ export default function HelpModal({ onClose }) {
               <span className="text-base flex-shrink-0">{icon}</span>
               <div>
                 <p className="text-xs font-black text-dark">{title}</p>
-                <p className="text-[11px] font-semibold text-sub leading-snug">{desc}</p>
+                <p className="text-[0.6875rem] font-semibold text-sub leading-snug">{desc}</p>
               </div>
             </div>
           ))}
@@ -77,7 +77,7 @@ export default function HelpModal({ onClose }) {
             </div>
           ))}
         </div>
-        <p className="text-[11px] font-semibold text-sub mb-5">매일 자정(KST)에 초기화돼요.</p>
+        <p className="text-[0.6875rem] font-semibold text-sub mb-5">매일 자정(KST)에 초기화돼요.</p>
 
         <button onClick={onClose} className="w-full btn-retro text-sm">
           확인했어요!

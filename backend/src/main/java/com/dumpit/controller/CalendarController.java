@@ -62,7 +62,8 @@ public class CalendarController {
             log.warn("Google Calendar authorized client refresh failed: errorCode={}, description={}",
                     ex.getError() != null ? ex.getError().getErrorCode() : null,
                     ex.getError() != null ? ex.getError().getDescription() : null);
-            return reconnectRequired();
+            throw new ApiException(HttpStatus.FORBIDDEN, "GOOGLE_CALENDAR_RECONNECT_REQUIRED",
+                    "Google Calendar 연결이 만료되었습니다. 다시 연결해주세요.");
         }
 
         if (client == null || client.getAccessToken() == null) {
@@ -82,10 +83,8 @@ public class CalendarController {
                     client.getAccessToken().getScopes(),
                     client.getAccessToken().getExpiresAt(),
                     client.getRefreshToken() != null);
-            return ResponseEntity.status(403).body(new CalendarPermissionRequiredResponse(
-                    "CALENDAR_PERMISSION_REQUIRED",
-                    "Google Calendar ?쇱젙??遺덈윭?ㅻ젮硫?罹섎┛???쎄린 沅뚰븳???꾩슂?⑸땲??"
-            ));
+            throw new ApiException(HttpStatus.FORBIDDEN, "CALENDAR_PERMISSION_REQUIRED",
+                    "Google Calendar 일정을 불러오려면 캘린더 읽기 권한이 필요합니다. 다시 연동해주세요.");
         }
 
         Instant start = parseInstantOrDefault(timeMin, Instant.now());
@@ -121,13 +120,4 @@ public class CalendarController {
             return fallback;
         }
     }
-
-    private ResponseEntity<CalendarPermissionRequiredResponse> reconnectRequired() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new CalendarPermissionRequiredResponse(
-                "GOOGLE_CALENDAR_RECONNECT_REQUIRED",
-                "Google Calendar ?곌껐??留뚮즺?섏뿀?듬땲?? ?ㅼ떆 ?곌껐?댁＜?몄슂."
-        ));
-    }
-
-    record CalendarPermissionRequiredResponse(String code, String message) {}
 }

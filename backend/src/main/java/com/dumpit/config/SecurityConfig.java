@@ -1,7 +1,8 @@
 package com.dumpit.config;
 
+import com.dumpit.repository.UserRepository;
 import com.dumpit.service.CustomOAuth2UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,10 +28,13 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequest
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,6 +51,8 @@ public class SecurityConfig {
     );
 
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final ObjectMapper objectMapper;
+    private final UserRepository userRepository;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -115,17 +121,18 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
+            // 직접 생성해 시큐리티 체인에만 등록한다. @Component로 두면 서블릿 컨테이너에도
+            // 자동 등록되어, @Order로 SecurityContext 확립 전 실행 시 once-per-request 우회가 열린다.
+            .addFilterAfter(new AuthenticatedRequestGuardFilter(userRepository, objectMapper),
+                    AuthorizationFilter.class)
+
             .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"status\":401,\"code\":\"UNAUTHORIZED\",\"error\":\"濡쒓렇?몄씠 ?꾩슂?⑸땲??\"}");
-                })
-                .accessDeniedHandler((request, response, denied) -> {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"status\":403,\"code\":\"FORBIDDEN\",\"error\":\"?묎렐 沅뚰븳???놁뒿?덈떎.\"}");
-                })
+                .authenticationEntryPoint((request, response, authException) ->
+                    writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                            "UNAUTHORIZED", "로그인이 필요합니다."))
+                .accessDeniedHandler((request, response, denied) ->
+                    writeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN,
+                            "FORBIDDEN", "접근 권한이 없습니다."))
             )
 
             .oauth2Login(oauth2 -> oauth2
@@ -155,6 +162,18 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    private void writeErrorResponse(HttpServletResponse response, int status,
+                                    String code, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", status);
+        body.put("code", code);
+        body.put("error", message);
+        response.getWriter().write(objectMapper.writeValueAsString(body));
     }
 
     private void logGoogleAuthorizedClientState(OAuth2AuthorizedClientRepository authorizedClientRepository,

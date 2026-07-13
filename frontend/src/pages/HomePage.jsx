@@ -24,8 +24,10 @@ export default function HomePage() {
 
         <div className="mb-8">
           <img
-            src="/logo.png"
+            src="/logo.webp"
             alt="덤핏 로고"
+            width={288}
+            height={288}
             className="w-72 mx-auto drop-shadow-lg"
           />
           <p className="mt-4 text-xl font-extrabold text-dark tracking-wide">
@@ -37,7 +39,7 @@ export default function HomePage() {
           <p>
             해야 할 일들이 우주먼지처럼 뒤엉켜 있나요?<br />
           </p>
-          <p className="my-5 font-dungeon text-[32px] max-sm:text-2xl text-primary leading-tight">
+          <p className="my-5 font-dungeon text-[2rem] max-sm:text-2xl text-primary leading-tight">
             그냥 다 쏟아내세요!
           </p>
           <p>

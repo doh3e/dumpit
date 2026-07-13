@@ -20,6 +20,21 @@ jobs:
       run:
         working-directory: backend
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: dumpit_test
+          POSTGRES_USER: dumpit
+          POSTGRES_PASSWORD: dumpit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dumpit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v4
 
@@ -30,10 +45,17 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Build
+      - name: Build & Test
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: chmod +x gradlew && ./gradlew build -x test --no-daemon
+        run: chmod +x gradlew && ./gradlew build --no-daemon
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-report
+          path: backend/build/reports/tests/test
 
       - name: Prepare Docker artifact
         if: github.ref == 'refs/heads/main'

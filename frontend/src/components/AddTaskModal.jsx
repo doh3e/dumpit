@@ -4,6 +4,7 @@ import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES } from '../constants/categories'
 import AiUsageBadge from './AiUsageBadge'
 import { EstimatedMinutesField, TaskDateTimeField } from './TaskTimeInputs'
+import DeadlineModeField, { getTodayDeadline } from './DeadlineModeField'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 const TASK_CATEGORIES = CATEGORIES.filter((category) => category.value !== 'ROUTINE')
@@ -15,12 +16,6 @@ function formatDateTimeInput(d) {
 
 function getMinDeadlineInput() {
   return formatDateTimeInput(new Date())
-}
-
-function getDefaultDeadline() {
-  const d = new Date()
-  d.setHours(23, 59, 0, 0)
-  return formatDateTimeInput(d)
 }
 
 function getDefaultStartTime() {
@@ -42,20 +37,34 @@ export default function AddTaskModal({ onClose, onCreated }) {
   const [description, setDescription] = useState('')
   const [useStartTime, setUseStartTime] = useState(false)
   const [startTime, setStartTime] = useState('')
-  const [deadline, setDeadline] = useState(getDefaultDeadline)
+  const [deadlineMode, setDeadlineMode] = useState('AI')
+  const [deadline, setDeadline] = useState('')
   const [useEstimatedMinutes, setUseEstimatedMinutes] = useState(false)
   const [estimatedMinutes, setEstimatedMinutes] = useState('')
   const [category, setCategory] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const handleModeChange = (mode) => {
+    setDeadlineMode(mode)
+    if (mode === 'CUSTOM' && !deadline) setDeadline(getTodayDeadline())
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!title.trim()) return
-    if (deadline && new Date(deadline) <= new Date()) {
+    if (deadlineMode === 'CUSTOM' && !deadline) {
+      alert('마감 시간을 입력하거나 다른 마감 옵션을 선택해주세요.')
+      return
+    }
+    const effectiveDeadline =
+      deadlineMode === 'CUSTOM' ? deadline
+      : deadlineMode === 'TODAY' ? getTodayDeadline()
+      : ''
+    if (effectiveDeadline && new Date(effectiveDeadline) <= new Date()) {
       alert('마감일시는 현재 시간 이후로 설정해야 합니다.')
       return
     }
-    if (useStartTime && startTime && deadline && new Date(deadline) <= new Date(startTime)) {
+    if (useStartTime && startTime && effectiveDeadline && new Date(effectiveDeadline) <= new Date(startTime)) {
       alert('마감 시간은 시작 시간 이후로 설정해주세요.')
       return
     }
@@ -66,7 +75,8 @@ export default function AddTaskModal({ onClose, onCreated }) {
         title: title.trim(),
         description: description.trim() || null,
         startTime: useStartTime ? (startTime || null) : null,
-        deadline: deadline || null,
+        deadline: effectiveDeadline || null,
+        noDeadline: deadlineMode === 'NONE',
         estimatedMinutes: useEstimatedMinutes && estimatedMinutes ? parseInt(estimatedMinutes) : null,
         category: category || null,
       })
@@ -117,17 +127,12 @@ export default function AddTaskModal({ onClose, onCreated }) {
         <hr className="border-line" />
 
         <div className="space-y-3">
-          <p className="text-xs font-bold text-sub">
-            시간을 직접 입력하면 그 값을 우선해요. 비워두면 AI가 자동으로 채워줘요.
-          </p>
-
-          <TaskDateTimeField
-            label="마감 시간"
-            value={deadline}
-            min={getMinDeadlineInput()}
-            defaultTimeWhenEmpty="23:59"
-            onChange={(e) => setDeadline(e.target.value)}
-            onClear={() => setDeadline('')}
+          <DeadlineModeField
+            mode={deadlineMode}
+            onModeChange={handleModeChange}
+            deadline={deadline}
+            onDeadlineChange={(e) => setDeadline(e.target.value)}
+            minDeadline={getMinDeadlineInput()}
           />
 
           <div className="flex flex-wrap gap-3">

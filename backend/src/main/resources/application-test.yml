@@ -1,0 +1,57 @@
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/dumpit_test}
+    username: ${TEST_DB_USERNAME:dumpit}
+    password: ${TEST_DB_PASSWORD:dumpit}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        generate_statistics: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6399   # 의도적으로 닫힌 포트 — Redis 부재 degrade 경로가 그대로 테스트됨
+
+  session:
+    store-type: none
+
+  # spring-session-data-redis가 클래스패스에 있어 store-type: none만으로는
+  # RedisSessionRepository가 활성화된다. local 프로파일과 동일하게 세션 자동설정을
+  # 통째로 제외해 톰캣 인메모리 세션을 쓴다(테스트는 세션 영속화가 불필요).
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+
+app:
+  frontend-url: http://localhost:5173
+  cors:
+    allowed-origins: http://localhost:5173
+
+openai:
+  api-key: test-openai-key
+
+mail:
+  resend:
+    api-key: test-resend-key
+  from: test@dumpit.local
+  admin-notification: admin-noti@dumpit.local
+
+sentry:
+  dsn: ""

@@ -37,3 +37,6 @@ dumpit_ai_learning_insight.md
 npm-debug.log*
 backup_*.sql
 .playwright-mcp/
+
+# Python (스프라이트 생성 스크립트)
+__pycache__/

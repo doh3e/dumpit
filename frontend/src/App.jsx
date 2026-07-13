@@ -1,20 +1,37 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense, Component } from 'react'
 import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom'
-import * as Sentry from '@sentry/react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider, notifyToast } from './context/ToastContext'
 import Layout from './components/layout/Layout'
 import HomePage from './pages/HomePage'
-import DashboardPage from './pages/DashboardPage'
-import BrainDumpPage from './pages/BrainDumpPage'
-import IdeaDumpPage from './pages/IdeaDumpPage'
-import RoutinePage from './pages/RoutinePage'
-import ShopPage from './pages/ShopPage'
-import AdminPage from './pages/AdminPage'
-import MyPage from './pages/MyPage'
-import NoticePage from './pages/NoticePage'
-import PrivacyPage from './pages/PrivacyPage'
-import TermsPage from './pages/TermsPage'
+
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const BrainDumpPage = lazy(() => import('./pages/BrainDumpPage'))
+const IdeaDumpPage = lazy(() => import('./pages/IdeaDumpPage'))
+const RoutinePage = lazy(() => import('./pages/RoutinePage'))
+const ShopPage = lazy(() => import('./pages/ShopPage'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
+const MyPage = lazy(() => import('./pages/MyPage'))
+const NoticePage = lazy(() => import('./pages/NoticePage'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const TermsPage = lazy(() => import('./pages/TermsPage'))
+
+/** Sentry 지연 로드와 호환되는 자체 에러 바운더리 — 캐치 시점에 SDK를 불러 전송 */
+class AppErrorBoundary extends Component {
+  state = { hasError: false }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(error) {
+    // sentry.js를 먼저 로드해 init 사이드이펙트를 보장한 뒤 전송 (load 이벤트 전 에러 유실 방지)
+    import('./sentry.js')
+      .then(() => import('@sentry/react'))
+      .then((Sentry) => Sentry.captureException(error))
+      .catch(() => {})
+  }
+  render() {
+    if (this.state.hasError) return <div className="min-h-screen bg-accent" />
+    return this.props.children
+  }
+}
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -47,9 +64,11 @@ function Root() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <Sentry.ErrorBoundary fallback={<div className="min-h-screen bg-accent" />}>
-          <Outlet />
-        </Sentry.ErrorBoundary>
+        <AppErrorBoundary>
+          <Suspense fallback={<div className="min-h-screen bg-accent" />}>
+            <Outlet />
+          </Suspense>
+        </AppErrorBoundary>
       </ToastProvider>
     </AuthProvider>
   )

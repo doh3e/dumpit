@@ -15,6 +15,8 @@ export default {
         dark:        'var(--fg)',
         card:        'var(--card)',
         line:        'var(--line)',
+        chrome:      'var(--chrome-bg)',
+        'chrome-line': 'var(--chrome-line)',
         edge:        'var(--edge)',
         chip:        'var(--chip)',
         sub:         'var(--sub)',

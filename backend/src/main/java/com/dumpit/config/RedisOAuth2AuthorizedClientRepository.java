@@ -1,7 +1,6 @@
 package com.dumpit.config;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +13,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import tools.jackson.core.JacksonException;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -103,7 +103,7 @@ public class RedisOAuth2AuthorizedClientRepository implements OAuth2AuthorizedCl
 
         try {
             redisTemplate.opsForValue().set(key(stored.clientRegistrationId(), principalName), objectMapper.writeValueAsString(stored));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Failed to save OAuth2 authorized client to Redis", e);
         }
     }

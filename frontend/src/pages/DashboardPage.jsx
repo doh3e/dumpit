@@ -1,210 +1,20 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../services/api'
+import api, { getApiErrorMessage } from '../services/api'
+import { notifyToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
-import CircularTimetable from '../components/CircularTimetable/CircularTimetable'
 import MiniCalendar from '../components/MiniCalendar'
 import AddTaskModal from '../components/AddTaskModal'
 import EditTaskModal from '../components/EditTaskModal'
 import TaskBoardModal from '../components/TaskBoardModal'
-import OrbitProgress from '../components/OrbitProgress'
+import NowHeroCard from '../components/dashboard/NowHeroCard'
+import TaskListCard from '../components/dashboard/TaskListCard'
 import PixelBurst from '../components/PixelBurst'
 import RocketLaunch from '../components/RocketLaunch'
-import { getCategory } from '../constants/categories'
+import { parseDate, isSameLocalDate } from '../utils/dates'
 import { calcCompletionCoins } from '../utils/taskRewards'
 
-const STATUS_LABEL = {
-  TODO: { label: '할 예정', color: 'bg-accent border-line text-sub' },
-  IN_PROGRESS: { label: '진행 중', color: 'bg-secondary border-secondary text-on-accent' },
-  DONE: { label: '완료', color: 'bg-chip border-line text-sub' },
-}
-
-/**
- * 백엔드 날짜 파싱 — ISO 문자열 또는 Jackson 배열 [year, month(1-based), day, h, m, s]
- */
-function parseDate(v) {
-  if (!v) return null
-  if (Array.isArray(v)) {
-    return new Date(v[0], (v[1] || 1) - 1, v[2] || 1, v[3] || 0, v[4] || 0, v[5] || 0)
-  }
-  return new Date(v)
-}
-
-function formatDeadline(deadline) {
-  const d = parseDate(deadline)
-  if (!d || isNaN(d)) return null
-  return d.toLocaleString('ko-KR', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function isSameLocalDate(a, b) {
-  return a.getFullYear() === b.getFullYear()
-    && a.getMonth() === b.getMonth()
-    && a.getDate() === b.getDate()
-}
-
-function startOfLocalDay(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
-}
-
-function endOfLocalDay(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999)
-}
-
-function addDays(date, days) {
-  const next = new Date(date)
-  next.setDate(next.getDate() + days)
-  return next
-}
-
-function getUrgencyInfo(deadline) {
-  const d = parseDate(deadline)
-  if (!d || isNaN(d)) return null
-  const now = new Date()
-  const diffMs = d - now
-  if (diffMs <= 0) return { text: '마감 지남!', level: 'red' }
-  const diffMin = Math.floor(diffMs / 60000)
-  const diffH = Math.floor(diffMin / 60)
-  const remainMin = diffMin % 60
-  if (diffH < 6) return { text: diffH > 0 ? `${diffH}시간 ${remainMin}분 남음!` : `${diffMin}분 남음!`, level: 'red' }
-  if (diffH < 12) return { text: `${diffH}시간 ${remainMin}분 남음!`, level: 'orange' }
-  if (diffH < 24) return { text: `${diffH}시간 남음`, level: 'yellow' }
-  const diffDays = Math.floor(diffH / 24)
-  if (diffDays <= 3) return { text: `${diffDays}일 남음`, level: null }
-  return null
-}
-
-function groupByParent(list) {
-  const byId = new Map(list.map((t) => [t.taskId, t]))
-  const childrenOf = new Map()
-  for (const t of list) {
-    if (t.parentTaskId && byId.has(t.parentTaskId)) {
-      if (!childrenOf.has(t.parentTaskId)) childrenOf.set(t.parentTaskId, [])
-      childrenOf.get(t.parentTaskId).push(t)
-    }
-  }
-  const result = []
-  for (const t of list) {
-    if (t.parentTaskId && byId.has(t.parentTaskId)) continue
-    result.push(t)
-    const kids = childrenOf.get(t.taskId)
-    if (kids) result.push(...kids)
-  }
-  return result
-}
-
-function getDashboardBucket(task, now = new Date()) {
-  const deadline = parseDate(task.deadline)
-  if (!deadline || Number.isNaN(deadline.getTime())) return 4
-  if (deadline < now) return 0
-  if (deadline <= endOfLocalDay(now)) return 1
-  if (deadline <= endOfLocalDay(addDays(now, 3))) return 2
-  if (deadline <= endOfLocalDay(addDays(now, 7))) return 3
-  return 4
-}
-
-function sortDashboardTasks(tasks) {
-  const now = new Date()
-  return [...tasks].sort((a, b) => {
-    const bucketA = getDashboardBucket(a, now)
-    const bucketB = getDashboardBucket(b, now)
-    if (bucketA !== bucketB) return bucketA - bucketB
-
-    const priorityA = a.effectivePriority ?? -1
-    const priorityB = b.effectivePriority ?? -1
-    if (priorityA !== priorityB) return priorityB - priorityA
-
-    const deadlineA = parseDate(a.deadline)?.getTime() ?? Number.MAX_SAFE_INTEGER
-    const deadlineB = parseDate(b.deadline)?.getTime() ?? Number.MAX_SAFE_INTEGER
-    return deadlineA - deadlineB
-  })
-}
-
-function getBucketLabel(task) {
-  const bucket = getDashboardBucket(task)
-  if (bucket === 0) return '마감 지남'
-  if (bucket === 1) return '오늘'
-  if (bucket === 2) return '3일 내'
-  if (bucket === 3) return '일주일 내'
-  return '그 외'
-}
-
-function getFocusRecommendation(tasks) {
-  const now = new Date()
-  let best = null
-
-  tasks
-    .filter((task) => task.status !== 'DONE' && task.status !== 'CANCELLED')
-    .forEach((task) => {
-      const start = parseDate(task.startTime)
-      const end = parseDate(task.endTime)
-      const deadline = parseDate(task.deadline)
-      const priority = task.effectivePriority ?? 0.5
-      const reasons = []
-      let score = priority * 40
-
-      if (start && end && start <= now && now < end) {
-        score += 120
-        reasons.push('지금 진행 중인 고정 시간대에 있어요.')
-      } else if (start && start > now && startOfLocalDay(start).getTime() === startOfLocalDay(now).getTime()) {
-        score -= 40
-      }
-
-      if (deadline && !Number.isNaN(deadline.getTime())) {
-        const diffHours = (deadline.getTime() - now.getTime()) / 3600000
-        if (diffHours < 0) {
-          score += 100
-          reasons.push('마감 시간이 이미 지나서 먼저 정리하는 게 좋아요.')
-        } else if (deadline <= endOfLocalDay(now)) {
-          score += 80
-          reasons.push('오늘 마감이라 시간 압박이 커요.')
-        } else if (deadline <= endOfLocalDay(addDays(now, 3))) {
-          score += 55
-          reasons.push('3일 안에 마감돼서 미리 시작하기 좋아요.')
-        } else if (deadline <= endOfLocalDay(addDays(now, 7))) {
-          score += 30
-          reasons.push('일주일 안에 마감되는 일이에요.')
-        }
-      }
-
-      if (priority >= 0.75) {
-        reasons.push('중요도가 높은 편이에요.')
-      }
-      if (task.estimatedMinutes && task.estimatedMinutes <= 40) {
-        score += 8
-        reasons.push(`${task.estimatedMinutes}분 정도라 한 번 집중하기 좋아요.`)
-      }
-
-      if (reasons.length === 0) {
-        reasons.push('마감과 중요도를 같이 봤을 때 지금 후보로 좋아요.')
-      }
-
-      if (!best || score > best.score) {
-        best = { task, score, reasons: reasons.slice(0, 2) }
-      }
-    })
-
-  return best
-}
-
-const URGENCY_STYLE = {
-  red: {
-    badge: 'bg-primary text-on-accent border-primary',
-    card: 'tone-overdue',
-  },
-  orange: {
-    badge: 'bg-warn text-on-accent border-warn',
-    card: 'tone-urgent-soon',
-  },
-  yellow: {
-    badge: 'bg-chip text-dark border-line',
-    card: 'tone-chip',
-  },
-}
+const SECTION_KEYS = ['overdue', 'today', 'tomorrow', 'next7Days', 'later', 'someday', 'recentDone']
 
 function replaceTask(list, updatedTask) {
   if (!Array.isArray(list) || !updatedTask?.taskId) return list
@@ -217,12 +27,9 @@ function replacePlanningTask(planning, updatedTask) {
   const nextSections = planning.sections
     ? {
         ...planning.sections,
-        today: replaceTask(planning.sections.today, updatedTask),
-        next3Days: replaceTask(planning.sections.next3Days, updatedTask),
-        next7Days: replaceTask(planning.sections.next7Days, updatedTask),
-        later: replaceTask(planning.sections.later, updatedTask),
-        overdue: replaceTask(planning.sections.overdue, updatedTask),
-        recentDone: replaceTask(planning.sections.recentDone, updatedTask),
+        ...Object.fromEntries(
+          SECTION_KEYS.map((key) => [key, replaceTask(planning.sections[key], updatedTask)])
+        ),
       }
     : planning.sections
 
@@ -239,7 +46,6 @@ function replacePlanningTask(planning, updatedTask) {
   return {
     ...planning,
     tasks: replaceTask(planning.tasks, updatedTask),
-    timedTasks: replaceTask(planning.timedTasks, updatedTask),
     sections: nextSections,
     nowSuggestion,
     focusRecommendations: Array.isArray(planning.focusRecommendations)
@@ -290,6 +96,24 @@ export default function DashboardPage() {
     fetchTasks()
   }, [fetchTasks])
 
+  const handleStickerChange = useCallback(async (task, code) => {
+    const previousCode = task.stickerCode ?? null
+    const optimisticTask = { ...task, stickerCode: code }
+    setTasks((prev) => replaceTask(prev, optimisticTask))
+    setPlanning((prev) => replacePlanningTask(prev, optimisticTask))
+    try {
+      const res = await api.put(`/tasks/${task.taskId}/sticker`, { code })
+      setTasks((prev) => replaceTask(prev, res.data))
+      setPlanning((prev) => replacePlanningTask(prev, res.data))
+      window.dispatchEvent(new CustomEvent('dumpit:tasks-updated'))
+    } catch (err) {
+      const rollbackTask = { ...task, stickerCode: previousCode }
+      setTasks((prev) => replaceTask(prev, rollbackTask))
+      setPlanning((prev) => replacePlanningTask(prev, rollbackTask))
+      notifyToast(getApiErrorMessage(err, '스티커를 변경하지 못했어요.'))
+    }
+  }, [])
+
   const toggleStatus = async (task, event) => {
     const next = task.status === 'DONE' ? 'TODO' : 'DONE'
     const clickX = event?.clientX
@@ -314,46 +138,32 @@ export default function DashboardPage() {
   }
 
   const taskList = Array.isArray(tasks) ? tasks : []
+  const sections = planning?.sections || null
 
-  const activeTaskBase = useMemo(
-    () => taskList.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED'),
-    [taskList]
-  )
-  const activeTasks = useMemo(
-    () => {
-      const sections = planning?.sections
-      if (sections) {
-        return groupByParent([
-          ...(sections.overdue || []),
-          ...(sections.today || []),
-          ...(sections.next3Days || []),
-          ...(sections.next7Days || []),
-          ...(sections.later || []),
-        ])
-      }
-      return groupByParent(sortDashboardTasks(activeTaskBase))
-    },
-    [activeTaskBase, planning]
-  )
-  const focusRecommendation = useMemo(
-    () => planning ? (planning.focusRecommendations?.[0] || null) : getFocusRecommendation(activeTaskBase),
-    [activeTaskBase, planning]
-  )
-  const nowSuggestion = planning?.nowSuggestion || (focusRecommendation
-    ? {
-        type: 'OPEN_SLOT',
-        title: '지금은 비어 있는 시간이에요.',
-        message: '25분 정도 집중하기 좋은 일을 골라봤어요.',
-        task: focusRecommendation.task,
-      }
-    : null)
-  const doneTasks = useMemo(() => taskList
-    .filter((t) => t.status === 'DONE')
-    .sort((a, b) => {
-      const aTime = parseDate(a.completedAt)?.getTime() ?? 0
-      const bTime = parseDate(b.completedAt)?.getTime() ?? 0
-      return bTime - aTime
-    }), [taskList])
+  const heroTaskId = planning?.nowSuggestion?.task?.taskId ?? null
+  // 미니 큐: 오늘 남은 일(마감순) 우선, 모자라면 추천 상위로 채움
+  const heroQueue = useMemo(() => {
+    const seen = new Set(heroTaskId != null ? [heroTaskId] : [])
+    const queue = []
+    const todayByDeadline = [...(planning?.sections?.today || [])].sort((a, b) => {
+      const ad = parseDate(a.deadline)?.getTime() ?? Number.MAX_SAFE_INTEGER
+      const bd = parseDate(b.deadline)?.getTime() ?? Number.MAX_SAFE_INTEGER
+      return ad - bd
+    })
+    for (const task of todayByDeadline) {
+      if (queue.length >= 2) break
+      if (seen.has(task.taskId)) continue
+      seen.add(task.taskId)
+      queue.push({ task, bucket: 'TODAY' })
+    }
+    for (const recommendation of planning?.focusRecommendations || []) {
+      if (queue.length >= 2) break
+      if (!recommendation.task || seen.has(recommendation.task.taskId)) continue
+      seen.add(recommendation.task.taskId)
+      queue.push(recommendation)
+    }
+    return queue
+  }, [planning, heroTaskId])
 
   // 오늘 진행률 (궤도 링) — 마감이 오늘인 태스크 기준
   const { todayDone, todayTotal } = useMemo(() => {
@@ -361,7 +171,7 @@ export default function DashboardPage() {
     const todayAll = taskList.filter((t) => {
       if (t.status === 'CANCELLED') return false
       const d = parseDate(t.deadline)
-      return d && !isNaN(d) && isSameLocalDate(d, now)
+      return d && isSameLocalDate(d, now)
     })
     return {
       todayDone: todayAll.filter((t) => t.status === 'DONE').length,
@@ -369,23 +179,16 @@ export default function DashboardPage() {
     }
   }, [taskList])
 
-  const heroTime = useMemo(() => {
-    const d = parseDate(nowSuggestion?.task?.deadline)
-    if (!d || isNaN(d)) return null
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-  }, [nowSuggestion])
-
-  // 하루 전체 완료 → 로켓 발사 (거짓→참 전환 시 1회, 하루 1번)
+  // 하루 전체 완료 → 로켓 발사 (거짓→참 전환마다 매번, 페이지 로드 시 이미 전체 완료 상태면 재생 안 함)
   const allDoneToday = todayTotal > 0 && todayDone === todayTotal
-  const prevAllDone = useRef(allDoneToday)
+  const prevAllDone = useRef(null)
   useEffect(() => {
-    if (allDoneToday && !prevAllDone.current && !loading) {
-      const key = `dumpit-rocket-${new Date().toISOString().slice(0, 10)}`
-      if (!sessionStorage.getItem(key)) {
-        sessionStorage.setItem(key, '1')
-        setShowRocket(true)
-      }
+    if (loading) return
+    if (prevAllDone.current === null) {
+      prevAllDone.current = allDoneToday
+      return
     }
+    if (allDoneToday && !prevAllDone.current) setShowRocket(true)
     prevAllDone.current = allDoneToday
   }, [allDoneToday, loading])
 
@@ -398,23 +201,18 @@ export default function DashboardPage() {
             오늘의 할 일을 확인하고 시간을 효율적으로 관리해보세요
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 [&>*]:grow">
           <button
             onClick={() => setShowTaskBoard(true)}
-            className="btn-retro text-sm"
+            disabled={!sections}
+            className="btn-retro text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             태스크 전체 보기
           </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="btn-retro-secondary text-sm"
-          >
+          <button onClick={() => setShowAddModal(true)} className="btn-retro-secondary text-sm">
             태스크 추가
           </button>
-          <Link
-            to="/brain-dump"
-            className="btn-retro-primary text-sm"
-          >
+          <Link to="/brain-dump" className="btn-retro-primary text-sm">
             브레인 덤프
           </Link>
         </div>
@@ -424,200 +222,40 @@ export default function DashboardPage() {
         <div className="card-retro text-center py-12">
           <p className="font-bold text-sub">불러오는 중...</p>
         </div>
+      ) : !planning ? (
+        <div className="card-retro text-center py-12">
+          <p className="font-extrabold text-dark text-base">할 일을 불러오지 못했어요</p>
+          <p className="text-xs text-sub mt-2">잠시 후 새로고침 해주세요</p>
+        </div>
       ) : (
         <>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="card-retro">
-            <div className="mb-4 flex flex-wrap items-baseline gap-2">
-              <h3 className="font-galmuri font-bold text-dark">오늘 일과표</h3>
-              <span className="text-[10px] font-bold text-sub">시간이 정해진 일과 오늘의 흐름을 보여줘요.</span>
+          <NowHeroCard
+            nowSuggestion={planning.nowSuggestion}
+            queue={heroQueue}
+            todayDone={todayDone}
+            todayTotal={todayTotal}
+            allDone={allDoneToday}
+            onComplete={toggleStatus}
+            onEdit={setEditingTask}
+          />
+
+          {/* 사이드바 몫을 빼면 lg에선 칸이 너무 좁아 달력이 비좁다 — xl부터 2열 */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <TaskListCard
+              sections={sections}
+              onToggle={toggleStatus}
+              onEdit={setEditingTask}
+              onStickerChange={handleStickerChange}
+            />
+
+            <div className="card-retro">
+              <div className="flex items-baseline gap-2 mb-4">
+                <h3 className="font-galmuri font-bold text-dark">달력</h3>
+                <span className="text-[0.625rem] text-sub font-medium">날짜를 클릭해서 일정을 태스크로 추가해보세요!</span>
+              </div>
+              <MiniCalendar tasks={taskList} onTaskAdded={fetchTasks} />
             </div>
-            {allDoneToday && (
-              <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
-                <div className="flex-1 min-w-[180px]">
-                  <p className="label-retro mb-2">지금 할 일</p>
-                  <p className="font-galmuri font-bold text-[22px] max-sm:text-[19px] leading-tight text-dark">
-                    오늘 다 비웠어요 🚀
-                  </p>
-                  <p className="text-xs text-sub mt-1">머릿속이 가벼워졌네요. 내일 또 만나요.</p>
-                </div>
-                <OrbitProgress done={todayDone} total={todayTotal} />
-              </div>
-            )}
-            {!allDoneToday && nowSuggestion && !nowSuggestion.task && (
-              <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
-                <div className="flex-1 min-w-[180px]">
-                  <p className="label-retro mb-2">지금 할 일</p>
-                  <p className="font-galmuri font-bold text-[22px] max-sm:text-[19px] leading-tight text-dark">
-                    {nowSuggestion.title}
-                  </p>
-                  <p className="text-xs text-sub mt-1">{nowSuggestion.message}</p>
-                </div>
-                <OrbitProgress done={todayDone} total={todayTotal} />
-              </div>
-            )}
-            {!allDoneToday && nowSuggestion?.task && (
-              <div className="card-retro-hero mb-4 flex flex-wrap items-center gap-4 p-4">
-                <div className="flex-1 min-w-[180px]">
-                  <p className="label-retro mb-2">지금 할 일</p>
-                  <button
-                    type="button"
-                    onClick={() => setEditingTask(nowSuggestion.task)}
-                    className="block max-w-full truncate text-left font-galmuri font-bold text-[22px] max-sm:text-[19px] leading-tight text-dark hover:text-primary transition-colors"
-                    title={nowSuggestion.task.title}
-                  >
-                    {nowSuggestion.task.title}
-                  </button>
-                  {heroTime && (
-                    <p className="font-dungeon text-[19px] text-primary mt-1">{heroTime}</p>
-                  )}
-                  <p className="text-xs text-sub mt-1">{nowSuggestion.message}</p>
-                </div>
-                <OrbitProgress done={todayDone} total={todayTotal} />
-              </div>
-            )}
-            <CircularTimetable tasks={planning?.timedTasks || activeTaskBase} />
           </div>
-
-          <div className="card-retro">
-            <div className="flex items-baseline gap-2 mb-4">
-              <h3 className="font-galmuri font-bold text-dark">달력</h3>
-              <span className="text-[10px] text-sub font-medium">날짜를 클릭해서 일정을 태스크로 추가해보세요!</span>
-            </div>
-            <MiniCalendar tasks={taskList} onTaskAdded={fetchTasks} />
-          </div>
-
-          <div className="card-retro">
-            <h3 className="font-galmuri font-bold text-dark mb-4">
-              해야 할 일 ({activeTasks.length})
-            </h3>
-
-            {activeTasks.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="font-extrabold text-dark text-base">
-                  {taskList.length === 0 ? '아직 할 일이 없어요!' : '모든 할 일 완료!'}
-                </p>
-                <p className="text-xs text-sub mt-2">
-                  브레인 덤프나 직접 추가를 통해 시작해보세요
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-                {activeTasks.map((task) => {
-                  const { label, color } = STATUS_LABEL[task.status] ?? STATUS_LABEL.TODO
-                  const urgency = getUrgencyInfo(task.deadline)
-                  const uStyle = urgency?.level ? URGENCY_STYLE[urgency.level] : null
-                  const cat = getCategory(task.category)
-                  const isChild = !!task.parentTaskId
-                  return (
-                    <div
-                      key={task.taskId}
-                      className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-colors ${
-                        uStyle ? uStyle.card : 'border-line hover:border-edge'
-                      } ${isChild ? 'ml-6 border-l-4 border-l-secondary' : ''}`}
-                    >
-                      <button
-                        onClick={(e) => toggleStatus(task, e)}
-                        aria-label="완료 처리"
-                        className="mt-0.5 w-5 h-5 rounded bg-card flex-shrink-0 hover:bg-primary transition-colors"
-                        style={{ border: '1.5px solid var(--edge)' }}
-                      />
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-line bg-card text-sub">
-                            {getBucketLabel(task)}
-                          </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${color}`}>
-                            {label}
-                          </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cat.color}`}>
-                            {cat.emoji} {cat.label}
-                          </span>
-                          {isChild && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-chip border border-line rounded-full text-secondary">
-                              ↳ 서브
-                            </span>
-                          )}
-                          {urgency && (
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                              uStyle ? uStyle.badge : 'bg-accent text-dark border-line'
-                            }`}>
-                              {urgency.text}
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-1 font-galmuri galmuri-semibold text-dark text-sm truncate">
-                          {task.title}
-                        </p>
-                        <p className="text-[10px] text-sub font-medium mt-0.5">
-                          {task.deadline && `마감 ${formatDeadline(task.deadline)}`}
-                          {task.estimatedMinutes && ` · ${task.estimatedMinutes}분`}
-                          {task.effectivePriority != null && ` · P ${Math.round(task.effectivePriority * 100)}`}
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={() => setEditingTask(task)}
-                        className="mt-0.5 text-xs font-bold text-sub hover:text-primary transition-colors flex-shrink-0"
-                      >
-                        수정
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="card-retro">
-            <h3 className="font-galmuri font-bold text-dark mb-4">
-              완료한 일 ({doneTasks.length})
-            </h3>
-
-            {doneTasks.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="font-bold text-sub text-sm">
-                  아직 완료한 항목이 없어요
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-                {doneTasks.map((task) => (
-                  <div
-                    key={task.taskId}
-                    className="flex items-center gap-3 p-3 rounded-lg border-2 border-line opacity-60"
-                  >
-                    <button
-                      onClick={() => toggleStatus(task)}
-                      aria-label="완료 취소"
-                      className="w-5 h-5 rounded bg-primary flex-shrink-0 flex items-center justify-center"
-                      style={{ border: '1.5px solid var(--accent)' }}
-                    >
-                      <span className="text-on-accent text-[10px] font-bold">V</span>
-                    </button>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="font-galmuri galmuri-semibold text-dark text-sm line-through truncate">
-                        {task.title}
-                      </p>
-                      <p className="text-[10px] text-sub font-medium">
-                        {task.deadline && `마감 ${formatDeadline(task.deadline)}`}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => setEditingTask(task)}
-                      className="text-xs font-bold text-sub hover:text-primary transition-colors flex-shrink-0"
-                    >
-                      수정
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
         </>
       )}
 
@@ -628,10 +266,9 @@ export default function DashboardPage() {
         />
       )}
 
-      {showTaskBoard && (
+      {showTaskBoard && sections && (
         <TaskBoardModal
-          tasks={taskList}
-          sections={planning?.sections}
+          sections={sections}
           onClose={() => setShowTaskBoard(false)}
           onEditTask={(task) => {
             setShowTaskBoard(false)
@@ -665,7 +302,7 @@ export default function DashboardPage() {
           <div className="card-retro !py-3 !px-5 bg-secondary flex items-center gap-3">
             <span className="font-dungeon text-2xl text-on-accent">+{coinToast.coins} C</span>
             <div>
-              <p className="text-[10px] font-bold text-on-accent opacity-70">완료!</p>
+              <p className="text-[0.625rem] font-bold text-on-accent opacity-70">완료!</p>
               <p className="text-xs font-extrabold text-on-accent truncate max-w-[200px]">{coinToast.taskTitle}</p>
             </div>
           </div>

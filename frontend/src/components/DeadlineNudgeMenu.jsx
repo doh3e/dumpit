@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
+import { parseDate } from '../utils/dates'
+import deadlineAlarm from '../assets/deadline_alarm.png'
 
 const NOTIFIED_KEY = 'dumpit.deadlineNudges.notified'
 const THRESHOLDS_KEY = 'dumpit_notification_thresholds'
@@ -24,14 +26,6 @@ function getSelectedThresholds() {
     if (saved) return JSON.parse(saved)
   } catch {}
   return DEFAULT_THRESHOLDS
-}
-
-function parseDate(value) {
-  if (!value) return null
-  if (Array.isArray(value)) {
-    return new Date(value[0], (value[1] || 1) - 1, value[2] || 1, value[3] || 0, value[4] || 0, value[5] || 0)
-  }
-  return new Date(value)
 }
 
 function formatDeadline(value) {
@@ -78,16 +72,6 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
       .then((res) => setNudges(res.data))
       .catch(() => setNudges([]))
   }, [])
-
-  const requestPermission = async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      setPermission('unsupported')
-      return
-    }
-
-    const result = await window.Notification.requestPermission()
-    setPermission(result)
-  }
 
   useEffect(() => {
     if (!open) return
@@ -179,7 +163,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
         onClick={() => setOpen((value) => !value)}
         className={isCard
           ? 'w-full rounded-lg border-2 tone-urgent-soon px-2 py-2 text-center transition-colors'
-          : `flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-extrabold text-sm transition-colors ${
+          : `flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-dungeon text-sm transition-colors ${
               urgentCount > 0
                 ? 'bg-chip border-line text-warn'
                 : 'bg-chip border-line text-sub hover:text-dark'
@@ -189,23 +173,17 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
       >
         {isCard ? (
           <>
-            <span className={`mx-auto mb-1 flex h-5 w-5 items-center justify-center rounded-full border-2 text-[11px] font-black leading-none ${
-              urgentCount > 0
-                ? 'border-warn bg-warn text-on-accent'
-                : 'border-line bg-card text-sub'
-            }`}>
-              !
-            </span>
-            <p className="text-[10px] font-black text-sub">마감</p>
-            <p className={`text-sm font-black ${urgentCount > 0 ? 'text-dark' : 'text-sub'}`}>
+            <img src={deadlineAlarm} alt="" className="mx-auto mb-1 h-5 w-5 object-contain" />
+            <p className="text-[0.625rem] font-black text-sub">마감</p>
+            <p className={`font-dungeon text-sm ${urgentCount > 0 ? 'text-dark' : 'text-sub'}`}>
               {urgentCount > 9 ? '9+' : urgentCount}
             </p>
           </>
         ) : (
           <>
-            <span className="text-xs leading-none">!</span>
+            <img src={deadlineAlarm} alt="" className="w-4 h-4 object-contain" />
             {urgentCount > 0 && (
-              <span className="text-sm font-extrabold leading-none">
+              <span className="text-sm leading-none">
                 {urgentCount > 9 ? '9+' : urgentCount}
               </span>
             )}
@@ -214,11 +192,13 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))]">
+        /* 앵커(알약/카드) 기준이 아니라 뷰포트 기준 — 좁은 화면에서 왼쪽으로 잘려나가지 않게
+           상단바(h-20) 바로 아래 우측에 고정 */
+        <div className="fixed right-4 top-[5.5rem] z-50 w-[min(22rem,calc(100vw-2rem))]">
           <div className="card-retro !p-3 bg-card">
             <div className="flex items-center justify-between gap-3 px-1 pb-2 border-b-2 border-line">
               <p className="text-sm font-black text-dark">마감 임박</p>
-              <span className="text-[10px] font-extrabold text-sub">24시간 이내</span>
+              <span className="text-[0.625rem] font-extrabold text-sub">24시간 이내</span>
             </div>
 
             {urgentCount === 0 ? (
@@ -243,7 +223,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                       <p className="min-w-0 flex-1 truncate text-sm font-extrabold text-dark">
                         {task.title}
                       </p>
-                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black ${
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[0.625rem] font-black ${
                         task.overdue
                           ? 'border-primary bg-primary text-on-accent'
                           : 'border-warn bg-warn text-on-accent'
@@ -251,7 +231,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                         {formatRemaining(task.deadline)}
                       </span>
                     </div>
-                    <p className="mt-1 text-[11px] font-semibold text-sub">
+                    <p className="mt-1 text-[0.6875rem] font-semibold text-sub">
                       마감 {formatDeadline(task.deadline)}
                     </p>
                   </Link>

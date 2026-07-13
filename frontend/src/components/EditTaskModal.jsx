@@ -5,6 +5,7 @@ import { CATEGORIES } from '../constants/categories'
 import SubtaskProposalModal from './SubtaskProposalModal'
 import AiUsageBadge from './AiUsageBadge'
 import { EstimatedMinutesField, TaskDateTimeField } from './TaskTimeInputs'
+import DeadlineModeField, { getTodayDeadline } from './DeadlineModeField'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 const TASK_CATEGORIES = CATEGORIES.filter((category) => category.value !== 'ROUTINE')
@@ -26,6 +27,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   const [title, setTitle] = useState(task.title || '')
   const [description, setDescription] = useState(task.description || '')
   const [deadline, setDeadline] = useState(initialDeadline)
+  const [deadlineMode, setDeadlineMode] = useState(task.deadline ? 'CUSTOM' : 'NONE')
   const [useStartTime, setUseStartTime] = useState(!!initialStartTime)
   const [startTime, setStartTime] = useState(initialStartTime)
   const [useEstimatedMinutes, setUseEstimatedMinutes] = useState(task.estimatedMinutes != null)
@@ -40,14 +42,27 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   const [saving, setSaving] = useState(false)
   const [reanalyzing, setReanalyzing] = useState(false)
 
+  const handleModeChange = (mode) => {
+    setDeadlineMode(mode)
+    if (mode === 'CUSTOM' && !deadline) setDeadline(getTodayDeadline())
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!title.trim()) return
-    if (deadline && deadline !== initialDeadline && new Date(deadline) <= new Date()) {
+    if (deadlineMode === 'CUSTOM' && !deadline) {
+      alert('마감 시간을 입력하거나 다른 마감 옵션을 선택해주세요.')
+      return
+    }
+    const effectiveDeadline =
+      deadlineMode === 'CUSTOM' ? deadline
+      : deadlineMode === 'TODAY' ? getTodayDeadline()
+      : ''
+    if (effectiveDeadline && effectiveDeadline !== initialDeadline && new Date(effectiveDeadline) <= new Date()) {
       alert('마감일시는 현재 시간 이후로 설정해야 합니다.')
       return
     }
-    if (startTime && deadline && new Date(deadline) <= new Date(startTime)) {
+    if (startTime && effectiveDeadline && new Date(effectiveDeadline) <= new Date(startTime)) {
       alert('마감 시간은 시작 시간 이후로 설정해주세요.')
       return
     }
@@ -57,7 +72,8 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
       const payload = {
         title: title.trim(),
         description: description.trim() || null,
-        deadline: deadline || null,
+        deadline: effectiveDeadline || null,
+        noDeadline: deadlineMode === 'NONE',
         estimatedMinutes: useEstimatedMinutes && estimatedMinutes ? parseInt(estimatedMinutes) : null,
         userPriorityScore: priorityScore,
         category,
@@ -118,13 +134,12 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         </div>
 
         <div className="space-y-3">
-          <TaskDateTimeField
-            label="마감 시간 (비워두면 AI가 자동 설정)"
-            value={deadline}
-            min={!deadline || new Date(deadline) > new Date() ? getMinDeadlineInput() : undefined}
-            defaultTimeWhenEmpty="23:59"
-            onChange={(e) => setDeadline(e.target.value)}
-            onClear={() => setDeadline('')}
+          <DeadlineModeField
+            mode={deadlineMode}
+            onModeChange={handleModeChange}
+            deadline={deadline}
+            onDeadlineChange={(e) => setDeadline(e.target.value)}
+            minDeadline={!deadline || new Date(deadline) > new Date() ? getMinDeadlineInput() : undefined}
           />
 
           <div className="flex flex-wrap gap-3">
@@ -195,7 +210,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
               <button
                 type="button"
                 onClick={() => setPriorityScore(task.aiPriorityScore ?? 0.5)}
-                className="ml-2 text-[10px] text-primary underline"
+                className="ml-2 text-[0.625rem] text-primary underline"
               >
                 AI 점수로 초기화
               </button>
@@ -210,7 +225,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             onChange={(e) => setPriorityScore(parseFloat(e.target.value))}
             className="w-full accent-primary"
           />
-          <div className="flex justify-between text-[10px] text-sub font-bold mt-1">
+          <div className="flex justify-between text-[0.625rem] text-sub font-bold mt-1">
             <span>낮음</span>
             <span>보통</span>
             <span>높음</span>

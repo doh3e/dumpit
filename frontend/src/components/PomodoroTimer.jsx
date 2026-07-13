@@ -216,9 +216,22 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
   const isFocus = mode === MODE.FOCUS
   const isDesktop = typeof window !== 'undefined' && Boolean(window.dumpitDesktop)
 
+  // 유휴 중 테마/스킨 변경 감지 — applyTheme·applySkins 모두 <html> dataset을 바꾸므로 observer 하나로 커버
+  const [skinTick, setSkinTick] = useState(0)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.dumpitDesktop) return undefined
+    const observer = new MutationObserver(() => setSkinTick((t) => t + 1))
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'data-skin-pomodoro'],
+    })
+    return () => observer.disconnect()
+  }, [])
+
   useEffect(() => {
     if (typeof window === 'undefined' || !window.dumpitDesktop?.updatePomodoroState) return
 
+    const style = getComputedStyle(document.documentElement)
     window.dumpitDesktop.updatePomodoroState({
       active: true,
       mode,
@@ -228,8 +241,14 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       taskTitle: selectedTask?.title || '',
       selectedTaskId: String(selectedTaskId || ''),
       tasks: desktopTasks,
+      colors: {
+        focus: style.getPropertyValue('--pomo-focus').trim(),
+        break: style.getPropertyValue('--pomo-break').trim(),
+        ring: style.getPropertyValue('--pomo-ring').trim(),
+        soft: style.getPropertyValue('--pomo-soft').trim(),
+      },
     })
-  }, [mode, min, sec, running, progress, selectedTask, selectedTaskId, desktopTasks])
+  }, [mode, min, sec, running, progress, selectedTask, selectedTaskId, desktopTasks, skinTick])
 
   useEffect(() => {
     return () => {
@@ -259,11 +278,10 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     <div className={`flex flex-col items-center gap-2 ${compact ? 'p-2' : 'p-3'}`}>
       {/* Mode label + settings button */}
       <div className="flex items-center gap-2">
-        <div className={`text-[10px] font-black px-3 py-1 rounded-full border border-edge ${
-          isFocus
-            ? 'bg-primary text-on-accent'
-            : 'bg-secondary text-on-accent'
-        }`}>
+        <div
+          className="text-[0.625rem] font-black px-3 py-1 rounded-full border border-edge text-on-accent"
+          style={{ background: isFocus ? 'var(--pomo-focus)' : 'var(--pomo-break)' }}
+        >
           {isFocus ? 'FOCUS' : 'BREAK'}
         </div>
         {isDesktop && (
@@ -288,9 +306,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
 
       {/* Settings panel */}
       {showSettings && (
-        <div className="w-full bg-accent border border-line rounded-lg p-2 space-y-2">
+        <div className="w-full border border-line rounded-lg p-2 space-y-2" style={{ background: 'var(--pomo-soft)' }}>
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[10px] font-bold text-sub">집중 (분)</label>
+            <label className="text-[0.625rem] font-bold text-sub">집중 (분)</label>
             <input
               type="number"
               min={MIN_MIN}
@@ -301,7 +319,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
             />
           </div>
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[10px] font-bold text-sub">휴식 (분)</label>
+            <label className="text-[0.625rem] font-bold text-sub">휴식 (분)</label>
             <input
               type="number"
               min={MIN_MIN}
@@ -313,7 +331,8 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           </div>
           <button
             onClick={() => saveSettings(focusMin, breakMin)}
-            className="w-full btn-retro-primary text-[10px] py-1.5"
+            className="w-full btn-retro text-on-accent text-[0.625rem] py-1.5"
+            style={{ background: 'var(--pomo-focus)' }}
           >
             적용
           </button>
@@ -326,13 +345,13 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           <circle
             cx="50" cy="50" r="42"
             fill="none"
-            stroke="var(--line)"
+            stroke="var(--pomo-ring)"
             strokeWidth="6"
           />
           <circle
             cx="50" cy="50" r="42"
             fill="none"
-            stroke={isFocus ? 'var(--accent)' : 'var(--accent2)'}
+            stroke={isFocus ? 'var(--pomo-focus)' : 'var(--pomo-break)'}
             strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 42}`}
@@ -352,7 +371,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         <select
           value={selectedTaskId}
           onChange={(e) => setSelectedTaskId(e.target.value)}
-          className="w-full text-[10px] font-bold border border-line rounded-lg px-2 py-1.5 bg-card truncate"
+          className="w-full text-[0.625rem] font-bold border border-line rounded-lg px-2 py-1.5 bg-card truncate"
         >
           <option value="">집중할 태스크 선택</option>
           {activeTasks.map((t) => (
@@ -367,11 +386,8 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       <div className="flex items-center gap-2 w-full">
         <button
           onClick={toggle}
-          className={`btn-retro flex-1 text-xs py-2 ${
-            running
-              ? 'bg-accent text-dark'
-              : 'bg-primary text-on-accent'
-          }`}
+          style={{ background: running ? 'var(--pomo-soft)' : 'var(--pomo-focus)' }}
+          className={`btn-retro flex-1 text-xs py-2 ${running ? 'text-dark' : 'text-on-accent'}`}
         >
           {running ? '일시정지' : isFocus ? '집중시작' : '쉬기시작'}
         </button>
@@ -385,7 +401,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
 
       {/* Completed count */}
       {completedCount > 0 && (
-        <p className="text-[10px] font-bold text-sub">
+        <p className="text-[0.625rem] font-bold text-sub">
           오늘 {completedCount}회 집중 완료
         </p>
       )}

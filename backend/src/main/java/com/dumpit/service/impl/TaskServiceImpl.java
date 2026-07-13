@@ -12,6 +12,7 @@ import com.dumpit.service.ActivityLogService;
 import com.dumpit.service.AiUsageService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
+import com.dumpit.service.ShopService;
 import com.dumpit.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class TaskServiceImpl implements TaskService {
     private final DeadlineNudgeService deadlineNudgeService;
     private final AiUsageService aiUsageService;
     private final ActivityLogService activityLogService;
+    private final ShopService shopService;
 
     @Override
     @Transactional(readOnly = true)
@@ -63,9 +65,12 @@ public class TaskServiceImpl implements TaskService {
     public Task createTask(String email, String title, String description,
                            LocalDateTime deadline, Integer estimatedMinutes,
                            LocalDateTime startTime, LocalDateTime endTime,
-                           Boolean isLocked, Task.Category category) {
+                           Boolean isLocked, Task.Category category, boolean noDeadline) {
+        if (noDeadline && deadline != null) {
+            throw new BadRequestException("기한 없는 일에는 마감 시간을 함께 보낼 수 없어요.");
+        }
         User user = findUser(email);
-        ScheduleFields schedule = inferScheduleIfNeeded(title, description, startTime, deadline, estimatedMinutes);
+        ScheduleFields schedule = inferScheduleIfNeeded(title, description, startTime, deadline, estimatedMinutes, noDeadline);
         validateSchedule(schedule.startTime(), schedule.deadline(), schedule.estimatedMinutes());
         Task task = Task.of(user, title, description, schedule.deadline(), schedule.estimatedMinutes());
 
@@ -102,22 +107,28 @@ public class TaskServiceImpl implements TaskService {
             throw new ForbiddenException("이 태스크에 접근할 권한이 없습니다.");
         }
 
+        if (fields.noDeadline() && fields.hasDeadline() && fields.deadline() != null) {
+            throw new BadRequestException("기한 없는 일에는 마감 시간을 함께 보낼 수 없어요.");
+        }
+
         Task.Status prevStatus = task.getStatus();
         Map<String, Object> before = snapshot(task);
 
         String nextTitle = fields.title() != null ? fields.title() : task.getTitle();
         String nextDescription = fields.hasDescription() ? fields.description() : task.getDescription();
-        LocalDateTime nextDeadline = fields.hasDeadline() ? fields.deadline() : task.getDeadline();
+        LocalDateTime nextDeadline = fields.noDeadline() ? null
+                : (fields.hasDeadline() ? fields.deadline() : task.getDeadline());
         Integer nextEstimatedMinutes = fields.hasEstimatedMinutes() ? fields.estimatedMinutes() : task.getEstimatedMinutes();
         LocalDateTime nextStartTime = fields.hasStartTime() ? fields.startTime() : task.getStartTime();
-        boolean scheduleTouched = fields.hasDeadline() || fields.hasEstimatedMinutes() || fields.hasStartTime();
+        boolean scheduleTouched = fields.hasDeadline() || fields.hasEstimatedMinutes()
+                || fields.hasStartTime() || fields.noDeadline();
         ScheduleFields nextSchedule = scheduleTouched
-                ? inferScheduleIfNeeded(nextTitle, nextDescription, nextStartTime, nextDeadline, nextEstimatedMinutes)
+                ? inferScheduleIfNeeded(nextTitle, nextDescription, nextStartTime, nextDeadline, nextEstimatedMinutes, fields.noDeadline())
                 : new ScheduleFields(nextStartTime, nextDeadline, nextEstimatedMinutes);
 
         if (fields.title() != null) task.setTitle(fields.title());
         if (fields.hasDescription()) task.setDescription(fields.description());
-        if (fields.status() != null) task.setStatus(Task.Status.valueOf(fields.status()));
+        if (fields.status() != null) task.setStatus(parseStatus(fields.status()));
         if (scheduleTouched) {
             validateSchedule(nextSchedule.startTime(), nextSchedule.deadline(), nextSchedule.estimatedMinutes());
             task.setStartTime(nextSchedule.startTime());
@@ -151,6 +162,26 @@ public class TaskServiceImpl implements TaskService {
         deadlineNudgeService.index(saved);
         Map<String, Object> after = snapshot(saved);
         activityLogService.record(task.getUser(), TaskChangeClassifier.classify(before, after), "TASK", saved.getTaskId(), before, after);
+        return saved;
+    }
+
+    @Override
+    @Transactional
+    public Task updateSticker(String email, UUID taskId, String code) {
+        Task task = taskRepository.findActiveById(taskId)
+                .orElseThrow(() -> new NotFoundException("태스크를 찾을 수 없습니다."));
+
+        if (!task.getUser().getEmail().equals(email)) {
+            throw new ForbiddenException("이 태스크에 접근할 권한이 없습니다.");
+        }
+
+        if (code != null) {
+            shopService.assertOwnsSticker(task.getUser(), code);
+        }
+        Map<String, Object> before = snapshot(task);
+        task.setStickerCode(code);
+        Task saved = taskRepository.save(task);
+        activityLogService.record(task.getUser(), "TASK_STICKER_UPDATED", "TASK", saved.getTaskId(), before, snapshot(saved));
         return saved;
     }
 
@@ -254,45 +285,31 @@ public class TaskServiceImpl implements TaskService {
     private ScheduleFields inferScheduleIfNeeded(String title, String description,
                                                  LocalDateTime startTime,
                                                  LocalDateTime deadline,
-                                                 Integer estimatedMinutes) {
-        if (startTime == null && deadline == null && estimatedMinutes == null) {
-            OpenAiService.ScheduleInferenceResult inferred =
-                    openAiService.inferSchedule(title, description, null, null, null);
-            return new ScheduleFields(null, parseDateTime(inferred.deadline()), inferred.estimatedMinutes());
+                                                 Integer estimatedMinutes,
+                                                 boolean noDeadline) {
+        if (noDeadline) {
+            // '언젠가' 선언: 마감·시작시간은 추론으로 채우지 않는다 — 유저가 입력한 시작시간만 보존
+            Integer minutes = estimatedMinutes != null
+                    ? estimatedMinutes
+                    : openAiService.inferSchedule(title, description, startTime, null, null).estimatedMinutes();
+            return new ScheduleFields(startTime, null, minutes);
         }
-
-        if (startTime != null && deadline != null) {
-            return new ScheduleFields(startTime, deadline,
-                    estimatedMinutes != null ? estimatedMinutes : (int) java.time.Duration.between(startTime, deadline).toMinutes());
+        // 마감이 확정돼 있고 다른 시간 정보도 있으면 AI 호출 없이 그대로 사용.
+        // 시작~마감 간격을 예상시간으로 환산하던 슬롯 파생은 하지 않는다 — 예상시간은 집중 작업량 의미
+        if (deadline != null && (startTime != null || estimatedMinutes != null)) {
+            return new ScheduleFields(startTime, deadline, estimatedMinutes);
         }
-        if (startTime != null && estimatedMinutes != null) {
-            return new ScheduleFields(startTime, startTime.plusMinutes(estimatedMinutes), estimatedMinutes);
-        }
-        if (deadline != null && estimatedMinutes != null) {
-            return new ScheduleFields(deadline.minusMinutes(estimatedMinutes), deadline, estimatedMinutes);
-        }
-
         OpenAiService.ScheduleInferenceResult inferred =
                 openAiService.inferSchedule(title, description, startTime, deadline, estimatedMinutes);
-        LocalDateTime inferredStart = parseDateTime(inferred.startTime());
-        LocalDateTime inferredDeadline = parseDateTime(inferred.deadline());
-        Integer inferredMinutes = inferred.estimatedMinutes();
-
-        LocalDateTime nextStart = startTime != null ? startTime : inferredStart;
-        LocalDateTime nextDeadline = deadline != null ? deadline : inferredDeadline;
-        Integer nextEstimated = estimatedMinutes != null ? estimatedMinutes : inferredMinutes;
-
-        if (nextStart != null && nextDeadline != null && nextEstimated == null) {
-            nextEstimated = (int) java.time.Duration.between(nextStart, nextDeadline).toMinutes();
+        LocalDateTime nextStart = startTime != null ? startTime : parseDateTime(inferred.startTime());
+        LocalDateTime nextDeadline = deadline != null ? deadline : parseDateTime(inferred.deadline());
+        // AI 추론값이 시작≥마감 쌍을 만들면 추론된 쪽을 버린다 — 유저 입력은 보존
+        if (nextStart != null && nextDeadline != null && !nextDeadline.isAfter(nextStart)) {
+            if (startTime == null) nextStart = null;
+            else nextDeadline = null;
         }
-        if (nextStart != null && nextEstimated != null && nextDeadline == null) {
-            nextDeadline = nextStart.plusMinutes(nextEstimated);
-        }
-        if (nextDeadline != null && nextEstimated != null && nextStart == null) {
-            nextStart = nextDeadline.minusMinutes(nextEstimated);
-        }
-
-        return new ScheduleFields(nextStart, nextDeadline, nextEstimated);
+        return new ScheduleFields(nextStart, nextDeadline,
+                estimatedMinutes != null ? estimatedMinutes : inferred.estimatedMinutes());
     }
 
     private LocalDateTime parseDateTime(String value) {
@@ -317,6 +334,14 @@ public class TaskServiceImpl implements TaskService {
     private void validateFutureDeadline(LocalDateTime deadline) {
         if (deadline != null && !deadline.isAfter(LocalDateTime.now())) {
             throw new BadRequestException("마감일시는 현재 시간 이후로 설정해야 합니다.");
+        }
+    }
+
+    private Task.Status parseStatus(String raw) {
+        try {
+            return Task.Status.valueOf(raw);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("상태 값을 확인해주세요.");
         }
     }
 
@@ -351,6 +376,7 @@ public class TaskServiceImpl implements TaskService {
         values.put("parentTaskId", task.getParentTask() != null ? task.getParentTask().getTaskId() : null);
         values.put("routineId", task.getRoutineId());
         values.put("routineScheduledDate", task.getRoutineScheduledDate());
+        values.put("stickerCode", task.getStickerCode());
         values.put("deletedAt", task.getDeletedAt());
         return values;
     }

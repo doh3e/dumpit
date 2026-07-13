@@ -6,9 +6,10 @@ import com.dumpit.entity.Task;
 import com.dumpit.exception.BadRequestException;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.TaskService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -48,7 +49,8 @@ public class TaskController {
                 req.title(), req.description(),
                 req.deadline(), req.estimatedMinutes(),
                 req.startTime(), req.endTime(), req.isLocked(),
-                req.category()
+                req.category(),
+                Boolean.TRUE.equals(req.noDeadline())
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(TaskResponse.from(task));
     }
@@ -87,11 +89,23 @@ public class TaskController {
                         req.containsKey("endTime"),
                         value(req, "isLocked", Boolean.class),
                         req.containsKey("isLocked"),
-                        value(req, "category", Task.Category.class)
+                        value(req, "category", Task.Category.class),
+                        Boolean.TRUE.equals(value(req, "noDeadline", Boolean.class))
                 )
         );
         return ResponseEntity.ok(TaskResponse.from(task));
     }
+
+    @PutMapping("/{taskId}/sticker")
+    public ResponseEntity<TaskResponse> updateSticker(
+            @AuthenticationPrincipal OAuth2User principal,
+            @PathVariable("taskId") UUID taskId,
+            @RequestBody StickerRequest req) {
+        Task task = taskService.updateSticker(principal.getAttribute("email"), taskId, req.code());
+        return ResponseEntity.ok(TaskResponse.from(task));
+    }
+
+    public record StickerRequest(String code) {}
 
     private <T> T value(Map<String, Object> req, String key, Class<T> type) {
         if (!req.containsKey(key) || req.get(key) == null) {
@@ -136,7 +150,7 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.CREATED).body(children.stream().map(TaskResponse::from).toList());
     }
 
-    public record SplitRequest(List<@Valid SubtaskRequest> subtasks) {}
+    public record SplitRequest(@NotEmpty List<@Valid SubtaskRequest> subtasks) {}
 
     public record SubtaskRequest(
             @NotBlank @Size(max = 200) String title,

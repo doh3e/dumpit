@@ -11,10 +11,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RestControllerAdvice
@@ -35,6 +38,11 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", koreanBadRequestMessage(ex.getMessage()));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", koreanBadRequestMessage(ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
@@ -47,6 +55,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleUnreadable(HttpMessageNotReadableException ex) {
         return error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST_BODY", "요청 본문 형식이 올바르지 않습니다.");
+    }
+
+    // 경로/쿼리 파라미터가 enum·UUID 등으로 바인딩되지 못하는 경우(예: DELETE /shop/equip/NOPE) —
+    // 과거엔 핸들러가 없어 catch-all(500)로 새던 것을 400으로 고정. 앱 전역(@RestControllerAdvice)에
+    // 적용되므로 다른 도메인의 잘못된 UUID 경로 파라미터도 함께 400으로 바뀐다.
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "요청값이 올바르지 않습니다.");
     }
 
     @ExceptionHandler(AiUsageLimitExceededException.class)
@@ -89,18 +105,37 @@ public class GlobalExceptionHandler {
             case "Monthly routines need at least one day between 1 and 31." -> "월간 루틴은 1~31 사이의 날짜를 하나 이상 선택해야 합니다.";
             case "Monthly weekday routines need an ordinal between 1 and 5." -> "월간 요일 루틴은 1~5 사이의 주차를 선택해야 합니다.";
             case "Monthly weekday routines need a day between 1 and 7." -> "월간 요일 루틴은 1~7 사이의 요일을 선택해야 합니다.";
+            case "Nickname must not be blank." -> "닉네임을 입력해주세요.";
+            case "Bio must be 500 characters or less." -> "자기소개는 500자 이내로 입력해주세요.";
+            case "Admin users cannot withdraw through this flow." -> "관리자 계정은 이 방법으로 탈퇴할 수 없습니다.";
+            case "Admin users cannot be banned." -> "관리자 계정은 정지할 수 없습니다.";
             default -> message;
         };
     }
 
+    // @Size 기본 메시지는 JVM 로케일에 따라 영어/한국어가 갈린다 — 두 원문 모두 우리 문구로 통일
+    private static final Pattern SIZE_MESSAGE_EN =
+            Pattern.compile("size must be between (\\d+) and (\\d+)");
+    private static final Pattern SIZE_MESSAGE_KO =
+            Pattern.compile("크기가 (\\d+)에서 (\\d+) 사이여야 합니다");
+
     private String translateValidationMessage(String message) {
         if (message == null) return "입력값이 올바르지 않습니다.";
+        Matcher sizeEn = SIZE_MESSAGE_EN.matcher(message);
+        if (sizeEn.matches()) return sizeLimitMessage(sizeEn.group(1), sizeEn.group(2));
+        Matcher sizeKo = SIZE_MESSAGE_KO.matcher(message);
+        if (sizeKo.matches()) return sizeLimitMessage(sizeKo.group(1), sizeKo.group(2));
         return switch (message) {
             case "must not be blank" -> "입력해주세요.";
             case "must not be null" -> "필수값입니다.";
             case "must not be empty" -> "하나 이상 입력해야 합니다.";
             default -> message;
         };
+    }
+
+    private String sizeLimitMessage(String min, String max) {
+        if ("0".equals(min)) return max + "자 이하로 입력해주세요.";
+        return min + "~" + max + "자로 입력해주세요.";
     }
 
     private String friendlyValidationMessage(String field, String message) {

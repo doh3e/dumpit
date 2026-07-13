@@ -22,7 +22,7 @@ export default function NoticeModal({ notice, onClose }) {
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase text-primary">Notice</p>
+            <p className="text-[0.625rem] font-black uppercase text-primary">Notice</p>
             <h2 className="font-dungeon text-dark mt-1 text-xl leading-tight">{notice.title}</h2>
             <p className="mt-2 text-xs font-semibold text-sub">{formatDate(notice.publishAt)}</p>
           </div>

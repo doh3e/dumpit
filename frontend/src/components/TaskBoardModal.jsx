@@ -1,35 +1,7 @@
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { getCategory } from '../constants/categories'
-
-function parseDate(value) {
-  if (!value) return null
-  if (Array.isArray(value)) {
-    return new Date(value[0], (value[1] || 1) - 1, value[2] || 1, value[3] || 0, value[4] || 0, value[5] || 0)
-  }
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
-function startOfDay(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
-}
-
-function endOfDay(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999)
-}
-
-function addDays(date, days) {
-  const next = new Date(date)
-  next.setDate(next.getDate() + days)
-  return next
-}
-
-function formatDeadline(value) {
-  const date = parseDate(value)
-  if (!date) return '마감 없음'
-  return date.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
+import { parseDate, formatDeadline } from '../utils/dates'
 
 function formatPriority(task) {
   if (task.effectivePriority == null) return 'P -'
@@ -53,58 +25,15 @@ function sortTasks(tasks, sortMode) {
   })
 }
 
-function buildSections(tasks, sortMode) {
-  const now = new Date()
-  const todayStart = startOfDay(now)
-  const todayEnd = endOfDay(now)
-  const threeDaysEnd = endOfDay(addDays(now, 3))
-  const weekEnd = endOfDay(addDays(now, 7))
-  const threeDaysAgo = startOfDay(addDays(now, -3))
-
-  const active = tasks.filter((task) => task.status !== 'DONE' && task.status !== 'CANCELLED')
-  const done = tasks.filter((task) => task.status === 'DONE')
-
-  const overdue = []
-  const today = []
-  const threeDays = []
-  const week = []
-  const later = []
-
-  for (const task of active) {
-    const deadline = parseDate(task.deadline)
-    if (deadline && deadline < now) overdue.push(task)
-    else if (deadline && deadline <= todayEnd) today.push(task)
-    else if (deadline && deadline <= threeDaysEnd) threeDays.push(task)
-    else if (deadline && deadline <= weekEnd) week.push(task)
-    else later.push(task)
-  }
-
-  const recentDone = done.filter((task) => {
-    const completedAt = parseDate(task.completedAt)
-    if (completedAt) return completedAt >= threeDaysAgo
-    const deadline = parseDate(task.deadline)
-    return !deadline || deadline >= threeDaysAgo
-  })
-
+function buildSections(sections, sortMode) {
   return [
-    { id: 'today', title: '오늘 할 일', tone: 'tone-today', tasks: sortTasks(today, sortMode) },
-    { id: 'three', title: '3일 내로 할 일', tone: 'tone-soon', tasks: sortTasks(threeDays, sortMode) },
-    { id: 'week', title: '일주일 내로 할 일', tone: 'tone-chip', tasks: sortTasks(week, sortMode) },
-    { id: 'later', title: '그 외', tone: 'tone-later', tasks: sortTasks(later, sortMode) },
-    { id: 'overdue', title: '마감기한 지난 일', tone: 'tone-overdue', tasks: sortTasks(overdue, 'deadline') },
-    { id: 'done', title: '완료된 일 (최근 3일)', tone: 'tone-done', tasks: sortTasks(recentDone, sortMode) },
-  ]
-}
-
-function buildSectionsFromPlanning(sections, sortMode) {
-  if (!sections) return null
-  return [
-    { id: 'today', title: '오늘 할 일', tone: 'tone-today', tasks: sortTasks(sections.today || [], sortMode) },
-    { id: 'three', title: '3일 내로 할 일', tone: 'tone-soon', tasks: sortTasks(sections.next3Days || [], sortMode) },
-    { id: 'week', title: '일주일 내로 할 일', tone: 'tone-chip', tasks: sortTasks(sections.next7Days || [], sortMode) },
+    { id: 'overdue', title: '마감 지남', tone: 'tone-overdue', tasks: sortTasks(sections.overdue || [], 'deadline') },
+    { id: 'today', title: '오늘', tone: 'tone-today', tasks: sortTasks(sections.today || [], sortMode) },
+    { id: 'tomorrow', title: '내일', tone: 'tone-soon', tasks: sortTasks(sections.tomorrow || [], sortMode) },
+    { id: 'week', title: '일주일 내', tone: 'tone-chip', tasks: sortTasks(sections.next7Days || [], sortMode) },
     { id: 'later', title: '그 외', tone: 'tone-later', tasks: sortTasks(sections.later || [], sortMode) },
-    { id: 'overdue', title: '마감기한 지난 일', tone: 'tone-overdue', tasks: sortTasks(sections.overdue || [], 'deadline') },
-    { id: 'done', title: '완료된 일 (최근 3일)', tone: 'tone-done', tasks: sortTasks(sections.recentDone || [], sortMode) },
+    { id: 'someday', title: '언젠가', tone: 'tone-later', tasks: sortTasks(sections.someday || [], sortMode) },
+    { id: 'done', title: '완료 (최근 3일)', tone: 'tone-done', tasks: sortTasks(sections.recentDone || [], sortMode) },
   ]
 }
 
@@ -123,26 +52,26 @@ function TaskRow({ task, onEdit, onToggle }) {
           }`}
           aria-label={isDone ? '완료 취소' : '완료'}
         >
-          {isDone && <span className="block text-[10px] font-black leading-4">V</span>}
+          {isDone && <span className="block text-[0.625rem] font-black leading-4">V</span>}
         </button>
 
         <button type="button" onClick={() => onEdit(task)} className="min-w-0 flex-1 text-left">
           <div className="mb-1 flex flex-wrap items-center gap-1.5">
-            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${category.color}`}>
+            <span className={`rounded-full border px-2 py-0.5 text-[0.625rem] font-bold ${category.color}`}>
               {category.emoji} {category.label}
             </span>
-            <span className="rounded-full border border-line bg-accent px-2 py-0.5 text-[10px] font-black text-sub">
+            <span className="rounded-full border border-line bg-accent px-2 py-0.5 text-[0.625rem] font-black text-sub">
               {formatPriority(task)}
             </span>
             {task.parentTaskId && (
-              <span className="rounded-full border border-line bg-chip px-2 py-0.5 text-[10px] font-black text-secondary">
+              <span className="rounded-full border border-line bg-chip px-2 py-0.5 text-[0.625rem] font-black text-secondary">
                 서브
               </span>
             )}
           </div>
           <p className={`truncate text-sm font-black text-dark ${isDone ? 'line-through' : ''}`}>{task.title}</p>
-          <p className="mt-0.5 truncate text-[11px] font-semibold text-sub">
-            {formatDeadline(task.deadline)}
+          <p className="mt-0.5 truncate text-[0.6875rem] font-semibold text-sub">
+            {formatDeadline(task.deadline) || '마감 없음'}
             {task.estimatedMinutes ? ` · ${task.estimatedMinutes}분` : ''}
           </p>
         </button>
@@ -151,11 +80,11 @@ function TaskRow({ task, onEdit, onToggle }) {
   )
 }
 
-export default function TaskBoardModal({ tasks, sections: planningSections, onClose, onEditTask, onToggleTask }) {
+export default function TaskBoardModal({ sections: planningSections, onClose, onEditTask, onToggleTask }) {
   const [sortMode, setSortMode] = useState('priority')
   const sections = useMemo(
-    () => buildSectionsFromPlanning(planningSections, sortMode) || buildSections(tasks, sortMode),
-    [tasks, planningSections, sortMode]
+    () => buildSections(planningSections || {}, sortMode),
+    [planningSections, sortMode]
   )
 
   return createPortal(
@@ -203,7 +132,7 @@ export default function TaskBoardModal({ tasks, sections: planningSections, onCl
               <section key={section.id} className={`flex min-h-0 flex-col rounded-lg border-2 p-3 ${section.tone}`}>
                 <div className="mb-3 flex flex-shrink-0 items-center justify-between gap-2">
                   <h3 className="font-galmuri font-bold text-sm text-dark">{section.title}</h3>
-                  <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[10px] font-black text-sub">
+                  <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[0.625rem] font-black text-sub">
                     {section.tasks.length}
                   </span>
                 </div>

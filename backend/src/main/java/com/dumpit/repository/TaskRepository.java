@@ -92,6 +92,14 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
 
     long countByCreatedAtGreaterThanEqual(LocalDateTime since);
 
+    // Admin 유저 목록에서 유저당 1쿼리씩 도는 N+1을 피하기 위한 집계 쿼리 — AdminUserController 참고
+    @Query("""
+        SELECT t.user.userId, COUNT(t) FROM Task t
+        WHERE t.deletedAt IS NULL
+        GROUP BY t.user.userId
+    """)
+    List<Object[]> countActiveGroupedByUser();
+
     @Query("""
         SELECT t FROM Task t
         WHERE t.user = :user

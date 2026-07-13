@@ -38,6 +38,9 @@ public class Idea {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "sticker_code", length = 64)
+    private String stickerCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Task.Category category = Task.Category.OTHER;
@@ -74,6 +77,10 @@ public class Idea {
     public void markConverted(Task task) {
         this.convertedTask = task;
         this.convertedAt = LocalDateTime.now();
+    }
+
+    public void updateSticker(String stickerCode) {
+        this.stickerCode = stickerCode;
     }
 
     public void markDeleted() {

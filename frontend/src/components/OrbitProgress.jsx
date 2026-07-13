@@ -1,27 +1,46 @@
 // 픽셀 행성 궤도 진행률 링 — 오늘 완료 비율만큼 궤도가 액센트 호로 채워진다
-export default function OrbitProgress({ done, total, size = 64 }) {
-  const r = (size / 2) - 3
-  const c = 2 * Math.PI * r
+// 크기는 --orbit-size(clamp)로 뷰포트 비례: 모바일 64px ~ 데스크톱 120px.
+// 엔드포인트가 rem이라 글자 크기 설정(루트 font-size)과도 연동된다.
+import { useAuth } from '../context/AuthContext'
+import { PLANET_SPRITES, spriteFor } from '../shop/registry'
+import PixelSprite from './PixelSprite'
+
+const VB = 64                 // viewBox 좌표계 — 기존 고정 64px 시절 수치를 그대로 유지
+const R = VB / 2 - 3
+const C = 2 * Math.PI * R
+
+export default function OrbitProgress({ done, total }) {
+  const { user } = useAuth()
   const frac = total > 0 ? Math.min(done / total, 1) : 0
   return (
-    <div className="flex-none text-center" style={{ width: size + 8 }}>
-      <div className="relative mx-auto" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90">
+    <div
+      className="flex-none text-center"
+      style={{ '--orbit-size': 'clamp(4rem, 8vw + 1rem, 7.5rem)', width: 'calc(var(--orbit-size) + 8px)' }}
+    >
+      <div className="relative mx-auto" style={{ width: 'var(--orbit-size)', height: 'var(--orbit-size)' }}>
+        <svg viewBox={`0 0 ${VB} ${VB}`} width="100%" height="100%" className="-rotate-90">
           <circle
-            cx={size / 2} cy={size / 2} r={r} fill="none"
+            cx={VB / 2} cy={VB / 2} r={R} fill="none"
             stroke="var(--line)" strokeWidth="1.5" strokeDasharray="2 4"
           />
           <circle
-            cx={size / 2} cy={size / 2} r={r} fill="none"
+            cx={VB / 2} cy={VB / 2} r={R} fill="none"
             stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"
-            strokeDasharray={`${frac * c} ${c}`}
+            strokeDasharray={`${frac * C} ${C}`}
           />
         </svg>
-        <div className="pixel-planet" aria-hidden="true" />
-        <div className="orbit-sat" aria-hidden="true" style={{ '--orbit-r': `${r}px` }} />
+        <PixelSprite
+          sprite={spriteFor(PLANET_SPRITES, user?.equipments?.PLANET)}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: 'calc(var(--orbit-size) * 0.34375)',
+            height: 'calc(var(--orbit-size) * 0.34375)',
+          }}
+        />
+        <div className="orbit-sat" aria-hidden="true" style={{ '--orbit-r': 'calc(var(--orbit-size) * 0.453)' }} />
       </div>
-      <p className="text-[11px] text-sub mt-1.5 whitespace-nowrap">
-        오늘 <span className="font-dungeon text-secondary text-xs">{done}/{total}</span>
+      <p className="text-xs text-sub mt-1.5 whitespace-nowrap">
+        오늘 <span className="font-dungeon text-secondary text-sm">{done}/{total}</span>
       </p>
     </div>
   )
