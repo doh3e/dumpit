@@ -70,16 +70,14 @@
 
 ## 3. 성능 — 인덱스 제안 (스키마 변경, 미적용)
 
-로컬 실데이터(수~수십 행)에서는 전부 Seq Scan이어도 무해하나, 데이터 증가 시 대비. **V4 마이그레이션으로 적용 결정 필요.**
+로컬 실데이터(수~수십 행)에서는 전부 Seq Scan이어도 무해하나, 데이터 증가 시 대비.
 
-- **[Medium]** `tasks` 테이블 PK 외 인덱스 전무 — 7개 쿼리가 `user_id, deleted_at`를 공통 술어로 씀:
-  `CREATE INDEX idx_tasks_user_id_deleted_at ON tasks (user_id, deleted_at);`
-- **[Low]** admin 통계 5테이블 `created_at` 무인덱스(admin 저빈도라 우선순위 낮음):
+- **[Medium → ✅ 적용]** per-user 리스트 조회의 공통 술어 `(user_id, deleted_at)` 복합 인덱스를 **V4 마이그레이션(`V4__add_performance_indexes.sql`)으로 tasks·ideas·routines·brain_dumps에 적용 완료**(2026-07-13, 커밋 6d7dad0). 신규 DB 대비 to_regclass 가드(V3 패턴), CI 신규 postgres 컨테이너 검증 통과. 리포트 초안의 "tasks 단독" 제안을, 동일 술어 패턴을 쓰는 4개 도메인 테이블로 확장 적용.
+- **[Low — 미적용]** admin 통계 5테이블 `created_at` 무인덱스(admin 저빈도라 우선순위 낮음):
   `tasks`/`ai_usage_logs`/`routines`/`brain_dumps`/`users`에 `(created_at)` 인덱스(데이터 증가 관찰 후 일괄 적용 권장).
-- **[Low]** `LogRetentionScheduler`의 `users.withdrawn_at` 무인덱스:
+- **[Low — 미적용]** `LogRetentionScheduler`의 `users.withdrawn_at` 무인덱스:
   `CREATE INDEX idx_users_withdrawn_at ON users (withdrawn_at) WHERE withdrawn_at IS NOT NULL;` (부분 인덱스)
 - **[정보]** `notice_reads` NOT EXISTS는 이미 유니크 제약으로 Index Only Scan 최적화됨 — 조치 불필요.
-- **[참고]** 나머지 도메인 FK 컬럼(`ideas.user_id` 등)도 무인덱스 — 성장 시 tasks와 동일 `(user_id[, deleted_at])` 패턴 일괄 적용 권장.
 
 ---
 
