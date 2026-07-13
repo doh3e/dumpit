@@ -250,7 +250,10 @@ export default function AdminPage() {
     const payload = {
       title: noticeForm.title.trim(),
       content: noticeForm.content.trim(),
-      publishAt: noticeForm.publishAt ? new Date(noticeForm.publishAt).toISOString().slice(0, 19) : null,
+      // datetime-local 값(KST 벽시계)을 변환 없이 그대로 전송 — 백엔드 LocalDateTime과 동일 기준
+      publishAt: noticeForm.publishAt
+        ? (noticeForm.publishAt.length === 16 ? `${noticeForm.publishAt}:00` : noticeForm.publishAt)
+        : null,
       status: noticeForm.status,
       pinned: noticeForm.pinned,
       popup: noticeForm.popup,
