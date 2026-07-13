@@ -80,9 +80,10 @@ export default function Header({ onOpenDrawer }) {
     : 'text-primary'
 
   return (
-    <header className="sticky top-0 z-50 bg-chrome border-b border-chrome-line">
-      <div className="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+    <header className="app-header sticky top-0 z-50 bg-chrome border-b border-chrome-line">
+      {/* 3분할 그리드 풀블리드 — 로고는 화면 왼쪽 끝, 배지·프사는 오른쪽 끝, 메뉴는 정중앙 */}
+      <div className="w-full px-6 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="col-start-1 flex items-center gap-2 justify-self-start">
           {/* Hamburger button - only below lg */}
           <button
             onClick={onOpenDrawer}
@@ -92,17 +93,19 @@ export default function Header({ onOpenDrawer }) {
             <img src={menuImage} alt="" className="h-5 w-5 object-contain" />
           </button>
           <Link to="/dashboard" className="flex items-center gap-2">
-            <img src="/text_logo.webp" alt="덤핏" className="h-24 w-auto" />
+            {/* 투명 여백 트리밍된 로고 — 바(h-20)를 넘지 않게. h-24 시절엔 오버플로+비대칭 여백으로 바가 어긋나 보였음 */}
+            <img src="/text_logo.webp" alt="덤핏" className="h-12 w-auto" />
             <span className="chip-retro text-secondary">BETA</span>
           </Link>
         </div>
 
-        <nav className="hidden min-[1100px]:flex items-center gap-1">
+        {/* 글자 크기 확대 설정에서도 라벨이 줄바꿈되지 않게 nowrap */}
+        <nav className="col-start-2 hidden min-[1100px]:flex items-center justify-center gap-1">
           {NAV_ITEMS.map(({ label, path }) => (
             <Link
               key={path}
               to={path}
-              className={`px-4 py-2 rounded-lg font-galmuri font-bold text-sm transition-all ${
+              className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-lg font-galmuri font-bold text-sm transition-all ${
                 pathname === path
                   ? 'bg-chip text-dark'
                   : 'text-sub hover:text-dark hover:bg-chip'
@@ -113,7 +116,7 @@ export default function Header({ onOpenDrawer }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="col-start-3 flex items-center gap-3 justify-self-end">
           <div className="hidden sm:block">
             <DeadlineNudgeMenu />
           </div>
