@@ -393,6 +393,86 @@ def draw_whale():
     return img
 
 
+def frames_sheet(frame_fns):
+    """[fn, ...] → 가로로 이어붙인 애니 시트."""
+    frames = [fn() for fn in frame_fns]
+    sheet = Image.new('RGBA', (SIZE * len(frames), SIZE), (0, 0, 0, 0))
+    for i, f in enumerate(frames):
+        sheet.paste(f, (i * SIZE, 0), f)
+    return sheet
+
+
+def draw_sun():
+    # 태양 — 자체 발광이라 방사형 셰이딩, 프레임별 플레어 명멸 (4프레임)
+    pal = [hx('#FBE89A'), hx('#F5C842'), hx('#F09030'), hx('#E86A2A')]
+
+    def frame(k):
+        img = new_canvas()
+        rot = k * (math.pi / 8)  # 프레임당 22.5° — 8프레임 = 180° = 불꽃 혀 2주기, 이음새 없는 루프
+
+        def shader(x, y, nx, ny):
+            rr = math.hypot(nx, ny)
+            off = 0.05 if (x + y + k) % 2 == 0 else 0.0  # 프레임마다 일렁이는 경계 디더
+            if rr < 0.5 + off:
+                return pal[0]
+            if rr < 0.78 + off:
+                return pal[1]
+            # 외곽 링 — 회전하는 불꽃 혀 8개 (반경 비례 트위스트로 감김)
+            ang = (math.atan2(ny, nx) - rot + (rr - 0.78) * 2.5) % (2 * math.pi)
+            return pal[2] if int(ang / (math.pi / 4)) % 2 == 0 else pal[3]
+
+        disc(img, 16, 16, 11, shader)
+        # 흑점 2개(180° 간격) — 중간 링 위를 함께 회전, 고대비라 움직임이 잘 읽힘
+        for g in range(2):
+            th = rot + g * math.pi
+            gx = round(16 + 7.0 * math.cos(th)) - 1
+            gy = round(16 + 7.0 * math.sin(th)) - 1
+            block(img, gx, gy, pal[2], 2, 2)
+        # 8방향 플레어 — 길이 파형(4~1)이 프레임마다 한 칸씩 돌며 물결치듯 순환
+        wave = [4, 2, 1, 2]
+        for j, (dx, dy) in enumerate([(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]):
+            length = wave[(j + k) % 4]
+            norm = math.hypot(dx, dy)
+            for step in range(length):
+                r = 11.5 + step
+                x = round(16 + dx / norm * r) - 1
+                y = round(16 + dy / norm * r) - 1
+                block(img, x, y, pal[1] if step < 2 else pal[2], 2, 2)
+        return img
+
+    return frames_sheet([lambda k=k: frame(k) for k in range(8)])
+
+
+def draw_blackhole():
+    # 블랙홀 — 사건의 지평선 + 포톤 링 + 소용돌이치는 나선팔 2개 강착원반 (8프레임)
+    # 2팔 대칭이라 프레임당 22.5° 회전 × 8 = 180° = 원상복귀 → 이음새 없는 루프
+    def frame(k):
+        img = new_canvas()
+        rot = k * (math.pi / 8)
+
+        def shader(x, y, nx, ny):
+            d = math.hypot(nx, ny)
+            if d < 0.42:
+                return hx('#0A0A12')          # 사건의 지평선
+            if d < 0.52:
+                return hx('#FBE89A')          # 포톤 링
+            # 각도에 반경 비례 트위스트를 더해 팔이 감기는 소용돌이
+            ang = (math.atan2(ny, nx) - rot + (d - 0.5) * 4.0) % (2 * math.pi)
+            a2 = ang % math.pi                # π 주기 접기 → 대칭 팔 2개
+            if a2 < 0.55:
+                return hx('#E8C170')
+            if a2 < 1.15:
+                return hx('#E88A4A')
+            if a2 < 2.1:
+                return hx('#8A63C4')
+            return hx('#4A3070')
+
+        disc(img, 16, 16, 14, shader)
+        return img
+
+    return frames_sheet([lambda k=k: frame(k) for k in range(8)])
+
+
 SPRITES = {
     'planet_default': draw_default,
     'planet_crimson': draw_crimson,
@@ -407,6 +487,8 @@ SPRITES = {
     'planet_candy': draw_candy,
     'planet_galaxy': draw_galaxy,
     'planet_whale': draw_whale,
+    'planet_sun': draw_sun,
+    'planet_blackhole': draw_blackhole,
 }
 
 
@@ -416,20 +498,34 @@ def save_sprite(name, img):
     print(f'saved {out} ({img.width}x{img.height})')
 
 
-def build_preview_sheet(sprites, out_path, scale=8):
-    """{이름: 이미지} → 라벨 붙은 확대 시트 (검수용)."""
-    cell_w = max(i.width for i in sprites.values()) * scale + 16
-    cell_h = SIZE * scale + 34
-    cols = 4
-    rows = math.ceil(len(sprites) / cols)
-    sheet = Image.new('RGBA', (cell_w * cols, cell_h * rows), (26, 26, 34, 255))
+def build_preview_sheet(sprites, out_path, scale=8, row_width=1088):
+    """{이름: 이미지} → 라벨 붙은 확대 시트 (검수용). 흐름 배치라 프레임 시트도 수용."""
+    pad, label_h = 8, 26
+    entries = [(n, i.resize((i.width * scale, i.height * scale), Image.NEAREST))
+               for n, i in sprites.items()]
+    row_width = max(row_width, max(b.width for _, b in entries) + pad * 2)
+    rows, cur, cur_w = [], [], 0
+    for name, big in entries:
+        w = big.width + pad * 2
+        if cur and cur_w + w > row_width:
+            rows.append(cur)
+            cur, cur_w = [], 0
+        cur.append((name, big))
+        cur_w += w
+    if cur:
+        rows.append(cur)
+    height = sum(max(b.height for _, b in r) + label_h + pad * 2 for r in rows)
+    sheet = Image.new('RGBA', (row_width, height), (26, 26, 34, 255))
     drawer = ImageDraw.Draw(sheet)
-    for i, (name, img) in enumerate(sprites.items()):
-        ox = (i % cols) * cell_w + 8
-        oy = (i // cols) * cell_h + 8
-        big = img.resize((img.width * scale, img.height * scale), Image.NEAREST)
-        sheet.paste(big, (ox, oy), big)
-        drawer.text((ox, oy + SIZE * scale + 6), name, fill=(230, 230, 230, 255))
+    y = 0
+    for r in rows:
+        row_h = max(b.height for _, b in r)
+        x = 0
+        for name, big in r:
+            sheet.paste(big, (x + pad, y + pad), big)
+            drawer.text((x + pad, y + pad + row_h + 4), name, fill=(230, 230, 230, 255))
+            x += big.width + pad * 2
+        y += row_h + label_h + pad * 2
     sheet.save(out_path)
     print(f'preview -> {out_path}')
 
