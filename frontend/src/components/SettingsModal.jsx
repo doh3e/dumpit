@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
 import { applyTheme, getThemePref } from '../utils/theme'
+import { applyFontScale, getFontScalePref, FONT_SCALES } from '../utils/fontScale'
 
 const DEFAULT_START = 9
 const DEFAULT_END = 22
@@ -55,6 +56,7 @@ export default function SettingsModal({ onClose }) {
     return v ? Number(v) : DEFAULT_END
   })
   const [themePref, setThemePref] = useState(getThemePref)
+  const [fontScale, setFontScale] = useState(getFontScalePref)
   const [permission, setPermission] = useState(getNotificationPermission)
   const [notificationsEnabled, setNotificationsEnabled] = useState(loadNotificationsEnabled)
   const [selectedThresholds, setSelectedThresholds] = useState(loadThresholds)
@@ -175,6 +177,25 @@ export default function SettingsModal({ onClose }) {
                 type="button"
                 onClick={() => { applyTheme(value); setThemePref(value) }}
                 className={`flex-1 text-xs ${themePref === value ? 'btn-retro-primary' : 'btn-retro'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <hr className="border-line mb-6" />
+
+        <section className="mb-6">
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">글자 크기</h3>
+          {/* 클릭 즉시 적용·영속 — 테마 버튼과 동일하게 저장 버튼과 무관 */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {Object.entries(FONT_SCALES).map(([value, { label }]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => { applyFontScale(value); setFontScale(value) }}
+                className={`text-xs ${fontScale === value ? 'btn-retro-primary' : 'btn-retro'}`}
               >
                 {label}
               </button>
