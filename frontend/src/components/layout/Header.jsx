@@ -176,7 +176,7 @@ export default function Header({ onOpenDrawer }) {
             <img src={coinImage} alt="coin" className="w-4 h-4 object-contain" />
             <span className="font-dungeon text-sm text-dark leading-none">{displayCoins}</span>
             <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg card-retro px-3 py-2 text-left text-xs font-bold text-sub opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100">
-              코인샵에서 테마와 스티커로 교환할 수 있어요.
+              코인샵에서 각종 테마와 꾸미기 용품, 스티커로 교환할 수 있어요.
             </div>
           </div>
 
