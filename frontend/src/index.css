@@ -167,6 +167,17 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { .orbit-sat { animation: none; } }
 
+/* ---- 도트 시트 애니 (PixelSprite) — 8프레임 전용: steps(8)가 시트를 8등분 순환
+   (N프레임 일반식: to = 100% * N/(N-1). 다른 프레임 수 추가 시 keyframes도 추가) ---- */
+.pixel-sprite-anim {
+  background-repeat: no-repeat;
+  animation: pixel-sprite-8 1.6s steps(8) infinite;
+}
+@keyframes pixel-sprite-8 {
+  from { background-position-x: 0%; }
+  to { background-position-x: 114.2857%; }
+}
+
 /* ---- 마이페이지 우주정거장 픽셀아트 ---- */
 /* ---- 별빛 로그 (마이페이지 히트맵) — 완료량을 별 밝기로 ---- */
 .star-log-0 { background: var(--chip); border-color: transparent; }
@@ -223,6 +234,8 @@ body {
 @keyframes blink { 50% { opacity: .2; } }
 
 @media (prefers-reduced-motion: reduce) {
+  /* 도트 시트 애니는 첫 프레임 고정 (인라인 animation-duration보다 우선하도록 !important) */
+  .pixel-sprite-anim { animation: none !important; }
   .pixel-spark { animation: none; opacity: 0; }
   /* 비행 스프라이트는 JS(matchMedia)에서 렌더링 자체를 건너뛰고 배너 안 정적 3개로 대체 — 아래는 안전망 */
   .celebration-sprite { animation: none; opacity: 0; }

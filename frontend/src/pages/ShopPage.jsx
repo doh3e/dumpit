@@ -4,6 +4,7 @@ import api, { getApiErrorMessage } from '../services/api'
 import coinImage from '../assets/coin_image.png'
 import { useAuth } from '../context/AuthContext'
 import RocketLaunch from '../components/RocketLaunch'
+import PixelSprite from '../components/PixelSprite'
 import {
   PLANET_SPRITES,
   CELEBRATION_SPRITES,
@@ -87,14 +88,7 @@ function ItemPreview({ item }) {
   const map = item.type === 'STICKER' ? STICKER_SPRITES : SPRITE_MAP_BY_SLOT[item.slot]
   const sprite = spriteFor(map || {}, item.code)
   if (!sprite) return null
-  return (
-    <img
-      src={sprite.img}
-      alt=""
-      className="w-10 h-10 object-contain flex-shrink-0"
-      style={{ imageRendering: 'pixelated' }}
-    />
-  )
+  return <PixelSprite sprite={sprite} className="w-10 h-10 object-contain flex-shrink-0" />
 }
 
 function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUnequip, onPreview, previewBusy }) {

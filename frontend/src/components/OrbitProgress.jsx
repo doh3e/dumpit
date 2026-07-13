@@ -3,6 +3,7 @@
 // 엔드포인트가 rem이라 글자 크기 설정(루트 font-size)과도 연동된다.
 import { useAuth } from '../context/AuthContext'
 import { PLANET_SPRITES, spriteFor } from '../shop/registry'
+import PixelSprite from './PixelSprite'
 
 const VB = 64                 // viewBox 좌표계 — 기존 고정 64px 시절 수치를 그대로 유지
 const R = VB / 2 - 3
@@ -28,12 +29,10 @@ export default function OrbitProgress({ done, total }) {
             strokeDasharray={`${frac * C} ${C}`}
           />
         </svg>
-        <img
-          src={spriteFor(PLANET_SPRITES, user?.equipments?.PLANET).img}
-          alt=""
+        <PixelSprite
+          sprite={spriteFor(PLANET_SPRITES, user?.equipments?.PLANET)}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
           style={{
-            imageRendering: 'pixelated',
             width: 'calc(var(--orbit-size) * 0.34375)',
             height: 'calc(var(--orbit-size) * 0.34375)',
           }}
