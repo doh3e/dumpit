@@ -71,7 +71,7 @@ function toTimestamp(value) {
 function StatPill({ label, value }) {
   return (
     <div className="rounded-lg border-2 border-line bg-card px-3 py-2">
-      <p className="text-[10px] font-black text-sub">{label}</p>
+      <p className="text-[0.625rem] font-black text-sub">{label}</p>
       <p className="mt-0.5 text-lg font-black text-dark">{value}</p>
     </div>
   )
@@ -354,10 +354,10 @@ export default function AdminPage() {
                       }`}
                     >
                       <div className="mb-1 flex flex-wrap items-center gap-2">
-                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${status.color}`}>
+                        <span className={`rounded-full border px-2 py-0.5 text-[0.625rem] font-bold ${status.color}`}>
                           {status.label}
                         </span>
-                        <span className="text-[10px] font-bold text-sub">{formatDate(inquiry.createdAt)}</span>
+                        <span className="text-[0.625rem] font-bold text-sub">{formatDate(inquiry.createdAt)}</span>
                       </div>
                       <p className="truncate text-sm font-extrabold text-dark">{inquiry.subject}</p>
                       <p className="truncate text-xs font-semibold text-sub">{inquiry.userEmail}</p>
@@ -416,7 +416,7 @@ export default function AdminPage() {
                       placeholder="답변 내용을 입력해주세요."
                       className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
                     />
-                    <p className="mt-1 text-right text-[10px] font-bold text-sub">{reply.length} / 3000</p>
+                    <p className="mt-1 text-right text-[0.625rem] font-bold text-sub">{reply.length} / 3000</p>
                   </div>
 
                   <div className="flex gap-3">
@@ -451,7 +451,7 @@ export default function AdminPage() {
           <div className="rounded-lg border border-line bg-card p-3">
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_160px_180px]">
               <div>
-                <label className="mb-1 block text-[10px] font-black text-sub">검색</label>
+                <label className="mb-1 block text-[0.625rem] font-black text-sub">검색</label>
                 <input
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
@@ -460,7 +460,7 @@ export default function AdminPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-black text-sub">상태</label>
+                <label className="mb-1 block text-[0.625rem] font-black text-sub">상태</label>
                 <select
                   value={userStatusFilter}
                   onChange={(e) => setUserStatusFilter(e.target.value)}
@@ -472,7 +472,7 @@ export default function AdminPage() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-black text-sub">정렬</label>
+                <label className="mb-1 block text-[0.625rem] font-black text-sub">정렬</label>
                 <select
                   value={userSort}
                   onChange={(e) => setUserSort(e.target.value)}
@@ -484,7 +484,7 @@ export default function AdminPage() {
                 </select>
               </div>
             </div>
-            <p className="mt-2 text-right text-[10px] font-black text-sub">
+            <p className="mt-2 text-right text-[0.625rem] font-black text-sub">
               {visibleUsers.length}명 표시
             </p>
           </div>
@@ -547,12 +547,12 @@ export default function AdminPage() {
                             </div>
                           </td>
                           <td className="px-3 py-3">
-                            <span className={`inline-flex whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-black ${status.color}`}>
+                            <span className={`inline-flex whitespace-nowrap rounded-full border px-2 py-0.5 text-[0.625rem] font-black ${status.color}`}>
                               {user.isAdmin ? '관리자' : status.label}
                             </span>
                           </td>
                           <td className="px-3 py-3">
-                            <div className="flex flex-wrap gap-1.5 text-[10px] font-black">
+                            <div className="flex flex-wrap gap-1.5 text-[0.625rem] font-black">
                               <span className="whitespace-nowrap rounded-full border border-line bg-card px-2 py-0.5 text-dark">
                                 코인 {user.coinBalance ?? 0}
                               </span>
@@ -621,7 +621,7 @@ export default function AdminPage() {
                         key={tool.label}
                         type="button"
                         onClick={() => insertMarkdown(tool)}
-                        className="rounded-md border-2 border-line bg-card px-2 py-1 text-[10px] font-black text-dark hover:border-edge"
+                        className="rounded-md border-2 border-line bg-card px-2 py-1 text-[0.625rem] font-black text-dark hover:border-edge"
                       >
                         {tool.label}
                       </button>
@@ -637,7 +637,7 @@ export default function AdminPage() {
                     placeholder="## 업데이트 안내&#10;- 새 기능&#10;- 수정 사항&#10;&#10;**중요한 내용**을 강조할 수 있어요."
                   />
                 </div>
-                <p className="mt-1 text-right text-[10px] font-bold text-sub">{noticeForm.content.length} / 5000</p>
+                <p className="mt-1 text-right text-[0.625rem] font-bold text-sub">{noticeForm.content.length} / 5000</p>
               </div>
               <div>
                 <p className="mb-1 block text-xs font-bold text-sub">미리보기</p>
@@ -707,7 +707,7 @@ export default function AdminPage() {
                     <div className="mb-2 flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-black text-dark">{notice.title}</p>
-                        <p className="mt-1 text-[10px] font-bold text-sub">
+                        <p className="mt-1 text-[0.625rem] font-bold text-sub">
                           {notice.status} · {formatDate(notice.publishAt)}
                         </p>
                       </div>
@@ -715,14 +715,14 @@ export default function AdminPage() {
                         <button
                           type="button"
                           onClick={() => editNotice(notice)}
-                          className="rounded-lg border border-line bg-accent px-2 py-1 text-[10px] font-black text-dark"
+                          className="rounded-lg border border-line bg-accent px-2 py-1 text-[0.625rem] font-black text-dark"
                         >
                           수정
                         </button>
                         <button
                           type="button"
                           onClick={() => archiveNotice(notice)}
-                          className="rounded-lg border-2 border-red-500 bg-card px-2 py-1 text-[10px] font-black text-red-600"
+                          className="rounded-lg border-2 border-red-500 bg-card px-2 py-1 text-[0.625rem] font-black text-red-600"
                         >
                           보관
                         </button>
@@ -778,7 +778,7 @@ export default function AdminPage() {
                   ['브레인덤프', managingUser.activity?.brainDumpCount ?? 0],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-lg border-2 border-line bg-accent px-3 py-2">
-                    <p className="text-[10px] font-black text-sub">{label}</p>
+                    <p className="text-[0.625rem] font-black text-sub">{label}</p>
                     <p className="mt-1 text-sm font-black text-dark">{value}</p>
                   </div>
                 ))}

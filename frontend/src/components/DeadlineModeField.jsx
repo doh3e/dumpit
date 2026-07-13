@@ -39,7 +39,7 @@ export default function DeadlineModeField({ mode, onModeChange, deadline, onDead
           </button>
         ))}
       </div>
-      <p className="text-[11px] font-semibold text-sub">{selected?.help}</p>
+      <p className="text-[0.6875rem] font-semibold text-sub">{selected?.help}</p>
       {mode === 'CUSTOM' && (
         <TaskDateTimeField
           label="마감 시간"

@@ -52,25 +52,25 @@ function TaskRow({ task, onEdit, onToggle }) {
           }`}
           aria-label={isDone ? '완료 취소' : '완료'}
         >
-          {isDone && <span className="block text-[10px] font-black leading-4">V</span>}
+          {isDone && <span className="block text-[0.625rem] font-black leading-4">V</span>}
         </button>
 
         <button type="button" onClick={() => onEdit(task)} className="min-w-0 flex-1 text-left">
           <div className="mb-1 flex flex-wrap items-center gap-1.5">
-            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${category.color}`}>
+            <span className={`rounded-full border px-2 py-0.5 text-[0.625rem] font-bold ${category.color}`}>
               {category.emoji} {category.label}
             </span>
-            <span className="rounded-full border border-line bg-accent px-2 py-0.5 text-[10px] font-black text-sub">
+            <span className="rounded-full border border-line bg-accent px-2 py-0.5 text-[0.625rem] font-black text-sub">
               {formatPriority(task)}
             </span>
             {task.parentTaskId && (
-              <span className="rounded-full border border-line bg-chip px-2 py-0.5 text-[10px] font-black text-secondary">
+              <span className="rounded-full border border-line bg-chip px-2 py-0.5 text-[0.625rem] font-black text-secondary">
                 서브
               </span>
             )}
           </div>
           <p className={`truncate text-sm font-black text-dark ${isDone ? 'line-through' : ''}`}>{task.title}</p>
-          <p className="mt-0.5 truncate text-[11px] font-semibold text-sub">
+          <p className="mt-0.5 truncate text-[0.6875rem] font-semibold text-sub">
             {formatDeadline(task.deadline) || '마감 없음'}
             {task.estimatedMinutes ? ` · ${task.estimatedMinutes}분` : ''}
           </p>
@@ -132,7 +132,7 @@ export default function TaskBoardModal({ sections: planningSections, onClose, on
               <section key={section.id} className={`flex min-h-0 flex-col rounded-lg border-2 p-3 ${section.tone}`}>
                 <div className="mb-3 flex flex-shrink-0 items-center justify-between gap-2">
                   <h3 className="font-galmuri font-bold text-sm text-dark">{section.title}</h3>
-                  <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[10px] font-black text-sub">
+                  <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[0.625rem] font-black text-sub">
                     {section.tasks.length}
                   </span>
                 </div>

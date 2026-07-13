@@ -172,14 +172,14 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
       >
         {isCard ? (
           <>
-            <span className={`mx-auto mb-1 flex h-5 w-5 items-center justify-center rounded-full border-2 text-[11px] font-black leading-none ${
+            <span className={`mx-auto mb-1 flex h-5 w-5 items-center justify-center rounded-full border-2 text-[0.6875rem] font-black leading-none ${
               urgentCount > 0
                 ? 'border-warn bg-warn text-on-accent'
                 : 'border-line bg-card text-sub'
             }`}>
               !
             </span>
-            <p className="text-[10px] font-black text-sub">마감</p>
+            <p className="text-[0.625rem] font-black text-sub">마감</p>
             <p className={`text-sm font-black ${urgentCount > 0 ? 'text-dark' : 'text-sub'}`}>
               {urgentCount > 9 ? '9+' : urgentCount}
             </p>
@@ -201,7 +201,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
           <div className="card-retro !p-3 bg-card">
             <div className="flex items-center justify-between gap-3 px-1 pb-2 border-b-2 border-line">
               <p className="text-sm font-black text-dark">마감 임박</p>
-              <span className="text-[10px] font-extrabold text-sub">24시간 이내</span>
+              <span className="text-[0.625rem] font-extrabold text-sub">24시간 이내</span>
             </div>
 
             {urgentCount === 0 ? (
@@ -226,7 +226,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                       <p className="min-w-0 flex-1 truncate text-sm font-extrabold text-dark">
                         {task.title}
                       </p>
-                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black ${
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[0.625rem] font-black ${
                         task.overdue
                           ? 'border-primary bg-primary text-on-accent'
                           : 'border-warn bg-warn text-on-accent'
@@ -234,7 +234,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                         {formatRemaining(task.deadline)}
                       </span>
                     </div>
-                    <p className="mt-1 text-[11px] font-semibold text-sub">
+                    <p className="mt-1 text-[0.6875rem] font-semibold text-sub">
                       마감 {formatDeadline(task.deadline)}
                     </p>
                   </Link>

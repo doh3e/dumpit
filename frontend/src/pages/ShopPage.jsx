@@ -48,7 +48,7 @@ function TierBadge({ tier }) {
   if (tier === 'CONCEPT') {
     return (
       <span
-        className="font-dungeon text-[11px] rounded-md px-2 py-0.5 border flex-shrink-0"
+        className="font-dungeon text-[0.6875rem] rounded-md px-2 py-0.5 border flex-shrink-0"
         style={{
           borderColor: 'var(--starlight)',
           color: 'var(--starlight)',
@@ -127,7 +127,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
               type="button"
               onClick={() => onPreview(item)}
               disabled={previewBusy}
-              className="text-[11px] font-bold underline text-sub hover:text-dark disabled:opacity-50 disabled:no-underline"
+              className="text-[0.6875rem] font-bold underline text-sub hover:text-dark disabled:opacity-50 disabled:no-underline"
             >
               미리보기
             </button>
@@ -171,7 +171,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
               type="button"
               onClick={() => onUnequip(item)}
               disabled={isBusy}
-              className="btn-retro text-[11px] px-2 py-1.5"
+              className="btn-retro text-[0.6875rem] px-2 py-1.5"
             >
               {isBusy ? '...' : '기본으로'}
             </button>
@@ -404,7 +404,7 @@ export default function ShopPage() {
         </section>
       )}
 
-      <p className="text-[11px] text-sub text-center pt-4 border-t border-line">
+      <p className="text-[0.6875rem] text-sub text-center pt-4 border-t border-line">
         픽셀 아트: peony (CC-BY 4.0) · Master484 · Dizzy Crow · stealthix · KerteX_
       </p>
 

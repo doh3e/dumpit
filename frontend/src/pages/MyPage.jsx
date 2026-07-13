@@ -114,8 +114,8 @@ function HeatmapGrid({ heatmap }) {
         ))}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[9px] text-sub">{entries[0]?.[0]?.slice(5)}</span>
-        <span className="text-[9px] text-sub">오늘</span>
+        <span className="text-[0.5625rem] text-sub">{entries[0]?.[0]?.slice(5)}</span>
+        <span className="text-[0.5625rem] text-sub">오늘</span>
       </div>
     </div>
   )
@@ -329,7 +329,7 @@ export default function MyPage() {
                 {profile?.bio || <span className="text-sub">자기소개가 없어요</span>}
               </p>
               <button onClick={() => setEditingBio(true)}
-                className="text-[10px] font-black text-sub hover:text-primary flex-shrink-0">
+                className="text-[0.625rem] font-black text-sub hover:text-primary flex-shrink-0">
                 수정
               </button>
             </div>
@@ -359,10 +359,10 @@ export default function MyPage() {
                 {icon && <img src={icon} alt="" className="w-6 h-6 object-contain mb-0.5" />}
                 <p className={`font-dungeon text-3xl leading-none ${text}`}>{value}</p>
                 {theme && (
-                  <p className={`font-dungeon text-[10px] text-center leading-tight ${text}`}>{theme}</p>
+                  <p className={`font-dungeon text-[0.625rem] text-center leading-tight ${text}`}>{theme}</p>
                 )}
-                <p className={`text-[10px] font-black text-center leading-tight ${text} opacity-70`}>{label}</p>
-                {sub && <p className={`text-[9px] font-semibold ${text} opacity-50`}>{sub}</p>}
+                <p className={`text-[0.625rem] font-black text-center leading-tight ${text} opacity-70`}>{label}</p>
+                {sub && <p className={`text-[0.5625rem] font-semibold ${text} opacity-50`}>{sub}</p>}
               </div>
             ))}
           </div>
@@ -374,7 +374,7 @@ export default function MyPage() {
         <div className="card-retro !p-4 space-y-2">
           <div className="flex items-center justify-between">
             <p className="font-galmuri font-bold text-sm text-dark">별빛 로그 <span className="text-sub font-sans font-bold">· 완료 기록</span></p>
-            <span className="text-[10px] font-bold text-sub">최근 28주</span>
+            <span className="text-[0.625rem] font-bold text-sub">최근 28주</span>
           </div>
           <HeatmapGrid heatmap={heatmap} />
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
@@ -386,7 +386,7 @@ export default function MyPage() {
             ].map(([label, count]) => (
               <div key={label} className="flex items-center gap-1.5">
                 <div className={`w-3 h-3 rounded-sm border ${heatmapColorClass(count)}`} />
-                <span className="text-[9px] text-sub">{label}</span>
+                <span className="text-[0.5625rem] text-sub">{label}</span>
               </div>
             ))}
           </div>
@@ -410,7 +410,7 @@ export default function MyPage() {
         <div className="card-retro !p-4 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-black text-dark">기한 초과 태스크</p>
-            <span className="text-[10px] font-black rounded-full px-2 py-0.5 chip-retro text-secondary">
+            <span className="text-[0.625rem] font-black rounded-full px-2 py-0.5 chip-retro text-secondary">
               완료 시 5코인
             </span>
           </div>
@@ -420,7 +420,7 @@ export default function MyPage() {
                 className="flex items-center gap-3 rounded-lg border-2 tone-overdue p-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-extrabold text-dark truncate">{task.title}</p>
-                  <p className="text-[11px] font-semibold text-primary">마감 {formatDeadline(task.deadline)}</p>
+                  <p className="text-[0.6875rem] font-semibold text-primary">마감 {formatDeadline(task.deadline)}</p>
                 </div>
                 <button
                   onClick={() => handleCompleteOverdue(task.taskId)}
@@ -449,7 +449,7 @@ export default function MyPage() {
         <button
           type="button"
           onClick={() => setShowWithdrawModal(true)}
-          className="text-[11px] font-bold text-sub underline underline-offset-2 hover:text-primary"
+          className="text-[0.6875rem] font-bold text-sub underline underline-offset-2 hover:text-primary"
         >
           회원 탈퇴
         </button>

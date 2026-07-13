@@ -250,7 +250,7 @@ export default function DashboardPage() {
             <div className="card-retro">
               <div className="flex items-baseline gap-2 mb-4">
                 <h3 className="font-galmuri font-bold text-dark">달력</h3>
-                <span className="text-[10px] text-sub font-medium">날짜를 클릭해서 일정을 태스크로 추가해보세요!</span>
+                <span className="text-[0.625rem] text-sub font-medium">날짜를 클릭해서 일정을 태스크로 추가해보세요!</span>
               </div>
               <MiniCalendar tasks={taskList} onTaskAdded={fetchTasks} />
             </div>
@@ -301,7 +301,7 @@ export default function DashboardPage() {
           <div className="card-retro !py-3 !px-5 bg-secondary flex items-center gap-3">
             <span className="font-dungeon text-2xl text-on-accent">+{coinToast.coins} C</span>
             <div>
-              <p className="text-[10px] font-bold text-on-accent opacity-70">완료!</p>
+              <p className="text-[0.625rem] font-bold text-on-accent opacity-70">완료!</p>
               <p className="text-xs font-extrabold text-on-accent truncate max-w-[200px]">{coinToast.taskTitle}</p>
             </div>
           </div>

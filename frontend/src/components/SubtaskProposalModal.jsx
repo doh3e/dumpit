@@ -82,7 +82,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
           </div>
         ) : (
           <>
-            <p className="text-[11px] font-semibold text-sub">
+            <p className="text-[0.6875rem] font-semibold text-sub">
               저장하면 각 항목이 '{task.title}'의 하위 태스크로 만들어져요. 체크 해제하면 제외돼요.
             </p>
 
@@ -121,7 +121,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         disabled={!s.include}
                       />
                       <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-bold text-sub">예상 시간</label>
+                        <label className="text-[0.625rem] font-bold text-sub">예상 시간</label>
                         <input
                           type="number"
                           value={s.estimatedMinutes}
@@ -131,7 +131,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                           className="w-20 px-2 py-1 border-2 border-line rounded text-xs font-bold bg-card outline-none focus:border-primary"
                           disabled={!s.include}
                         />
-                        <span className="text-[10px] font-bold text-sub">분</span>
+                        <span className="text-[0.625rem] font-bold text-sub">분</span>
                       </div>
                     </div>
                   </div>

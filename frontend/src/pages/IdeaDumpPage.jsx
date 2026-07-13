@@ -62,7 +62,7 @@ function ExtractPreviewNode({ node, depth }) {
   return (
     <div style={{ paddingLeft: `${depth * 16}px` }} className="mt-1.5">
       <div className="rounded-lg border-2 border-line bg-card px-3 py-2">
-        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
+        <span className={`rounded-full border px-2 py-0.5 text-[0.625rem] font-black ${category.color}`}>
           {category.label}
         </span>
         <p className="mt-1 font-galmuri galmuri-semibold text-sm text-dark">{node.title}</p>
@@ -101,7 +101,7 @@ function CategoryPills({ value, onChange, compact = false, iconOnly = false }) {
               onClick={() => onChange(category.value)}
               className={`rounded-full border-2 font-bold transition-all ${
                 iconOnly ? 'w-7 h-7 text-sm flex items-center justify-center' :
-                compact ? 'px-2 py-1 text-[11px]' : 'px-2.5 py-1 text-xs'
+                compact ? 'px-2 py-1 text-[0.6875rem]' : 'px-2.5 py-1 text-xs'
               } ${
                 isSelected
                   ? 'border-edge bg-primary text-on-accent shadow-retro'
@@ -111,7 +111,7 @@ function CategoryPills({ value, onChange, compact = false, iconOnly = false }) {
               {iconOnly ? category.emoji : <><span aria-hidden="true">{category.emoji}</span> {category.label}</>}
             </button>
             {iconOnly && (
-              <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-chip px-1.5 py-0.5 text-[10px] font-bold text-dark border border-line opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-chip px-1.5 py-0.5 text-[0.625rem] font-bold text-dark border border-line opacity-0 transition-opacity group-hover:opacity-100">
                 {category.label}
               </div>
             )}
@@ -562,7 +562,7 @@ export default function IdeaDumpPage() {
                       }}
                       disabled={childCount === 0}
                       aria-label={isExpanded ? '하위 아이디어 접기' : '하위 아이디어 펼치기'}
-                      className="mt-0.5 h-6 w-6 shrink-0 text-[10px] font-black leading-none text-sub hover:text-dark disabled:invisible"
+                      className="mt-0.5 h-6 w-6 shrink-0 text-[0.625rem] font-black leading-none text-sub hover:text-dark disabled:invisible"
                     >
                       {isExpanded ? '▼' : '▶'}
                     </button>
@@ -572,12 +572,12 @@ export default function IdeaDumpPage() {
                       className="min-w-0 flex-1 text-left"
                     >
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
+                        <span className={`rounded-full border px-2 py-0.5 text-[0.625rem] font-black ${category.color}`}>
                           {category.label}
                         </span>
-                        {idea.pinned && <span className="text-[10px] font-black text-secondary">고정</span>}
-                        {idea.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
-                        {childCount > 0 && <span className="text-[10px] font-black text-sub">하위 {childCount}</span>}
+                        {idea.pinned && <span className="text-[0.625rem] font-black text-secondary">고정</span>}
+                        {idea.convertedTaskId && <span className="text-[0.625rem] font-black text-secondary">태스크 전환됨</span>}
+                        {childCount > 0 && <span className="text-[0.625rem] font-black text-sub">하위 {childCount}</span>}
                       </div>
                       <div className="mt-1 flex min-w-0 items-center gap-1.5">
                         <p className="truncate font-galmuri galmuri-semibold text-sm text-dark">{idea.title}</p>
@@ -607,7 +607,7 @@ export default function IdeaDumpPage() {
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-bold text-sub">수정 {formatDate(selectedIdea.updatedAt)}</p>
+                  <p className="text-[0.625rem] font-bold text-sub">수정 {formatDate(selectedIdea.updatedAt)}</p>
                   <h3 className="mt-1 font-galmuri font-bold text-lg text-dark">아이디어 상세</h3>
                 </div>
                 <label className="flex items-center gap-2 text-sm font-extrabold text-dark">
@@ -664,7 +664,7 @@ export default function IdeaDumpPage() {
               <div className="rounded-lg border-2 border-line bg-card p-3">
                 <div className="flex items-center justify-between gap-3">
                   <h4 className="font-galmuri font-bold text-sm text-dark">하위 아이디어</h4>
-                  <span className="text-[10px] font-black text-sub">{selectedChildren.length}개</span>
+                  <span className="text-[0.625rem] font-black text-sub">{selectedChildren.length}개</span>
                 </div>
                 {selectedChildren.length === 0 ? (
                   <p className="mt-3 text-xs font-semibold text-sub">아직 연결된 하위 아이디어가 없어요.</p>
@@ -680,10 +680,10 @@ export default function IdeaDumpPage() {
                           className="w-full rounded-lg border-2 border-line bg-accent px-3 py-2 text-left hover:border-line"
                         >
                           <div className="flex items-center gap-2">
-                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${category.color}`}>
+                            <span className={`rounded-full border px-2 py-0.5 text-[0.625rem] font-black ${category.color}`}>
                               {category.label}
                             </span>
-                            {child.convertedTaskId && <span className="text-[10px] font-black text-secondary">태스크 전환됨</span>}
+                            {child.convertedTaskId && <span className="text-[0.625rem] font-black text-secondary">태스크 전환됨</span>}
                           </div>
                           <p className="mt-1 truncate font-galmuri galmuri-semibold text-sm text-dark">{child.title}</p>
                         </button>

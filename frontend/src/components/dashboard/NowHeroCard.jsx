@@ -31,7 +31,7 @@ export default function NowHeroCard({
           <p className="label-retro mb-2">지금 할 일</p>
           {allDone ? (
             <>
-              <p className="font-galmuri font-bold text-[24px] max-sm:text-[19px] leading-tight text-dark">
+              <p className="font-galmuri font-bold text-[1.5rem] max-sm:text-[1.1875rem] leading-tight text-dark">
                 오늘 다 비웠어요 🚀
               </p>
               <p className="text-xs text-sub mt-1">머릿속이 가벼워졌네요. 내일 또 만나요.</p>
@@ -41,13 +41,13 @@ export default function NowHeroCard({
               <button
                 type="button"
                 onClick={() => onEdit(task)}
-                className="block max-w-full truncate text-left font-galmuri font-bold text-[24px] max-sm:text-[19px] leading-tight text-dark hover:text-primary transition-colors"
+                className="block max-w-full truncate text-left font-galmuri font-bold text-[1.5rem] max-sm:text-[1.1875rem] leading-tight text-dark hover:text-primary transition-colors"
                 title={task.title}
               >
                 {task.title}
               </button>
               {heroTime && (
-                <p className="font-dungeon text-[19px] text-primary mt-1">{heroTime} 마감</p>
+                <p className="font-dungeon text-[1.1875rem] text-primary mt-1">{heroTime} 마감</p>
               )}
               <p className="text-xs text-sub mt-1">{nowSuggestion.message}</p>
               <div className="mt-3 flex gap-2">
@@ -61,7 +61,7 @@ export default function NowHeroCard({
             </>
           ) : (
             <>
-              <p className="font-galmuri font-bold text-[24px] max-sm:text-[19px] leading-tight text-dark">
+              <p className="font-galmuri font-bold text-[1.5rem] max-sm:text-[1.1875rem] leading-tight text-dark">
                 {nowSuggestion?.title || '지금은 비어 있는 시간이에요.'}
               </p>
               <p className="text-xs text-sub mt-1">
@@ -75,7 +75,7 @@ export default function NowHeroCard({
 
       {!allDone && queue.length > 0 && (
         <div className="mt-4 border-t border-line pt-3">
-          <p className="text-[10px] font-bold text-sub mb-2">다음에 할 일</p>
+          <p className="text-[0.625rem] font-bold text-sub mb-2">다음에 할 일</p>
           <div className="flex flex-wrap gap-2">
             {queue.map((recommendation) => (
               <button
@@ -84,14 +84,14 @@ export default function NowHeroCard({
                 onClick={() => onEdit(recommendation.task)}
                 className="flex items-center gap-2 rounded-lg border-2 border-line bg-card px-3 py-1.5 text-left hover:border-edge transition-colors"
               >
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-line bg-chip text-sub flex-shrink-0">
+                <span className="text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full border border-line bg-chip text-sub flex-shrink-0">
                   {QUEUE_BUCKET_LABEL[recommendation.bucket] || '추천'}
                 </span>
                 <span className="text-xs font-extrabold text-dark truncate max-w-[180px]">
                   {recommendation.task.title}
                 </span>
                 {formatTime(recommendation.task.deadline) && (
-                  <span className="text-[10px] font-bold text-sub flex-shrink-0">
+                  <span className="text-[0.625rem] font-bold text-sub flex-shrink-0">
                     {formatTime(recommendation.task.deadline)}
                   </span>
                 )}

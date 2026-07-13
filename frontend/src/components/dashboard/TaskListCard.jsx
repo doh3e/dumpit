@@ -85,20 +85,20 @@ function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           {overdue && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-primary text-on-accent border-primary">
+            <span className="text-[0.625rem] font-bold px-2 py-0.5 rounded-full border bg-primary text-on-accent border-primary">
               마감 지남
             </span>
           )}
           {task.status === 'IN_PROGRESS' && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-secondary border-secondary text-on-accent">
+            <span className="text-[0.625rem] font-bold px-2 py-0.5 rounded-full border bg-secondary border-secondary text-on-accent">
               진행 중
             </span>
           )}
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cat.color}`}>
+          <span className={`text-[0.625rem] font-bold px-2 py-0.5 rounded-full border ${cat.color}`}>
             {cat.emoji} {cat.label}
           </span>
           {isChild && (
-            <span className="text-[10px] font-bold px-2 py-0.5 bg-chip border border-line rounded-full text-secondary">
+            <span className="text-[0.625rem] font-bold px-2 py-0.5 bg-chip border border-line rounded-full text-secondary">
               ↳ 서브
             </span>
           )}
@@ -107,7 +107,7 @@ function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
           <p className="font-galmuri galmuri-semibold text-dark text-sm truncate">{task.title}</p>
           <StickerBadge stickerCode={task.stickerCode} />
         </div>
-        <p className="text-[10px] text-sub font-medium mt-0.5">
+        <p className="text-[0.625rem] text-sub font-medium mt-0.5">
           {task.deadline && `마감 ${formatDeadline(task.deadline)}`}
           {task.estimatedMinutes && ` · ${task.estimatedMinutes}분`}
           {task.effectivePriority != null && ` · P ${Math.round(task.effectivePriority * 100)}`}
@@ -144,14 +144,14 @@ function DoneRow({ task, onToggle, onEdit }) {
         className="w-5 h-5 rounded bg-primary flex-shrink-0 flex items-center justify-center"
         style={{ border: '1.5px solid var(--accent)' }}
       >
-        <span className="text-on-accent text-[10px] font-bold">V</span>
+        <span className="text-on-accent text-[0.625rem] font-bold">V</span>
       </button>
       <div className="flex-1 min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
           <p className="font-galmuri galmuri-semibold text-dark text-sm line-through truncate">{task.title}</p>
           <StickerBadge stickerCode={task.stickerCode} />
         </div>
-        <p className="text-[10px] text-sub font-medium">
+        <p className="text-[0.625rem] text-sub font-medium">
           {doneAt && `${doneAt} 완료`}
           {coins > 0 && (
             <>

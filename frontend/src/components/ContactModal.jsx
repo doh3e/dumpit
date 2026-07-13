@@ -93,7 +93,7 @@ export default function ContactModal({ onClose }) {
                 disabled={!user}
                 required
               />
-              <p className="text-[10px] text-sub font-bold mt-1 text-right">
+              <p className="text-[0.625rem] text-sub font-bold mt-1 text-right">
                 {message.length} / 5000
               </p>
             </div>

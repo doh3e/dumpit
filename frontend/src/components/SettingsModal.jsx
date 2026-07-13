@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
 import { applyTheme, getThemePref } from '../utils/theme'
+import { applyFontScale, getFontScalePref, FONT_SCALES } from '../utils/fontScale'
 
 const DEFAULT_START = 9
 const DEFAULT_END = 22
@@ -55,6 +56,7 @@ export default function SettingsModal({ onClose }) {
     return v ? Number(v) : DEFAULT_END
   })
   const [themePref, setThemePref] = useState(getThemePref)
+  const [fontScale, setFontScale] = useState(getFontScalePref)
   const [permission, setPermission] = useState(getNotificationPermission)
   const [notificationsEnabled, setNotificationsEnabled] = useState(loadNotificationsEnabled)
   const [selectedThresholds, setSelectedThresholds] = useState(loadThresholds)
@@ -184,6 +186,25 @@ export default function SettingsModal({ onClose }) {
 
         <hr className="border-line mb-6" />
 
+        <section className="mb-6">
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">글자 크기</h3>
+          {/* 클릭 즉시 적용·영속 — 테마 버튼과 동일하게 저장 버튼과 무관 */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {Object.entries(FONT_SCALES).map(([value, { label }]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => { applyFontScale(value); setFontScale(value) }}
+                className={`text-xs ${fontScale === value ? 'btn-retro-primary' : 'btn-retro'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <hr className="border-line mb-6" />
+
         {/* 루틴 시작/끝: 현재 localStorage 전용(소비처 없음). 후속 작업에서 서버 저장으로 이전해
             추천 개인화·하루 용량 경고·AI 시간 배정 제약에 사용할 예정. */}
         <section className="mb-6">
@@ -252,7 +273,7 @@ export default function SettingsModal({ onClose }) {
           </div>
 
           <div className="mt-3 rounded-lg border-2 border-line bg-card px-4 py-3">
-            <p className="text-[11px] font-medium text-sub leading-relaxed">
+            <p className="text-[0.6875rem] font-medium text-sub leading-relaxed">
               {notificationNote}
             </p>
             <button
@@ -268,7 +289,7 @@ export default function SettingsModal({ onClose }) {
           {permission !== 'unsupported' && (
             <div className="mt-3 rounded-lg border-2 border-line bg-card px-4 py-3">
               <p className="text-xs font-bold text-dark mb-2">알림 시점</p>
-              <p className="text-[11px] font-medium text-sub mb-3">
+              <p className="text-[0.6875rem] font-medium text-sub mb-3">
                 처음 감지 시는 항상 알려드려요. 추가로 받을 시점을 선택하세요.
               </p>
               <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
