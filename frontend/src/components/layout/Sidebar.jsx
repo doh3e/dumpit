@@ -66,7 +66,14 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
           onClick={handleNavClick}
           className="flex items-center justify-center mb-4 px-2"
         >
-          <img src="/logo.webp" alt="덤핏" className="h-36 w-auto" />
+          {/* srcset: h-36(144px) 기준 DPR별 사전 리사이즈본 — 576px 원본의 4배 축소 계단 현상 방지 */}
+          <img
+            src="/logo.webp"
+            srcSet="/logo_144.webp 144w, /logo_180.webp 180w, /logo_216.webp 216w, /logo_288.webp 288w, /logo_432.webp 432w, /logo.webp 576w"
+            sizes="144px"
+            alt="덤핏"
+            className="h-36 w-auto"
+          />
         </Link>
       )}
 
