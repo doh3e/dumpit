@@ -354,7 +354,9 @@ export default function ShopPage() {
 
   const items = catalog?.items || []
   const coinBalance = catalog?.coinBalance ?? 0
-  const stickers = items.filter((item) => item.type === 'STICKER')
+  // 섹션 내 정렬: 가격 오름차순 → 이름 오름차순 (같은 컨셉 테마가 슬롯마다 흩어져 보이는 문제 방지)
+  const byPriceThenName = (a, b) => (a.price - b.price) || a.name.localeCompare(b.name, 'ko')
+  const stickers = items.filter((item) => item.type === 'STICKER').sort(byPriceThenName)
 
   const cardProps = {
     coinBalance,
@@ -381,7 +383,7 @@ export default function ShopPage() {
       )}
 
       {SLOT_SECTIONS.map(({ slot, title }) => {
-        const slotItems = items.filter((item) => item.slot === slot)
+        const slotItems = items.filter((item) => item.slot === slot).sort(byPriceThenName)
         if (slotItems.length === 0) return null
         return (
           <section key={slot}>

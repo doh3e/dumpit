@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
-import api from '../services/api'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
 import { applyTheme, getThemePref } from '../utils/theme'
 import { applyFontScale, getFontScalePref, FONT_SCALES } from '../utils/fontScale'
@@ -61,8 +59,6 @@ export default function SettingsModal({ onClose }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(loadNotificationsEnabled)
   const [selectedThresholds, setSelectedThresholds] = useState(loadThresholds)
   const [testSent, setTestSent] = useState(false)
-  const [purchases, setPurchases] = useState([])
-  const [loadingPurchases, setLoadingPurchases] = useState(true)
   const isIOS = isIOSDevice()
   const isStandalone = isStandaloneWebApp()
   const notificationNote = isIOS && !isStandalone
@@ -115,13 +111,6 @@ export default function SettingsModal({ onClose }) {
     setTestSent(true)
     window.setTimeout(() => setTestSent(false), 2500)
   }
-
-  useEffect(() => {
-    api.get('/shop/catalog')
-      .then((res) => setPurchases(res.data.items.filter((i) => i.owned)))
-      .catch(() => setPurchases([]))
-      .finally(() => setLoadingPurchases(false))
-  }, [])
 
   useEffect(() => {
     if (!isDesktop) return
@@ -305,30 +294,6 @@ export default function SettingsModal({ onClose }) {
                   </label>
                 ))}
               </div>
-            </div>
-          )}
-        </section>
-
-        <hr className="border-line mb-6" />
-
-        <section className="mb-6">
-          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">보유 아이템</h3>
-          {loadingPurchases ? (
-            <p className="text-xs text-sub font-medium">불러오는 중...</p>
-          ) : purchases.length === 0 ? (
-            <p className="text-xs text-sub font-medium">
-              아직 구매한 아이템이 없어요.{' '}
-              <Link to="/shop" onClick={onClose} className="font-bold text-primary hover:underline">
-                코인샵에서 구매해보세요!
-              </Link>
-            </p>
-          ) : (
-            <div className="flex flex-wrap gap-1.5">
-              {purchases.map((item) => (
-                <span key={item.code} className="chip-retro">
-                  {item.name}
-                </span>
-              ))}
             </div>
           )}
         </section>
