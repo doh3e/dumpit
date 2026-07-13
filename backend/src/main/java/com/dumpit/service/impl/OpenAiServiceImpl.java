@@ -226,6 +226,7 @@ public class OpenAiServiceImpl implements OpenAiService {
             - Date-only deadlines must use 23:59:00 unless the user gives a specific time.
             - Expressions that describe quantity or duration, such as "일주일 치", "한 달치", or "3시간짜리", are NOT deadlines by themselves.
             - If one global due date clearly applies to multiple tasks, apply the same deadline to those tasks.
+            - A leading time expression (오늘, 내일, 이번 주, 이번 주말 등) at the start of a sentence or run-on list applies to EVERY task chained in that same sentence (connected by ~하고, ~고, ~며, or commas), until a NEW time expression or a clear sentence break introduces a different time context. Do NOT let it leak past a sentence boundary onto tasks that have their own or no time context.
             - For Korean fixed-date events, infer the correct upcoming date only when it is directly relevant to the task. Example: "어버이날 선물" is due by May 8 at 23:59.
             - Split large or vague thoughts into practical tasks.
             - Use null or omit meaningfully impossible values, but keep valid JSON.
@@ -233,6 +234,15 @@ public class OpenAiServiceImpl implements OpenAiService {
             - category must be one of WORK, STUDY, APPOINTMENT, CHORE, ROUTINE, HEALTH, HOBBY, OTHER.
             - Focus on tasks that a user can actually execute.
             - All title and description fields MUST be written in Korean (한국어).
+
+            EXAMPLE (assume current time is 2026-03-10T09:00:00):
+            Input: "오늘 약선반 정리하고 베란다 청소하고 화장실 청소해야해. 내일은 장보기"
+            Output: {"tasks":[
+              {"title":"약선반 정리","description":"약선반 정리하기","deadline":"2026-03-10T23:59:00","estimatedMinutes":20,"priorityScore":0.6,"category":"CHORE"},
+              {"title":"베란다 청소","description":"베란다 청소하기","deadline":"2026-03-10T23:59:00","estimatedMinutes":30,"priorityScore":0.6,"category":"CHORE"},
+              {"title":"화장실 청소","description":"화장실 청소하기","deadline":"2026-03-10T23:59:00","estimatedMinutes":30,"priorityScore":0.6,"category":"CHORE"},
+              {"title":"장보기","description":"장보기","deadline":"2026-03-11T23:59:00","estimatedMinutes":40,"priorityScore":0.5,"category":"CHORE"}
+            ]}
 
             <user_input>
             Brain dump:
