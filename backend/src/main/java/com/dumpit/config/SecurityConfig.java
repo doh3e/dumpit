@@ -1,5 +1,6 @@
 package com.dumpit.config;
 
+import com.dumpit.repository.UserRepository;
 import com.dumpit.service.CustomOAuth2UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,7 +52,7 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final ObjectMapper objectMapper;
-    private final AuthenticatedRequestGuardFilter authenticatedRequestGuardFilter;
+    private final UserRepository userRepository;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -120,7 +121,10 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
-            .addFilterAfter(authenticatedRequestGuardFilter, AuthorizationFilter.class)
+            // 직접 생성해 시큐리티 체인에만 등록한다. @Component로 두면 서블릿 컨테이너에도
+            // 자동 등록되어, @Order로 SecurityContext 확립 전 실행 시 once-per-request 우회가 열린다.
+            .addFilterAfter(new AuthenticatedRequestGuardFilter(userRepository, objectMapper),
+                    AuthorizationFilter.class)
 
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) ->

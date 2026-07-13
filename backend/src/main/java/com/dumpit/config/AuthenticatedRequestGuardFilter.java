@@ -12,7 +12,6 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
@@ -34,13 +33,23 @@ import java.util.Set;
  *       simple request로 위조되는 것을, 브라우저가 크로스오리진에서 임의로 못 붙이는
  *       X-Requested-With 헤더 존재 여부로 막는다.</li>
  * </ol>
+ *
+ * <p><b>빈 등록 주의</b>: 이 필터는 {@code @Component}가 아니다. 시큐리티 체인에
+ * {@code addFilterAfter(AuthorizationFilter.class)}로만 등록되어야 하며(SecurityConfig에서 직접 생성),
+ * 서블릿 컨테이너 자동 등록을 겸하면 누군가 {@code @Order}로 SecurityContext 확립 전에 실행시켜
+ * once-per-request 속성을 미리 세팅 → 체인 내 가드가 통째로 스킵되는 우회가 가능해진다.
  */
-@Component
 @RequiredArgsConstructor
 public class AuthenticatedRequestGuardFilter extends OncePerRequestFilter {
 
+    /** 하위 경로를 가지므로 접두어(startsWith) 매칭. */
     private static final Set<String> EXEMPT_PATH_PREFIXES = Set.of(
-            "/auth/", "/oauth2/", "/login/oauth2/", "/logout", "/health", "/error"
+            "/auth/", "/oauth2/", "/login/oauth2/"
+    );
+
+    /** 정확 매칭(equals) — /healthfoo·/errorbar 같은 경계 우회를 막는다. (/logout은 실제 경로가 /auth/logout이라 위 접두어에 포함됨.) */
+    private static final Set<String> EXEMPT_EXACT_PATHS = Set.of(
+            "/health", "/error"
     );
 
     private static final Set<String> STATE_CHANGING_METHODS = Set.of("POST", "PUT", "PATCH", "DELETE");
@@ -68,7 +77,10 @@ public class AuthenticatedRequestGuardFilter extends OncePerRequestFilter {
 
         String email = extractEmail(auth);
         if (email == null) {
-            filterChain.doFilter(request, response);
+            // 인증됐는데 email 식별 불가는 비정상 — fail-closed로 401 차단.
+            // (예외 경로/미인증은 이미 위에서 통과됐으므로, 여기 도달 = 비예외·인증됨·email-null 이상 케이스뿐.)
+            writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "SESSION_INVALIDATED", "세션이 만료되었습니다. 다시 로그인해주세요.");
             return;
         }
 
@@ -96,6 +108,7 @@ public class AuthenticatedRequestGuardFilter extends OncePerRequestFilter {
      */
     private boolean isExemptPath(HttpServletRequest request) {
         String path = URL_PATH_HELPER.getPathWithinApplication(request);
+        if (EXEMPT_EXACT_PATHS.contains(path)) return true;
         for (String prefix : EXEMPT_PATH_PREFIXES) {
             if (path.startsWith(prefix)) return true;
         }

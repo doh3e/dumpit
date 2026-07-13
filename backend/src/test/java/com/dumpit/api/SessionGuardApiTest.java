@@ -55,6 +55,17 @@ class SessionGuardApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void 인증됐지만_email없는_principal은_401_fail_closed() throws Exception {
+        // 인증된 OAuth2User인데 email 속성이 없는 이상 케이스 → 통과가 아니라 fail-closed 401.
+        // (sub만 넣어 유효한 principal을 만들되 email은 비운다.)
+        MvcResult result = mockMvc.perform(get("/tasks")
+                        .with(oauth2Login().attributes(attrs -> attrs.put("sub", "no-email-subject"))))
+                .andExpect(status().isUnauthorized())
+                .andReturn();
+        assertKoreanError(result);
+    }
+
     // ---------- CSRF 커스텀 헤더 ----------
 
     @Test
