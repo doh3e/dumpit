@@ -80,6 +80,10 @@ body {
     background-image: var(--bg-pattern, none);
   }
 
+  /* 스크롤은 되지만 스크롤바는 숨김 (sticky 사이드바 등) */
+  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
   .btn-retro {
     @apply font-dungeon text-sm px-4 py-2.5 rounded-[11px] bg-card text-dark inline-flex items-center justify-center whitespace-nowrap;
     border: 1.5px solid var(--edge);

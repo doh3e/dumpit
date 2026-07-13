@@ -81,8 +81,8 @@ export default function Header({ onOpenDrawer }) {
 
   return (
     <header className="app-header sticky top-0 z-50 bg-chrome border-b border-chrome-line">
-      {/* 3분할 그리드 — 로고는 항상 좌측, 배지·프사는 항상 우측, 메뉴는 컨테이너 정중앙 */}
-      <div className="max-w-screen-2xl mx-auto px-6 h-16 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+      {/* 3분할 그리드 풀블리드 — 로고는 화면 왼쪽 끝, 배지·프사는 오른쪽 끝, 메뉴는 정중앙 */}
+      <div className="w-full px-6 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <div className="col-start-1 flex items-center gap-2 justify-self-start">
           {/* Hamburger button - only below lg */}
           <button
@@ -93,7 +93,8 @@ export default function Header({ onOpenDrawer }) {
             <img src={menuImage} alt="" className="h-5 w-5 object-contain" />
           </button>
           <Link to="/dashboard" className="flex items-center gap-2">
-            <img src="/text_logo.webp" alt="덤핏" className="h-24 w-auto" />
+            {/* 투명 여백 트리밍된 로고 — 바(h-20)를 넘지 않게. h-24 시절엔 오버플로+비대칭 여백으로 바가 어긋나 보였음 */}
+            <img src="/text_logo.webp" alt="덤핏" className="h-12 w-auto" />
             <span className="chip-retro text-secondary">BETA</span>
           </Link>
         </div>

@@ -124,7 +124,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
     <>
       {/* Desktop sidebar (lg+) */}
       {/* sticky: 본문이 길어져도 사이드바(설정·공지 포함)가 화면에 고정, 넘치면 내부 스크롤 */}
-      <aside className="app-sidebar hidden lg:flex flex-col w-56 sticky top-16 self-start h-[calc(100vh-4rem)] overflow-y-auto bg-chrome border-r border-chrome-line pt-6 pb-6 px-3 gap-1">
+      <aside className="app-sidebar hidden lg:flex flex-col w-56 sticky top-20 self-start h-[calc(100vh-5rem)] overflow-y-auto scrollbar-none bg-chrome border-r border-chrome-line pt-6 pb-10 px-3 gap-1">
         {sidebarContent}
       </aside>
 
