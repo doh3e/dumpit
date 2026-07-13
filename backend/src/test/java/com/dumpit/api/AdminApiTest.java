@@ -193,18 +193,20 @@ class AdminApiTest extends ApiIntegrationTestBase {
     // ---------- 보안 케이스: 밴된 유저가 세션이 살아있는 동안 일반 API를 계속 쓸 수 있는지 ----------
 
     @Test
-    void 밴된유저_세션유지중_GET_tasks_차단여부_실증() throws Exception {
+    void 밴된유저_세션유지중_GET_tasks_차단됨() throws Exception {
         mockMvc.perform(patch("/admin/users/" + userB.getUserId() + "/ban").with(asUser(ADMIN))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reason\":\"테스트 밴\"}"))
                 .andExpect(status().isOk());
 
         // OAuth 세션은 로그인 시점 캐시라 밴 이후에도 살아있는 세션으로는 계속 인증된 상태를 유지한다.
-        // TaskController/TaskServiceImpl.findUser()는 findByEmail()만 하고 isActive()를 걸지 않으므로
-        // 실제로 200이 나온다 — 밴된 유저가 API를 계속 쓸 수 있는 보안 갭. High로 report-notes에 기록함
-        // (docs/superpowers/audits/report-notes.md, 태스크8 Medium 노트와 연결).
-        mockMvc.perform(get("/tasks").with(asUser(USER_B)))
-                .andExpect(status().isOk());
+        // AuthenticatedRequestGuardFilter가 요청마다 DB를 재조회해 isActive()를 확인하므로
+        // 이제는 401(SESSION_INVALIDATED)로 차단된다 — 이전엔 200이 나오던 보안 갭이었다
+        // (docs/superpowers/audits/2026-07-13-api-audit-report.md §2 High #1 픽스).
+        MvcResult result = mockMvc.perform(get("/tasks").with(asUser(USER_B)))
+                .andExpect(status().isUnauthorized())
+                .andReturn();
+        assertKoreanError(result);
     }
 
     // ---------- GET/POST/PATCH/DELETE /admin/notices ----------

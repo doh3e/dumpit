@@ -27,6 +27,7 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequest
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 import java.io.IOException;
@@ -50,6 +51,7 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final ObjectMapper objectMapper;
+    private final AuthenticatedRequestGuardFilter authenticatedRequestGuardFilter;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -117,6 +119,8 @@ public class SecurityConfig {
                 .requestMatchers("/health", "/error").permitAll()
                 .anyRequest().authenticated()
             )
+
+            .addFilterAfter(authenticatedRequestGuardFilter, AuthorizationFilter.class)
 
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) ->

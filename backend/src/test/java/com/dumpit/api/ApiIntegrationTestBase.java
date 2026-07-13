@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -75,12 +76,21 @@ public abstract class ApiIntegrationTestBase {
         }
     }
 
-    /** OAuth 세션 로그인 재현 — 컨트롤러는 principal.getAttribute("email")로 유저를 식별한다 */
+    /**
+     * OAuth 세션 로그인 재현 — 컨트롤러는 principal.getAttribute("email")로 유저를 식별한다.
+     * AuthenticatedRequestGuardFilter의 CSRF 커스텀 헤더 게이트를 통과하도록
+     * X-Requested-With 헤더도 함께 합성한다(프론트 axios 인스턴스 기본 헤더와 동일).
+     */
     protected RequestPostProcessor asUser(String email) {
-        return oauth2Login().attributes(attrs -> {
+        RequestPostProcessor login = oauth2Login().attributes(attrs -> {
             attrs.put("email", email);
             attrs.put("name", "테스트유저");
         });
+        return request -> {
+            MockHttpServletRequest r = login.postProcessRequest(request);
+            r.addHeader("X-Requested-With", "XMLHttpRequest");
+            return r;
+        };
     }
 
     /** 오류 응답 형식 + 한글 메시지 + 영어 원문 미노출 검증 */
