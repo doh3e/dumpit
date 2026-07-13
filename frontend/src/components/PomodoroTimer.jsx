@@ -216,9 +216,22 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
   const isFocus = mode === MODE.FOCUS
   const isDesktop = typeof window !== 'undefined' && Boolean(window.dumpitDesktop)
 
+  // 유휴 중 테마/스킨 변경 감지 — applyTheme·applySkins 모두 <html> dataset을 바꾸므로 observer 하나로 커버
+  const [skinTick, setSkinTick] = useState(0)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.dumpitDesktop) return undefined
+    const observer = new MutationObserver(() => setSkinTick((t) => t + 1))
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'data-skin-pomodoro'],
+    })
+    return () => observer.disconnect()
+  }, [])
+
   useEffect(() => {
     if (typeof window === 'undefined' || !window.dumpitDesktop?.updatePomodoroState) return
 
+    const style = getComputedStyle(document.documentElement)
     window.dumpitDesktop.updatePomodoroState({
       active: true,
       mode,
@@ -228,8 +241,14 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       taskTitle: selectedTask?.title || '',
       selectedTaskId: String(selectedTaskId || ''),
       tasks: desktopTasks,
+      colors: {
+        focus: style.getPropertyValue('--pomo-focus').trim(),
+        break: style.getPropertyValue('--pomo-break').trim(),
+        ring: style.getPropertyValue('--pomo-ring').trim(),
+        soft: style.getPropertyValue('--pomo-soft').trim(),
+      },
     })
-  }, [mode, min, sec, running, progress, selectedTask, selectedTaskId, desktopTasks])
+  }, [mode, min, sec, running, progress, selectedTask, selectedTaskId, desktopTasks, skinTick])
 
   useEffect(() => {
     return () => {
