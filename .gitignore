@@ -40,3 +40,6 @@ backup_*.sql
 
 # Python (½ºÇÁ¶óÀÌÆ® »ý¼º ½ºÅ©¸³Æ®)
 __pycache__/
+
+# superpowers ê³¼ì • ë¬¸ì„œ (plan/spec/audit) - ë¡œì»¬ ì „ìš©
+docs/superpowers/
