@@ -34,7 +34,8 @@
   /* 색 역할: accent=주 포인트(빨강) accent2=보조 포인트(틸) warn=마감 임박(앰버) starlight=별·보상(골드) */
   --warn:#D98E2B; --starlight:#E9B44C;
   --chrome-bg:var(--card); --chrome-line:var(--line);
-  --pomo-focus:var(--accent); --pomo-break:var(--accent2); --pomo-ring:var(--line);
+  /* 뽀모도로는 전역 테마와 독립된 고정 팔레트 — pomo 스킨 장착 시에만 아래 스킨 블록이 관장 */
+  --pomo-focus:#D95F52; --pomo-break:#3E8E85; --pomo-ring:#E0D2B6; --pomo-soft:#F7EFDF;
 }
 
 [data-theme="dark"] {
@@ -45,6 +46,7 @@
   --overlay:rgba(10,8,20,.55);
   --danger:#E57B67;
   --warn:#E9B44C; --starlight:#E9B44C;
+  --pomo-focus:#F09355; --pomo-break:#5FC4B4; --pomo-ring:#413966; --pomo-soft:#1F1B2E;
 }
 
 *, *::before, *::after {
@@ -338,11 +340,11 @@ body {
 [data-skin-chrome="wood"][data-theme="dark"] { --chrome-bg:#2A2118; --chrome-line:#4A3A28; }
 
 /* ==== 상점 스킨: 뽀모도로 ==== */
-[data-skin-pomodoro="ocean"] { --pomo-focus:#2E7D8A; --pomo-break:#D97757; }
-[data-skin-pomodoro="ocean"][data-theme="dark"] { --pomo-focus:#5FB8C9; --pomo-break:#F09355; }
-[data-skin-pomodoro="lavender"] { --pomo-focus:#8A63C4; --pomo-break:#3E8E85; }
-[data-skin-pomodoro="lavender"][data-theme="dark"] { --pomo-focus:#B79CE8; --pomo-break:#5FC4B4; }
-[data-skin-pomodoro="rose"] { --pomo-focus:#C25B6E; --pomo-break:#6E9E62; }
-[data-skin-pomodoro="rose"][data-theme="dark"] { --pomo-focus:#E8899B; --pomo-break:#8FBF6F; }
-[data-skin-pomodoro="candy"] { --pomo-focus:#E05C8A; --pomo-break:#5CA8E0; --pomo-ring:#F0C4D8; }
-[data-skin-pomodoro="candy"][data-theme="dark"] { --pomo-focus:#F08CAE; --pomo-break:#7FB8E8; --pomo-ring:#5A3A48; }
+[data-skin-pomodoro="ocean"] { --pomo-focus:#2E7D8A; --pomo-break:#D97757; --pomo-soft:#E4EFEC; }
+[data-skin-pomodoro="ocean"][data-theme="dark"] { --pomo-focus:#5FB8C9; --pomo-break:#F09355; --pomo-soft:#1E3240; }
+[data-skin-pomodoro="lavender"] { --pomo-focus:#8A63C4; --pomo-break:#3E8E85; --pomo-soft:#EEEAF4; }
+[data-skin-pomodoro="lavender"][data-theme="dark"] { --pomo-focus:#B79CE8; --pomo-break:#5FC4B4; --pomo-soft:#32294E; }
+[data-skin-pomodoro="rose"] { --pomo-focus:#C25B6E; --pomo-break:#6E9E62; --pomo-soft:#F5E9EA; }
+[data-skin-pomodoro="rose"][data-theme="dark"] { --pomo-focus:#E8899B; --pomo-break:#8FBF6F; --pomo-soft:#3A282E; }
+[data-skin-pomodoro="candy"] { --pomo-focus:#E05C8A; --pomo-break:#5CA8E0; --pomo-ring:#F0C4D8; --pomo-soft:#FBE4EE; }
+[data-skin-pomodoro="candy"][data-theme="dark"] { --pomo-focus:#F08CAE; --pomo-break:#7FB8E8; --pomo-ring:#5A3A48; --pomo-soft:#402832; }
