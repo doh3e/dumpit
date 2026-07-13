@@ -53,7 +53,7 @@ dependencies {
     runtimeOnly 'javax.xml.bind:jaxb-api:2.3.1'
 
     // Sentry error monitoring
-    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.40.0'
+    implementation 'io.sentry:sentry-spring-boot-4:8.44.1'
 
     // Flyway (DB 스키마 마이그레이션) — Postgres 15+는 flyway-database-postgresql 필요
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
