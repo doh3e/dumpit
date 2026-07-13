@@ -12,7 +12,7 @@
 
 - 아트 스타일: 외곽선 없음, 좌상단 광원, 톤 2~4개, 투명 배경, 본체 지름 ~28px(고리·플레어는 캔버스 꽉 채움).
 - **다운스케일 제약: 핵심 디테일은 2×2px 클러스터 이상** (모바일에서 22px로 축소 표시됨).
-- 정지 스프라이트 32×32, 애니 스프라이트 128×32(가로 4프레임, 각 32×32).
+- 정지 스프라이트 32×32, 애니 스프라이트 256×32(가로 8프레임, 각 32×32 — 4프레임 90° 스텝은 Task 3 검수에서 끊김 피드백으로 확장됨).
 - 각 아트 태스크는 **8배 확대 미리보기 시트 사용자 검수 통과 후에만 커밋** (하드 게이트).
 - 백엔드 테스트: `cd backend` 후 `$env:JAVA_HOME = 'C:\Program Files\RedHat\java-21-openjdk-21.0.10.0.7-1'; ./gradlew test` (JDK21 필수 — 기본 java는 25라 JAVA_HOME 지정 필요).
 - 프론트 검증: `npm run lint`, `npm run build` (테스트 러너 없음 — dev 서버 스모크로 보완).
@@ -376,8 +376,8 @@ export const PLANET_SPRITES = {
   'planet.candy': { name: '사탕 행성', img: planetCandy },
   'planet.galaxy': { name: '나선 은하', img: planetGalaxy },
   'planet.whale': { name: '우주 고래', img: planetWhale },
-  'planet.sun': { name: '태양', img: planetSun, frames: 4, fps: 5 },
-  'planet.blackhole': { name: '블랙홀', img: planetBlackhole, frames: 4, fps: 5 },
+  'planet.sun': { name: '태양', img: planetSun, frames: 8, fps: 5 },
+  'planet.blackhole': { name: '블랙홀', img: planetBlackhole, frames: 8, fps: 5 },
 }
 ```
 
@@ -385,7 +385,7 @@ export const PLANET_SPRITES = {
 
 ```jsx
 // 도트 스프라이트 공용 렌더러 — frames 메타가 있으면 시트 애니, 없으면 정지 img.
-// 애니는 가로 4프레임 시트 전제 (keyframes pixel-sprite-4, index.css).
+// 애니는 가로 8프레임 시트 전제 (keyframes pixel-sprite-8, index.css).
 export default function PixelSprite({ sprite, className = '', style }) {
   if (!sprite) return null
   if (!sprite.frames) {
@@ -417,13 +417,14 @@ export default function PixelSprite({ sprite, className = '', style }) {
 - [ ] **Step 3: index.css에 keyframes + reduced-motion**
 
 ```css
-/* 도트 시트 애니 — 4프레임 전용: steps(4)가 0/33.33/66.67/100% 위치 = 프레임 1~4 */
+/* 도트 시트 애니 — 8프레임 전용: steps(8)가 0~100% 8등분 위치 = 프레임 1~8
+   (N프레임 일반식: to = 100% * N/(N-1)) */
 .pixel-sprite-anim {
-  animation: pixel-sprite-4 0.8s steps(4) infinite;
+  animation: pixel-sprite-8 1.6s steps(8) infinite;
 }
-@keyframes pixel-sprite-4 {
+@keyframes pixel-sprite-8 {
   from { background-position-x: 0%; }
-  to { background-position-x: 133.3333%; }
+  to { background-position-x: 114.2857%; }
 }
 ```
 
