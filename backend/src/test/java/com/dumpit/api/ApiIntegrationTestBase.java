@@ -6,20 +6,20 @@ import com.dumpit.service.EmailService;
 import com.dumpit.service.GoogleCalendarService;
 import com.dumpit.service.OAuthRevocationService;
 import com.dumpit.service.OpenAiService;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -42,12 +42,12 @@ public abstract class ApiIntegrationTestBase {
     @Autowired protected EntityManagerFactory entityManagerFactory;
 
     // 외부 의존성 목 — 상속한 테스트에서 given(...)으로 스텁
-    @MockBean protected OpenAiService openAiService;
-    @MockBean protected GoogleCalendarService googleCalendarService;
-    @MockBean protected EmailService emailService;
-    @MockBean protected OAuthRevocationService oauthRevocationService;
+    @MockitoBean protected OpenAiService openAiService;
+    @MockitoBean protected GoogleCalendarService googleCalendarService;
+    @MockitoBean protected EmailService emailService;
+    @MockitoBean protected OAuthRevocationService oauthRevocationService;
     // Redis 기반 실구현(RedisOAuth2AuthorizedClientRepository)이 테스트 환경 Redis에 연결을 시도하는 것을 막는다
-    @MockBean protected OAuth2AuthorizedClientRepository authorizedClientRepository;
+    @MockitoBean protected OAuth2AuthorizedClientRepository authorizedClientRepository;
 
     protected static final String USER_A = "usera@test.dumpit.local";
     protected static final String USER_B = "userb@test.dumpit.local";
@@ -98,7 +98,7 @@ public abstract class ApiIntegrationTestBase {
         String body = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
         JsonNode json = objectMapper.readTree(body);
         assertThat(json.has("error")).as("오류 응답에 error 필드 필요: " + body).isTrue();
-        String message = json.get("error").asText();
+        String message = json.get("error").asString();
         assertThat(message).as("한글 메시지 필요, 실제: " + message).containsPattern("[가-힣]");
         assertThat(message.toLowerCase())
                 .as("영어 원문 노출: " + message)

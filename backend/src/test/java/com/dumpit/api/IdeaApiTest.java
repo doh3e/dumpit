@@ -7,11 +7,11 @@ import com.dumpit.repository.IdeaRepository;
 import com.dumpit.service.AiUsageLimitExceededException;
 import com.dumpit.service.AiUsageService;
 import com.dumpit.service.OpenAiService;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
@@ -43,7 +43,7 @@ class IdeaApiTest extends ApiIntegrationTestBase {
     // 감사로그 전용이라 시드해도 한도 판정에 영향 없음). 게다가 test 프로파일은 Redis 포트를 의도적으로
     // 막아둬(application-test.yml 참고) consume()이 항상 fail-open으로 통과한다. 따라서 429 시나리오는
     // AiUsageService 자체를 목 처리해 컨트롤러~예외핸들러 계약만 검증한다.
-    @MockBean private AiUsageService aiUsageService;
+    @MockitoBean private AiUsageService aiUsageService;
 
     private Idea seedIdea(User user, String title, Idea parent) {
         Idea idea = Idea.of(user, title, null);
@@ -78,8 +78,8 @@ class IdeaApiTest extends ApiIntegrationTestBase {
         JsonNode root = objectMapper.readTree(body);
         Map<String, String> parentByIdeaId = new HashMap<>();
         root.forEach(node -> parentByIdeaId.put(
-                node.get("ideaId").asText(),
-                node.hasNonNull("parentIdeaId") ? node.get("parentIdeaId").asText() : null));
+                node.get("ideaId").asString(),
+                node.hasNonNull("parentIdeaId") ? node.get("parentIdeaId").asString() : null));
 
         assertThat(parentByIdeaId.get(c1.getIdeaId().toString())).isEqualTo(parent1.getIdeaId().toString());
         assertThat(parentByIdeaId.get(c2.getIdeaId().toString())).isEqualTo(parent1.getIdeaId().toString());
@@ -374,7 +374,7 @@ class IdeaApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.title").value("전환할 아이디어"))
                 .andExpect(jsonPath("$.category").value("WORK"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String taskId = objectMapper.readTree(body).get("taskId").asText();
+        String taskId = objectMapper.readTree(body).get("taskId").asString();
 
         Idea updated = ideaRepository.findActiveById(idea.getIdeaId()).orElseThrow();
         assertThat(updated.getConvertedTask()).isNotNull();

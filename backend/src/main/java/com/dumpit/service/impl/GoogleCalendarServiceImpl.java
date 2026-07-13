@@ -3,7 +3,7 @@ package com.dumpit.service.impl;
 import com.dumpit.exception.ApiException;
 import com.dumpit.service.GoogleCalendarService;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

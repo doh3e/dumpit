@@ -1,7 +1,7 @@
 package com.dumpit.api;
 
 import com.dumpit.entity.User;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
@@ -41,7 +41,7 @@ class ShopApiTest extends ApiIntegrationTestBase {
     /** items 배열에서 code가 일치하는 노드를 찾는다 */
     private JsonNode findItem(JsonNode items, String code) {
         for (JsonNode item : items) {
-            if (code.equals(item.get("code").asText())) return item;
+            if (code.equals(item.get("code").asString())) return item;
         }
         throw new AssertionError("카탈로그에서 코드를 찾을 수 없음: " + code);
     }
@@ -63,8 +63,8 @@ class ShopApiTest extends ApiIntegrationTestBase {
         assertThat(before.get("coinBalance").asInt()).isEqualTo(1000);
         assertThat(before.get("items")).hasSize(26);
         JsonNode bgOceanBefore = findItem(before.get("items"), "bg.ocean");
-        assertThat(bgOceanBefore.get("type").asText()).isEqualTo("THEME");
-        assertThat(bgOceanBefore.get("slot").asText()).isEqualTo("BACKGROUND");
+        assertThat(bgOceanBefore.get("type").asString()).isEqualTo("THEME");
+        assertThat(bgOceanBefore.get("slot").asString()).isEqualTo("BACKGROUND");
         assertThat(bgOceanBefore.get("owned").asBoolean()).isFalse();
         assertThat(bgOceanBefore.get("equipped").asBoolean()).isFalse();
 

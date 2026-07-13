@@ -8,13 +8,13 @@ import com.dumpit.service.OpenAiService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.oauth2.client.ClientAuthorizationRequiredException;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
@@ -45,7 +45,7 @@ class DashboardCalendarApiTest extends ApiIntegrationTestBase {
     // 받는 클라이언트는 항상 그 고정값이 되어 스코프 조건을 검증할 수 없었다(최초 시도에서 실측 확인).
     // OAuth2AuthorizedClientManager를 통째로 목 처리하면 이 훅이 적용되는 instanceof 체크
     // (DefaultOAuth2AuthorizedClientManager)를 벗어나 정상적으로 시나리오별 스텁이 가능하다.
-    @MockBean private OAuth2AuthorizedClientManager authorizedClientManager;
+    @MockitoBean private OAuth2AuthorizedClientManager authorizedClientManager;
 
     @BeforeEach
     void stubOpenAi() {

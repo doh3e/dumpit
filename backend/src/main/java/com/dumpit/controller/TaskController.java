@@ -6,7 +6,7 @@ import com.dumpit.entity.Task;
 import com.dumpit.exception.BadRequestException;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.TaskService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

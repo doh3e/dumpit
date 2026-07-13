@@ -4,11 +4,11 @@ import com.dumpit.entity.ActivityLog;
 import com.dumpit.entity.User;
 import com.dumpit.repository.ActivityLogRepository;
 import com.dumpit.service.ActivityLogService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
 
 import java.util.UUID;
 
@@ -36,7 +36,7 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         if (value == null) return null;
         try {
             return objectMapper.writeValueAsString(value);
-        } catch (JsonProcessingException ex) {
+        } catch (JacksonException ex) {
             log.warn("Could not serialize activity log payload: {}", ex.getMessage());
             return "{}";
         }

@@ -2,7 +2,7 @@ package com.dumpit.api;
 
 import com.dumpit.entity.Task;
 import com.dumpit.repository.TaskRepository;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -89,13 +89,13 @@ class AdminApiTest extends ApiIntegrationTestBase {
         JsonNode users = objectMapper.readTree(result.getResponse().getContentAsString(StandardCharsets.UTF_8));
         JsonNode userANode = findByEmail(users, USER_A);
         assertThat(userANode.get("activity").get("taskCount").asLong()).isEqualTo(2);
-        assertThat(userANode.get("status").asText()).isEqualTo("ACTIVE");
+        assertThat(userANode.get("status").asString()).isEqualTo("ACTIVE");
         assertThat(findByEmail(users, ADMIN).get("isAdmin").asBoolean()).isTrue();
     }
 
     private JsonNode findByEmail(JsonNode users, String email) {
         for (JsonNode node : users) {
-            if (email.equals(node.get("email").asText())) return node;
+            if (email.equals(node.get("email").asString())) return node;
         }
         throw new AssertionError("응답에 email=" + email + " 유저가 없음: " + users);
     }
@@ -376,6 +376,6 @@ class AdminApiTest extends ApiIntegrationTestBase {
     private UUID extractUuid(MvcResult result, String field) throws Exception {
         String body = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
         JsonNode json = objectMapper.readTree(body);
-        return UUID.fromString(json.get(field).asText());
+        return UUID.fromString(json.get(field).asString());
     }
 }

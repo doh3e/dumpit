@@ -2,11 +2,11 @@ package com.dumpit.service.impl;
 
 import com.dumpit.service.OpenAiService;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
-import org.springframework.boot.http.client.ClientHttpRequestFactorySettings;
+import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -49,7 +49,7 @@ public class OpenAiServiceImpl implements OpenAiService {
         this.restClient = RestClient.builder()
                 .baseUrl("https://api.openai.com/v1")
                 .requestFactory(ClientHttpRequestFactoryBuilder.detect()
-                        .build(ClientHttpRequestFactorySettings.defaults()
+                        .build(HttpClientSettings.defaults()
                                 .withConnectTimeout(Duration.ofSeconds(5))
                                 .withReadTimeout(Duration.ofSeconds(30))))
                 .defaultHeader("Authorization", "Bearer " + apiKey)

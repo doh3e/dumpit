@@ -310,7 +310,7 @@ class TaskApiTest extends ApiIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"A의 할일\"}"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String taskId = objectMapper.readTree(body).get("taskId").asText();
+        String taskId = objectMapper.readTree(body).get("taskId").asString();
 
         // userB가 접근 → 4xx + A 데이터 미노출
         MvcResult result = mockMvc.perform(patch("/tasks/" + taskId).with(asUser(USER_B))
