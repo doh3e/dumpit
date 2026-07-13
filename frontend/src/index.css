@@ -375,30 +375,27 @@ body {
 [data-skin-chrome="candy"] { --chrome-bg:#F7E7EE; --chrome-line:#E5BCCE; }
 [data-skin-chrome="candy"][data-theme="dark"] { --chrome-bg:#3A2230; --chrome-line:#5E3B50; }
 
-/* 컨셉 크롬 도트 엣지 장식 — 사이드바 안쪽 세로 + 상단바 하단 가로 (COLOR 크롬은 장식 없음) */
-.app-sidebar, .app-header { position: relative; }
-.app-sidebar::after, .app-header::after {
-  content: none; position: absolute; pointer-events: none;
-  image-rendering: pixelated; background-repeat: repeat;
+/* 컨셉 크롬 도트 장식 — 크롬 전면에 은은한 산포 타일 (COLOR 크롬은 장식 없음)
+   background-image라 메뉴/버튼 콘텐츠보다 항상 아래에 깔린다 */
+.app-sidebar, .app-header {
+  background-repeat: repeat; background-size: 48px 48px; image-rendering: pixelated;
 }
-.app-sidebar::after { top: 0; bottom: 0; right: 0; width: 24px; background-size: 24px 24px; }
-.app-header::after { left: 0; right: 0; bottom: 0; height: 24px; background-size: 24px 24px; }
-[data-skin-chrome="sprout"] .app-sidebar::after,
-[data-skin-chrome="sprout"] .app-header::after { content: ""; background-image: url('./assets/shop/deco_sprout_light.png'); }
-[data-skin-chrome="sprout"][data-theme="dark"] .app-sidebar::after,
-[data-skin-chrome="sprout"][data-theme="dark"] .app-header::after { background-image: url('./assets/shop/deco_sprout_dark.png'); }
-[data-skin-chrome="galaxy"] .app-sidebar::after,
-[data-skin-chrome="galaxy"] .app-header::after { content: ""; background-image: url('./assets/shop/deco_galaxy_light.png'); }
-[data-skin-chrome="galaxy"][data-theme="dark"] .app-sidebar::after,
-[data-skin-chrome="galaxy"][data-theme="dark"] .app-header::after { background-image: url('./assets/shop/deco_galaxy_dark.png'); }
-[data-skin-chrome="wood"] .app-sidebar::after,
-[data-skin-chrome="wood"] .app-header::after { content: ""; background-image: url('./assets/shop/deco_wood_light.png'); }
-[data-skin-chrome="wood"][data-theme="dark"] .app-sidebar::after,
-[data-skin-chrome="wood"][data-theme="dark"] .app-header::after { background-image: url('./assets/shop/deco_wood_dark.png'); }
-[data-skin-chrome="candy"] .app-sidebar::after,
-[data-skin-chrome="candy"] .app-header::after { content: ""; background-image: url('./assets/shop/deco_candy_light.png'); }
-[data-skin-chrome="candy"][data-theme="dark"] .app-sidebar::after,
-[data-skin-chrome="candy"][data-theme="dark"] .app-header::after { background-image: url('./assets/shop/deco_candy_dark.png'); }
+[data-skin-chrome="sprout"] .app-sidebar,
+[data-skin-chrome="sprout"] .app-header { background-image: url('./assets/shop/deco_sprout_light.png'); }
+[data-skin-chrome="sprout"][data-theme="dark"] .app-sidebar,
+[data-skin-chrome="sprout"][data-theme="dark"] .app-header { background-image: url('./assets/shop/deco_sprout_dark.png'); }
+[data-skin-chrome="galaxy"] .app-sidebar,
+[data-skin-chrome="galaxy"] .app-header { background-image: url('./assets/shop/deco_galaxy_light.png'); }
+[data-skin-chrome="galaxy"][data-theme="dark"] .app-sidebar,
+[data-skin-chrome="galaxy"][data-theme="dark"] .app-header { background-image: url('./assets/shop/deco_galaxy_dark.png'); }
+[data-skin-chrome="wood"] .app-sidebar,
+[data-skin-chrome="wood"] .app-header { background-image: url('./assets/shop/deco_wood_light.png'); }
+[data-skin-chrome="wood"][data-theme="dark"] .app-sidebar,
+[data-skin-chrome="wood"][data-theme="dark"] .app-header { background-image: url('./assets/shop/deco_wood_dark.png'); }
+[data-skin-chrome="candy"] .app-sidebar,
+[data-skin-chrome="candy"] .app-header { background-image: url('./assets/shop/deco_candy_light.png'); }
+[data-skin-chrome="candy"][data-theme="dark"] .app-sidebar,
+[data-skin-chrome="candy"][data-theme="dark"] .app-header { background-image: url('./assets/shop/deco_candy_dark.png'); }
 
 /* ==== 상점 스킨: 뽀모도로 ==== */
 [data-skin-pomodoro="ocean"] { --pomo-focus:#2E7D8A; --pomo-break:#D97757; --pomo-soft:#E4EFEC; }
