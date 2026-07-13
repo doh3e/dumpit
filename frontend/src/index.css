@@ -74,6 +74,12 @@ body {
 }
 
 @layer components {
+  /* 배경 스킨 — 색 + 패턴(--bg-pattern). body만 칠하면 Layout 래퍼가 덮어 패턴이 안 보인다 */
+  .bg-skin {
+    background-color: var(--bg);
+    background-image: var(--bg-pattern, none);
+  }
+
   .btn-retro {
     @apply font-dungeon text-sm px-4 py-2.5 rounded-[11px] bg-card text-dark inline-flex items-center justify-center whitespace-nowrap;
     border: 1.5px solid var(--edge);
