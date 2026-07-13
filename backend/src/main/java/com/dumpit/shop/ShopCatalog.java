@@ -41,7 +41,7 @@ public class ShopCatalog {
         ShopItem.theme("planet.blossom",   PLANET, "꽃 행성",   "꽃잎으로 뒤덮인 향기로운 행성이에요.", 500, CONCEPT),
         ShopItem.theme("planet.candy",     PLANET, "사탕 행성", "달콤한 소용돌이 사탕 행성이에요.",    500, CONCEPT),
         ShopItem.theme("planet.galaxy",    PLANET, "나선 은하", "소용돌이치는 나선 은하예요.",        600, CONCEPT),
-        ShopItem.theme("planet.whale",     PLANET, "우주 고래", "궤도를 유영하는 우주 고래예요.",      800, CONCEPT),
+        ShopItem.theme("planet.whale",     PLANET, "우주 고래", "궤도를 유영하는 우주 고래예요.",     1200, CONCEPT),
         ShopItem.theme("planet.sun",       PLANET, "태양",      "이글이글 타오르는 태양이에요.",       800, CONCEPT),
         ShopItem.theme("planet.blackhole", PLANET, "블랙홀",    "모든 빛을 삼키는 블랙홀이에요.",     1000, CONCEPT),
         ShopItem.theme("celeb.shooting-star", CELEBRATION, "별똥별",   "완료 축하로 별똥별이 지나가요.",  500, CONCEPT),

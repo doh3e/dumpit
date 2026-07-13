@@ -40,7 +40,7 @@ export const PLANET_SPRITES = {
   'planet.blossom': { name: '꽃 행성', img: planetBlossom },
   'planet.candy': { name: '사탕 행성', img: planetCandy },
   'planet.galaxy': { name: '나선 은하', img: planetGalaxy },
-  'planet.whale': { name: '우주 고래', img: planetWhale },
+  'planet.whale': { name: '우주 고래', img: planetWhale, frames: 8, fps: 5 },
   'planet.sun': { name: '태양', img: planetSun, frames: 8, fps: 5 },
   'planet.blackhole': { name: '블랙홀', img: planetBlackhole, frames: 8, fps: 5 },
 }

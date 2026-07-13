@@ -362,35 +362,51 @@ def draw_galaxy():
 
 
 def draw_whale():
-    # 옆모습 우주 고래 (왼쪽 보기) — 뭉툭한 머리 슈퍼타원 몸통 + 치켜든 꼬리 + 물뿜기
-    img = new_canvas()
+    # 옆모습 우주 고래 (왼쪽 보기) — 유영 애니 8프레임:
+    # 꼬리 플랩(경첩 회전) + 몸통 부유(±1px) + 물뿜기 사이클
     back, backd, belly, eye = hx('#5B7FBF'), hx('#43619C'), hx('#C8D8F0'), hx('#1E2A44')
-    # 꼬리 지느러미 — 위로 크게 치켜든 형태 (몸통이 접합부를 덮음)
-    tri(img, (21, 14), (29, 8), (24, 18), backd)
-    tri(img, (21, 18), (28, 22), (24, 15), backd)
-    # 몸통 — 슈퍼타원(지수 2.5)이라 머리가 뭉툭
-    for y in range(SIZE):
-        for x in range(SIZE):
-            ex, ey = (x + 0.5 - 13.0) / 10.0, (y + 0.5 - 17.0) / 6.0
-            if abs(ex) ** 2.5 + abs(ey) ** 2.5 <= 1:
-                if ey > 0.35:
-                    put(img, x, y, belly)
-                elif ey > 0.05:
-                    put(img, x, y, backd)
-                else:
-                    put(img, x, y, back)
-    # 배 주름 1줄
-    for x in range(6, 20):
-        ex = (x + 0.5 - 13.0) / 10.0
-        if abs(ex) ** 2.5 + abs((21.5 - 17.0) / 6.0) ** 2.5 <= 1:
-            put(img, x, 21, hx('#9FB6D8'))
-    # 가슴 지느러미 + 눈 + 물뿜기
-    tri(img, (12, 21), (17, 21), (13, 26), backd)
-    block(img, 6, 15, eye, 2, 2)
-    put(img, 7, 9, belly); put(img, 7, 8, belly)
-    put(img, 5, 7, belly); put(img, 6, 6, belly)
-    put(img, 9, 7, belly); put(img, 10, 6, belly)
-    return img
+    tail_dy = [-2, -1, 0, 1, 2, 1, 0, -1]   # 꼬리 끝 상하 (접합부 고정)
+    bob = [0, -1, -1, 0, 0, 1, 1, 0]        # 몸통 부유
+
+    def frame(k):
+        img = new_canvas()
+        b = bob[k]
+        td = tail_dy[k]
+        # 꼬리 지느러미 — 먼 꼭짓점만 td만큼 움직여 경첩 플랩 (몸통이 접합부를 덮음)
+        tri(img, (21, 14 + b), (29, 8 + b + td), (24, 18 + b), backd)
+        tri(img, (21, 18 + b), (28, 22 + b + td), (24, 15 + b), backd)
+        # 몸통 — 슈퍼타원(지수 2.5)이라 머리가 뭉툭
+        for y in range(SIZE):
+            for x in range(SIZE):
+                ex, ey = (x + 0.5 - 13.0) / 10.0, (y + 0.5 - 17.0 - b) / 6.0
+                if abs(ex) ** 2.5 + abs(ey) ** 2.5 <= 1:
+                    if ey > 0.35:
+                        put(img, x, y, belly)
+                    elif ey > 0.05:
+                        put(img, x, y, backd)
+                    else:
+                        put(img, x, y, back)
+        # 배 주름 1줄
+        for x in range(6, 20):
+            ex = (x + 0.5 - 13.0) / 10.0
+            if abs(ex) ** 2.5 + abs((21.5 - 17.0) / 6.0) ** 2.5 <= 1:
+                put(img, x, 21 + b, hx('#9FB6D8'))
+        # 가슴 지느러미 + 눈
+        tri(img, (12, 21 + b), (17, 21 + b), (13, 26 + b), backd)
+        block(img, 6, 15 + b, eye, 2, 2)
+        # 물뿜기 — 4단계 사이클로 물방울이 솟아오름
+        stage = k % 4
+        if stage == 0:
+            put(img, 7, 9 + b, belly); put(img, 7, 8 + b, belly)
+        elif stage == 1:
+            put(img, 7, 8 + b, belly); put(img, 5, 7 + b, belly); put(img, 9, 7 + b, belly)
+        elif stage == 2:
+            put(img, 5, 6 + b, belly); put(img, 7, 5 + b, belly); put(img, 9, 6 + b, belly)
+        else:
+            put(img, 5, 5 + b, belly); put(img, 9, 5 + b, belly)
+        return img
+
+    return frames_sheet([lambda k=k: frame(k) for k in range(8)])
 
 
 def frames_sheet(frame_fns):
