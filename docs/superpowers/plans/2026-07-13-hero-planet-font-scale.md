@@ -4,7 +4,7 @@
 
 **Goal:** 대시보드 히어로 행성을 뷰포트 비례(64~120px)로 키우고, 설정 모달에 4단계 글자 크기 옵션(루트 font-size 스케일링)을 추가한다.
 
-**Architecture:** ① `text-[Npx]` 고정 글자 127곳을 rem으로 기계 치환해 루트 스케일링 기반을 만든다. ② OrbitProgress를 CSS 변수(`--orbit-size` clamp) + SVG viewBox 비례로 전환한다. ③ `utils/fontScale.js` + `index.html` 부트 스크립트(테마와 동일 패턴)로 첫 페인트 전 적용, 설정 모달에서 즉시 적용 버튼 4개.
+**Architecture:** ① `text-[Npx]` 고정 글자 130토큰을 rem으로 기계 치환해 루트 스케일링 기반을 만든다. ② OrbitProgress를 CSS 변수(`--orbit-size` clamp) + SVG viewBox 비례로 전환한다. ③ `utils/fontScale.js` + `index.html` 부트 스크립트(테마와 동일 패턴)로 첫 페인트 전 적용, 설정 모달에서 즉시 적용 버튼 4개.
 
 **Tech Stack:** React 19 + Vite 6 + Tailwind 3.4 (테스트 러너 없음 — lint/build/grep/브라우저 스모크로 검증)
 
@@ -25,7 +25,7 @@
 ### Task 1: px 고정 글자 → rem 일괄 마이그레이션
 
 **Files:**
-- Modify: `frontend/src/**/*.jsx`, `frontend/src/index.css` — `text-[Npx]` 127곳 (26개 파일)
+- Modify: `frontend/src/**/*.jsx`, `frontend/src/index.css` — `text-[Npx]` 130토큰·127라인 (26개 파일)
 
 **Interfaces:**
 - Consumes: 없음
@@ -48,7 +48,7 @@ Bash 도구로 실행:
 ```bash
 cd /c/coding/dumpit/frontend/src && grep -roE 'text-\[[0-9]+px\]' . | wc -l
 ```
-Expected: `127`
+Expected: `130` (토큰 기준 — 한 줄 2토큰인 라인이 3개라 매치 라인 수는 127)
 
 - [ ] **Step 2: sed 일괄 치환** (sed는 바이트 단위 치환이라 인코딩·개행 보존)
 
@@ -70,7 +70,7 @@ done
 cd /c/coding/dumpit/frontend/src
 grep -rE 'text-\[[0-9]+px\]' . ; grep -roE 'text-\[[0-9.]+rem\]' . | wc -l
 ```
-Expected: 첫 grep 출력 없음(잔존 0건), 둘째 `127`
+Expected: 첫 grep 출력 없음(잔존 0건), 둘째 `130`
 
 - [ ] **Step 4: lint + build**
 
@@ -84,7 +84,7 @@ Expected: 둘 다 성공 (경고 0 신규)
 ```powershell
 git add frontend/src
 git commit -m @'
-Refactor: 고정 px 글자 크기 127곳 rem 전환
+Refactor: 고정 px 글자 크기 130토큰 rem 전환
 
 루트 font-size 스케일링(글자 크기 설정) 선행 작업. 9/10/11/19/24/32px →
 동치 rem. 테두리·그림자·터치 타깃 px는 의도적으로 유지.

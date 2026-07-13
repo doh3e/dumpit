@@ -134,7 +134,7 @@ export default function StickerPicker({ current, onSelect }) {
             style={{ imageRendering: 'pixelated' }}
           />
         ) : (
-          <span className="text-[11px] leading-none font-black">+</span>
+          <span className="text-[0.6875rem] leading-none font-black">+</span>
         )}
       </button>
 
@@ -194,7 +194,7 @@ export default function StickerPicker({ current, onSelect }) {
                   <Link
                     to="/shop"
                     onClick={(event) => { event.stopPropagation(); setOpen(false) }}
-                    className="text-[11px] text-sub hover:text-dark"
+                    className="text-[0.6875rem] text-sub hover:text-dark"
                   >
                     상점에서 더 보기
                   </Link>

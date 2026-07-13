@@ -39,7 +39,7 @@ export default function HomePage() {
           <p>
             해야 할 일들이 우주먼지처럼 뒤엉켜 있나요?<br />
           </p>
-          <p className="my-5 font-dungeon text-[32px] max-sm:text-2xl text-primary leading-tight">
+          <p className="my-5 font-dungeon text-[2rem] max-sm:text-2xl text-primary leading-tight">
             그냥 다 쏟아내세요!
           </p>
           <p>

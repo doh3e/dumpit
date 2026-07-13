@@ -210,7 +210,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
               <button
                 type="button"
                 onClick={() => setPriorityScore(task.aiPriorityScore ?? 0.5)}
-                className="ml-2 text-[10px] text-primary underline"
+                className="ml-2 text-[0.625rem] text-primary underline"
               >
                 AI 점수로 초기화
               </button>
@@ -225,7 +225,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             onChange={(e) => setPriorityScore(parseFloat(e.target.value))}
             className="w-full accent-primary"
           />
-          <div className="flex justify-between text-[10px] text-sub font-bold mt-1">
+          <div className="flex justify-between text-[0.625rem] text-sub font-bold mt-1">
             <span>낮음</span>
             <span>보통</span>
             <span>높음</span>

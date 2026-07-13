@@ -133,7 +133,7 @@ export default function Header({ onOpenDrawer }) {
               <div className="pointer-events-none absolute right-0 top-10 z-50 w-72 rounded-lg card-retro p-0 text-left opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
                 <div className="px-3 py-2.5 border-b border-line">
                   <p className="text-xs font-black text-dark">AI 사용량 (오늘)</p>
-                  <p className="text-[11px] font-bold text-sub mt-0.5">
+                  <p className="text-[0.6875rem] font-bold text-sub mt-0.5">
                     남은 사용량:{' '}
                     <span className={usage.remaining === 0 ? 'text-primary' : 'text-dark'}>
                       {usage.remaining}
@@ -142,7 +142,7 @@ export default function Header({ onOpenDrawer }) {
                   </p>
                 </div>
                 <div className="px-3 py-2 border-b border-line">
-                  <p className="text-[10px] font-semibold text-sub leading-relaxed">
+                  <p className="text-[0.625rem] font-semibold text-sub leading-relaxed">
                     Dumpit!은 베타 서비스 중이에요. 모든 활동이 무료인 대신
                     AI 기능에는 일일 사용량 제한이 있어요.
                   </p>
@@ -161,7 +161,7 @@ export default function Header({ onOpenDrawer }) {
                   </div>
                 ))}
                 <div className="px-3 py-2 border-t border-line">
-                  <p className="text-[10px] font-semibold text-sub">매일 자정(KST)에 초기화돼요.</p>
+                  <p className="text-[0.625rem] font-semibold text-sub">매일 자정(KST)에 초기화돼요.</p>
                 </div>
               </div>
             </div>
@@ -205,12 +205,12 @@ export default function Header({ onOpenDrawer }) {
                     <div className="grid grid-cols-3 gap-2">
                       <div className="rounded-lg border border-line bg-accent px-2 py-2 text-center">
                         <img src={coinImage} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
-                        <p className="text-[10px] font-black text-sub">코인</p>
+                        <p className="text-[0.625rem] font-black text-sub">코인</p>
                         <p className="font-dungeon text-sm text-dark">{user?.coins ?? 0}</p>
                       </div>
                       <div className="rounded-lg border border-line bg-chip px-2 py-2 text-center">
                         <img src={remainAiToken} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
-                        <p className="text-[10px] font-black text-sub">AI</p>
+                        <p className="text-[0.625rem] font-black text-sub">AI</p>
                         <p className={`font-dungeon text-sm ${usage?.remaining === 0 ? 'text-primary' : 'text-dark'}`}>
                           {usage ? usage.remaining : '-'}
                         </p>
@@ -218,7 +218,7 @@ export default function Header({ onOpenDrawer }) {
                       <DeadlineNudgeMenu variant="mobile-card" />
                     </div>
                     {usage && (
-                      <p className="mt-2 text-[10px] font-semibold text-sub text-right">
+                      <p className="mt-2 text-[0.625rem] font-semibold text-sub text-right">
                         AI {usage.remaining} / {usage.limit} · 자정 초기화
                       </p>
                     )}

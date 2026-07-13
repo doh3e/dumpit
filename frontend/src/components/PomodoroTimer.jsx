@@ -260,7 +260,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       {/* Mode label + settings button */}
       <div className="flex items-center gap-2">
         <div
-          className="text-[10px] font-black px-3 py-1 rounded-full border border-edge text-on-accent"
+          className="text-[0.625rem] font-black px-3 py-1 rounded-full border border-edge text-on-accent"
           style={{ background: isFocus ? 'var(--pomo-focus)' : 'var(--pomo-break)' }}
         >
           {isFocus ? 'FOCUS' : 'BREAK'}
@@ -289,7 +289,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       {showSettings && (
         <div className="w-full bg-accent border border-line rounded-lg p-2 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[10px] font-bold text-sub">집중 (분)</label>
+            <label className="text-[0.625rem] font-bold text-sub">집중 (분)</label>
             <input
               type="number"
               min={MIN_MIN}
@@ -300,7 +300,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
             />
           </div>
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[10px] font-bold text-sub">휴식 (분)</label>
+            <label className="text-[0.625rem] font-bold text-sub">휴식 (분)</label>
             <input
               type="number"
               min={MIN_MIN}
@@ -312,7 +312,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           </div>
           <button
             onClick={() => saveSettings(focusMin, breakMin)}
-            className="w-full btn-retro-primary text-[10px] py-1.5"
+            className="w-full btn-retro-primary text-[0.625rem] py-1.5"
           >
             적용
           </button>
@@ -351,7 +351,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         <select
           value={selectedTaskId}
           onChange={(e) => setSelectedTaskId(e.target.value)}
-          className="w-full text-[10px] font-bold border border-line rounded-lg px-2 py-1.5 bg-card truncate"
+          className="w-full text-[0.625rem] font-bold border border-line rounded-lg px-2 py-1.5 bg-card truncate"
         >
           <option value="">집중할 태스크 선택</option>
           {activeTasks.map((t) => (
@@ -385,7 +385,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
 
       {/* Completed count */}
       {completedCount > 0 && (
-        <p className="text-[10px] font-bold text-sub">
+        <p className="text-[0.625rem] font-bold text-sub">
           오늘 {completedCount}회 집중 완료
         </p>
       )}

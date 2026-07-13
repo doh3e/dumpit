@@ -238,20 +238,20 @@ export default function RoutinePage() {
                   <div className="flex items-start justify-between gap-3">
                     <button type="button" onClick={() => editRoutine(routine)} className="min-w-0 flex-1 text-left">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${
+                        <span className={`rounded-full border px-2 py-0.5 text-[0.625rem] font-black ${
                           routine.enabled ? 'bg-secondary text-on-accent border-secondary' : 'bg-accent text-dark border-line'
                         }`}>
                           {routine.enabled ? 'ON' : 'OFF'}
                         </span>
-                        <span className="text-[10px] font-black text-sub">{formatRule(routine)}</span>
-                        <span className="text-[10px] font-black text-sub">
+                        <span className="text-[0.625rem] font-black text-sub">{formatRule(routine)}</span>
+                        <span className="text-[0.625rem] font-black text-sub">
                           {routine.routineStartTime || routine.createTime
                             ? `${(routine.routineStartTime || routine.createTime).slice(0, 5)}${routine.routineEndTime ? `-${routine.routineEndTime.slice(0, 5)}` : ''}`
                             : '하루 안'}
                         </span>
                       </div>
                       <p className="mt-1 truncate text-sm font-black text-dark">{routine.name}</p>
-                      <p className="mt-1 text-[10px] font-semibold text-sub">
+                      <p className="mt-1 text-[0.625rem] font-semibold text-sub">
                         {formatDate(routine.startDate)} 시작
                         {routine.endDate && ` · ${formatDate(routine.endDate)} 종료`}
                         {routine.lastGeneratedDate && ` · 마지막 생성 ${formatDate(routine.lastGeneratedDate)}`}
@@ -283,7 +283,7 @@ export default function RoutinePage() {
 
         <form onSubmit={saveRoutine} className="card-retro space-y-4">
           <div>
-            <p className="text-[10px] font-bold text-sub">{editingId ? '편집 중' : '새 루틴'}</p>
+            <p className="text-[0.625rem] font-bold text-sub">{editingId ? '편집 중' : '새 루틴'}</p>
             <h3 className="mt-1 font-galmuri font-bold text-base text-dark">루틴 설정</h3>
           </div>
 
@@ -415,7 +415,7 @@ export default function RoutinePage() {
                   ))}
                 </div>
               </div>
-              <p className="text-[11px] font-semibold text-sub">
+              <p className="text-[0.6875rem] font-semibold text-sub">
                 선택한 주차의 요일이 없는 달에는 태스크를 만들지 않아요.
               </p>
             </div>

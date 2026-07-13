@@ -252,7 +252,7 @@ export default function SettingsModal({ onClose }) {
           </div>
 
           <div className="mt-3 rounded-lg border-2 border-line bg-card px-4 py-3">
-            <p className="text-[11px] font-medium text-sub leading-relaxed">
+            <p className="text-[0.6875rem] font-medium text-sub leading-relaxed">
               {notificationNote}
             </p>
             <button
@@ -268,7 +268,7 @@ export default function SettingsModal({ onClose }) {
           {permission !== 'unsupported' && (
             <div className="mt-3 rounded-lg border-2 border-line bg-card px-4 py-3">
               <p className="text-xs font-bold text-dark mb-2">알림 시점</p>
-              <p className="text-[11px] font-medium text-sub mb-3">
+              <p className="text-[0.6875rem] font-medium text-sub mb-3">
                 처음 감지 시는 항상 알려드려요. 추가로 받을 시점을 선택하세요.
               </p>
               <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">

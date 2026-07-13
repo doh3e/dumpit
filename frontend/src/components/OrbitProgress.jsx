@@ -29,7 +29,7 @@ export default function OrbitProgress({ done, total, size = 64 }) {
         />
         <div className="orbit-sat" aria-hidden="true" style={{ '--orbit-r': `${r}px` }} />
       </div>
-      <p className="text-[11px] text-sub mt-1.5 whitespace-nowrap">
+      <p className="text-[0.6875rem] text-sub mt-1.5 whitespace-nowrap">
         오늘 <span className="font-dungeon text-secondary text-xs">{done}/{total}</span>
       </p>
     </div>
