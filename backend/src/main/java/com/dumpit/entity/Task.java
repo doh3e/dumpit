@@ -110,6 +110,11 @@ public class Task {
     @Setter
     private LocalDateTime completedAt;
 
+    // 완료 시 실제 지급한 코인 — 해제·삭제 시 이 금액만 회수한다 (재계산 금지: 마감/우선순위가 바뀌면 금액이 달라짐)
+    @Column(nullable = false)
+    @Setter
+    private Integer coinsGranted = 0;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

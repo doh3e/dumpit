@@ -25,15 +25,48 @@ class PomodoroNotificationApiTest extends ApiIntegrationTestBase {
         return taskRepository.save(task);
     }
 
-    // ---------- POST /pomodoro/complete ----------
+    // ---------- POST /pomodoro/start · /pomodoro/complete ----------
+    // 세션 검증 설계: docs/superpowers/specs/2026-07-14-coin-anti-farming-design.md
+
+    /** 시작 기록을 과거로 되돌려 실제 경과시간을 재현 */
+    private void backdatePomodoroStart(String email, int minutesAgo) {
+        jdbcTemplate.update("UPDATE users SET pomodoro_started_at = ? WHERE email = ?",
+                LocalDateTime.now().minusMinutes(minutesAgo), email);
+    }
 
     @Test
-    void 완료_focusMinutes_25면_코인5개_지급_및_잔액반영() throws Exception {
+    void 시작_200() throws Exception {
+        mockMvc.perform(post("/pomodoro/start").with(asUser(USER_A)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void 시작_미인증이면_401_한글() throws Exception {
+        MvcResult result = mockMvc.perform(post("/pomodoro/start"))
+                .andExpect(status().isUnauthorized())
+                .andReturn();
+        assertKoreanError(result);
+    }
+
+    @Test
+    void 완료_경과충족이면_코인지급_같은세션_재청구는_0코인() throws Exception {
+        mockMvc.perform(post("/pomodoro/start").with(asUser(USER_A)))
+                .andExpect(status().isOk());
+        backdatePomodoroStart(USER_A, 26);
+
         mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 25))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.coins").value(5))
+                .andExpect(jsonPath("$.totalCoins").value(5));
+
+        // 세션은 완료로 소거 — 같은 시작 기록으로 반복 청구 불가
+        mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 25))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(0))
                 .andExpect(jsonPath("$.totalCoins").value(5));
 
         mockMvc.perform(get("/auth/me").with(asUser(USER_A)))
@@ -42,7 +75,47 @@ class PomodoroNotificationApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void 완료_body없으면_기본25분으로_코인5개() throws Exception {
+    void 완료_시작기록_없으면_0코인() throws Exception {
+        mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 25))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(0))
+                .andExpect(jsonPath("$.totalCoins").value(0));
+    }
+
+    @Test
+    void 완료_경과부족이면_0코인() throws Exception {
+        mockMvc.perform(post("/pomodoro/start").with(asUser(USER_A)))
+                .andExpect(status().isOk());
+
+        // 시작 직후 완료 요청 — 25분 세션인데 경과 0분
+        mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 25))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(0));
+    }
+
+    @Test
+    void 완료_1분세션도_즉시완료는_통과못함() throws Exception {
+        // 고정 관용치 60초였다면 1분 세션의 요구 경과시간이 0이 되는 회귀 방지
+        mockMvc.perform(post("/pomodoro/start").with(asUser(USER_A)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 1))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(0));
+    }
+
+    @Test
+    void 완료_body없으면_기본25분으로_검증() throws Exception {
+        mockMvc.perform(post("/pomodoro/start").with(asUser(USER_A)))
+                .andExpect(status().isOk());
+        backdatePomodoroStart(USER_A, 26);
+
         mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.coins").value(5))

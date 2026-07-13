@@ -119,7 +119,7 @@ export default function DashboardPage() {
     const clickX = event?.clientX
     const clickY = event?.clientY
     try {
-      await api.patch(`/tasks/${task.taskId}`, { status: next })
+      const res = await api.patch(`/tasks/${task.taskId}`, { status: next })
       fetchTasks()
       refreshCoins()
 
@@ -128,7 +128,8 @@ export default function DashboardPage() {
         if (clickX != null) {
           setBursts((prev) => prev.length >= 3 ? prev : [...prev, { id: Date.now(), x: clickX, y: clickY }])
         }
-        const coins = calcCompletionCoins(task)
+        // 서버가 확정한 실지급액(일일 점감 반영) — 프론트 재계산과 다를 수 있다
+        const coins = res.data?.coinsGranted ?? calcCompletionCoins(task)
         if (coins > 0) {
           setCoinToast({ coins, taskTitle: task.title })
           setTimeout(() => setCoinToast(null), 2500)

@@ -134,7 +134,8 @@ function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
 }
 
 function DoneRow({ task, onToggle, onEdit }) {
-  const coins = calcCompletionCoins(task)
+  // 완료된 행은 서버가 실제 지급한 금액(점감 반영) — 미완료 행(TaskRow)의 재계산은 예상 보상 표기
+  const coins = task.coinsGranted ?? calcCompletionCoins(task)
   const doneAt = formatTime(task.completedAt)
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-line opacity-60">

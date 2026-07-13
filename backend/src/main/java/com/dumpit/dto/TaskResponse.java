@@ -27,7 +27,8 @@ public record TaskResponse(
         String syncSource,
         LocalDateTime createdAt,
         LocalDateTime completedAt,
-        String stickerCode
+        String stickerCode,
+        Integer coinsGranted
 ) {
     public static TaskResponse from(Task t) {
         return new TaskResponse(
@@ -46,7 +47,8 @@ public record TaskResponse(
                 t.getSyncSource().name(),
                 t.getCreatedAt(),
                 t.getCompletedAt(),
-                t.getStickerCode()
+                t.getStickerCode(),
+                t.getCoinsGranted()
         );
     }
 }
