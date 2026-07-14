@@ -5,6 +5,7 @@ import coinImage from '../assets/coin_image.png'
 import { useAuth } from '../context/AuthContext'
 import RocketLaunch from '../components/RocketLaunch'
 import PixelSprite from '../components/PixelSprite'
+import { applySkinsTransient, applyCachedSkins } from '../shop/applySkins'
 import {
   PLANET_SPRITES,
   CELEBRATION_SPRITES,
@@ -37,6 +38,9 @@ const SKIN_PREVIEWS = {
   'pomo.galaxy': ['#6D74C9', '#C9922E'],
   'pomo.wood': ['#A8763E', '#5C8A6E'],
 }
+
+// 라이브 미리보기(dataset) 가능한 CSS 슬롯 — 스프라이트 슬롯은 모달 미리보기(Task 4)
+const LIVE_PREVIEW_SLOTS = ['BACKGROUND', 'CHROME', 'POMODORO']
 
 const SLOT_SECTIONS = [
   { slot: 'BACKGROUND', title: '배경 & 주요 색상' },
@@ -96,7 +100,7 @@ function SwatchPreview({ code }) {
 }
 
 function ItemPreview({ item }) {
-  if (['BACKGROUND', 'CHROME', 'POMODORO'].includes(item.slot)) {
+  if (LIVE_PREVIEW_SLOTS.includes(item.slot)) {
     return <SwatchPreview code={item.code} />
   }
   const map = item.type === 'STICKER' ? STICKER_SPRITES : SPRITE_MAP_BY_SLOT[item.slot]
@@ -105,7 +109,7 @@ function ItemPreview({ item }) {
   return <PixelSprite sprite={sprite} className="w-10 h-10 object-contain flex-shrink-0" />
 }
 
-function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUnequip, onPreview, previewBusy }) {
+function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUnequip, onPreview, previewBusy, previews, onLivePreviewToggle, onSpritePreview }) {
   const insufficientCoins = !item.owned && coinBalance < item.price
   const isBusy = busyCode === item.code
 
@@ -142,6 +146,24 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
               onClick={() => onPreview(item)}
               disabled={previewBusy}
               className="text-[0.6875rem] font-bold underline text-sub hover:text-dark disabled:opacity-50 disabled:no-underline"
+            >
+              미리보기
+            </button>
+          )}
+          {LIVE_PREVIEW_SLOTS.includes(item.slot) && !item.equipped && onLivePreviewToggle && (
+            <button
+              type="button"
+              onClick={() => onLivePreviewToggle(item)}
+              className="text-[0.6875rem] font-bold underline text-sub hover:text-dark"
+            >
+              {previews?.[item.slot] === item.code ? '미리보기 취소' : '미리보기'}
+            </button>
+          )}
+          {['PLANET', 'STATION'].includes(item.slot) && onSpritePreview && (
+            <button
+              type="button"
+              onClick={() => onSpritePreview(item)}
+              className="text-[0.6875rem] font-bold underline text-sub hover:text-dark"
             >
               미리보기
             </button>
@@ -257,8 +279,43 @@ function PurchaseConfirmModal({ item, coinBalance, submitting, error, onConfirm,
   )
 }
 
+// 행성·우주정거장은 상점 화면에 렌더 위치가 없어(대시보드/마이페이지) 확대 모달로 미리보기
+function SpritePreviewModal({ item, onClose }) {
+  if (!item) return null
+  const sprite = spriteFor(SPRITE_MAP_BY_SLOT[item.slot] || {}, item.code)
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center overlay-retro px-4"
+      onClick={onClose}
+    >
+      <div className="card-retro w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+            <h2 className="font-dungeon text-dark text-lg">{item.name}</h2>
+            <TierBadge tier={item.tier} />
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-7 h-7 flex-shrink-0 rounded-lg border border-line font-black text-sub text-xs hover:bg-chip transition-colors"
+          >
+            X
+          </button>
+        </div>
+        <div className="my-6 flex items-center justify-center">
+          <PixelSprite sprite={sprite} className="w-32 h-32 sm:w-40 sm:h-40 object-contain" />
+        </div>
+        {item.description && (
+          <p className="text-xs font-semibold text-sub leading-snug text-center">{item.description}</p>
+        )}
+      </div>
+    </div>,
+    document.body
+  )
+}
+
 export default function ShopPage() {
-  const { refreshCoins } = useAuth()
+  const { user, refreshCoins } = useAuth()
   const [catalog, setCatalog] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
@@ -268,6 +325,8 @@ export default function ShopPage() {
   const [confirmSubmitting, setConfirmSubmitting] = useState(false)
   const [confirmError, setConfirmError] = useState(null)
   const [previewCode, setPreviewCode] = useState(null)
+  const [previews, setPreviews] = useState({})
+  const [spritePreviewItem, setSpritePreviewItem] = useState(null)
   const [activeTab, setActiveTab] = useState(SHOP_TABS[0].id)
 
   const fetchCatalog = useCallback(() => {
@@ -280,6 +339,17 @@ export default function ShopPage() {
     setLoading(true)
     fetchCatalog().finally(() => setLoading(false))
   }, [fetchCatalog])
+
+  // 미리보기 합성 적용. user 의존이 핵심 — refreshCoins/창 포커스 재검증이
+  // applySkins(실제)로 dataset을 덮어써도 setUser 리렌더 후 여기가 미리보기를 재적용한다.
+  // previews가 비면 실제 장착이 그대로 적용되므로 해제 원복에 별도 분기 불필요.
+  useEffect(() => {
+    if (!user) return
+    applySkinsTransient({ ...(user.equipments || {}), ...previews })
+  }, [user, previews])
+
+  // 상점 이탈(언마운트) 시 실제 장착 상태로 원복 — 캐시는 미리보기에 오염되지 않으므로 신뢰 가능
+  useEffect(() => () => applyCachedSkins(), [])
 
   const afterAction = async () => {
     setActionError(null)
@@ -314,6 +384,7 @@ export default function ShopPage() {
     try {
       await api.put('/shop/equip', { code: item.code })
       await afterAction()
+      clearSlotPreview(item.slot)
     } catch (err) {
       setActionError(getApiErrorMessage(err, '장착에 실패했어요.'))
     } finally {
@@ -327,6 +398,7 @@ export default function ShopPage() {
     try {
       await api.delete(`/shop/equip/${item.slot}`)
       await afterAction()
+      clearSlotPreview(item.slot)
     } catch (err) {
       setActionError(getApiErrorMessage(err, '해제에 실패했어요.'))
     } finally {
@@ -338,6 +410,26 @@ export default function ShopPage() {
     if (previewCode) return // 재생 중이면 연타 무시
     setPreviewCode(item.code)
   }
+
+  const handleLivePreviewToggle = (item) => {
+    setPreviews((prev) => {
+      const next = { ...prev }
+      if (next[item.slot] === item.code) delete next[item.slot]
+      else next[item.slot] = item.code
+      return next
+    })
+  }
+
+  const clearSlotPreview = (slot) => {
+    setPreviews((prev) => {
+      if (!(slot in prev)) return prev
+      const next = { ...prev }
+      delete next[slot]
+      return next
+    })
+  }
+
+  const clearAllPreviews = () => setPreviews({})
 
   if (loading) {
     return (
@@ -385,6 +477,9 @@ export default function ShopPage() {
     onUnequip: handleUnequip,
     onPreview: handlePreview,
     previewBusy: Boolean(previewCode),
+    previews,
+    onLivePreviewToggle: handleLivePreviewToggle,
+    onSpritePreview: setSpritePreviewItem,
   }
 
   return (
@@ -446,6 +541,29 @@ export default function ShopPage() {
       <p className="text-[0.6875rem] text-sub text-center pt-4 border-t border-line">
         픽셀 아트: peony (CC-BY 4.0) · Master484 · Dizzy Crow · stealthix · KerteX_
       </p>
+
+      {Object.keys(previews).length > 0 && (
+        <div className="fixed bottom-6 left-4 right-24 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:max-w-lg z-40">
+          <div className="card-retro flex items-center gap-3 px-4 py-2.5">
+            <span aria-hidden>👁</span>
+            <p className="text-xs font-bold text-dark truncate flex-1">
+              미리보기 중: {Object.values(previews)
+                .map((code) => items.find((i) => i.code === code)?.name)
+                .filter(Boolean)
+                .join(', ')}
+            </p>
+            <button
+              type="button"
+              onClick={clearAllPreviews}
+              className="btn-retro text-[0.6875rem] px-2.5 py-1.5 flex-shrink-0"
+            >
+              전체 해제
+            </button>
+          </div>
+        </div>
+      )}
+
+      <SpritePreviewModal item={spritePreviewItem} onClose={() => setSpritePreviewItem(null)} />
 
       <PurchaseConfirmModal
         item={confirmItem}
