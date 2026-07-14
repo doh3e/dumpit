@@ -8,13 +8,13 @@ class ShopCatalogTest {
     private final ShopCatalog catalog = new ShopCatalog();
 
     @Test
-    void 카탈로그는_45개_아이템을_가진다() {
-        assertThat(catalog.getAll()).hasSize(45);
+    void 카탈로그는_52개_아이템을_가진다() {
+        assertThat(catalog.getAll()).hasSize(52);
     }
 
     @Test
     void 코드는_전부_유일하다() {
-        assertThat(catalog.getAll().stream().map(ShopItem::code).distinct()).hasSize(45);
+        assertThat(catalog.getAll().stream().map(ShopItem::code).distinct()).hasSize(52);
     }
 
     @Test
