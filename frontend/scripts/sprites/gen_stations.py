@@ -399,6 +399,156 @@ def draw_candy():
     return img
 
 
+# ---- 동물 애니 3종 (8프레임 256×32 시트, fps 5) ----
+
+def frames_sheet(frame_fns):
+    """[fn, ...] → 가로로 이어붙인 애니 시트."""
+    frames = [fn() for fn in frame_fns]
+    sheet = Image.new('RGBA', (SIZE * len(frames), SIZE), (0, 0, 0, 0))
+    for i, f in enumerate(frames):
+        sheet.paste(f, (i * SIZE, 0), f)
+    return sheet
+
+
+PAL['pup'] = [hx('#F5E3C0'), hx('#E3BE8A'), hx('#BE9257'), hx('#8A6437')]
+PAL['cat'] = [hx('#EDEDF2'), hx('#C4C4CE'), hx('#8F8F9E'), hx('#5C5C6B')]
+PAL['ham'] = [hx('#FBE6C4'), hx('#F2C892'), hx('#D89A50'), hx('#A06A2E')]
+DARK = hx('#3A3230')
+PINK = hx('#E89AA6')
+
+
+def draw_dog():
+    # 엎드린 강아지 — 꼬리가 큰 덩어리로 좌우 스윙(핑퐁 4단계) + 스윙 끝에서 귀 들썩
+    pup = PAL['pup']
+
+    def frame(k):
+        img = new_canvas()
+        swing = [0, 1, 2, 3, 3, 2, 1, 0][k]       # 0=아래 … 3=위
+        # 몸통 (엎드림)
+        for y in range(17, 27):
+            for x in range(9, 26):
+                dx, dy = x + 0.5 - 17.5, y + 0.5 - 23
+                if (dx / 8.5) ** 2 + (dy / 4.6) ** 2 <= 1:
+                    tone = 1 if dy < 0 else 2
+                    if dx > 5.5:
+                        tone = 2 if dy < 0 else 3
+                    put(img, x, y, pup[tone])
+        rect(img, 10, 18, 15, 19, pup[0])          # 등 하이라이트
+        # 머리 (좌측, 살짝 큼직하게)
+        disc(img, 10, 15, 5.6, sphere_shade(pup))
+        # 주둥이 + 코 + 입
+        rect(img, 5, 16, 9, 19, pup[0])
+        block(img, 5, 16, DARK, 2, 2)              # 코
+        put(img, 7, 19, pup[2])                    # 입
+        # 눈 (또렷한 2px)
+        block(img, 10, 13, DARK, 2, 2)
+        put(img, 10, 13, hx('#FFFFFF'))            # 눈 반짝
+        # 귀 (늘어진 귀 — 스윙 절정에서 1px 들썩)
+        ear_lift = 1 if swing == 3 else 0
+        rect(img, 6, 10 - ear_lift, 8, 14 - ear_lift, pup[3])
+        rect(img, 12, 9 - ear_lift, 14, 13 - ear_lift, pup[3])
+        # 앞발
+        rect(img, 8, 25, 12, 26, pup[1])
+        put(img, 10, 25, pup[2])
+        # 꼬리 — 뿌리(24,22)에서 4단계 스윙, 2px 두께 큰 덩어리
+        tips = [(30, 26), (31, 22), (30, 18), (28, 14)]
+        mids = [(27, 24), (28, 22), (27, 20), (26, 17)]
+        polyline(img, [(24, 22), mids[swing], tips[swing]], pup[2], 2)
+        block(img, tips[swing][0] - 1, tips[swing][1] - 1, pup[0], 2, 2)  # 꼬리 끝 밝은 술
+        return img
+
+    return frames_sheet([lambda k=k: frame(k) for k in range(8)])
+
+
+def draw_cat():
+    # 웅크린(식빵) 고양이 — 꼬리 끝이 앞에서 살랑(핑퐁) + 4프레임마다 귀 쫑긋
+    cat = PAL['cat']
+
+    def frame(k):
+        img = new_canvas()
+        sway = [0, 1, 2, 3, 3, 2, 1, 0][k]
+        perk = 1 if k in (3, 4) else 0             # 귀 쫑긋
+        # 몸통 (식빵 자세)
+        for y in range(15, 27):
+            for x in range(8, 26):
+                dx, dy = x + 0.5 - 17, y + 0.5 - 22
+                if (dx / 8.8) ** 2 + (dy / 5.2) ** 2 <= 1:
+                    put(img, x, y, cat[1] if dy < 0 else cat[2])
+        rect(img, 12, 16, 20, 17, cat[0])          # 등 하이라이트
+        # 줄무늬 2개
+        for sx in (17, 21):
+            rect(img, sx, 16, sx + 1, 20, cat[3], lambda x, y: (x + 0.5 - 17) ** 2 / 77 + (y + 0.5 - 22) ** 2 / 27 <= 1)
+        # 머리
+        disc(img, 11, 14, 5.4, sphere_shade(cat))
+        # 귀 (삼각 2개 — 쫑긋 시 1px 상승)
+        tri(img, (7, 8 - perk), (7, 11), (10, 10), cat[2])
+        tri(img, (14, 7 - perk), (12, 10), (15, 10), cat[2])
+        put(img, 8, 10, PINK); put(img, 13, 9, PINK)  # 귀 안쪽
+        # 자는 눈 (^ ^) + 코·수염
+        put(img, 8, 14, DARK); put(img, 9, 13, DARK); put(img, 10, 14, DARK)
+        put(img, 12, 13, DARK); put(img, 13, 12, DARK); put(img, 14, 13, DARK)
+        put(img, 11, 16, PINK)
+        put(img, 6, 16, cat[3]); put(img, 5, 17, cat[3])   # 수염 좌
+        put(img, 15, 16, cat[3]); put(img, 16, 17, cat[3])
+        # 꼬리 — 오른쪽 뒤에서 S자로 치켜들고 끝이 위아래로 살랑 (2px 큰 덩어리)
+        mids = [(28, 24), (29, 22), (29, 20), (28, 18)]
+        tips = [(30, 21), (30, 18), (29, 15), (27, 13)]
+        polyline(img, [(23, 22), (26, 24), mids[sway], tips[sway]], cat[3], 2)
+        block(img, tips[sway][0] - 1, tips[sway][1] - 1, cat[0], 2, 2)  # 흰 꼬리 끝
+        return img
+
+    return frames_sheet([lambda k=k: frame(k) for k in range(8)])
+
+
+def draw_hamster():
+    # 쳇바퀴 햄스터 — 스포크가 프레임당 11.25° 회전(4폭 대칭 → 8프레임 = 90° = 무이음 루프) + 다리 교차
+    ham, steel = PAL['ham'], PAL['steel']
+
+    def frame(k):
+        img = new_canvas()
+        rot = k * (math.pi / 16)                   # 11.25°/프레임
+        cx, cy, r = 16, 15, 11.5
+        # 받침대 (바퀴 뒤)
+        tri(img, (16, 24), (9, 30), (23, 30), steel[2])
+        rect(img, 7, 29, 25, 30, steel[3])
+        # 바퀴 링 (2px)
+        for i in range(2880):
+            t = i * math.pi / 1440
+            x = cx + r * math.cos(t)
+            y = cy + r * math.sin(t)
+            block(img, round(x) - 1, round(y) - 1, steel[1], 2, 2)
+        # 스포크 4개 (회전 — 큰 색 덩어리)
+        for s in range(4):
+            th = rot + s * (math.pi / 2)
+            pts = []
+            for rr in (0, 4, 7, 10):
+                pts.append((round(cx + rr * math.cos(th)), round(cy + rr * math.sin(th))))
+            polyline(img, pts, steel[2], 2)
+        block(img, cx - 1, cy - 1, steel[0], 2, 2)  # 축
+        # 햄스터 (바퀴 안 하단, 달리는 중)
+        bob = 1 if k % 2 == 0 else 0
+        hy = 20 - bob
+        for y in range(hy - 4, hy + 4):
+            for x in range(11, 21):
+                dx, dy = x + 0.5 - 15.5, y + 0.5 - hy
+                if (dx / 4.8) ** 2 + (dy / 3.8) ** 2 <= 1:
+                    put(img, x, y, ham[1] if dy < 0 else ham[2])
+        rect(img, 13, hy - 3, 16, hy - 2, ham[0])   # 등 하이라이트
+        # 머리(우측 진행 방향) + 귀 + 눈 + 볼
+        disc(img, 19.5, hy - 1.5, 3.4, sphere_shade(ham))
+        put(img, 19, hy - 5 + bob, ham[2]); put(img, 20, hy - 5 + bob, ham[2])  # 귀
+        put(img, 20, hy - 2, DARK)                  # 눈
+        put(img, 21, hy, PINK)                      # 볼
+        # 다리 스커리 (2단계 교차)
+        if k % 2 == 0:
+            block(img, 12, hy + 3, ham[3], 2, 1); block(img, 17, hy + 4, ham[3], 2, 1)
+        else:
+            block(img, 13, hy + 4, ham[3], 2, 1); block(img, 18, hy + 3, ham[3], 2, 1)
+        return img
+
+    return frames_sheet([lambda k=k: frame(k) for k in range(8)])
+
+
 SPRITES = {
     'station_default': draw_default,
     'station_mint': draw_mint,
@@ -408,6 +558,9 @@ SPRITES = {
     'station_galaxy': draw_galaxy,
     'station_wood': draw_wood,
     'station_candy': draw_candy,
+    'station_dog': draw_dog,
+    'station_cat': draw_cat,
+    'station_hamster': draw_hamster,
 }
 
 
