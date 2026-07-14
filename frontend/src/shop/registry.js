@@ -21,6 +21,13 @@ import stationDefault from '../assets/shop/station_default.png'
 import stationMint from '../assets/shop/station_mint.png'
 import stationMoonbase from '../assets/shop/station_moonbase.png'
 import stationMothership from '../assets/shop/station_mothership.png'
+import stationSprout from '../assets/shop/station_sprout.png'
+import stationGalaxy from '../assets/shop/station_galaxy.png'
+import stationWood from '../assets/shop/station_wood.png'
+import stationCandy from '../assets/shop/station_candy.png'
+import stationDog from '../assets/shop/station_dog.png'
+import stationCat from '../assets/shop/station_cat.png'
+import stationHamster from '../assets/shop/station_hamster.png'
 import stickerHeart from '../assets/shop/sticker_heart.png'
 import stickerImportant from '../assets/shop/sticker_important.png'
 import stickerStar from '../assets/shop/sticker_star.png'
@@ -57,6 +64,13 @@ export const STATION_SPRITES = {
   'station.mint': { name: '민트 정거장', img: stationMint },
   'station.moonbase': { name: '달 기지', img: stationMoonbase },
   'station.mothership': { name: '모선', img: stationMothership },
+  'station.sprout': { name: '새싹 온실', img: stationSprout },
+  'station.galaxy': { name: '은하수 전망대', img: stationGalaxy },
+  'station.wood': { name: '원목 오두막', img: stationWood },
+  'station.candy': { name: '과자집', img: stationCandy },
+  'station.dog': { name: '강아지', img: stationDog, frames: 8, fps: 5 },
+  'station.cat': { name: '고양이', img: stationCat, frames: 8, fps: 5 },
+  'station.hamster': { name: '햄스터', img: stationHamster, frames: 8, fps: 5 },
 }
 
 export const STICKER_SPRITES = {

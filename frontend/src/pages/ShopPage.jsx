@@ -539,7 +539,7 @@ export default function ShopPage() {
       ))}
 
       <p className="text-[0.6875rem] text-sub text-center pt-4 border-t border-line">
-        픽셀 아트: peony (CC-BY 4.0) · Master484 · Dizzy Crow · stealthix · KerteX_
+        픽셀 아트: peony (CC-BY 4.0) · stealthix · KerteX_
       </p>
 
       {Object.keys(previews).length > 0 && (
