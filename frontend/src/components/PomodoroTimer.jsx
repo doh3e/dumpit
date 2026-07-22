@@ -437,28 +437,33 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
               <option value={0}>∞</option>
             </select>
           </div>
-          <div className="flex items-center justify-between gap-2">
-            <label className="text-[0.625rem] font-bold text-sub">긴 휴식 (분)</label>
-            <input
-              type="number"
-              min={MIN_MIN}
-              max={MAX_MIN}
-              value={longBreakMin}
-              onChange={(e) => setLongBreakMin(Number(e.target.value))}
-              className="w-16 text-xs font-bold border border-line rounded px-2 py-1 bg-card"
-            />
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <label className="text-[0.625rem] font-bold text-sub">긴 휴식 주기 (세트)</label>
-            <input
-              type="number"
-              min={2}
-              max={MAX_SETS}
-              value={longBreakEvery}
-              onChange={(e) => setLongBreakEvery(Number(e.target.value))}
-              className="w-16 text-xs font-bold border border-line rounded px-2 py-1 bg-card"
-            />
-          </div>
+          {/* 긴 휴식은 세트 반복이 있을 때만 의미 있음 — 세트 1이면 숨김 */}
+          {setsTarget !== 1 && (
+            <>
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-[0.625rem] font-bold text-sub">긴 휴식 (분)</label>
+                <input
+                  type="number"
+                  min={MIN_MIN}
+                  max={MAX_MIN}
+                  value={longBreakMin}
+                  onChange={(e) => setLongBreakMin(Number(e.target.value))}
+                  className="w-16 text-xs font-bold border border-line rounded px-2 py-1 bg-card"
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-[0.625rem] font-bold text-sub">긴 휴식 주기 (세트)</label>
+                <input
+                  type="number"
+                  min={2}
+                  max={MAX_SETS}
+                  value={longBreakEvery}
+                  onChange={(e) => setLongBreakEvery(Number(e.target.value))}
+                  className="w-16 text-xs font-bold border border-line rounded px-2 py-1 bg-card"
+                />
+              </div>
+            </>
+          )}
           <button
             onClick={() => saveSettings(focusMin, breakMin, setsTarget, longBreakMin, longBreakEvery)}
             className="w-full btn-retro text-on-accent text-[0.625rem] py-1.5"
