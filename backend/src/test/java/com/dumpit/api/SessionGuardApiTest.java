@@ -103,4 +103,35 @@ class SessionGuardApiTest extends ApiIntegrationTestBase {
                         })))
                 .andExpect(status().isOk());
     }
+
+    // ---------- 로그아웃 CSRF (강제 로그아웃 방어) ----------
+    // LogoutFilter는 AuthenticatedRequestGuardFilter보다 앞에 있어 위 가드가 로그아웃을 못 지킨다.
+    // SameSite=Lax여도 최상위 GET 내비게이션엔 쿠키가 실리므로, 링크 클릭만으로
+    // 세션이 죽는 강제 로그아웃을 로그아웃 매처 자체에서 막아야 한다.
+
+    @Test
+    void 로그아웃_GET으로는_불가_강제로그아웃_방어() throws Exception {
+        mockMvc.perform(get("/auth/logout")
+                        .with(oauth2Login().attributes(attrs -> {
+                            attrs.put("email", USER_A);
+                            attrs.put("name", "테스트유저");
+                        })))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 로그아웃_XRequestedWith없는_POST_불가() throws Exception {
+        mockMvc.perform(post("/auth/logout")
+                        .with(oauth2Login().attributes(attrs -> {
+                            attrs.put("email", USER_A);
+                            attrs.put("name", "테스트유저");
+                        })))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 로그아웃_정상요청은_204_회귀없음() throws Exception {
+        mockMvc.perform(post("/auth/logout").with(asUser(USER_A)))
+                .andExpect(status().isNoContent());
+    }
 }
