@@ -196,6 +196,27 @@ def celeb_ember():
     return img
 
 
+def celeb_fire_glow():
+    """모닥불 광륜 48×48 — 내핵 + 체커 디더 링 2겹, 저알파 웜 오렌지.
+    CSS에서 ~300px로 업스케일(pixelated)해 청키한 픽셀 글로우로 쓴다."""
+    img = new_canvas(48, 48)
+    warm = (242, 176, 76)
+    for y in range(48):
+        for x in range(48):
+            dx, dy = x + 0.5 - 24, y + 0.5 - 24
+            d = (dx * dx + dy * dy) ** 0.5
+            if d <= 10:
+                a = 88
+            elif d <= 17 and (x + y) % 2 == 0:
+                a = 64
+            elif d <= 23 and (x + y) % 2 == 0:
+                a = 36
+            else:
+                continue
+            img.load()[x, y] = (*warm, a)
+    return img
+
+
 SPRITES = {
     'celeb_fireworks.png': celeb_fireworks,
     'celeb_firework_spark_gold.png': lambda: spark('#F2CE5E', '#FFF7DE'),
@@ -213,6 +234,7 @@ SPRITES = {
     'celeb_bonfire_a.png': celeb_bonfire_a,
     'celeb_bonfire_b.png': celeb_bonfire_b,
     'celeb_ember.png': celeb_ember,
+    'celeb_fire_glow.png': celeb_fire_glow,
 }
 
 
@@ -223,7 +245,7 @@ def main():
     imgs = {name: fn() for name, fn in SPRITES.items()}
     if args.preview:
         scale, pad, cols = 8, 8, 4
-        cell = 24 * scale + pad
+        cell = max(im.width for im in imgs.values()) * scale + pad
         rows = (len(imgs) + cols - 1) // cols
         sheet = Image.new('RGBA', (cols * cell + pad, rows * cell + pad), (30, 30, 40, 255))
         for i, (name, im) in enumerate(imgs.items()):

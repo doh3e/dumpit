@@ -33,6 +33,7 @@ import celebCandyConfetti from '../assets/shop/celeb_candy_confetti.png'
 import celebBonfireA from '../assets/shop/celeb_bonfire_a.png'
 import celebBonfireB from '../assets/shop/celeb_bonfire_b.png'
 import celebEmber from '../assets/shop/celeb_ember.png'
+import celebFireGlow from '../assets/shop/celeb_fire_glow.png'
 import stationDefault from '../assets/shop/station_default.png'
 import stationMint from '../assets/shop/station_mint.png'
 import stationMoonbase from '../assets/shop/station_moonbase.png'
@@ -81,7 +82,10 @@ export const CELEBRATION_SPRITES = {
   'celeb.golden-rocket': { name: '황금 로켓', img: celebrationGoldenRocket },
   'celeb.fireworks': {
     name: '불꽃놀이', img: celebFireworks, motion: 'fireworks',
-    parts: { sparks: [celebFireworkSparkGold, celebFireworkSparkCoral, celebFireworkSparkTeal] },
+    parts: {
+      sparks: [celebFireworkSparkGold, celebFireworkSparkCoral, celebFireworkSparkTeal],
+      flash: celebMeteorStar, // 폭발 순간 플래시 — 잔별 스프라이트를 크게 스케일해 재사용
+    },
   },
   'celeb.meteor-shower': {
     name: '유성우', img: celebMeteor, motion: 'meteor',
@@ -101,7 +105,7 @@ export const CELEBRATION_SPRITES = {
   },
   'celeb.bonfire': {
     name: '모닥불', img: celebBonfireA, motion: 'bonfire',
-    parts: { flameAlt: celebBonfireB, ember: celebEmber },
+    parts: { flameAlt: celebBonfireB, ember: celebEmber, glow: celebFireGlow },
   },
 }
 

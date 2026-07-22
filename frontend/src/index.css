@@ -293,33 +293,54 @@ body {
   100% { transform: translate(var(--dx), 10vh) rotate(360deg); opacity: 0; }
 }
 
-/* 모닥불 — 두 포즈 opacity 교차(타닥타닥) + 불씨 상승 */
-.celeb-bonfire { bottom: 18px; animation: bonfire-flicker .44s steps(1) infinite; }
-.celeb-bonfire-alt { bottom: 18px; animation: bonfire-flicker .44s steps(1) -.22s infinite; }
+/* 모닥불 — 광륜 펄스 + 두 포즈 opacity 교차(타닥타닥) + 숨쉬기 + 불씨 상승 */
+.celeb-fire-glow { bottom: -80px; opacity: .55; animation: glow-pulse .72s ease-in-out infinite; }
+@keyframes glow-pulse {
+  0%, 100% { opacity: .55; transform: scale(1); }
+  50% { opacity: .8; transform: scale(1.05); }
+}
+.celeb-bonfire, .celeb-bonfire-alt { bottom: 18px; transform-origin: 50% 100%; }
+/* 숨쉬기(breathe)는 두 포즈가 같은 위상이어야 포즈 교차 시 크기가 튀지 않는다 */
+.celeb-bonfire { animation: bonfire-flicker .36s steps(1) infinite, bonfire-breathe .9s ease-in-out infinite; }
+.celeb-bonfire-alt { animation: bonfire-flicker .36s steps(1) -.18s infinite, bonfire-breathe .9s ease-in-out infinite; }
 @keyframes bonfire-flicker {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
-.celeb-ember { opacity: 0; animation: ember-rise 1.4s ease-out forwards; }
+@keyframes bonfire-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scaleX(1.02) scaleY(1.06); }
+}
+.celeb-ember { opacity: 0; animation: ember-rise 1.6s ease-out forwards; }
 @keyframes ember-rise {
   0% { transform: translate(0, 0); opacity: 1; }
-  30% { transform: translate(6px, -9vh); }
-  60% { transform: translate(-5px, -18vh); opacity: .9; }
-  100% { transform: translate(4px, -28vh); opacity: 0; }
+  25% { transform: translate(calc(var(--drift) * .6), -10vh); }
+  55% { transform: translate(calc(var(--drift) * -.4), -22vh); opacity: .95; }
+  80% { transform: translate(var(--drift), -32vh); opacity: .6; }
+  100% { transform: translate(calc(var(--drift) * .5), -40vh); opacity: 0; }
 }
 
-/* 불꽃놀이 — 로켓 발사 후 상단 방사형 파열 */
-.celeb-fw-rocket { bottom: -8vh; opacity: 0; animation: firework-launch .55s cubic-bezier(.55, .06, .68, .19) forwards; }
+/* 불꽃놀이 — 로켓 발사 → 플래시 → 방사형 파열 + 중력 낙하·깜빡임 */
+.celeb-fw-rocket { bottom: -8vh; opacity: 0; animation: firework-launch .5s cubic-bezier(.55, .06, .68, .19) forwards; }
 @keyframes firework-launch {
   0% { transform: translateY(0); opacity: 1; }
   95% { opacity: 1; }
   100% { transform: translateY(-72vh); opacity: 0; }
 }
-.celeb-fw-spark { opacity: 0; animation: firework-burst .9s ease-out forwards; }
+.celeb-fw-flash { opacity: 0; animation: firework-flash .32s ease-out forwards; }
+@keyframes firework-flash {
+  0% { transform: scale(.4); opacity: 1; }
+  60% { transform: scale(2.4); opacity: .9; }
+  100% { transform: scale(3); opacity: 0; }
+}
+.celeb-fw-spark { opacity: 0; animation: firework-burst 1.05s ease-out forwards; }
 @keyframes firework-burst {
-  0% { transform: translate(0, 0) scale(.6); opacity: 1; }
+  0% { transform: translate(0, 0) scale(.5); opacity: 1; }
+  55% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 1; }
   70% { opacity: 1; }
-  100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
+  78% { opacity: .35; }
+  86% { opacity: .9; }
+  100% { transform: translate(var(--dx), calc(var(--dy) + 34px)) scale(.9); opacity: 0; }
 }
 
 .coin-bounce { animation: coin-pop .4s cubic-bezier(.3, 1.6, .5, 1); }

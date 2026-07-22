@@ -93,61 +93,75 @@ function burst(sprite) {
 }
 
 function bonfire(sprite) {
+  // 글로우를 배열 앞에 둬서 DOM 순서상 화염 뒤(아래)에 깔린다
+  const glow = {
+    src: sprite.parts.glow,
+    className: `${BASE} celeb-fire-glow`,
+    style: { left: 'calc(50% - 150px)', width: '300px' },
+  }
   const flames = [
     {
       src: sprite.img,
       className: `${BASE} celeb-bonfire`,
-      style: { left: 'calc(50% - 36px)', width: '72px' },
+      style: { left: 'calc(50% - 52px)', width: '104px' },
     },
     {
       src: sprite.parts.flameAlt,
       className: `${BASE} celeb-bonfire-alt`,
-      style: { left: 'calc(50% - 36px)', width: '72px' },
+      style: { left: 'calc(50% - 52px)', width: '104px' },
     },
   ]
-  const embers = Array.from({ length: 9 }, () => ({
+  const embers = Array.from({ length: 12 }, () => ({
     src: sprite.parts.ember,
     className: `${BASE} celeb-ember`,
     style: {
-      left: `${44 + Math.random() * 12}%`,
-      bottom: `${56 + Math.random() * 24}px`,
-      width: '10px',
-      animationDelay: `${Math.random() * 0.9}s`,
+      left: `${42 + Math.random() * 16}%`,
+      bottom: `${70 + Math.random() * 40}px`,
+      width: `${8 + Math.random() * 6}px`,
+      animationDelay: `${Math.random() * 0.7}s`,
+      '--drift': `${(Math.random() * 2 - 1) * 20}px`,
     },
   }))
-  return [...flames, ...embers]
+  return [glow, ...flames, ...embers]
 }
 
 function fireworks(sprite) {
   const bursts = [
-    { x: 26, y: 30, delay: 0 },
-    { x: 50, y: 20, delay: 0.25 },
-    { x: 74, y: 32, delay: 0.5 },
+    { x: 24, y: 30, delay: 0 },
+    { x: 50, y: 18, delay: 0.3 },
+    { x: 76, y: 26, delay: 0.6 },
   ]
   const rockets = bursts.map((b) => ({
     src: sprite.img,
     className: `${BASE} celeb-fw-rocket`,
     style: { left: `${b.x}%`, width: '28px', animationDelay: `${b.delay}s` },
   }))
+  // 폭발 순간의 번쩍 — 잔별 스프라이트가 3배로 확 퍼지며 사라진다
+  const flashes = bursts.map((b) => ({
+    src: sprite.parts.flash,
+    className: `${BASE} celeb-fw-flash`,
+    style: { left: `${b.x}%`, top: `${b.y}%`, width: '36px', animationDelay: `${b.delay + 0.5}s` },
+  }))
   const sparks = bursts.flatMap((b, bi) =>
     Array.from({ length: 8 }, (_, i) => {
-      const angle = (i / 8) * Math.PI * 2 + Math.random() * 0.4
-      const dist = 60 + Math.random() * 70
+      // 파열마다 각도를 반 칸씩 어긋내 겹치는 방사선을 피한다
+      const angle = ((i + (bi % 2) * 0.5) / 8) * Math.PI * 2 + Math.random() * 0.3
+      const dist = 90 + Math.random() * 110
       return {
         src: sprite.parts.sparks[(bi + i) % 3],
         className: `${BASE} celeb-fw-spark`,
         style: {
           left: `${b.x}%`,
           top: `${b.y}%`,
-          width: '14px',
-          animationDelay: `${b.delay + 0.5}s`,
+          width: `${10 + Math.random() * 8}px`,
+          animationDelay: `${b.delay + 0.52 + Math.random() * 0.12}s`,
           '--dx': `${Math.cos(angle) * dist}px`,
           '--dy': `${Math.sin(angle) * dist}px`,
         },
       }
     })
   )
-  return [...rockets, ...sparks]
+  return [...rockets, ...flashes, ...sparks]
 }
 
 export const BUILDERS = { launch, meteor, petal, sprout, burst, bonfire, fireworks }
