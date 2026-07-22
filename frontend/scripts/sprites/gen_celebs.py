@@ -3,6 +3,7 @@
 #       python gen_celebs.py --preview OUT.png  → 미리보기 시트만 저장 (8배 확대, 검수용)
 # 스타일: 외곽선 없음, 좌상단 광원, 톤 2~4개, 투명 배경 (gen_stations.py 규약과 동일)
 import argparse
+import math
 from pathlib import Path
 from PIL import Image
 
@@ -88,6 +89,43 @@ def celeb_meteor():
     stroke(img, [(10, 5), (3, 12)], gold, thick=2)      # 꼬리 본체
     disc(img, 3.5, 12.5, 2.2, gold)                     # 머리
     disc(img, 3.0, 12.0, 1.2, white)                    # 머리 코어
+    return img
+
+
+def celeb_meteor_big():
+    """전경용 대형 유성 32×32 — 롱테일 + 밝은 코어 (72~112px로 업스케일)"""
+    img = new_canvas(32, 32)
+    white, gold, gold_d, indigo = hx('#FFF7DE'), hx('#F2CE5E'), hx('#C9922E'), hx('#8A8FD4')
+    stroke(img, [(29, 2), (11, 20)], indigo, thick=1)   # 꼬리 끝
+    stroke(img, [(27, 4), (9, 22)], gold_d, thick=2)
+    stroke(img, [(24, 7), (7, 24)], gold, thick=3)      # 꼬리 본체
+    put(img, 22, 6, white); put(img, 15, 14, white)     # 꼬리 반짝
+    disc(img, 6.5, 25.5, 3.4, gold)                     # 머리
+    disc(img, 5.8, 24.8, 2.0, white)                    # 머리 코어
+    return img
+
+
+def celeb_fw_bloom_a():
+    """폭발 초기 블룸 48×48 — 촘촘한 2겹 점 링 + 흰 코어 (~190px 업스케일)"""
+    img = new_canvas(48, 48)
+    palette = [hx('#F2CE5E'), hx('#E87070'), hx('#58B8A8'), hx('#FFF7DE')]
+    for i in range(16):
+        ang = i / 16 * 2 * math.pi
+        disc(img, 24 + math.cos(ang) * 13, 24 + math.sin(ang) * 13, 1.7, palette[i % 4])
+    for i in range(8):
+        ang = i / 8 * 2 * math.pi + 0.4
+        disc(img, 24 + math.cos(ang) * 7, 24 + math.sin(ang) * 7, 1.3, palette[(i + 1) % 4])
+    disc(img, 24, 24, 2.6, hx('#FFF7DE'))
+    return img
+
+
+def celeb_fw_bloom_b():
+    """폭발 후기 블룸 48×48 — 넓고 성긴 링, 살짝 아래로 처짐"""
+    img = new_canvas(48, 48)
+    palette = [hx('#F2CE5E'), hx('#E87070'), hx('#58B8A8')]
+    for i in range(20):
+        ang = i / 20 * 2 * math.pi + 0.25
+        disc(img, 24 + math.cos(ang) * 19, 25.5 + math.sin(ang) * 19, 1.2, palette[i % 3])
     return img
 
 
@@ -223,7 +261,10 @@ SPRITES = {
     'celeb_firework_spark_coral.png': lambda: spark('#E87070', '#FBD3D3'),
     'celeb_firework_spark_teal.png': lambda: spark('#58B8A8', '#DFF5F0'),
     'celeb_meteor.png': celeb_meteor,
+    'celeb_meteor_big.png': celeb_meteor_big,
     'celeb_meteor_star.png': celeb_meteor_star,
+    'celeb_fw_bloom_a.png': celeb_fw_bloom_a,
+    'celeb_fw_bloom_b.png': celeb_fw_bloom_b,
     'celeb_petal.png': celeb_petal,
     'celeb_petal_leaf.png': celeb_petal_leaf,
     'celeb_sprout.png': celeb_sprout,

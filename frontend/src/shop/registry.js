@@ -22,7 +22,10 @@ import celebFireworkSparkGold from '../assets/shop/celeb_firework_spark_gold.png
 import celebFireworkSparkCoral from '../assets/shop/celeb_firework_spark_coral.png'
 import celebFireworkSparkTeal from '../assets/shop/celeb_firework_spark_teal.png'
 import celebMeteor from '../assets/shop/celeb_meteor.png'
+import celebMeteorBig from '../assets/shop/celeb_meteor_big.png'
 import celebMeteorStar from '../assets/shop/celeb_meteor_star.png'
+import celebFwBloomA from '../assets/shop/celeb_fw_bloom_a.png'
+import celebFwBloomB from '../assets/shop/celeb_fw_bloom_b.png'
 import celebPetal from '../assets/shop/celeb_petal.png'
 import celebPetalLeaf from '../assets/shop/celeb_petal_leaf.png'
 import celebSprout from '../assets/shop/celeb_sprout.png'
@@ -85,11 +88,12 @@ export const CELEBRATION_SPRITES = {
     parts: {
       sparks: [celebFireworkSparkGold, celebFireworkSparkCoral, celebFireworkSparkTeal],
       flash: celebMeteorStar, // 폭발 순간 플래시 — 잔별 스프라이트를 크게 스케일해 재사용
+      blooms: [celebFwBloomA, celebFwBloomB], // 파열 밀도 담당 — 점 링 2단 크로스페이드
     },
   },
   'celeb.meteor-shower': {
     name: '유성우', img: celebMeteor, motion: 'meteor',
-    parts: { star: celebMeteorStar },
+    parts: { star: celebMeteorStar, big: celebMeteorBig },
   },
   'celeb.petal-wind': {
     name: '꽃잎 바람', img: celebPetal, motion: 'petal',

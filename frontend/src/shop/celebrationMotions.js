@@ -16,26 +16,37 @@ function launch(sprite) {
 }
 
 function meteor(sprite) {
-  const meteors = Array.from({ length: 10 }, () => ({
+  // 배경 층 — 작은 유성 12발, 느리고 얕게
+  const small = Array.from({ length: 12 }, () => ({
     src: sprite.img,
     className: `${BASE} celeb-meteor`,
     style: {
-      left: `${20 + Math.random() * 90}%`, // 좌하로 흐르므로 오른쪽까지 넓게
-      width: `${24 + Math.random() * 24}px`,
-      animationDelay: `${Math.random() * 1.1}s`,
+      left: `${15 + Math.random() * 95}%`, // 좌하로 흐르므로 오른쪽까지 넓게
+      width: `${20 + Math.random() * 20}px`,
+      animationDelay: `${Math.random() * 1.15}s`,
     },
   }))
-  const stars = Array.from({ length: 7 }, () => ({
+  // 전경 층 — 대형 유성 4발, 빠르고 길게 화면을 가른다
+  const big = Array.from({ length: 4 }, (_, i) => ({
+    src: sprite.parts.big,
+    className: `${BASE} celeb-meteor-big`,
+    style: {
+      left: `${25 + i * 22 + Math.random() * 8}%`,
+      width: `${72 + Math.random() * 40}px`,
+      animationDelay: `${0.15 + i * 0.4 + Math.random() * 0.15}s`,
+    },
+  }))
+  const stars = Array.from({ length: 8 }, () => ({
     src: sprite.parts.star,
     className: `${BASE} celeb-star`,
     style: {
       left: `${5 + Math.random() * 90}%`,
-      top: `${5 + Math.random() * 60}%`,
-      width: '14px',
+      top: `${5 + Math.random() * 55}%`,
+      width: `${12 + Math.random() * 8}px`,
       animationDelay: `${Math.random() * 0.5}s`,
     },
   }))
-  return [...meteors, ...stars]
+  return [...small, ...big, ...stars]
 }
 
 function petal(sprite) {
@@ -131,22 +142,44 @@ function fireworks(sprite) {
     { x: 50, y: 18, delay: 0.3 },
     { x: 76, y: 26, delay: 0.6 },
   ]
-  const rockets = bursts.map((b) => ({
-    src: sprite.img,
-    className: `${BASE} celeb-fw-rocket`,
-    style: { left: `${b.x}%`, width: '28px', animationDelay: `${b.delay}s` },
-  }))
-  // 폭발 순간의 번쩍 — 잔별 스프라이트가 3배로 확 퍼지며 사라진다
-  const flashes = bursts.map((b) => ({
-    src: sprite.parts.flash,
-    className: `${BASE} celeb-fw-flash`,
-    style: { left: `${b.x}%`, top: `${b.y}%`, width: '36px', animationDelay: `${b.delay + 0.5}s` },
-  }))
-  const sparks = bursts.flatMap((b, bi) =>
-    Array.from({ length: 8 }, (_, i) => {
+  // 파열당: 로켓 + 플래시 + 블룸 2단(밀도 담당) + 비행 파편 6 = 10노드 × 3파열 = 30
+  return bursts.flatMap((b, bi) => [
+    {
+      src: sprite.img,
+      className: `${BASE} celeb-fw-rocket`,
+      style: { left: `${b.x}%`, width: '28px', animationDelay: `${b.delay}s` },
+    },
+    {
+      src: sprite.parts.flash,
+      className: `${BASE} celeb-fw-flash`,
+      style: {
+        left: `${b.x}%`, top: `${b.y}%`, width: '36px',
+        marginLeft: '-18px', marginTop: '-18px', // 파열점 중심 정렬 (정적 속성 — 애니 아님)
+        animationDelay: `${b.delay + 0.5}s`,
+      },
+    },
+    {
+      src: sprite.parts.blooms[0],
+      className: `${BASE} celeb-fw-bloom`,
+      style: {
+        left: `${b.x}%`, top: `${b.y}%`, width: '190px',
+        marginLeft: '-95px', marginTop: '-95px',
+        animationDelay: `${b.delay + 0.5}s`,
+      },
+    },
+    {
+      src: sprite.parts.blooms[1],
+      className: `${BASE} celeb-fw-bloom-late`,
+      style: {
+        left: `${b.x}%`, top: `${b.y}%`, width: '210px',
+        marginLeft: '-105px', marginTop: '-105px',
+        animationDelay: `${b.delay + 0.72}s`,
+      },
+    },
+    ...Array.from({ length: 6 }, (_, i) => {
       // 파열마다 각도를 반 칸씩 어긋내 겹치는 방사선을 피한다
-      const angle = ((i + (bi % 2) * 0.5) / 8) * Math.PI * 2 + Math.random() * 0.3
-      const dist = 90 + Math.random() * 110
+      const angle = ((i + (bi % 2) * 0.5) / 6) * Math.PI * 2 + Math.random() * 0.3
+      const dist = 100 + Math.random() * 110
       return {
         src: sprite.parts.sparks[(bi + i) % 3],
         className: `${BASE} celeb-fw-spark`,
@@ -159,9 +192,8 @@ function fireworks(sprite) {
           '--dy': `${Math.sin(angle) * dist}px`,
         },
       }
-    })
-  )
-  return [...rockets, ...flashes, ...sparks]
+    }),
+  ])
 }
 
 export const BUILDERS = { launch, meteor, petal, sprout, burst, bonfire, fireworks }
