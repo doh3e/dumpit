@@ -2,13 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
+import { getUserSettings } from '../services/userSettings'
 import { parseDate } from '../utils/dates'
 import deadlineAlarm from '../assets/deadline_alarm.png'
 
 const NOTIFIED_KEY = 'dumpit.deadlineNudges.notified'
-const THRESHOLDS_KEY = 'dumpit_notification_thresholds'
-const NOTIFICATIONS_ENABLED_KEY = 'dumpit_notifications_enabled'
-const DEFAULT_THRESHOLDS = [60]
 const THRESHOLD_WINDOW_MIN = 5
 
 const THRESHOLD_LABELS = {
@@ -18,14 +16,6 @@ const THRESHOLD_LABELS = {
   60:  '1시간 전',
   30:  '30분 전',
   10:  '10분 전',
-}
-
-function getSelectedThresholds() {
-  try {
-    const saved = localStorage.getItem(THRESHOLDS_KEY)
-    if (saved) return JSON.parse(saved)
-  } catch {}
-  return DEFAULT_THRESHOLDS
 }
 
 function formatDeadline(value) {
@@ -101,9 +91,10 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
 
   useEffect(() => {
     if (permission !== 'granted' || nudges.length === 0) return
-    if (localStorage.getItem(NOTIFICATIONS_ENABLED_KEY) === '0') return
+    const { notificationsEnabled, notificationThresholds } = getUserSettings()
+    if (!notificationsEnabled) return
 
-    const selectedThresholds = getSelectedThresholds()
+    const selectedThresholds = notificationThresholds
 
     let notified = []
     try {
