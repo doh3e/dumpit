@@ -1,10 +1,12 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.common.ActiveHours;
 import com.dumpit.dto.TaskPlanningResponse;
 import com.dumpit.dto.TaskResponse;
 import com.dumpit.entity.Task;
 import com.dumpit.service.TaskPlanningService;
 import com.dumpit.service.TaskService;
+import com.dumpit.service.UserSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
     private static final int MAX_RECOMMENDATIONS = 3;
 
     private final TaskService taskService;
+    private final UserSettingsService userSettingsService;
 
     @Override
     @Transactional(readOnly = true)
@@ -35,6 +38,7 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
 
     TaskPlanningResponse getPlanning(String email, LocalDateTime now) {
         List<Task> tasks = taskService.getTasksForUser(email, RECENT_DONE_DAYS);
+        ActiveHours activeHours = userSettingsService.activeHours(email);
         int availableFocusMinutes = availableFocusMinutes(tasks, now);
 
         List<Task> active = tasks.stream()
@@ -64,7 +68,7 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
                 now,
                 availableFocusMinutes,
                 tasks.stream().map(TaskResponse::from).toList(),
-                nowSuggestion(active, recommendations, now, availableFocusMinutes),
+                nowSuggestion(active, recommendations, now, availableFocusMinutes, activeHours),
                 recommendations.stream()
                         .map((recommendation) -> new TaskPlanningResponse.TaskRecommendationResponse(
                                 TaskResponse.from(recommendation.task()),
@@ -81,7 +85,8 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
             List<Task> active,
             List<TaskRecommendation> recommendations,
             LocalDateTime now,
-            int availableFocusMinutes
+            int availableFocusMinutes,
+            ActiveHours activeHours
     ) {
         Task currentTimedTask = active.stream()
                 .filter((task) -> isHappeningNow(task, now))
@@ -98,6 +103,15 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
         }
 
         int hour = now.getHour();
+        if (!activeHours.contains(hour)) {
+            return new TaskPlanningResponse.NowSuggestionResponse(
+                    "SLEEP",
+                    "아직 안 주무시는 거 아니죠?",
+                    "내일을 위해 숙면을 취해봐요.",
+                    null,
+                    null
+            );
+        }
         if ((hour >= 11 && hour < 13) || (hour >= 17 && hour < 19)) {
             return new TaskPlanningResponse.NowSuggestionResponse(
                     "MEAL",
@@ -107,7 +121,8 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
                     recommendations.isEmpty() ? null : availableFocusMinutes
             );
         }
-        if (hour >= 5 && hour < 10) {
+        // 짧은 활동창(<4h)에서 겹치면 DAY_START 우선 — 먼저 검사한다
+        if (activeHours.inFirstHours(hour, 2)) {
             return new TaskPlanningResponse.NowSuggestionResponse(
                     "DAY_START",
                     "오늘 흐름을 잡기 좋은 시간이에요.",
@@ -116,22 +131,13 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
                     recommendations.isEmpty() ? null : availableFocusMinutes
             );
         }
-        if (hour >= 21 && hour < 24) {
+        if (activeHours.inLastHours(hour, 2)) {
             return new TaskPlanningResponse.NowSuggestionResponse(
                     "DAY_END",
                     "하루를 마무리 할 시간이에요.",
                     "급한 일만 가볍게 정리해볼까요?",
                     recommendations.isEmpty() ? null : TaskResponse.from(recommendations.getFirst().task()),
                     recommendations.isEmpty() ? null : availableFocusMinutes
-            );
-        }
-        if (hour >= 0 && hour < 5) {
-            return new TaskPlanningResponse.NowSuggestionResponse(
-                    "SLEEP",
-                    "아직 안 주무시는 거 아니죠?",
-                    "내일을 위해 숙면을 취해봐요.",
-                    null,
-                    null
             );
         }
         if (!recommendations.isEmpty()) {
