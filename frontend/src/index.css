@@ -245,6 +245,83 @@ body {
   100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
 }
 
+/* ---- 프리미엄 완료축하 모션 (celebrationMotions.js 빌더와 클래스 계약) ---- */
+.celeb-part { position: absolute; height: auto; image-rendering: pixelated; }
+
+/* 유성우 — 우상→좌하 스트릭 + 잔별 반짝 */
+.celeb-meteor { top: -10vh; opacity: 0; animation: meteor-fall 1.1s linear forwards; }
+@keyframes meteor-fall {
+  0% { transform: translate(0, 0); opacity: 1; }
+  75% { opacity: 1; }
+  100% { transform: translate(-55vw, 120vh); opacity: 0; }
+}
+.celeb-star { opacity: 0; animation: star-twinkle .9s ease-in-out 2; }
+.celeb-sparkle { opacity: 0; animation: star-twinkle .9s ease-in-out both; }
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0; transform: scale(.5); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* 꽃잎 바람 — 좌→우 사인파 요동 + 회전 */
+.celeb-petal { left: -8vw; opacity: 0; animation: petal-drift 1.9s linear forwards; }
+@keyframes petal-drift {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  8% { opacity: 1; }
+  25% { transform: translate(30vw, var(--sway)) rotate(90deg); }
+  50% { transform: translate(60vw, calc(var(--sway) * -1)) rotate(180deg); }
+  75% { transform: translate(90vw, var(--sway)) rotate(270deg); }
+  92% { opacity: 1; }
+  100% { transform: translate(120vw, 0) rotate(360deg); opacity: 0; }
+}
+
+/* 새싹 움트기 — 하단에서 순차 팝업 */
+.celeb-sprout {
+  bottom: 0; transform: scale(0); transform-origin: 50% 100%;
+  animation: sprout-pop .5s cubic-bezier(.3, 1.6, .5, 1) forwards;
+}
+@keyframes sprout-pop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* 캔디 폭죽 — 하단 중앙에서 포물선 근사(상승 ease-out → 하강 ease-in) */
+.celeb-candy { bottom: -6vh; opacity: 0; animation: candy-burst 1.5s forwards; }
+@keyframes candy-burst {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; animation-timing-function: cubic-bezier(.17, .84, .44, 1); }
+  55% { transform: translate(calc(var(--dx) * .8), var(--peak)) rotate(200deg); opacity: 1; animation-timing-function: cubic-bezier(.55, .06, .68, .19); }
+  100% { transform: translate(var(--dx), 10vh) rotate(360deg); opacity: 0; }
+}
+
+/* 모닥불 — 두 포즈 opacity 교차(타닥타닥) + 불씨 상승 */
+.celeb-bonfire { bottom: 18px; animation: bonfire-flicker .44s steps(1) infinite; }
+.celeb-bonfire-alt { bottom: 18px; animation: bonfire-flicker .44s steps(1) -.22s infinite; }
+@keyframes bonfire-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.celeb-ember { opacity: 0; animation: ember-rise 1.4s ease-out forwards; }
+@keyframes ember-rise {
+  0% { transform: translate(0, 0); opacity: 1; }
+  30% { transform: translate(6px, -9vh); }
+  60% { transform: translate(-5px, -18vh); opacity: .9; }
+  100% { transform: translate(4px, -28vh); opacity: 0; }
+}
+
+/* 불꽃놀이 — 로켓 발사 후 상단 방사형 파열 */
+.celeb-fw-rocket { bottom: -8vh; opacity: 0; animation: firework-launch .55s cubic-bezier(.55, .06, .68, .19) forwards; }
+@keyframes firework-launch {
+  0% { transform: translateY(0); opacity: 1; }
+  95% { opacity: 1; }
+  100% { transform: translateY(-72vh); opacity: 0; }
+}
+.celeb-fw-spark { opacity: 0; animation: firework-burst .9s ease-out forwards; }
+@keyframes firework-burst {
+  0% { transform: translate(0, 0) scale(.6); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
+}
+
 .coin-bounce { animation: coin-pop .4s cubic-bezier(.3, 1.6, .5, 1); }
 @keyframes coin-pop { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
 
@@ -257,6 +334,7 @@ body {
   .pixel-spark { animation: none; opacity: 0; }
   /* 비행 스프라이트는 JS(matchMedia)에서 렌더링 자체를 건너뛰고 배너 안 정적 3개로 대체 — 아래는 안전망 */
   .celebration-sprite { animation: none; opacity: 0; }
+  .celeb-part { animation: none !important; opacity: 0; }
   .celebration-banner { animation: none; opacity: 1; transform: translate(-50%, -50%) scale(1); }
   .coin-bounce, .px-blink { animation: none; }
 }
