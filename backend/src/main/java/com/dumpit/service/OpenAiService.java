@@ -1,5 +1,6 @@
 package com.dumpit.service;
 
+import com.dumpit.common.ActiveHours;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.time.LocalDateTime;
@@ -13,11 +14,12 @@ public interface OpenAiService {
     ScheduleInferenceResult inferSchedule(String title, String description,
                                           LocalDateTime startTime,
                                           LocalDateTime deadline,
-                                          Integer estimatedMinutes);
+                                          Integer estimatedMinutes,
+                                          ActiveHours activeHours);
 
     SubtaskResult proposeSubtasks(String title, String description, Integer estimatedMinutes);
 
-    BrainDumpResult analyzeBrainDump(String rawText);
+    BrainDumpResult analyzeBrainDump(String rawText, ActiveHours activeHours);
 
     IdeaExtractResult extractIdeas(String rawText);
 

@@ -1,5 +1,6 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.common.ActiveHours;
 import com.dumpit.service.OpenAiService;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import tools.jackson.databind.ObjectMapper;
@@ -13,6 +14,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -111,10 +113,15 @@ public class OpenAiServiceImpl implements OpenAiService {
     public ScheduleInferenceResult inferSchedule(String title, String description,
                                                  LocalDateTime startTime,
                                                  LocalDateTime deadline,
-                                                 Integer estimatedMinutes) {
+                                                 Integer estimatedMinutes,
+                                                 ActiveHours activeHours) {
+        LocalDate today = LocalDate.now();
         String nowStr = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        String todayEnd = LocalDateTime.now().toLocalDate().atTime(23, 59, 0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        String tomorrowEnd = LocalDateTime.now().toLocalDate().plusDays(1).atTime(23, 59, 0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        String todayEnd = activeHours.dayEnd(today).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        String tomorrowEnd = activeHours.dayEnd(today.plusDays(1)).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        String activeHoursStr = String.format("%02d:00-%02d:00%s",
+                activeHours.startHour(), activeHours.endHour(),
+                activeHours.wraps() ? " (crosses midnight into the next day)" : "");
         String prompt = """
             You infer missing schedule fields for a Dumpit task.
             Return only valid JSON in this shape:
@@ -124,6 +131,8 @@ public class OpenAiServiceImpl implements OpenAiService {
             - Current time is %s.
             - Preserve provided values exactly. Never change or overwrite a provided field.
             - Fill a missing startTime or deadline ONLY from an explicit or relative time cue in the title/description (e.g. 오늘, 내일, 금요일까지, 5월 1일, 오후 3시 → today ends at %s, tomorrow ends at %s).
+            - The user's active hours are %s. When a cue gives a date but no explicit clock time, set the time-of-day within active hours — a "~까지" style cue means that day's active-hours end shown above.
+            - An explicit clock time in the user's text (e.g. 새벽 3시, 밤 11시) always wins, even if it is outside active hours.
             - If there is NO time cue for a field, that field MUST be null. Never invent startTime or deadline from urgency, effort, or task type alone — the user keeps open-ended tasks without deadlines on purpose.
             - Do NOT derive one time field from another with arithmetic (no startTime + estimatedMinutes = deadline, no deadline - estimatedMinutes = startTime).
             - deadline means the end/due time of the task. All deadlines must be strictly in the future.
@@ -141,6 +150,7 @@ public class OpenAiServiceImpl implements OpenAiService {
                 nowStr,
                 todayEnd,
                 tomorrowEnd,
+                activeHoursStr,
                 title,
                 description != null ? description : "none",
                 startTime != null ? startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "unknown",
@@ -209,8 +219,14 @@ public class OpenAiServiceImpl implements OpenAiService {
     }
 
     @Override
-    public BrainDumpResult analyzeBrainDump(String rawText) {
+    public BrainDumpResult analyzeBrainDump(String rawText, ActiveHours activeHours) {
         String nowStr = LocalDateTime.now().format(DISPLAY_FORMAT);
+        String dayEndClause = activeHours.wraps()
+                ? String.format("%02d:00:00 on the FOLLOWING calendar day (the user's day crosses midnight)", activeHours.endHour())
+                : String.format("%02d:00:00", activeHours.endHour());
+        String activeHoursStr = String.format("%02d:00-%02d:00%s",
+                activeHours.startHour(), activeHours.endHour(),
+                activeHours.wraps() ? " (crosses midnight into the next day)" : "");
         String prompt = """
             You analyze a brain dump for the Dumpit productivity app.
             Extract actionable tasks and return only valid JSON in this shape:
@@ -223,7 +239,8 @@ public class OpenAiServiceImpl implements OpenAiService {
             - Prefer explicit due dates/times, relative due dates/times, or well-known fixed event dates from the user's text.
             - If a task has NO time cue in the user's text — no explicit date/time, no relative expression (e.g. 오늘, 내일, 이번 주, ~까지, 곧), and no fixed event implying a date — deadline MUST be null. Never invent a deadline from urgency, effort, or task type.
             - Open-ended wishes and someday items (e.g. "언젠가 기타 배우기", "시간 나면 책 읽기") must have deadline null.
-            - Date-only deadlines must use 23:59:00 unless the user gives a specific time.
+            - The user's active hours are %s. Date-only deadlines must use %s as the time unless the user gives a specific time.
+            - An explicit clock time in the user's text always wins, even if it is outside active hours.
             - Expressions that describe quantity or duration, such as "일주일 치", "한 달치", or "3시간짜리", are NOT deadlines by themselves.
             - If one global due date clearly applies to multiple tasks, apply the same deadline to those tasks.
             - A leading time expression (오늘, 내일, 이번 주, 이번 주말 등) at the start of a sentence or run-on list applies to EVERY task chained in that same sentence (connected by ~하고, ~고, ~며, or commas), until a NEW time expression or a clear sentence break introduces a different time context. Do NOT let it leak past a sentence boundary onto tasks that have their own or no time context.
@@ -235,20 +252,20 @@ public class OpenAiServiceImpl implements OpenAiService {
             - Focus on tasks that a user can actually execute.
             - All title and description fields MUST be written in Korean (한국어).
 
-            EXAMPLE (assume current time is 2026-03-10T09:00:00):
+            EXAMPLE (assume current time is 2026-03-10T09:00:00 and the user's active hours end at 22:00):
             Input: "오늘 약선반 정리하고 베란다 청소하고 화장실 청소해야해. 내일은 장보기"
             Output: {"tasks":[
-              {"title":"약선반 정리","description":"약선반 정리하기","deadline":"2026-03-10T23:59:00","estimatedMinutes":20,"priorityScore":0.6,"category":"CHORE"},
-              {"title":"베란다 청소","description":"베란다 청소하기","deadline":"2026-03-10T23:59:00","estimatedMinutes":30,"priorityScore":0.6,"category":"CHORE"},
-              {"title":"화장실 청소","description":"화장실 청소하기","deadline":"2026-03-10T23:59:00","estimatedMinutes":30,"priorityScore":0.6,"category":"CHORE"},
-              {"title":"장보기","description":"장보기","deadline":"2026-03-11T23:59:00","estimatedMinutes":40,"priorityScore":0.5,"category":"CHORE"}
+              {"title":"약선반 정리","description":"약선반 정리하기","deadline":"2026-03-10T22:00:00","estimatedMinutes":20,"priorityScore":0.6,"category":"CHORE"},
+              {"title":"베란다 청소","description":"베란다 청소하기","deadline":"2026-03-10T22:00:00","estimatedMinutes":30,"priorityScore":0.6,"category":"CHORE"},
+              {"title":"화장실 청소","description":"화장실 청소하기","deadline":"2026-03-10T22:00:00","estimatedMinutes":30,"priorityScore":0.6,"category":"CHORE"},
+              {"title":"장보기","description":"장보기","deadline":"2026-03-11T22:00:00","estimatedMinutes":40,"priorityScore":0.5,"category":"CHORE"}
             ]}
 
             <user_input>
             Brain dump:
             %s
             </user_input>
-            """.formatted(nowStr, rawText);
+            """.formatted(nowStr, activeHoursStr, dayEndClause, rawText);
 
         try {
             String json = callChatApi(prompt, DATA_BOUNDARY_RULE);

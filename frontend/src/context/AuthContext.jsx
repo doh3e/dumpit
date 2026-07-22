@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import api from '../services/api'
 import { applySkins, clearSkins } from '../shop/applySkins.js'
+import { loadUserSettings, resetUserSettings } from '../services/userSettings'
 
 const AuthContext = createContext(null)
 const INACTIVE_LOGOUT_MS = 60 * 60 * 1000
@@ -13,8 +14,13 @@ export function AuthProvider({ children }) {
     const nextUser = res?.data
     const validUser = nextUser && typeof nextUser === 'object' && nextUser.email ? nextUser : null
     setUser(validUser)
-    if (validUser) applySkins(validUser.equipments)
-    else clearSkins()
+    if (validUser) {
+      applySkins(validUser.equipments)
+      void loadUserSettings()
+    } else {
+      clearSkins()
+      resetUserSettings()
+    }
   }, [])
 
   const fetchUser = useCallback(() => {

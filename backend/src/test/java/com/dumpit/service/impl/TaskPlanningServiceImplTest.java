@@ -1,9 +1,12 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.common.ActiveHours;
 import com.dumpit.dto.TaskPlanningResponse;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.service.TaskService;
+import com.dumpit.service.UserSettingsService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -20,8 +23,15 @@ class TaskPlanningServiceImplTest {
     private static final String EMAIL = "user@test.com";
 
     private final TaskService taskService = mock(TaskService.class);
-    private final TaskPlanningServiceImpl planningService = new TaskPlanningServiceImpl(taskService);
+    private final UserSettingsService userSettingsService = mock(UserSettingsService.class);
+    private final TaskPlanningServiceImpl planningService =
+            new TaskPlanningServiceImpl(taskService, userSettingsService);
     private final User user = User.of(EMAIL, "tester", "google", "pid");
+
+    @BeforeEach
+    void setUp() {
+        when(userSettingsService.activeHours(EMAIL)).thenReturn(ActiveHours.DEFAULT);
+    }
 
     private Task task(String title, Task.Category category) {
         Task t = Task.of(user, title, null, null, null);
@@ -174,5 +184,48 @@ class TaskPlanningServiceImplTest {
 
         assertThat(sections.someday()).extracting("title")
                 .containsExactly("더 중요한 언젠가", "덜 중요한 언젠가");
+    }
+
+    @Test
+    void 활동시간_밖에는_수면_제안이_뜬다() {
+        LocalDateTime now = LocalDateTime.of(2026, 7, 8, 23, 30); // 기본 9~22 밖
+        givenTasks();
+
+        TaskPlanningResponse res = planningService.getPlanning(EMAIL, now);
+
+        assertThat(res.nowSuggestion().type()).isEqualTo("SLEEP");
+        assertThat(res.nowSuggestion().task()).isNull();
+    }
+
+    @Test
+    void 활동_시작_두시간은_하루_시작_종료_전_두시간은_마무리다() {
+        givenTasks();
+
+        assertThat(planningService.getPlanning(EMAIL, LocalDateTime.of(2026, 7, 8, 9, 30))
+                .nowSuggestion().type()).isEqualTo("DAY_START");
+        assertThat(planningService.getPlanning(EMAIL, LocalDateTime.of(2026, 7, 8, 20, 30))
+                .nowSuggestion().type()).isEqualTo("DAY_END");
+    }
+
+    @Test
+    void 야행성은_낮이_수면_밤이_하루_시작_새벽이_마무리다() {
+        when(userSettingsService.activeHours(EMAIL)).thenReturn(new ActiveHours(22, 6));
+        givenTasks();
+
+        assertThat(planningService.getPlanning(EMAIL, LocalDateTime.of(2026, 7, 8, 14, 0))
+                .nowSuggestion().type()).isEqualTo("SLEEP");
+        assertThat(planningService.getPlanning(EMAIL, LocalDateTime.of(2026, 7, 8, 22, 30))
+                .nowSuggestion().type()).isEqualTo("DAY_START");
+        assertThat(planningService.getPlanning(EMAIL, LocalDateTime.of(2026, 7, 9, 4, 30))
+                .nowSuggestion().type()).isEqualTo("DAY_END");
+    }
+
+    @Test
+    void 야행성의_점심시간은_식사가_아니라_수면이다() {
+        when(userSettingsService.activeHours(EMAIL)).thenReturn(new ActiveHours(22, 6));
+        givenTasks();
+
+        assertThat(planningService.getPlanning(EMAIL, LocalDateTime.of(2026, 7, 8, 12, 0))
+                .nowSuggestion().type()).isEqualTo("SLEEP");
     }
 }

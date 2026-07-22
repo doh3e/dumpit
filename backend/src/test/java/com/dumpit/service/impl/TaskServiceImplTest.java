@@ -1,5 +1,6 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.common.ActiveHours;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.exception.BadRequestException;
@@ -11,6 +12,7 @@ import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.ShopService;
 import com.dumpit.service.TaskService;
+import com.dumpit.service.UserSettingsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,10 +40,11 @@ class TaskServiceImplTest {
     private final AiUsageService aiUsageService = mock(AiUsageService.class);
     private final ActivityLogService activityLogService = mock(ActivityLogService.class);
     private final ShopService shopService = mock(ShopService.class);
+    private final UserSettingsService userSettingsService = mock(UserSettingsService.class);
 
     private final TaskServiceImpl taskService = new TaskServiceImpl(
             taskRepository, userRepository, openAiService,
-            deadlineNudgeService, aiUsageService, activityLogService, shopService);
+            deadlineNudgeService, aiUsageService, activityLogService, shopService, userSettingsService);
 
     @BeforeEach
     void setUp() {
@@ -49,12 +52,13 @@ class TaskServiceImplTest {
                 .thenReturn(Optional.of(User.of(EMAIL, "tester", "google", "pid")));
         when(openAiService.scorePriority(any(), any(), any(), any()))
                 .thenReturn(new OpenAiService.PriorityResult(0.5, "WORK", "테스트"));
+        when(userSettingsService.activeHours(EMAIL)).thenReturn(ActiveHours.DEFAULT);
         when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
     @Test
     void 마감만_입력하면_시작시간을_역산하지_않는다() {
-        when(openAiService.inferSchedule(any(), any(), any(), any(), any()))
+        when(openAiService.inferSchedule(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new OpenAiService.ScheduleInferenceResult(null, null, 120, "추론"));
         LocalDateTime deadline = LocalDateTime.now().plusHours(8);
 
@@ -79,7 +83,7 @@ class TaskServiceImplTest {
         assertThat(saved.getEstimatedMinutes()).isNull();
         assertThat(saved.getStartTime()).isEqualTo(start);
         assertThat(saved.getDeadline()).isEqualTo(deadline);
-        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any());
+        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -91,12 +95,12 @@ class TaskServiceImplTest {
 
         assertThat(saved.getStartTime()).isNull();
         assertThat(saved.getEndTime()).isNull();
-        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any());
+        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any(), any());
     }
 
     @Test
     void 예상시간만_입력하면_단서_없을때_마감이_생기지_않는다() {
-        when(openAiService.inferSchedule(any(), any(), any(), any(), any()))
+        when(openAiService.inferSchedule(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new OpenAiService.ScheduleInferenceResult(null, null, null, "단서 없음"));
 
         Task saved = taskService.createTask(EMAIL, "기타 연습", null,
@@ -150,7 +154,7 @@ class TaskServiceImplTest {
 
     @Test
     void 언젠가_선언시_AI가_마감을_돌려줘도_버린다() {
-        when(openAiService.inferSchedule(any(), any(), any(), any(), any()))
+        when(openAiService.inferSchedule(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new OpenAiService.ScheduleInferenceResult(
                         "2099-01-01T10:00:00", "2099-01-01T12:00:00", 45, "추론"));
 
@@ -167,7 +171,7 @@ class TaskServiceImplTest {
         Task saved = taskService.createTask(EMAIL, "책 읽기", null,
                 null, 30, null, null, null, Task.Category.OTHER, true);
 
-        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any());
+        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any(), any());
         assertThat(saved.getDeadline()).isNull();
         assertThat(saved.getEstimatedMinutes()).isEqualTo(30);
     }
@@ -213,12 +217,12 @@ class TaskServiceImplTest {
 
         assertThat(saved.getDeadline()).isNull();
         // 기존 예상시간(60분)이 있으므로 AI 재추론 자체가 불필요
-        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any());
+        verify(openAiService, never()).inferSchedule(any(), any(), any(), any(), any(), any());
     }
 
     @Test
     void AI가_시작과_마감을_같은_시각으로_추론하면_시작시간을_버린다() {
-        when(openAiService.inferSchedule(any(), any(), any(), any(), any()))
+        when(openAiService.inferSchedule(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new OpenAiService.ScheduleInferenceResult(
                         "2099-01-02T15:00:00", "2099-01-02T15:00:00", 60, "회의 추론"));
 
@@ -232,7 +236,7 @@ class TaskServiceImplTest {
 
     @Test
     void 유저_시작시간과_모순되는_추론_마감은_버린다() {
-        when(openAiService.inferSchedule(any(), any(), any(), any(), any()))
+        when(openAiService.inferSchedule(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new OpenAiService.ScheduleInferenceResult(
                         null, "2099-01-01T09:00:00", 30, "모순 추론"));
         LocalDateTime start = LocalDateTime.parse("2099-01-02T10:00:00");

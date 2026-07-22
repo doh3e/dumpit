@@ -16,6 +16,7 @@ import com.dumpit.service.AiUsageService;
 import com.dumpit.service.BrainDumpService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
+import com.dumpit.service.UserSettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ public class BrainDumpServiceImpl implements BrainDumpService {
     private final AiUsageService aiUsageService;
     private final DeadlineNudgeService deadlineNudgeService;
     private final ActivityLogService activityLogService;
+    private final UserSettingsService userSettingsService;
 
     @Override
     @Transactional
@@ -54,7 +56,7 @@ public class BrainDumpServiceImpl implements BrainDumpService {
 
         OpenAiService.BrainDumpResult aiResult;
         try {
-            aiResult = openAiService.analyzeBrainDump(rawText);
+            aiResult = openAiService.analyzeBrainDump(rawText, userSettingsService.activeHours(email));
         } catch (Exception e) {
             dump.markFailed();
             brainDumpRepository.save(dump);
