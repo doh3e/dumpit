@@ -10,6 +10,7 @@ import com.dumpit.repository.InquiryRepository;
 import com.dumpit.repository.RoutineRepository;
 import com.dumpit.repository.TaskRepository;
 import com.dumpit.repository.UserRepository;
+import com.dumpit.repository.UserSettingsRepository;
 import com.dumpit.service.AccountService;
 import com.dumpit.service.ActivityLogService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class AccountServiceImpl implements AccountService {
     private final BrainDumpRepository brainDumpRepository;
     private final InquiryRepository inquiryRepository;
     private final ActivityLogService activityLogService;
+    private final UserSettingsRepository userSettingsRepository;
 
     @Override
     @Transactional
@@ -67,6 +69,8 @@ public class AccountServiceImpl implements AccountService {
                         "deletedBrainDumps", deletedBrainDumps
                 ));
 
+        // 소프트 탈퇴(행 유지)라 FK CASCADE가 타지 않는다 — 설정 행은 직접 삭제
+        userSettingsRepository.findById(user.getUserId()).ifPresent(userSettingsRepository::delete);
         user.withdraw();
         return userRepository.save(user);
     }
