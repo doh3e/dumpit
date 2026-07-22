@@ -142,6 +142,9 @@ class AuthProfileApiTest extends ApiIntegrationTestBase {
         seedTask(userA, Task.Status.IN_PROGRESS, Task.Category.CHORE, now.plusDays(1), null);
         brainDumpRepository.save(BrainDump.of(userA, "덤프 내용"));
         ideaRepository.save(Idea.of(userA, "아이디어 제목", "아이디어 내용"));
+        jdbcTemplate.update(
+                "UPDATE users SET pomodoro_total_minutes = 125, pomodoro_total_sessions = 5 WHERE email = ?",
+                USER_A);
 
         mockMvc.perform(get("/me/stats").with(asUser(USER_A)))
                 .andExpect(status().isOk())
@@ -153,6 +156,8 @@ class AuthProfileApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.heatmap").isMap())
                 .andExpect(jsonPath("$.brainDumpCount").value(1))
                 .andExpect(jsonPath("$.ideaCount").value(1))
+                .andExpect(jsonPath("$.pomodoroTotalMinutes").value(125))
+                .andExpect(jsonPath("$.pomodoroTotalSessions").value(5))
                 .andExpect(jsonPath("$.coinBalance").value(0));
     }
 
