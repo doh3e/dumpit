@@ -426,3 +426,37 @@ body {
 [data-skin-pomodoro="galaxy"][data-theme="dark"] { --pomo-focus:#8F97E8; --pomo-break:#E9B44C; --pomo-soft:#151329; }
 [data-skin-pomodoro="wood"] { --pomo-focus:#A8763E; --pomo-break:#5C8A6E; --pomo-soft:#F1E5D2; }
 [data-skin-pomodoro="wood"][data-theme="dark"] { --pomo-focus:#C99B5C; --pomo-break:#7FAF8F; --pomo-soft:#241B10; }
+
+/* 마크다운 미리보기 — 테마 토큰 기반, 레트로 톤 유지 */
+.md-preview { font-size: 0.875rem; line-height: 1.7; color: var(--fg); font-weight: 600; }
+.md-preview > :first-child { margin-top: 0; }
+.md-preview > :last-child { margin-bottom: 0; }
+.md-preview h1, .md-preview h2, .md-preview h3 {
+  font-family: 'Galmuri11', sans-serif; font-weight: 700; color: var(--fg);
+  margin: 1em 0 0.4em;
+}
+.md-preview h1 { font-size: 1.25rem; }
+.md-preview h2 { font-size: 1.125rem; }
+.md-preview h3 { font-size: 1rem; }
+.md-preview p { margin: 0.5em 0; }
+.md-preview ul, .md-preview ol { margin: 0.5em 0; padding-left: 1.4em; }
+.md-preview ul { list-style: disc; }
+.md-preview ol { list-style: decimal; }
+.md-preview li { margin: 0.2em 0; }
+.md-preview code {
+  background: var(--chip); border: 1px solid var(--line); border-radius: 4px;
+  padding: 0.1em 0.35em; font-size: 0.8125rem;
+}
+.md-preview pre {
+  background: var(--chip); border: 1.5px solid var(--line); border-radius: 8px;
+  padding: 0.75rem; margin: 0.6em 0; overflow-x: auto;
+}
+.md-preview pre code { background: none; border: none; padding: 0; }
+.md-preview blockquote {
+  border-left: 3px solid var(--line); padding-left: 0.75rem; margin: 0.6em 0; color: var(--sub);
+}
+.md-preview a { color: var(--accent); text-decoration: underline; }
+.md-preview hr { border: none; border-top: 1.5px solid var(--line); margin: 1em 0; }
+.md-preview table { display: block; overflow-x: auto; border-collapse: collapse; margin: 0.6em 0; }
+.md-preview th, .md-preview td { border: 1px solid var(--line); padding: 0.3em 0.6em; }
+.md-preview th { background: var(--chip); }
