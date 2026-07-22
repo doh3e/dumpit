@@ -55,6 +55,12 @@ public class ShopCatalog {
         ShopItem.theme("celeb.shooting-star", CELEBRATION, "별똥별",   "완료 축하로 별똥별이 지나가요.",  500, CONCEPT),
         ShopItem.theme("celeb.ufo",           CELEBRATION, "UFO",     "완료 축하로 UFO가 날아올라요.",   600, CONCEPT),
         ShopItem.theme("celeb.golden-rocket", CELEBRATION, "황금 로켓", "반짝이는 황금 로켓 발사!",       800, CONCEPT),
+        ShopItem.theme("celeb.fireworks",     CELEBRATION, "불꽃놀이",    "밤하늘 가득 팡팡! 최고의 피날레예요.",      1500, CONCEPT),
+        ShopItem.theme("celeb.meteor-shower", CELEBRATION, "유성우",      "완주의 밤, 유성우가 쏟아져요.",           1200, CONCEPT),
+        ShopItem.theme("celeb.petal-wind",    CELEBRATION, "꽃잎 바람",   "꽃잎이 바람을 타고 축하하러 와요.",        1000, CONCEPT),
+        ShopItem.theme("celeb.sprout-bloom",  CELEBRATION, "새싹 움트기", "완주한 하루에 새싹이 쏙쏙 돋아나요.",      1000, CONCEPT),
+        ShopItem.theme("celeb.candy-pop",     CELEBRATION, "캔디 폭죽",   "달콤한 사탕이 팡 터지는 축하예요.",        1000, CONCEPT),
+        ShopItem.theme("celeb.bonfire",       CELEBRATION, "모닥불",      "타닥타닥, 오늘 하루를 따뜻하게 마무리해요.", 1000, CONCEPT),
         ShopItem.theme("station.mint",       STATION, "민트 정거장", "민트빛 우주정거장이에요.",       400, COLOR),
         ShopItem.theme("station.moonbase",   STATION, "달 기지",    "달 표면의 아늑한 기지예요.",      600, CONCEPT),
         ShopItem.theme("station.mothership", STATION, "모선",      "웅장한 모선이에요.",             600, CONCEPT),
@@ -68,7 +74,11 @@ public class ShopCatalog {
         ShopItem.sticker("sticker.heart",     "하트",  "마음이 가는 항목에 붙여요.",  80),
         ShopItem.sticker("sticker.important", "중요!", "놓치면 안 되는 항목에 붙여요.", 100),
         ShopItem.sticker("sticker.star",      "별",    "빛나는 항목에 붙여요.",       100),
-        ShopItem.sticker("sticker.fire",      "불꽃",  "지금 불타는 항목에 붙여요.",   120)
+        ShopItem.sticker("sticker.fire",      "불꽃",  "지금 불타는 항목에 붙여요.",   120),
+        ShopItem.sticker("sticker.check",  "체크",       "끝낸 항목에 시원하게 체크!",    80),
+        ShopItem.sticker("sticker.circle", "동그라미",   "잘한 항목에 크게 동그라미!",    80),
+        ShopItem.sticker("sticker.cross",  "엑스",       "오늘은 넘어가는 항목에 붙여요",  80),
+        ShopItem.sticker("sticker.clover", "네잎클로버", "행운이 필요한 항목에 붙여요",   150)
     );
 
     private static final Map<String, ShopItem> BY_CODE =
