@@ -5,6 +5,7 @@ import coinImage from '../assets/coin_image.png'
 import { useAuth } from '../context/AuthContext'
 import RocketLaunch from '../components/RocketLaunch'
 import PixelSprite from '../components/PixelSprite'
+import useReducedMotion from '../hooks/useReducedMotion'
 import { applySkinsTransient, applyCachedSkins } from '../shop/applySkins'
 import {
   PLANET_SPRITES,
@@ -328,6 +329,7 @@ export default function ShopPage() {
   const [previews, setPreviews] = useState({})
   const [spritePreviewItem, setSpritePreviewItem] = useState(null)
   const [activeTab, setActiveTab] = useState(SHOP_TABS[0].id)
+  const reducedMotion = useReducedMotion()
 
   const fetchCatalog = useCallback(() => {
     return api.get('/shop/catalog')
@@ -510,6 +512,25 @@ export default function ShopPage() {
           </button>
         ))}
       </div>
+
+      {activeTab === 'CELEBRATION' && (
+        <div className={`card-retro !py-3 ${reducedMotion ? 'tone-overdue' : ''}`}>
+          {reducedMotion ? (
+            <>
+              <p className="text-sm font-bold text-primary">지금 이 기기에는 '애니메이션 줄이기'가 켜져 있어요.</p>
+              <p className="mt-1 text-xs font-semibold text-sub leading-relaxed">
+                완료 축하가 움직임 없는 이미지로 보여요. 애니메이션을 보려면 기기 설정을 확인해주세요 —
+                Windows는 설정 &gt; 접근성 &gt; 시각 효과 &gt; 애니메이션 효과, macOS는 시스템 설정 &gt; 손쉬운 사용 &gt; 디스플레이 &gt; 동작 줄이기,
+                모바일은 접근성 &gt; 모션 설정에 있어요.
+              </p>
+            </>
+          ) : (
+            <p className="text-xs font-semibold text-sub leading-relaxed">
+              완료 축하 애니메이션은 기기의 모션(애니메이션) 설정을 따라요. '애니메이션 줄이기'가 켜진 기기에서는 움직임 없이 표시돼요.
+            </p>
+          )}
+        </div>
+      )}
 
       {actionError && (
         <p className="text-xs font-bold text-center" style={{ color: 'var(--danger)' }}>{actionError}</p>
