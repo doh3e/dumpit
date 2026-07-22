@@ -17,6 +17,22 @@ import celebrationDefault from '../assets/shop/celeb_rocket_default.png'
 import celebrationShootingStar from '../assets/shop/celeb_shooting_star.png'
 import celebrationUfo from '../assets/shop/celeb_ufo.png'
 import celebrationGoldenRocket from '../assets/shop/celeb_golden_rocket.png'
+import celebFireworks from '../assets/shop/celeb_fireworks.png'
+import celebFireworkSparkGold from '../assets/shop/celeb_firework_spark_gold.png'
+import celebFireworkSparkCoral from '../assets/shop/celeb_firework_spark_coral.png'
+import celebFireworkSparkTeal from '../assets/shop/celeb_firework_spark_teal.png'
+import celebMeteor from '../assets/shop/celeb_meteor.png'
+import celebMeteorStar from '../assets/shop/celeb_meteor_star.png'
+import celebPetal from '../assets/shop/celeb_petal.png'
+import celebPetalLeaf from '../assets/shop/celeb_petal_leaf.png'
+import celebSprout from '../assets/shop/celeb_sprout.png'
+import celebSproutSparkle from '../assets/shop/celeb_sprout_sparkle.png'
+import celebCandy from '../assets/shop/celeb_candy.png'
+import celebCandyDrop from '../assets/shop/celeb_candy_drop.png'
+import celebCandyConfetti from '../assets/shop/celeb_candy_confetti.png'
+import celebBonfireA from '../assets/shop/celeb_bonfire_a.png'
+import celebBonfireB from '../assets/shop/celeb_bonfire_b.png'
+import celebEmber from '../assets/shop/celeb_ember.png'
 import stationDefault from '../assets/shop/station_default.png'
 import stationMint from '../assets/shop/station_mint.png'
 import stationMoonbase from '../assets/shop/station_moonbase.png'
@@ -32,6 +48,10 @@ import stickerHeart from '../assets/shop/sticker_heart.png'
 import stickerImportant from '../assets/shop/sticker_important.png'
 import stickerStar from '../assets/shop/sticker_star.png'
 import stickerFire from '../assets/shop/sticker_fire.png'
+import stickerCheck from '../assets/shop/sticker_check.png'
+import stickerCircle from '../assets/shop/sticker_circle.png'
+import stickerCross from '../assets/shop/sticker_cross.png'
+import stickerClover from '../assets/shop/sticker_clover.png'
 
 // frames/fps 메타가 있으면 가로 프레임 시트 — PixelSprite가 CSS steps 애니로 재생
 export const PLANET_SPRITES = {
@@ -52,11 +72,37 @@ export const PLANET_SPRITES = {
   'planet.blackhole': { name: '블랙홀', img: planetBlackhole, frames: 8, fps: 5 },
 }
 
+// motion 생략 = 'launch'(기존 발사 연출). motion·parts는 celebrationMotions.js의 빌더가 소비.
+// img는 대표 스프라이트 — 상점 카드·reduced-motion 폴백에 사용.
 export const CELEBRATION_SPRITES = {
   default: { name: '기본 로켓', img: celebrationDefault },
   'celeb.shooting-star': { name: '별똥별', img: celebrationShootingStar },
   'celeb.ufo': { name: 'UFO', img: celebrationUfo },
   'celeb.golden-rocket': { name: '황금 로켓', img: celebrationGoldenRocket },
+  'celeb.fireworks': {
+    name: '불꽃놀이', img: celebFireworks, motion: 'fireworks',
+    parts: { sparks: [celebFireworkSparkGold, celebFireworkSparkCoral, celebFireworkSparkTeal] },
+  },
+  'celeb.meteor-shower': {
+    name: '유성우', img: celebMeteor, motion: 'meteor',
+    parts: { star: celebMeteorStar },
+  },
+  'celeb.petal-wind': {
+    name: '꽃잎 바람', img: celebPetal, motion: 'petal',
+    parts: { leaf: celebPetalLeaf },
+  },
+  'celeb.sprout-bloom': {
+    name: '새싹 움트기', img: celebSprout, motion: 'sprout',
+    parts: { sparkle: celebSproutSparkle },
+  },
+  'celeb.candy-pop': {
+    name: '캔디 폭죽', img: celebCandy, motion: 'burst',
+    parts: { drop: celebCandyDrop, confetti: celebCandyConfetti },
+  },
+  'celeb.bonfire': {
+    name: '모닥불', img: celebBonfireA, motion: 'bonfire',
+    parts: { flameAlt: celebBonfireB, ember: celebEmber },
+  },
 }
 
 export const STATION_SPRITES = {
@@ -78,6 +124,10 @@ export const STICKER_SPRITES = {
   'sticker.important': { name: '중요!', img: stickerImportant },
   'sticker.star': { name: '별', img: stickerStar },
   'sticker.fire': { name: '불꽃', img: stickerFire },
+  'sticker.check': { name: '체크', img: stickerCheck },
+  'sticker.circle': { name: '동그라미', img: stickerCircle },
+  'sticker.cross': { name: '엑스', img: stickerCross },
+  'sticker.clover': { name: '네잎클로버', img: stickerClover },
 }
 
 export function spriteFor(map, code) {
