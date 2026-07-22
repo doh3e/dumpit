@@ -110,6 +110,28 @@ export default function SettingsModal({ onClose }) {
       .catch(() => setAppInfo(null))
   }, [isDesktop])
 
+  // 시작프로그램 등록 상태 — 브리지가 없는 구 데스크톱 빌드에서는 토글 자체를 숨긴다
+  const hasLaunchAtLoginBridge = isDesktop && Boolean(window.dumpitDesktop.getLaunchAtLogin)
+  const [launchAtLogin, setLaunchAtLogin] = useState(null)
+  useEffect(() => {
+    if (!hasLaunchAtLoginBridge) return
+    window.dumpitDesktop.getLaunchAtLogin()
+      .then((res) => setLaunchAtLogin(Boolean(res?.enabled)))
+      .catch(() => setLaunchAtLogin(null))
+  }, [hasLaunchAtLoginBridge])
+
+  const toggleLaunchAtLogin = async () => {
+    if (launchAtLogin === null) return
+    const next = !launchAtLogin
+    setLaunchAtLogin(next)
+    try {
+      await window.dumpitDesktop.setLaunchAtLogin(next)
+    } catch {
+      setLaunchAtLogin(!next)
+      notifyToast('시작프로그램 설정을 바꾸지 못했어요.')
+    }
+  }
+
   const checkForUpdates = async () => {
     if (!window.dumpitDesktop?.checkForUpdates) return
     setCheckingUpdate(true)
@@ -317,7 +339,32 @@ export default function SettingsModal({ onClose }) {
             <hr className="border-line mb-6" />
 
             <section className="mb-6">
-              <h3 className="font-galmuri font-bold text-dark text-sm mb-3">앱 정보</h3>
+              <h3 className="font-galmuri font-bold text-dark text-sm mb-3">데스크톱</h3>
+              {hasLaunchAtLoginBridge && (
+                <div className="mb-3 flex items-center justify-between gap-4 rounded-lg border-2 border-line bg-card px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-dark">시작프로그램 등록</p>
+                    <p className="mt-0.5 text-xs font-medium text-sub">
+                      {launchAtLogin === null && '상태를 확인하지 못했어요.'}
+                      {launchAtLogin === true && '컴퓨터를 켜면 트레이에서 조용히 시작해요.'}
+                      {launchAtLogin === false && '꺼져 있어요. 켜면 부팅 시 자동으로 시작해요.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleLaunchAtLogin}
+                    disabled={launchAtLogin === null}
+                    className={`relative w-11 h-6 rounded-full border-2 transition-colors flex-shrink-0 ${
+                      launchAtLogin ? 'bg-primary border-primary' : 'bg-chip border-line'
+                    } disabled:opacity-40 disabled:cursor-not-allowed`}
+                    aria-label="시작프로그램 등록 토글"
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-card border border-line transition-all ${
+                      launchAtLogin ? 'left-[18px]' : 'left-0.5'
+                    }`} />
+                  </button>
+                </div>
+              )}
               <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
