@@ -41,7 +41,7 @@ function fetchOwnedStickers() {
 }
 
 const POPOVER_WIDTH = 224 // w-56
-const POPOVER_EST_HEIGHT = 170 // 플립 판단용 추정치 (한 줄 격자 + 떼기 버튼 + 패딩)
+const POPOVER_EST_HEIGHT = 214 // 플립 판단용 추정치 (두 줄 격자 + 떼기 버튼 + 패딩)
 const VIEWPORT_MARGIN = 8
 
 export default function StickerPicker({ current, onSelect }) {
