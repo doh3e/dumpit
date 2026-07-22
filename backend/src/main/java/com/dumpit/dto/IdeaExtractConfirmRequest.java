@@ -10,7 +10,7 @@ public record IdeaExtractConfirmRequest(
 ) {
     public record IdeaNodeInput(
             @Size(max = 200) String title,
-            @Size(max = 3000) String content,
+            @Size(max = 5000) String content,
             @Size(max = 50) String category,
             List<@Valid IdeaNodeInput> children
     ) {}

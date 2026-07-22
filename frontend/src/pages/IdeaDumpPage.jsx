@@ -3,6 +3,7 @@ import { useBlocker } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES, getCategory } from '../constants/categories'
 import AiUsageBadge from '../components/AiUsageBadge'
+import MarkdownEditor from '../components/MarkdownEditor'
 import StickerPicker from '../components/StickerPicker'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 import { parseDate } from '../utils/dates'
@@ -487,7 +488,7 @@ export default function IdeaDumpPage() {
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
               rows={3}
-              maxLength={3000}
+              maxLength={5000}
               placeholder="내용 (선택)"
               className="w-full resize-none rounded-lg border-2 border-line bg-accent px-3 py-2 text-sm font-semibold leading-relaxed text-dark outline-none focus:border-primary placeholder:text-sub"
             />
@@ -652,13 +653,14 @@ export default function IdeaDumpPage() {
                 </div>
               </div>
 
-              <textarea
+              <MarkdownEditor
+                key={selectedIdea.ideaId}
                 value={detailForm.content}
-                onChange={(e) => setDetailForm((prev) => ({ ...prev, content: e.target.value }))}
-                maxLength={3000}
+                onChange={(content) => setDetailForm((prev) => ({ ...prev, content }))}
+                maxLength={5000}
                 rows={12}
-                placeholder="이 아이디어의 세부 메모를 적어두세요."
-                className="w-full resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold leading-relaxed outline-none focus:border-primary"
+                placeholder="이 아이디어의 세부 메모를 적어두세요. 마크다운 서식을 쓸 수 있어요."
+                defaultMode={selectedIdea.content ? 'preview' : 'write'}
               />
 
               <div className="rounded-lg border-2 border-line bg-card p-3">
