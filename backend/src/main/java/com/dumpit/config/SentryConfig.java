@@ -1,6 +1,8 @@
 package com.dumpit.config;
 
 import com.dumpit.exception.ApiException;
+import com.dumpit.service.GoogleUserUpserter;
+import com.dumpit.service.MobileGoogleTokenVerifier;
 import io.sentry.Hint;
 import io.sentry.SentryEvent;
 import io.sentry.SentryLevel;
@@ -41,7 +43,9 @@ public class SentryConfig {
         return throwable instanceof AccessDeniedException
                 || throwable instanceof MethodArgumentNotValidException
                 || throwable instanceof HttpMessageNotReadableException
-                || throwable instanceof IllegalArgumentException;
+                || throwable instanceof IllegalArgumentException
+                || throwable instanceof MobileGoogleTokenVerifier.InvalidMobileTokenException
+                || throwable instanceof GoogleUserUpserter.AccountInactiveException;
     }
 
     private void markHandled(SentryEvent event) {

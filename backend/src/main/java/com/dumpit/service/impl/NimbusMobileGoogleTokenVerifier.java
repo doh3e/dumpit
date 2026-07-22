@@ -12,14 +12,14 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Set;
 
 /** 구글 JWKS로 모바일 ID 토큰을 로컬 검증한다 (iss·exp·aud). */
-@Component
+@Service
 public class NimbusMobileGoogleTokenVerifier implements MobileGoogleTokenVerifier {
 
     private static final String GOOGLE_JWKS = "https://www.googleapis.com/oauth2/v3/certs";

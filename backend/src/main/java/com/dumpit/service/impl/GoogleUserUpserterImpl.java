@@ -5,10 +5,10 @@ import com.dumpit.repository.UserRepository;
 import com.dumpit.service.GoogleUserUpserter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 @Slf4j
-@Component
+@Service
 @RequiredArgsConstructor
 public class GoogleUserUpserterImpl implements GoogleUserUpserter {
 

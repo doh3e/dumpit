@@ -7,6 +7,7 @@ import com.dumpit.service.MobileGoogleTokenVerifier.GoogleIdClaims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,6 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +35,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/auth/mobile")
 @RequiredArgsConstructor
-@Validated
 public class MobileAuthController {
 
     private final MobileGoogleTokenVerifier tokenVerifier;
@@ -47,7 +46,7 @@ public class MobileAuthController {
     public record MobileLoginResponse(String email, String nickname, String picture) {}
 
     @PostMapping("/google")
-    public ResponseEntity<MobileLoginResponse> google(@RequestBody @Validated MobileGoogleLoginRequest body,
+    public ResponseEntity<MobileLoginResponse> google(@Valid @RequestBody MobileGoogleLoginRequest body,
                                                       HttpServletRequest request,
                                                       HttpServletResponse response) {
         GoogleIdClaims claims = tokenVerifier.verify(body.idToken());
