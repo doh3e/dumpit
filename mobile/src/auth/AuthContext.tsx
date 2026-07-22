@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = useCallback(async () => {
     await GoogleSignin.hasPlayServices();
     const result = await GoogleSignin.signIn();
+    if (result.type === 'cancelled') return;
     const idToken = result.data?.idToken;
     if (!idToken) throw new Error('구글에서 ID 토큰을 받지 못했어요.');
     setMe(await loginWithGoogleIdToken(idToken));
