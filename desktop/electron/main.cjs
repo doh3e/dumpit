@@ -41,6 +41,10 @@ const API_URL_FILTER = [`${API_ORIGIN}/api/*`]
 const WEB_ORIGIN_FOR_API = LOCAL_API ? 'http://localhost:5173' : 'https://dumpit.kr'
 const isDev = !app.isPackaged
 const isDebug = process.env.DUMPIT_DESKTOP_DEBUG === '1'
+// 시작프로그램 등록 시 args — 부팅 자동 시작은 창 없이 트레이로만 (사용자 결정 2026-07-22)
+// Windows에서 getLoginItemSettings는 등록 때와 같은 args로 조회해야 정확하다
+const LOGIN_ITEM_ARGS = ['--hidden']
+const startHidden = process.argv.includes('--hidden')
 let mainWindow
 let authWindow = null
 let pomodoroWidgetWindow = null
@@ -57,9 +61,11 @@ let latestPomodoroState = {
   taskTitle: null,
   selectedTaskId: '',
   tasks: [],
+  colors: null,
 }
 let preferences = {
   skipCloseToTrayPrompt: false,
+  launchAtLoginPrompted: false,
 }
 const CONTENT_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -611,6 +617,8 @@ function updatePomodoroState(payload = {}) {
     taskTitle: typeof payload.taskTitle === 'string' ? payload.taskTitle : null,
     selectedTaskId: typeof payload.selectedTaskId === 'string' ? payload.selectedTaskId : '',
     tasks: Array.isArray(payload.tasks) ? payload.tasks : [],
+    // 웹이 계산한 테마 토큰 — 위젯 preload가 CSS 변수로 반영한다 (여기서 떨구면 스킨 동기화 전체가 죽음)
+    colors: payload.colors && typeof payload.colors === 'object' ? payload.colors : null,
   }
 
   if (payload.active === false) {
@@ -825,8 +833,46 @@ async function logStoredAuthCookies() {
   }
 }
 
+function getLaunchAtLoginEnabled() {
+  return app.getLoginItemSettings({ args: LOGIN_ITEM_ARGS }).openAtLogin
+}
+
+function setLaunchAtLoginEnabled(enabled) {
+  app.setLoginItemSettings({ openAtLogin: Boolean(enabled), args: LOGIN_ITEM_ARGS })
+}
+
+// 최초 실행 1회만 묻는다 — 응답과 무관하게 prompted 저장, 이후엔 설정 토글로만.
+// dev(electron.exe 등록 오염)와 --hidden 부팅(이미 등록된 상태)에서는 묻지 않는다.
+async function maybePromptLaunchAtLogin() {
+  if (isDev || startHidden || preferences.launchAtLoginPrompted) return
+
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: 'question',
+    buttons: ['등록하기', '괜찮아요'],
+    defaultId: 0,
+    cancelId: 1,
+    title: '덤핏(Dumpit!)',
+    message: '컴퓨터를 켤 때 덤핏을 자동으로 시작할까요?',
+    detail: '등록하면 부팅 시 트레이에서 조용히 시작돼요. 나중에 설정 > 데스크톱에서 언제든 바꿀 수 있어요.',
+  })
+
+  preferences.launchAtLoginPrompted = true
+  savePreferences()
+
+  if (response === 0) {
+    setLaunchAtLoginEnabled(true)
+  }
+}
+
 function registerNotificationBridge() {
   ipcMain.handle('dumpit:app-info', () => getUpdaterStatus())
+
+  ipcMain.handle('dumpit:get-launch-at-login', () => ({ enabled: getLaunchAtLoginEnabled() }))
+
+  ipcMain.handle('dumpit:set-launch-at-login', (_event, enabled) => {
+    setLaunchAtLoginEnabled(enabled)
+    return { enabled: getLaunchAtLoginEnabled() }
+  })
 
   ipcMain.handle('dumpit:check-for-updates', () => {
     checkForDesktopUpdates({ manual: true })
@@ -899,6 +945,7 @@ function createWindow() {
     minHeight: 820,
     title: '덤핏(Dumpit!)',
     icon: getAppIconPath(),
+    show: !startHidden, // 시작프로그램 자동 시작(--hidden)은 트레이로만 — 창은 사용자가 열 때
     backgroundColor: '#fff7e8',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -1020,6 +1067,7 @@ app.whenReady().then(async () => {
   await logStoredAuthCookies()
   createTray()
   mainWindow = createWindow()
+  void maybePromptLaunchAtLogin()
 
   app.on('activate', () => {
     showMainWindow()

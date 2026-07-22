@@ -3,6 +3,8 @@ const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('dumpitDesktop', {
   getAppInfo: () => ipcRenderer.invoke('dumpit:app-info'),
   checkForUpdates: () => ipcRenderer.invoke('dumpit:check-for-updates'),
+  getLaunchAtLogin: () => ipcRenderer.invoke('dumpit:get-launch-at-login'),
+  setLaunchAtLogin: (enabled) => ipcRenderer.invoke('dumpit:set-launch-at-login', Boolean(enabled)),
   notify: (payload) => ipcRenderer.invoke('dumpit:notify', payload),
   openPomodoroWidget: () => ipcRenderer.send('dumpit:pomodoro-widget-show'),
   updatePomodoroState: (payload) => ipcRenderer.send('dumpit:pomodoro-state', payload),
