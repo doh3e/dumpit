@@ -3,9 +3,8 @@ import { createPortal } from 'react-dom'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
 import { applyTheme, getThemePref } from '../utils/theme'
 import { applyFontScale, getFontScalePref, FONT_SCALES } from '../utils/fontScale'
-
-const DEFAULT_START = 9
-const DEFAULT_END = 22
+import { getUserSettings, saveUserSettings } from '../services/userSettings'
+import { notifyToast } from '../context/ToastContext'
 
 const THRESHOLDS = [
   { min: 720, label: '12시간 전' },
@@ -15,9 +14,6 @@ const THRESHOLDS = [
   { min: 30,  label: '30분 전' },
   { min: 10,  label: '10분 전' },
 ]
-const THRESHOLDS_KEY = 'dumpit_notification_thresholds'
-const NOTIFICATIONS_ENABLED_KEY = 'dumpit_notifications_enabled'
-const DEFAULT_THRESHOLDS = [60]
 
 function isIOSDevice() {
   if (typeof navigator === 'undefined') return false
@@ -29,41 +25,35 @@ function isStandaloneWebApp() {
   return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
 }
 
-function loadThresholds() {
-  try {
-    const saved = localStorage.getItem(THRESHOLDS_KEY)
-    if (saved) return JSON.parse(saved)
-  } catch {}
-  return DEFAULT_THRESHOLDS
-}
-
-function loadNotificationsEnabled() {
-  return localStorage.getItem(NOTIFICATIONS_ENABLED_KEY) !== '0'
-}
 
 export default function SettingsModal({ onClose }) {
   const isDesktop = typeof window !== 'undefined' && Boolean(window.dumpitDesktop)
   const [appInfo, setAppInfo] = useState(null)
   const [checkingUpdate, setCheckingUpdate] = useState(false)
-  const [routineStart, setRoutineStart] = useState(() => {
-    const v = localStorage.getItem('dumpit_routine_start')
-    return v ? Number(v) : DEFAULT_START
-  })
-  const [routineEnd, setRoutineEnd] = useState(() => {
-    const v = localStorage.getItem('dumpit_routine_end')
-    return v ? Number(v) : DEFAULT_END
-  })
+  const serverSettings = getUserSettings()
+  const [routineStart, setRoutineStart] = useState(serverSettings.routineStartHour)
+  const [routineEnd, setRoutineEnd] = useState(serverSettings.routineEndHour)
+  const [confirmWrap, setConfirmWrap] = useState(false)
+  const [savingRoutine, setSavingRoutine] = useState(false)
   const [themePref, setThemePref] = useState(getThemePref)
   const [fontScale, setFontScale] = useState(getFontScalePref)
   const [permission, setPermission] = useState(getNotificationPermission)
-  const [notificationsEnabled, setNotificationsEnabled] = useState(loadNotificationsEnabled)
-  const [selectedThresholds, setSelectedThresholds] = useState(loadThresholds)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(serverSettings.notificationsEnabled)
+  const [selectedThresholds, setSelectedThresholds] = useState(serverSettings.notificationThresholds)
   const [testSent, setTestSent] = useState(false)
   const isIOS = isIOSDevice()
   const isStandalone = isStandaloneWebApp()
   const notificationNote = isIOS && !isStandalone
     ? '아이폰/아이패드에서는 홈 화면에 추가한 앱에서만 백그라운드 웹 푸시가 가능해요. 현재 알림은 Dumpit!을 열어둔 상태에서 동작해요.'
     : '현재 알림은 Dumpit! 탭이나 앱이 열려 있을 때 마감 정보를 확인해 띄워요.'
+
+  // 알림 설정은 즉시 서버 저장 — 실패 시 이전 값으로 되돌린다
+  const persistNotifications = (patch, rollback) => {
+    saveUserSettings(patch).catch((error) => {
+      rollback()
+      notifyToast(error.userMessage || '설정 저장에 실패했어요.')
+    })
+  }
 
   const handleNotificationToggle = async () => {
     if (permission === 'unsupported' || permission === 'denied') return
@@ -72,23 +62,22 @@ export default function SettingsModal({ onClose }) {
       const result = await window.Notification.requestPermission()
       setPermission(result)
       if (result === 'granted') {
-        localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, '1')
         setNotificationsEnabled(true)
+        persistNotifications({ notificationsEnabled: true }, () => setNotificationsEnabled(false))
       }
       return
     }
 
     const next = !notificationsEnabled
-    localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, next ? '1' : '0')
     setNotificationsEnabled(next)
+    persistNotifications({ notificationsEnabled: next }, () => setNotificationsEnabled(!next))
   }
 
   const toggleThreshold = (min) => {
-    setSelectedThresholds((prev) => {
-      const next = prev.includes(min) ? prev.filter((t) => t !== min) : [...prev, min]
-      localStorage.setItem(THRESHOLDS_KEY, JSON.stringify(next))
-      return next
-    })
+    const prev = selectedThresholds
+    const next = prev.includes(min) ? prev.filter((t) => t !== min) : [...prev, min]
+    setSelectedThresholds(next)
+    persistNotifications({ notificationThresholds: next }, () => setSelectedThresholds(prev))
   }
 
   const sendTestNotification = async () => {
@@ -101,8 +90,10 @@ export default function SettingsModal({ onClose }) {
     }
     if (currentPermission !== 'granted') return
 
-    localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, '1')
-    setNotificationsEnabled(true)
+    if (!notificationsEnabled) {
+      setNotificationsEnabled(true)
+      persistNotifications({ notificationsEnabled: true }, () => setNotificationsEnabled(false))
+    }
     void showBrowserNotification('Dumpit! 테스트 알림', {
       body: '알림 설정이 정상이에요.',
       icon: '/favicon-48x48.png',
@@ -130,11 +121,22 @@ export default function SettingsModal({ onClose }) {
     }
   }
 
-  const saveRoutine = () => {
-    localStorage.setItem('dumpit_routine_start', routineStart)
-    localStorage.setItem('dumpit_routine_end', routineEnd)
-    window.dispatchEvent(new CustomEvent('dumpit_routine_changed'))
-    onClose()
+  const isWrap = routineStart > routineEnd
+  const saveRoutine = async () => {
+    if (routineStart === routineEnd) return
+    if (isWrap && !confirmWrap) {
+      setConfirmWrap(true)
+      return
+    }
+    setSavingRoutine(true)
+    try {
+      await saveUserSettings({ routineStartHour: routineStart, routineEndHour: routineEnd })
+      onClose()
+    } catch (error) {
+      notifyToast(error.userMessage || '일과 시간 저장에 실패했어요.')
+    } finally {
+      setSavingRoutine(false)
+    }
   }
 
   return createPortal(
@@ -194,19 +196,18 @@ export default function SettingsModal({ onClose }) {
 
         <hr className="border-line mb-6" />
 
-        {/* 루틴 시작/끝: 현재 localStorage 전용(소비처 없음). 후속 작업에서 서버 저장으로 이전해
-            추천 개인화·하루 용량 경고·AI 시간 배정 제약에 사용할 예정. */}
+        {/* 일과 시간: 서버 저장(user_settings) — AI 시간 배정·nowSuggestion 추천이 이 창을 기준으로 동작 */}
         <section className="mb-6">
           <h3 className="font-galmuri font-bold text-dark text-sm mb-3">일과 시간</h3>
           <p className="text-xs text-sub font-medium mb-3">
-            시간표에 표시될 나의 일과 시간대를 설정하세요
+            AI 시간 배정과 '지금 뭐할까' 추천이 이 시간대를 기준으로 동작해요
           </p>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <label className="text-xs font-bold text-sub">시작</label>
               <select
                 value={routineStart}
-                onChange={(e) => setRoutineStart(Number(e.target.value))}
+                onChange={(e) => { setRoutineStart(Number(e.target.value)); setConfirmWrap(false) }}
                 className="text-sm font-bold border border-line rounded-lg px-2 py-1.5 bg-card"
               >
                 {Array.from({ length: 24 }, (_, h) => (
@@ -219,7 +220,7 @@ export default function SettingsModal({ onClose }) {
               <label className="text-xs font-bold text-sub">종료</label>
               <select
                 value={routineEnd}
-                onChange={(e) => setRoutineEnd(Number(e.target.value))}
+                onChange={(e) => { setRoutineEnd(Number(e.target.value)); setConfirmWrap(false) }}
                 className="text-sm font-bold border border-line rounded-lg px-2 py-1.5 bg-card"
               >
                 {Array.from({ length: 24 }, (_, h) => (
@@ -228,6 +229,19 @@ export default function SettingsModal({ onClose }) {
               </select>
             </div>
           </div>
+          {routineStart === routineEnd && (
+            <p className="mt-2 text-xs font-bold text-warn">시작과 종료 시각은 서로 달라야 해요.</p>
+          )}
+          {confirmWrap && (
+            <div className="mt-3 rounded-lg border-2 border-warn bg-chip p-3">
+              <p className="text-xs font-bold text-dark">
+                {routineStart}시부터 다음날 새벽 {routineEnd}시까지로 설정돼요.
+              </p>
+              <p className="mt-1 text-xs font-semibold text-sub">
+                AI 시간 배정과 추천이 이 기준으로 동작해요. 저장을 한 번 더 누르면 확정돼요.
+              </p>
+            </div>
+          )}
         </section>
 
         <hr className="border-line mb-6" />
@@ -335,7 +349,8 @@ export default function SettingsModal({ onClose }) {
           </button>
           <button
             onClick={saveRoutine}
-            className="btn-retro-primary flex-1 text-sm"
+            disabled={routineStart === routineEnd || savingRoutine}
+            className="btn-retro-primary flex-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             저장
           </button>
