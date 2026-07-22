@@ -76,7 +76,9 @@ def sticker_check():
 
 def sticker_circle():
     img = new_canvas()
-    ring(img, 8, 8, 6.6, 4.4, hx('#E05252'), hx('#F08A8A'), hx('#B03A3A'))
+    # r_out 6.6은 상하좌우 정중앙에 2px 혹이 삐져나온다(경계값 6.52가 걸림) — 6.5로 매끈하게.
+    # r_in 3.5로 링 두께 3px — 엑스 스티커(thick=3)와 두께감 통일
+    ring(img, 8, 8, 6.5, 3.5, hx('#E05252'), hx('#F08A8A'), hx('#B03A3A'))
     return img
 
 
