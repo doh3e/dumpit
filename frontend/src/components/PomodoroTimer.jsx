@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import { setPomodoroFocus, clearPomodoroFocus } from '../services/pomodoroFocus'
 import settingImage from '../assets/setting_image.png'
 import arrowheadImage from '../assets/arrowheads.png'
 
@@ -194,8 +195,27 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     if (running && mode === MODE.FOCUS && !sessionOpenRef.current) {
       sessionOpenRef.current = true
       api.post('/pomodoro/start').catch(() => { sessionOpenRef.current = false })
+      // 집중을 시작한 태스크는 '손댄 일'로 기록 — 진행 중 뱃지·추천 가산·TASK_STARTED가 여기서 발화.
+      // 세션 도중 태스크를 바꿔도 전환하지 않는다(세션은 시작 태스크의 것).
+      if (selectedTask && selectedTask.status === 'TODO') {
+        api.patch(`/tasks/${selectedTask.taskId}`, { status: 'IN_PROGRESS' })
+          .then(() => window.dispatchEvent(new CustomEvent('dumpit:tasks-updated')))
+          .catch(() => {})
+      }
     }
-  }, [running, mode])
+  }, [running, mode, selectedTask])
+
+  // 집중 타이머가 도는 동안만 라이브 집중 상태 발행 — 대시보드 히어로가 구독한다
+  const focusTokenRef = useRef({})
+  useEffect(() => {
+    const token = focusTokenRef.current
+    if (running && mode === MODE.FOCUS && selectedTask) {
+      setPomodoroFocus(token, { taskId: selectedTask.taskId, title: selectedTask.title })
+    } else {
+      clearPomodoroFocus(token)
+    }
+    return () => clearPomodoroFocus(token)
+  }, [running, mode, selectedTask])
 
   const toggle = useCallback(() => setRunning((value) => !value), [])
 
