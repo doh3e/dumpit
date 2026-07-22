@@ -1,10 +1,12 @@
-# gen_stickers.py — 상점 스티커 16×16 도트 생성기
+# gen_stickers.py — 상점 스티커 16×16 도트 생성기 (8종 전체 자체 제작)
 # 사용: python gen_stickers.py                    → frontend/src/assets/shop/에 PNG 저장
 #       python gen_stickers.py --preview OUT.png  → 미리보기 시트만 저장 (8배 확대, 검수용)
-# 스타일: 외곽선 없음, 좌상단 광원, 톤 2~4개, 투명 배경 (gen_stations.py 규약과 동일)
-# 세트 통일 규칙(2026-07-22): 단색 실루엣 + 공통 베벨(위·왼쪽 가장자리 light, 아래·오른쪽 dark),
-# 획 굵기 3px, 본체 크기 12~13px, 팔레트는 초록/빨강 2벌만 사용
+# 스타일: 외곽선 없음, 좌상단 광원, 투명 배경 (gen_stations.py 규약과 동일)
+# 세트 통일 규칙(2026-07-22): 꽉 찬 단색 실루엣 + 공통 베벨(위·왼쪽 가장자리 light,
+# 아래·오른쪽 dark), 획 굵기 3px, 본체 12~14px, 스티커별 계열색 1벌(light/base/dark 3톤).
+# 별·불꽃 등 밝은 계열도 dark 베벨 테두리가 생겨 라이트 모드에서 형태가 살아남는다.
 import argparse
+import math
 from pathlib import Path
 from PIL import Image
 
@@ -60,6 +62,32 @@ def annulus(img, cx, cy, r_out, r_in, color):
                 put(img, x, y, color)
 
 
+def poly(img, pts, color):
+    """다각형 채움 — 픽셀 중심 짝홀(ray casting) 판정"""
+    n = len(pts)
+    for y in range(img.height):
+        for x in range(img.width):
+            px_, py_ = x + 0.5, y + 0.5
+            inside = False
+            j = n - 1
+            for i in range(n):
+                xi, yi = pts[i]
+                xj, yj = pts[j]
+                if (yi > py_) != (yj > py_) and px_ < (xj - xi) * (py_ - yi) / (yj - yi) + xi:
+                    inside = not inside
+                j = i
+            if inside:
+                put(img, x, y, color)
+
+
+def pixmap(img, rows, ox, oy, color):
+    """문자열 픽셀맵('X'=칠함) — 16px에서 다각형 근사가 뭉개지는 별·불꽃용"""
+    for dy, row in enumerate(rows):
+        for dx, ch in enumerate(row):
+            if ch == 'X':
+                put(img, ox + dx, oy + dy, color)
+
+
 def bevel(img, light, dark):
     """세트 공통 명암 — 위/왼쪽이 빈 픽셀은 light, 아니면서 아래/오른쪽이 빈 픽셀은 dark."""
     px = img.load()
@@ -83,8 +111,12 @@ def bevel(img, light, dark):
         px[p] = dark
 
 
-GREEN = (hx('#8FD97A'), hx('#5FBF4A'), hx('#3F9433'))  # light, base, dark
-RED = (hx('#F08A8A'), hx('#E05252'), hx('#B03A3A'))
+# light, base, dark
+GREEN = (hx('#8FD97A'), hx('#5FBF4A'), hx('#3F9433'))    # 체크·클로버
+RED = (hx('#F08A8A'), hx('#E05252'), hx('#B03A3A'))      # 동그라미·엑스·중요!
+PINK = (hx('#F7B8C6'), hx('#EE8FA4'), hx('#C75D77'))     # 하트
+GOLD = (hx('#F9DF8B'), hx('#EDBE45'), hx('#B5851E'))     # 별 — 라이트 모드 가독용 딥 골드
+ORANGE = (hx('#F5B76B'), hx('#E8863C'), hx('#B85A20'))   # 불꽃
 STEM = hx('#2F6B27')
 
 
@@ -116,21 +148,83 @@ def sticker_cross():
 def sticker_clover():
     img = new_canvas()
     light, base, dark = GREEN
-    px = img.load()
-    # 잎 4장 = 5×5 사각 + 십자 갭 1px. 바깥쪽 모서리 3개만 컷(둥근 잎),
-    # 중심을 향한 모서리는 남겨 잎들이 가운데(7,7) 매듭으로 모이는 클로버 실루엣.
-    # 베벨이 잎마다 따로 걸려 잎 경계가 또렷하다.
-    center = (7, 7)
-    for x0, y0 in [(2, 2), (8, 2), (2, 8), (8, 8)]:
-        block(img, x0, y0, base, 5, 5)
-        corners = [(x0, y0), (x0 + 4, y0), (x0, y0 + 4), (x0 + 4, y0 + 4)]
-        inner = min(corners, key=lambda c: abs(c[0] - center[0]) + abs(c[1] - center[1]))
-        for c in corners:
-            if c != inner:
-                px[c] = (0, 0, 0, 0)  # 바깥 모서리 컷 → 둥근 잎
+    # 디스크 겹침 실루엣 — 잎이 꽉 찬 통통한 클로버. 명암은 세트 공통 베벨만.
+    disc(img, 4.7, 3.3, 3.5, base)
+    disc(img, 11.3, 3.3, 3.5, base)
+    disc(img, 4.7, 9.9, 3.5, base)
+    disc(img, 11.3, 9.9, 3.5, base)
     bevel(img, light, dark)
-    px[center] = STEM                                # 중심 매듭
-    stroke(img, [(7, 13), (9, 15)], STEM, thick=1)   # 줄기 — 중심 아래서 우하단으로
+    block(img, 7, 6, STEM, 2, 2)                     # 중심 매듭 (잎 경계 강조)
+    stroke(img, [(8, 12), (9, 15)], STEM, thick=1)   # 줄기
+    return img
+
+
+def sticker_heart():
+    img = new_canvas()
+    light, base, dark = PINK
+    disc(img, 5.4, 5.6, 3.5, base)                    # 왼쪽 봉우리
+    disc(img, 10.6, 5.6, 3.5, base)                   # 오른쪽 봉우리
+    poly(img, [(2.4, 7.2), (13.6, 7.2), (8.0, 14.4)], base)  # 아래 뾰족
+    bevel(img, light, dark)
+    return img
+
+
+def sticker_important():
+    img = new_canvas()
+    light, base, dark = RED
+    poly(img, [(4.8, 2.0), (11.2, 2.0), (9.4, 9.9), (6.6, 9.9)], base)  # 테이퍼 느낌표 대
+    block(img, 6, 11, base, 4, 3)                     # 점
+    px = img.load()
+    for cx, cy in [(6, 11), (9, 11), (6, 13), (9, 13)]:
+        px[cx, cy] = (0, 0, 0, 0)                     # 점 모서리 컷 → 둥근 점
+    bevel(img, light, dark)
+    return img
+
+
+STAR_MAP = [
+    '......X......',
+    '.....XXX.....',
+    '.....XXX.....',
+    'XXXXXXXXXXXXX',
+    '.XXXXXXXXXXX.',
+    '..XXXXXXXXX..',
+    '...XXXXXXX...',
+    '..XXXXXXXXX..',
+    '..XXXX.XXXX..',
+    '.XXXX...XXXX.',
+    '.XX.......XX.',
+]
+
+FIRE_MAP = [
+    '......X....',
+    '......XX...',
+    '..X...XX...',
+    '..XX.XXX...',
+    '..XXXXXXX..',
+    '.XXXXXXXXX.',
+    '.XXXXXXXXX.',
+    'XXXXXXXXXXX',
+    'XXXXXXXXXXX',
+    'XXXXXXXXXXX',
+    '.XXXXXXXXX.',
+    '..XXXXXXX..',
+    '...XXXXX...',
+]
+
+
+def sticker_star():
+    img = new_canvas()
+    light, base, dark = GOLD
+    pixmap(img, STAR_MAP, 1, 2, base)
+    bevel(img, light, dark)
+    return img
+
+
+def sticker_fire():
+    img = new_canvas()
+    light, base, dark = ORANGE
+    pixmap(img, FIRE_MAP, 2, 1, base)
+    bevel(img, light, dark)
     return img
 
 
@@ -139,6 +233,10 @@ SPRITES = {
     'sticker_circle.png': sticker_circle,
     'sticker_cross.png': sticker_cross,
     'sticker_clover.png': sticker_clover,
+    'sticker_heart.png': sticker_heart,
+    'sticker_important.png': sticker_important,
+    'sticker_star.png': sticker_star,
+    'sticker_fire.png': sticker_fire,
 }
 
 
