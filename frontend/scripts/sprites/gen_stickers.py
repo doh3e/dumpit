@@ -2,9 +2,10 @@
 # 사용: python gen_stickers.py                    → frontend/src/assets/shop/에 PNG 저장
 #       python gen_stickers.py --preview OUT.png  → 미리보기 시트만 저장 (8배 확대, 검수용)
 # 스타일: 외곽선 없음, 좌상단 광원, 투명 배경 (gen_stations.py 규약과 동일)
-# 세트 통일 규칙(2026-07-22): 꽉 찬 단색 실루엣 + 공통 베벨(위·왼쪽 가장자리 light,
-# 아래·오른쪽 dark), 획 굵기 3px, 본체 12~14px, 스티커별 계열색 1벌(light/base/dark 3톤).
-# 별·불꽃 등 밝은 계열도 dark 베벨 테두리가 생겨 라이트 모드에서 형태가 살아남는다.
+# 세트 통일 규칙(2026-07-22): 꽉 찬 실루엣 + 공통 셰이딩 — 좌상단 광원 대각 그라데이션
+# (light→base→dark, 경계 체커 디더) 위에 가장자리 한 톤 보정(위·왼쪽 밝게, 아래·오른쪽
+# 어둡게) + 좌상단 글린트 2px. 획 굵기 3px, 본체 12~14px, 스티커별 계열색 1벌(4톤).
+# 불꽃만 예외로 코어가 빛나는 방사형 셰이딩. 어두운 톤이 반드시 섞여 라이트 모드에서도 또렷.
 import argparse
 import math
 from pathlib import Path
@@ -88,72 +89,114 @@ def pixmap(img, rows, ox, oy, color):
                 put(img, ox + dx, oy + dy, color)
 
 
-def bevel(img, light, dark):
-    """세트 공통 명암 — 위/왼쪽이 빈 픽셀은 light, 아니면서 아래/오른쪽이 빈 픽셀은 dark."""
+def shade(img, palette):
+    """세트 공통 셰이딩 — 좌상단 광원 (행성·정거장 sphere_shade와 같은 계열).
+    ① 실루엣 바운딩 대각 진행도로 light→base→dark 그라데이션 (경계는 체커 디더)
+    ② 가장자리 보정: 위/왼쪽 접경은 한 톤 밝게, 아래/오른쪽 접경은 한 톤 어둡게
+    ③ 좌상단(광원쪽) 글린트 2px"""
+    glint_c, light, base, dark = palette
+    tones = [light, base, dark]
+    px = img.load()
+    w, h = img.width, img.height
+    solid = [(x, y) for y in range(h) for x in range(w) if px[x, y][3] != 0]
+    if not solid:
+        return
+    x0 = min(x for x, _ in solid)
+    x1 = max(x for x, _ in solid)
+    y0 = min(y for _, y in solid)
+    y1 = max(y for _, y in solid)
+    span = max(x1 - x0 + y1 - y0, 1)
+
+    def empty(x, y):
+        return x < 0 or y < 0 or x >= w or y >= h or px[x, y][3] == 0
+
+    out = {}
+    for x, y in solid:
+        f = (x - x0 + y - y0) / span * 3
+        idx = min(int(f), 2)
+        if idx < 2 and f - idx > 0.7 and (x + y) % 2 == 0:
+            idx += 1
+        if empty(x, y - 1) or empty(x - 1, y):
+            idx = max(idx - 1, 0)
+        elif empty(x, y + 1) or empty(x + 1, y):
+            idx = min(idx + 1, 2)
+        out[(x, y)] = tones[idx]
+    for p, c in out.items():
+        px[p] = c
+    gx, gy = min(solid, key=lambda p: (p[0] + p[1], p[0]))
+    px[gx, gy] = glint_c
+    if not empty(gx + 1, gy):
+        px[gx + 1, gy] = glint_c
+    elif not empty(gx, gy + 1):
+        px[gx, gy + 1] = glint_c
+
+
+def fire_shade(img):
+    """불꽃 전용 — 코어가 빛나는 방사형 셰이딩 (노란 코어→주황→진한 주황 테두리)"""
+    tones = [hx('#F9E08A'), hx('#F2B04C'), hx('#E8863C'), hx('#C05A20')]
     px = img.load()
     w, h = img.width, img.height
 
     def empty(x, y):
         return x < 0 or y < 0 or x >= w or y >= h or px[x, y][3] == 0
 
-    lights, darks = [], []
+    out = {}
     for y in range(h):
         for x in range(w):
             if px[x, y][3] == 0:
                 continue
-            if empty(x, y - 1) or empty(x - 1, y):
-                lights.append((x, y))
-            elif empty(x, y + 1) or empty(x + 1, y):
-                darks.append((x, y))
-    for p in lights:
-        px[p] = light
-    for p in darks:
-        px[p] = dark
+            dx = (x + 0.5 - 8) / 3.6
+            dy = (y + 0.5 - 10.5) / 4.8
+            f = math.hypot(dx, dy) * 3
+            idx = min(int(f), 3)
+            if idx < 3 and f - idx > 0.7 and (x + y) % 2 == 0:
+                idx += 1
+            if empty(x, y + 1) or empty(x + 1, y):
+                idx = min(idx + 1, 3)  # 테두리는 어둡게 — 라이트 모드 가독
+            out[(x, y)] = tones[idx]
+    for p, c in out.items():
+        px[p] = c
 
 
-# light, base, dark
-GREEN = (hx('#8FD97A'), hx('#5FBF4A'), hx('#3F9433'))    # 체크·클로버
-RED = (hx('#F08A8A'), hx('#E05252'), hx('#B03A3A'))      # 동그라미·엑스·중요!
-PINK = (hx('#F7B8C6'), hx('#EE8FA4'), hx('#C75D77'))     # 하트
-GOLD = (hx('#F9DF8B'), hx('#EDBE45'), hx('#B5851E'))     # 별 — 라이트 모드 가독용 딥 골드
-ORANGE = (hx('#F5B76B'), hx('#E8863C'), hx('#B85A20'))   # 불꽃
+# glint, light, base, dark
+GREEN = (hx('#D6F5C4'), hx('#8FD97A'), hx('#5FBF4A'), hx('#3F9433'))    # 체크·클로버
+RED = (hx('#FBD3D3'), hx('#F08A8A'), hx('#E05252'), hx('#B03A3A'))      # 동그라미·엑스·중요!
+PINK = (hx('#FCE3EA'), hx('#F7B8C6'), hx('#EE8FA4'), hx('#C75D77'))     # 하트
+GOLD = (hx('#FFF3C9'), hx('#F9DF8B'), hx('#EDBE45'), hx('#B5851E'))     # 별 — 딥 골드
 STEM = hx('#2F6B27')
 
 
 def sticker_check():
     img = new_canvas()
-    light, base, dark = GREEN
-    stroke(img, [(2, 8), (5, 12), (12, 3)], base, thick=3)
-    bevel(img, light, dark)
+    stroke(img, [(2, 8), (5, 12), (12, 3)], GREEN[2], thick=3)
+    shade(img, GREEN)
     return img
 
 
 def sticker_circle():
     img = new_canvas()
-    light, base, dark = RED
-    annulus(img, 8, 8, 6.5, 3.5, base)  # 두께 3px — 엑스(thick=3)와 통일
-    bevel(img, light, dark)
+    annulus(img, 8, 8, 6.5, 3.5, RED[2])  # 두께 3px — 엑스(thick=3)와 통일
+    shade(img, RED)
     return img
 
 
 def sticker_cross():
     img = new_canvas()
-    light, base, dark = RED
-    stroke(img, [(2, 2), (11, 11)], base, thick=3)
-    stroke(img, [(11, 2), (2, 11)], base, thick=3)
-    bevel(img, light, dark)
+    stroke(img, [(2, 2), (11, 11)], RED[2], thick=3)
+    stroke(img, [(11, 2), (2, 11)], RED[2], thick=3)
+    shade(img, RED)
     return img
 
 
 def sticker_clover():
     img = new_canvas()
-    light, base, dark = GREEN
-    # 디스크 겹침 실루엣 — 잎이 꽉 찬 통통한 클로버. 명암은 세트 공통 베벨만.
-    disc(img, 4.7, 3.3, 3.5, base)
-    disc(img, 11.3, 3.3, 3.5, base)
-    disc(img, 4.7, 9.9, 3.5, base)
-    disc(img, 11.3, 9.9, 3.5, base)
-    bevel(img, light, dark)
+    # 디스크 겹침 실루엣 — 잎이 꽉 찬 통통한 클로버.
+    # 대각 그라데이션이 좌상 잎은 밝게, 우하 잎은 어둡게 — 잎별 톤 차가 자연히 생긴다.
+    disc(img, 4.7, 3.3, 3.5, GREEN[2])
+    disc(img, 11.3, 3.3, 3.5, GREEN[2])
+    disc(img, 4.7, 9.9, 3.5, GREEN[2])
+    disc(img, 11.3, 9.9, 3.5, GREEN[2])
+    shade(img, GREEN)
     block(img, 7, 6, STEM, 2, 2)                     # 중심 매듭 (잎 경계 강조)
     stroke(img, [(8, 12), (9, 15)], STEM, thick=1)   # 줄기
     return img
@@ -161,23 +204,21 @@ def sticker_clover():
 
 def sticker_heart():
     img = new_canvas()
-    light, base, dark = PINK
-    disc(img, 5.4, 5.6, 3.5, base)                    # 왼쪽 봉우리
-    disc(img, 10.6, 5.6, 3.5, base)                   # 오른쪽 봉우리
-    poly(img, [(2.4, 7.2), (13.6, 7.2), (8.0, 14.4)], base)  # 아래 뾰족
-    bevel(img, light, dark)
+    disc(img, 5.4, 5.6, 3.5, PINK[2])                 # 왼쪽 봉우리
+    disc(img, 10.6, 5.6, 3.5, PINK[2])                # 오른쪽 봉우리
+    poly(img, [(2.4, 7.2), (13.6, 7.2), (8.0, 14.4)], PINK[2])  # 아래 뾰족
+    shade(img, PINK)
     return img
 
 
 def sticker_important():
     img = new_canvas()
-    light, base, dark = RED
-    poly(img, [(4.8, 2.0), (11.2, 2.0), (9.4, 9.9), (6.6, 9.9)], base)  # 테이퍼 느낌표 대
-    block(img, 6, 11, base, 4, 3)                     # 점
+    poly(img, [(4.8, 2.0), (11.2, 2.0), (9.4, 9.9), (6.6, 9.9)], RED[2])  # 테이퍼 느낌표 대
+    block(img, 6, 11, RED[2], 4, 3)                   # 점
     px = img.load()
     for cx, cy in [(6, 11), (9, 11), (6, 13), (9, 13)]:
         px[cx, cy] = (0, 0, 0, 0)                     # 점 모서리 컷 → 둥근 점
-    bevel(img, light, dark)
+    shade(img, RED)
     return img
 
 
@@ -214,17 +255,15 @@ FIRE_MAP = [
 
 def sticker_star():
     img = new_canvas()
-    light, base, dark = GOLD
-    pixmap(img, STAR_MAP, 1, 2, base)
-    bevel(img, light, dark)
+    pixmap(img, STAR_MAP, 1, 2, GOLD[2])
+    shade(img, GOLD)
     return img
 
 
 def sticker_fire():
     img = new_canvas()
-    light, base, dark = ORANGE
-    pixmap(img, FIRE_MAP, 2, 1, base)
-    bevel(img, light, dark)
+    pixmap(img, FIRE_MAP, 2, 1, hx('#E8863C'))  # 색은 fire_shade가 전부 다시 입힌다
+    fire_shade(img)
     return img
 
 
