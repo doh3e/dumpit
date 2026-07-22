@@ -222,6 +222,31 @@ class IdeaApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.parentIdeaId").value(parent.getIdeaId().toString()));
     }
 
+    // 마크다운 서식 문자가 본문 길이에 포함되므로 실효 용량 확보 차원에서 content 상한을 5000으로 상향
+    // (2026-07-22, 컬럼은 TEXT라 DB 제약 없음 — DTO @Size만 변경).
+    @Test
+    void 수정_content_5000자_허용() throws Exception {
+        Idea idea = seedIdea(userA, "한도 확인용", null);
+        String longContent = "가".repeat(5000);
+        mockMvc.perform(patch("/ideas/" + idea.getIdeaId()).with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("content", longContent))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value(longContent));
+    }
+
+    @Test
+    void 수정_content_길이초과면_400_한글() throws Exception {
+        Idea idea = seedIdea(userA, "한도 초과 확인용", null);
+        String tooLong = "가".repeat(5001);
+        MvcResult result = mockMvc.perform(patch("/ideas/" + idea.getIdeaId()).with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("content", tooLong))))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        assertKoreanError(result);
+    }
+
     @Test
     void 수정_미인증이면_401_한글() throws Exception {
         Idea idea = seedIdea(userA, "제목", null);
@@ -497,7 +522,7 @@ class IdeaApiTest extends ApiIntegrationTestBase {
 
     // [태스크13] IdeaExtractConfirmRequest.IdeaNodeInput은 title/content/category에 @Size가 없고
     // 최상위 ideas 리스트에도 @Valid가 빠져 있어(중첩 children 포함) 대용량 문자열이 검증 없이
-    // 그대로 저장될 수 있었다. IdeaRequest(@Size(max=200)/(max=3000))와 동일 상한을 적용하고
+    // 그대로 저장될 수 있었다. IdeaRequest(@Size(max=200)/(max=5000))와 동일 상한을 적용하고
     // ideas/children 양쪽에 @Valid를 추가해 재귀적으로 걸러지는지 확인(최상위/자식 노드 각각).
     @Test
     void AI추출확정_title_길이초과면_400_한글() throws Exception {
