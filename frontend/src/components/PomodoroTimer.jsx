@@ -249,13 +249,14 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
   const isDesktop = typeof window !== 'undefined' && Boolean(window.dumpitDesktop)
 
   // 유휴 중 테마/스킨 변경 감지 — applyTheme·applySkins 모두 <html> dataset을 바꾸므로 observer 하나로 커버
+  // data-skin-bg: 배경 테마는 위젯 크롬 토큰(--bg 등)을 바꾸므로 함께 감시
   const [skinTick, setSkinTick] = useState(0)
   useEffect(() => {
     if (typeof window === 'undefined' || !window.dumpitDesktop) return undefined
     const observer = new MutationObserver(() => setSkinTick((t) => t + 1))
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['data-theme', 'data-skin-pomodoro'],
+      attributeFilter: ['data-theme', 'data-skin-pomodoro', 'data-skin-bg'],
     })
     return () => observer.disconnect()
   }, [])
@@ -278,6 +279,16 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         break: style.getPropertyValue('--pomo-break').trim(),
         ring: style.getPropertyValue('--pomo-ring').trim(),
         soft: style.getPropertyValue('--pomo-soft').trim(),
+        // 위젯 크롬용 전역 토큰 — 다크모드·배경 테마가 위젯에도 반영되게 전체 전달
+        bg: style.getPropertyValue('--bg').trim(),
+        card: style.getPropertyValue('--card').trim(),
+        fg: style.getPropertyValue('--fg').trim(),
+        sub: style.getPropertyValue('--sub').trim(),
+        line: style.getPropertyValue('--line').trim(),
+        edge: style.getPropertyValue('--edge').trim(),
+        chip: style.getPropertyValue('--chip').trim(),
+        shadowSm: style.getPropertyValue('--shadow-sm').trim(),
+        onAccent: style.getPropertyValue('--on-accent').trim(),
       },
     })
   }, [mode, min, sec, running, progress, selectedTask, selectedTaskId, desktopTasks, skinTick])
