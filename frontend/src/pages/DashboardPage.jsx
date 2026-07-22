@@ -13,6 +13,7 @@ import PixelBurst from '../components/PixelBurst'
 import RocketLaunch from '../components/RocketLaunch'
 import { parseDate, isSameLocalDate } from '../utils/dates'
 import { calcCompletionCoins } from '../utils/taskRewards'
+import { getPomodoroFocus, subscribePomodoroFocus } from '../services/pomodoroFocus'
 
 const SECTION_KEYS = ['overdue', 'today', 'tomorrow', 'next7Days', 'later', 'someday', 'recentDone']
 
@@ -86,6 +87,17 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchTasks() }, [fetchTasks])
 
+  // 타이머(사이드바·모바일 팝업)가 IN_PROGRESS 전환 후 쏘는 이벤트 — 뱃지·섹션 갱신
+  useEffect(() => {
+    const handler = () => fetchTasks()
+    window.addEventListener('dumpit:tasks-updated', handler)
+    return () => window.removeEventListener('dumpit:tasks-updated', handler)
+  }, [fetchTasks])
+
+  // 집중 타이머가 도는 동안 히어로가 그 태스크를 보여준다
+  const [pomodoroFocus, setPomodoroFocusState] = useState(getPomodoroFocus)
+  useEffect(() => subscribePomodoroFocus(setPomodoroFocusState), [])
+
   const handleTaskUpdated = useCallback((updatedTask) => {
     setEditingTask(null)
     if (updatedTask?.taskId) {
@@ -138,10 +150,33 @@ export default function DashboardPage() {
     } catch { /* ignore */ }
   }
 
-  const taskList = Array.isArray(tasks) ? tasks : []
+  const taskList = useMemo(() => (Array.isArray(tasks) ? tasks : []), [tasks])
   const sections = planning?.sections || null
 
-  const heroTaskId = planning?.nowSuggestion?.task?.taskId ?? null
+  const focusTask = useMemo(() => {
+    if (!pomodoroFocus) return null
+    return taskList.find((t) =>
+      String(t.taskId) === String(pomodoroFocus.taskId)
+      && t.status !== 'DONE' && t.status !== 'CANCELLED'
+    ) || null
+  }, [pomodoroFocus, taskList])
+
+  const heroSuggestion = useMemo(() => {
+    if (!focusTask) return planning?.nowSuggestion
+    const topTaskId = planning?.nowSuggestion?.task?.taskId
+    const isTopPick = topTaskId != null && String(topTaskId) === String(focusTask.taskId)
+    return {
+      type: 'FOCUS_SESSION',
+      title: `지금은 ${focusTask.title} 중이에요.`,
+      message: isTopPick
+        ? '뽀모도로 타이머가 돌고 있어요. 끝까지 화이팅!'
+        : '추천은 잠시 뒤로 — 지금 집중하는 일을 먼저 끝내요.',
+      task: focusTask,
+      availableFocusMinutes: null,
+    }
+  }, [focusTask, planning])
+
+  const heroTaskId = heroSuggestion?.task?.taskId ?? null
   // 미니 큐: 오늘 남은 일(마감순) 우선, 모자라면 추천 상위로 채움
   const heroQueue = useMemo(() => {
     const seen = new Set(heroTaskId != null ? [heroTaskId] : [])
@@ -231,11 +266,11 @@ export default function DashboardPage() {
       ) : (
         <>
           <NowHeroCard
-            nowSuggestion={planning.nowSuggestion}
+            nowSuggestion={heroSuggestion}
             queue={heroQueue}
             todayDone={todayDone}
             todayTotal={todayTotal}
-            allDone={allDoneToday}
+            allDone={allDoneToday && !focusTask}
             onComplete={toggleStatus}
             onEdit={setEditingTask}
           />
