@@ -101,12 +101,15 @@ def celeb_meteor_star():
 
 
 def celeb_petal():
+    """물방울형(teardrop) 실루엣 — 큰 원에서 작은 원으로 점감하며 끝을 뾰족하게"""
     img = new_canvas(16, 16)
     light, pink, dark = hx('#F9C6D2'), hx('#F2A0B4'), hx('#DB7D96')
-    disc(img, 7, 8, 4.4, pink)                          # 몸체
-    disc(img, 5.6, 6.6, 1.8, light)                     # 좌상단 하이라이트
-    stroke(img, [(10, 10), (13, 13)], dark, thick=2)    # 꽃잎 꼬리
-    stroke(img, [(9, 9), (11, 11)], pink, thick=2)
+    disc(img, 6.5, 6.5, 4.3, pink)                      # 몸체 — 둥근 윗부분
+    disc(img, 8.5, 8.5, 3.3, pink)                      # 점감 1
+    disc(img, 10.3, 10.3, 2.2, pink)                    # 점감 2
+    disc(img, 11.6, 11.6, 1.2, pink)                    # 점감 3 — 뾰족한 끝으로
+    disc(img, 12.4, 12.4, 0.6, dark)                    # 끝 음영
+    disc(img, 5.0, 5.0, 1.8, light)                     # 좌상단 하이라이트
     return img
 
 
