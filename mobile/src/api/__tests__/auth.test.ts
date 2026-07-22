@@ -8,8 +8,12 @@ jest.mock('../client', () => ({
 const mockedApi = api as jest.Mocked<typeof api>;
 
 describe('auth api', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('loginWithGoogleIdToken은 idToken을 POST하고 me를 반환한다', async () => {
-    mockedApi.post.mockResolvedValue({ data: { email: 'a@b.c', nickname: '유저', picture: null } });
+    mockedApi.post.mockResolvedValue({ data: { email: 'stale@b.c', nickname: '유저', picture: null } });
     mockedApi.get.mockResolvedValue({
       data: { email: 'a@b.c', name: '유저', picture: null, coins: 0, isAdmin: false },
     });
@@ -17,6 +21,7 @@ describe('auth api', () => {
     const me = await loginWithGoogleIdToken('tok');
 
     expect(mockedApi.post).toHaveBeenCalledWith('/auth/mobile/google', { idToken: 'tok' });
+    expect(mockedApi.get).toHaveBeenCalledWith('/auth/me');
     expect(me.email).toBe('a@b.c');
   });
 
