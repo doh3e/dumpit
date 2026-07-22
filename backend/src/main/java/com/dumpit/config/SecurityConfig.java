@@ -30,6 +30,8 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.util.StringUtils;
+import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -49,6 +51,9 @@ public class SecurityConfig {
             "profile",
             "https://www.googleapis.com/auth/calendar.readonly"
     );
+
+    /** 운영 컨텍스트 패스(/api)를 뺀 내부 경로 비교용 — AuthenticatedRequestGuardFilter와 동일 방식. */
+    private static final UrlPathHelper URL_PATH_HELPER = new UrlPathHelper();
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final ObjectMapper objectMapper;
@@ -152,8 +157,15 @@ public class SecurityConfig {
                 .failureUrl(frontendUrl + "/?error=login_failed")
             )
 
+            // logoutUrl() 대신 커스텀 매처를 쓴다. CSRF 비활성 상태의 기본 매처는 GET까지 허용해,
+            // SameSite=Lax여도 최상위 GET 내비게이션(링크 클릭)으로 강제 로그아웃이 가능했다.
+            // LogoutFilter는 AuthenticatedRequestGuardFilter보다 앞이라 가드의 헤더 검사도 못 미친다 —
+            // POST + X-Requested-With(프론트 axios 기본 헤더)를 여기서 직접 요구한다.
             .logout(logout -> logout
-                .logoutUrl("/auth/logout")
+                .logoutRequestMatcher(request ->
+                    "POST".equals(request.getMethod())
+                            && "/auth/logout".equals(URL_PATH_HELPER.getPathWithinApplication(request))
+                            && StringUtils.hasText(request.getHeader("X-Requested-With")))
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .logoutSuccessHandler((request, response, authentication) ->
