@@ -43,3 +43,6 @@ __pycache__/
 
 # superpowers 과정 문서 (plan/spec/audit) - 로컬 전용
 docs/superpowers/
+
+# superpowers 브레인스토밍 산출물 (목업·세션 상태) - 로컬 전용
+.superpowers/
