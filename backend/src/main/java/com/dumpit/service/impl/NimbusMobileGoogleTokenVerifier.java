@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.JwtValidators;
@@ -15,13 +16,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Set;
 
 /** 구글 JWKS로 모바일 ID 토큰을 로컬 검증한다 (iss·exp·aud). */
 @Component
 public class NimbusMobileGoogleTokenVerifier implements MobileGoogleTokenVerifier {
 
     private static final String GOOGLE_JWKS = "https://www.googleapis.com/oauth2/v3/certs";
-    private static final String GOOGLE_ISSUER = "https://accounts.google.com";
+    private static final Set<String> GOOGLE_ISSUERS = Set.of("https://accounts.google.com", "accounts.google.com");
 
     private final JwtDecoder jwtDecoder;
 
@@ -30,9 +32,24 @@ public class NimbusMobileGoogleTokenVerifier implements MobileGoogleTokenVerifie
             List<String> allowedClientIds) {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(GOOGLE_JWKS).build();
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-                JwtValidators.createDefaultWithIssuer(GOOGLE_ISSUER),
+                JwtValidators.createDefault(),
+                issuerValidator(GOOGLE_ISSUERS),
                 audienceValidator(allowedClientIds)));
         this.jwtDecoder = decoder;
+    }
+
+    /**
+     * 테스트 가능하도록 분리 — iss가 구글의 두 표기(스킴 유무) 중 하나면 통과.
+     * getIssuer()는 URL 파싱이라 스킴 없는 "accounts.google.com"에서 예외 — 문자열 비교 필수.
+     */
+    public static OAuth2TokenValidator<Jwt> issuerValidator(Set<String> allowedIssuers) {
+        return jwt -> {
+            String iss = jwt.getClaimAsString(JwtClaimNames.ISS);
+            return iss != null && allowedIssuers.contains(iss)
+                    ? OAuth2TokenValidatorResult.success()
+                    : OAuth2TokenValidatorResult.failure(
+                            new OAuth2Error("invalid_token", "iss가 구글이 아닙니다.", null));
+        };
     }
 
     /** 테스트 가능하도록 분리 — aud에 허용 클라이언트 ID가 하나라도 있으면 통과. */
