@@ -15,11 +15,17 @@ contextBridge.exposeInMainWorld('dumpitPomodoroWidget', {
 })
 
 function renderState(payload = {}) {
-  // 웹이 보낸 pomo 색을 로컬 CSS 변수로 반영 (부재 시 기본 토큰 유지 — 구버전 웹 하위호환)
+  // 웹이 보낸 테마 토큰을 로컬 CSS 변수로 반영 (부재 시 기본 토큰 유지 — 구버전 웹 하위호환)
+  // pomo 3색 + 크롬 토큰 9종: 다크모드·배경 테마·뽀모도로 스킨이 위젯에 그대로 따라온다
   const colors = payload.colors
   if (colors && typeof colors === 'object') {
     const root = document.documentElement
-    const varMap = { focus: '--pomo-focus', break: '--pomo-break', ring: '--pomo-ring' }
+    const varMap = {
+      focus: '--pomo-focus', break: '--pomo-break', ring: '--pomo-ring',
+      bg: '--bg', card: '--card', fg: '--fg', sub: '--sub',
+      line: '--line', edge: '--edge', chip: '--chip',
+      shadowSm: '--shadow-sm', onAccent: '--on-accent',
+    }
     for (const [key, cssVar] of Object.entries(varMap)) {
       if (typeof colors[key] === 'string' && colors[key]) {
         root.style.setProperty(cssVar, colors[key])
