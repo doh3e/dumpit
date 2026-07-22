@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { setPomodoroFocus, clearPomodoroFocus } from '../services/pomodoroFocus'
+import { nextAfterFocus, autoStartNextFocus } from '../utils/pomodoroCycle'
 import settingImage from '../assets/setting_image.png'
 import arrowheadImage from '../assets/arrowheads.png'
 
@@ -9,6 +10,10 @@ const DEFAULT_FOCUS_MIN = 25
 const DEFAULT_BREAK_MIN = 5
 const MIN_MIN = 1
 const MAX_MIN = 120
+const DEFAULT_SETS = 1 // 0 = 무한
+const MAX_SETS = 12
+const DEFAULT_LONG_BREAK_MIN = 15
+const DEFAULT_LONG_EVERY = 4
 
 const MODE = { FOCUS: 'FOCUS', BREAK: 'BREAK' }
 
@@ -19,13 +24,20 @@ function loadMinutes(key, fallback) {
   return n
 }
 
-function notifyDesktopPomodoroComplete(mode) {
+function loadIntSetting(key, fallback, min, max) {
+  const v = localStorage.getItem(key)
+  const n = v == null ? fallback : Number(v)
+  if (!Number.isFinite(n) || n < min || n > max) return fallback
+  return n
+}
+
+function notifyDesktopPomodoroComplete(mode, { autoContinue = false } = {}) {
   if (typeof window === 'undefined' || !window.dumpitDesktop?.notify) return
 
   window.dumpitDesktop.notify({
     title: mode === MODE.BREAK ? 'Dumpit! 휴식이 끝났어요' : 'Dumpit! 집중 완료',
     body: mode === MODE.BREAK
-      ? '다시 집중할 준비가 됐어요.'
+      ? (autoContinue ? '다음 집중을 시작할게요.' : '다시 집중할 준비가 됐어요.')
       : '좋아요. 잠깐 쉬어갈 시간이에요.',
   }).catch(() => {})
 }
@@ -39,6 +51,12 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
   const { refreshCoins } = useAuth()
   const [focusMin, setFocusMin] = useState(() => loadMinutes('dumpit_pomodoro_focus', DEFAULT_FOCUS_MIN))
   const [breakMin, setBreakMin] = useState(() => loadMinutes('dumpit_pomodoro_break', DEFAULT_BREAK_MIN))
+  const [setsTarget, setSetsTarget] = useState(() => loadIntSetting('dumpit_pomodoro_sets', DEFAULT_SETS, 0, MAX_SETS))
+  const [longBreakMin, setLongBreakMin] = useState(() => loadIntSetting('dumpit_pomodoro_long_break', DEFAULT_LONG_BREAK_MIN, MIN_MIN, MAX_MIN))
+  const [longBreakEvery, setLongBreakEvery] = useState(() => loadIntSetting('dumpit_pomodoro_long_every', DEFAULT_LONG_EVERY, 2, MAX_SETS))
+  const [currentSet, setCurrentSet] = useState(0) // 이번 런에서 완료한 집중 수
+  const [setsDone, setSetsDone] = useState(null) // "N세트 완료!" 배너 — 다음 시작/리셋까지 유지
+  const [activeBreakMin, setActiveBreakMin] = useState(breakMin) // 진행 중 휴식 길이(긴 휴식 대응)
   const [mode, setMode] = useState(MODE.FOCUS)
   const [remaining, setRemaining] = useState(focusMin * 60)
   const [running, setRunning] = useState(false)
@@ -130,6 +148,23 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     setBlinking(true)
     setTimeout(() => setBlinking(false), 1600)
     sessionOpenRef.current = false // 세션은 완료로 소비 — 다음 집중은 새로 시작 신호를 보낸다
+    const finishedSets = currentSet + 1
+    const decision = nextAfterFocus({ completedSets: finishedSets, setsTarget, longBreakEvery })
+    if (decision.type === 'DONE') {
+      // 마지막 세트: 휴식 없이 종료(세트 1은 여기 안 옴 — 기존 동작 보존)
+      setCurrentSet(0)
+      setSetsDone(finishedSets)
+      setMode(MODE.FOCUS)
+      setRemaining(focusMin * 60)
+      setRunning(false)
+    } else {
+      setCurrentSet(finishedSets)
+      const nextBreakMin = decision.long ? longBreakMin : breakMin
+      setActiveBreakMin(nextBreakMin)
+      setMode(MODE.BREAK)
+      setRemaining(nextBreakMin * 60)
+      setRunning(true)
+    }
     try {
       const res = await api.post('/pomodoro/complete', { focusMinutes: focusMin })
       refreshCoins()
@@ -138,18 +173,17 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     } catch {
       /* ignore */
     }
-    setMode(MODE.BREAK)
-    setRemaining(breakMin * 60)
-    setRunning(true)
-  }, [playAlarm, refreshCoins, breakMin, focusMin])
+  }, [playAlarm, refreshCoins, breakMin, focusMin, currentSet, setsTarget, longBreakEvery, longBreakMin])
 
   const handleBreakComplete = useCallback(() => {
+    const autoContinue = autoStartNextFocus(setsTarget)
     playAlarm()
-    notifyDesktopPomodoroComplete(MODE.BREAK)
+    notifyDesktopPomodoroComplete(MODE.BREAK, { autoContinue })
     setMode(MODE.FOCUS)
     setRemaining(focusMin * 60)
-    setRunning(false)
-  }, [playAlarm, focusMin])
+    setRunning(autoContinue)
+    if (!autoContinue) setCurrentSet(0) // 세트 1: 런 종료(기존 동작)
+  }, [playAlarm, focusMin, setsTarget])
 
   useEffect(() => {
     if (!running) {
@@ -217,32 +251,50 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     return () => clearPomodoroFocus(token)
   }, [running, mode, selectedTask])
 
-  const toggle = useCallback(() => setRunning((value) => !value), [])
+  const toggle = useCallback(() => {
+    setSetsDone(null)
+    setRunning((value) => !value)
+  }, [])
 
   const reset = useCallback(() => {
     setRunning(false)
     setMode(MODE.FOCUS)
     setRemaining(focusMin * 60)
+    setCurrentSet(0)
+    setSetsDone(null)
     sessionOpenRef.current = false // 진행 중 세션 폐기 — 다음 시작이 새 세션
   }, [focusMin])
 
-  const saveSettings = (newFocus, newBreak) => {
+  const saveSettings = (newFocus, newBreak, newSets, newLongBreak, newLongEvery) => {
     const f = Math.max(MIN_MIN, Math.min(MAX_MIN, Number(newFocus) || DEFAULT_FOCUS_MIN))
     const b = Math.max(MIN_MIN, Math.min(MAX_MIN, Number(newBreak) || DEFAULT_BREAK_MIN))
+    const rawSets = Number(newSets)
+    const s = Number.isFinite(rawSets) && rawSets >= 0 && rawSets <= MAX_SETS ? rawSets : DEFAULT_SETS
+    const lb = Math.max(MIN_MIN, Math.min(MAX_MIN, Number(newLongBreak) || DEFAULT_LONG_BREAK_MIN))
+    const le = Math.max(2, Math.min(MAX_SETS, Number(newLongEvery) || DEFAULT_LONG_EVERY))
     setFocusMin(f)
     setBreakMin(b)
+    setSetsTarget(s)
+    setLongBreakMin(lb)
+    setLongBreakEvery(le)
     localStorage.setItem('dumpit_pomodoro_focus', f)
     localStorage.setItem('dumpit_pomodoro_break', b)
+    localStorage.setItem('dumpit_pomodoro_sets', s)
+    localStorage.setItem('dumpit_pomodoro_long_break', lb)
+    localStorage.setItem('dumpit_pomodoro_long_every', le)
     setRunning(false)
     setMode(MODE.FOCUS)
     setRemaining(f * 60)
+    setCurrentSet(0)
+    setSetsDone(null)
+    setActiveBreakMin(b)
     setShowSettings(false)
     sessionOpenRef.current = false
   }
 
   const min = String(Math.floor(remaining / 60)).padStart(2, '0')
   const sec = String(remaining % 60).padStart(2, '0')
-  const total = mode === MODE.FOCUS ? focusMin * 60 : breakMin * 60
+  const total = mode === MODE.FOCUS ? focusMin * 60 : activeBreakMin * 60
   const progress = total > 0 ? ((total - remaining) / total) * 100 : 0
 
   const isFocus = mode === MODE.FOCUS
@@ -372,8 +424,43 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
               className="w-16 text-xs font-bold border border-line rounded px-2 py-1 bg-card"
             />
           </div>
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-[0.625rem] font-bold text-sub">반복 세트</label>
+            <select
+              value={setsTarget}
+              onChange={(e) => setSetsTarget(Number(e.target.value))}
+              className="w-16 text-xs font-bold border border-line rounded px-1 py-1 bg-card"
+            >
+              {Array.from({ length: MAX_SETS }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+              <option value={0}>∞</option>
+            </select>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-[0.625rem] font-bold text-sub">긴 휴식 (분)</label>
+            <input
+              type="number"
+              min={MIN_MIN}
+              max={MAX_MIN}
+              value={longBreakMin}
+              onChange={(e) => setLongBreakMin(Number(e.target.value))}
+              className="w-16 text-xs font-bold border border-line rounded px-2 py-1 bg-card"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-[0.625rem] font-bold text-sub">긴 휴식 주기 (세트)</label>
+            <input
+              type="number"
+              min={2}
+              max={MAX_SETS}
+              value={longBreakEvery}
+              onChange={(e) => setLongBreakEvery(Number(e.target.value))}
+              className="w-16 text-xs font-bold border border-line rounded px-2 py-1 bg-card"
+            />
+          </div>
           <button
-            onClick={() => saveSettings(focusMin, breakMin)}
+            onClick={() => saveSettings(focusMin, breakMin, setsTarget, longBreakMin, longBreakEvery)}
             className="w-full btn-retro text-on-accent text-[0.625rem] py-1.5"
             style={{ background: 'var(--pomo-focus)' }}
           >
@@ -441,6 +528,18 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           초기화
         </button>
       </div>
+
+      {/* Set progress — 세트 1은 기존 화면 그대로(표시 없음) */}
+      {setsTarget !== 1 && setsDone == null && (currentSet > 0 || running) && (
+        <p className="text-[0.625rem] font-bold text-sub">
+          {setsTarget === 0
+            ? (isFocus ? `${currentSet + 1}세트째` : `${currentSet}세트 완료`)
+            : (isFocus ? `${Math.min(currentSet + 1, setsTarget)}/${setsTarget} 세트` : `${currentSet}/${setsTarget} 세트 완료`)}
+        </p>
+      )}
+      {setsDone != null && (
+        <p className="text-[0.625rem] font-black text-secondary">{setsDone}세트 완료! 수고했어요</p>
+      )}
 
       {/* Completed count */}
       {completedCount > 0 && (
