@@ -334,10 +334,10 @@ export default function DashboardPage() {
       {showRocket && <RocketLaunch onDone={() => setShowRocket(false)} />}
 
       {coinToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] animate-bounce">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] max-w-[calc(100%-2rem)] animate-bounce">
           <div className="card-retro !py-3 !px-5 bg-secondary flex items-center gap-3">
-            <span className="font-dungeon text-2xl text-on-accent">+{coinToast.coins} C</span>
-            <div>
+            <span className="font-dungeon text-2xl text-on-accent shrink-0">+{coinToast.coins} C</span>
+            <div className="min-w-0">
               <p className="text-[0.625rem] font-bold text-on-accent opacity-70">완료!</p>
               <p className="text-xs font-extrabold text-on-accent truncate max-w-[200px]">{coinToast.taskTitle}</p>
             </div>
