@@ -48,10 +48,19 @@ const CATEGORY_COLOR = {
   HOBBY: '#C07862', OTHER: '#8A8578',
 }
 
+// 누적 집중 분 → "N분" / "H시간 M분" (검증 통과한 뽀모도로 세션만 서버가 누적)
+const formatFocusTotal = (minutes) => {
+  const m = Number(minutes) || 0
+  if (m < 60) return `${m}분`
+  const h = Math.floor(m / 60)
+  const rest = m % 60
+  return rest > 0 ? `${h}시간 ${rest}분` : `${h}시간`
+}
+
 // 정거장 모듈 — 테마 라벨과 기능 라벨 병기
 const STAT_CARDS = (stats) => [
   { theme: '수거한 생각', label: '완료한 태스크', value: stats.totalDone, bg: 'bg-primary', text: 'text-on-accent' },
-  { theme: '처리 중', label: '진행 중', value: stats.totalInProgress, bg: 'bg-secondary', text: 'text-on-accent' },
+  { theme: '집중 관제', label: '뽀모도로 집중', value: `${stats.pomodoroTotalSessions ?? 0}회`, sub: `누적 ${formatFocusTotal(stats.pomodoroTotalMinutes)}`, bg: 'bg-secondary', text: 'text-on-accent' },
   { theme: '궤도 유지', label: '연속 완료', value: `${stats.streak}일`, bg: 'bg-chip', text: 'text-dark', sub: '오늘 기준' },
   { theme: '자원', label: '보유 코인', value: stats.coinBalance, bg: 'bg-card', text: 'text-dark', icon: coinImage },
   { label: '브레인 덤프', value: stats.brainDumpCount, bg: 'bg-card', text: 'text-dark' },

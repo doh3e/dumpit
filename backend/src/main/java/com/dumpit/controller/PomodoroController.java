@@ -56,6 +56,7 @@ public class PomodoroController {
         if (elapsedEnough) {
             coins = Math.max(1, focusMinutes / 5);
             user.addCoins(coins);
+            user.recordPomodoroFocus(focusMinutes);
         }
         user.clearPomodoro(); // 성공이든 아니든 세션 소거 — 같은 start로 재청구 불가
         userRepository.save(user);

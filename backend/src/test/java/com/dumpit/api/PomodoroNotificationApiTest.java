@@ -75,6 +75,50 @@ class PomodoroNotificationApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    void 완료_검증통과시_누적집중_증가() throws Exception {
+        mockMvc.perform(post("/pomodoro/start").with(asUser(USER_A)))
+                .andExpect(status().isOk());
+        backdatePomodoroStart(USER_A, 26);
+
+        mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 25))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/me/stats").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pomodoroTotalMinutes").value(25))
+                .andExpect(jsonPath("$.pomodoroTotalSessions").value(1));
+
+        // 세션 소거 후 재청구는 코인처럼 통계도 안 쌓인다
+        mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 25))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/me/stats").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pomodoroTotalMinutes").value(25))
+                .andExpect(jsonPath("$.pomodoroTotalSessions").value(1));
+    }
+
+    @Test
+    void 완료_경과부족이면_누적집중_안쌓임() throws Exception {
+        mockMvc.perform(post("/pomodoro/start").with(asUser(USER_A)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 25))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/me/stats").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pomodoroTotalMinutes").value(0))
+                .andExpect(jsonPath("$.pomodoroTotalSessions").value(0));
+    }
+
+    @Test
     void 완료_시작기록_없으면_0코인() throws Exception {
         mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
                         .contentType(MediaType.APPLICATION_JSON)

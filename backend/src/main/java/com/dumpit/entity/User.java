@@ -58,6 +58,13 @@ public class User {
     // 진행 중인 뽀모도로 집중 세션 시작 시각 — 완료 시 경과시간 검증 후 소거 (동시 1세션)
     private LocalDateTime pomodoroStartedAt;
 
+    // 검증 통과한 집중 세션만 누적 — 마이페이지 통계용 (코인 지급과 동일 기준이라 파밍으로 못 불림)
+    @Column(nullable = false)
+    private Integer pomodoroTotalMinutes = 0;
+
+    @Column(nullable = false)
+    private Integer pomodoroTotalSessions = 0;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -110,6 +117,11 @@ public class User {
         this.pomodoroStartedAt = null;
     }
 
+    public void recordPomodoroFocus(int minutes) {
+        this.pomodoroTotalMinutes += minutes;
+        this.pomodoroTotalSessions += 1;
+    }
+
     public boolean isActive() {
         return status == Status.ACTIVE;
     }
@@ -145,6 +157,8 @@ public class User {
         this.bio = null;
         this.providerId = "withdrawn:" + suffix;
         this.coinBalance = 0;
+        this.pomodoroTotalMinutes = 0;
+        this.pomodoroTotalSessions = 0;
         this.bannedAt = null;
         this.banReason = null;
     }

@@ -131,6 +131,7 @@ public class ProfileController {
                 totalDone, totalTodo, totalInProgress,
                 categoryBreakdown, streak, heatmap,
                 brainDumpCount, ideaCount,
+                user.getPomodoroTotalMinutes(), user.getPomodoroTotalSessions(),
                 user.getCoinBalance()
         ));
     }
@@ -183,7 +184,8 @@ public class ProfileController {
     public record StatsResponse(
             long totalDone, long totalTodo, long totalInProgress,
             Map<String, Long> categoryBreakdown, int streak, Map<String, Integer> heatmap,
-            long brainDumpCount, long ideaCount, int coinBalance) {}
+            long brainDumpCount, long ideaCount,
+            int pomodoroTotalMinutes, int pomodoroTotalSessions, int coinBalance) {}
     public record OverdueTaskResponse(
             UUID taskId, String title, String category,
             LocalDateTime deadline, Integer estimatedMinutes) {}
