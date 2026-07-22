@@ -56,7 +56,7 @@ class ShopApiTest extends ApiIntegrationTestBase {
     // ---------- GET /shop/catalog ----------
 
     @Test
-    void 카탈로그_52종_반환_및_구매전후_owned_equipped_플래그_변화() throws Exception {
+    void 카탈로그_62종_반환_및_구매전후_owned_equipped_플래그_변화() throws Exception {
         seedCoins(userA, 1000);
 
         JsonNode before = catalogBody(USER_A);
@@ -112,7 +112,7 @@ class ShopApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.items.length()").value(62)));
 
         // 실측값 3 (2026-07-13 측정, 강제 실패로 확인: Expecting actual: 3L / 유저 조회 1 + 구매목록 1 + 장착목록 1,
-        // 카탈로그 자체는 인메모리 리스트라 아이템 26종·구매 4건에도 N+1 없음) + 여유 2 = 5로 고정
+        // 카탈로그 자체는 인메모리 리스트라 아이템 62종·구매 4건에도 N+1 없음) + 여유 2 = 5로 고정
         assertThat(count).isLessThanOrEqualTo(5);
     }
 
