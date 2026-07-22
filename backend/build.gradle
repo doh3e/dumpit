@@ -44,6 +44,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
 
+    // 모바일 구글 ID 토큰 JWKS 로컬 검증
+    implementation 'org.springframework.security:spring-security-oauth2-jose'
+
     // Spring Data Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.session:spring-session-data-redis'
