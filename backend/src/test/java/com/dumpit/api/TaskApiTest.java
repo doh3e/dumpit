@@ -39,7 +39,7 @@ class TaskApiTest extends ApiIntegrationTestBase {
         // create/update가 예상치 못하게 AI 추론 분기를 타도 NPE 없이 넘어가도록 하는 안전망
         given(openAiService.scorePriority(any(), any(), any(), any()))
                 .willReturn(new OpenAiService.PriorityResult(0.6, "WORK", "테스트 사유"));
-        given(openAiService.inferSchedule(any(), any(), any(), any(), any()))
+        given(openAiService.inferSchedule(any(), any(), any(), any(), any(), any()))
                 .willReturn(new OpenAiService.ScheduleInferenceResult(null, null, 30, "테스트 사유"));
     }
 

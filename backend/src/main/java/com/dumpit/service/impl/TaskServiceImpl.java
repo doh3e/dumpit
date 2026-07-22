@@ -14,6 +14,7 @@ import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.ShopService;
 import com.dumpit.service.TaskService;
+import com.dumpit.service.UserSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,7 @@ public class TaskServiceImpl implements TaskService {
     private final AiUsageService aiUsageService;
     private final ActivityLogService activityLogService;
     private final ShopService shopService;
+    private final UserSettingsService userSettingsService;
 
     @Override
     @Transactional(readOnly = true)
@@ -71,7 +73,7 @@ public class TaskServiceImpl implements TaskService {
             throw new BadRequestException("기한 없는 일에는 마감 시간을 함께 보낼 수 없어요.");
         }
         User user = findUser(email);
-        ScheduleFields schedule = inferScheduleIfNeeded(title, description, startTime, deadline, estimatedMinutes, noDeadline);
+        ScheduleFields schedule = inferScheduleIfNeeded(email, title, description, startTime, deadline, estimatedMinutes, noDeadline);
         validateSchedule(schedule.startTime(), schedule.deadline(), schedule.estimatedMinutes());
         Task task = Task.of(user, title, description, schedule.deadline(), schedule.estimatedMinutes());
 
@@ -124,7 +126,7 @@ public class TaskServiceImpl implements TaskService {
         boolean scheduleTouched = fields.hasDeadline() || fields.hasEstimatedMinutes()
                 || fields.hasStartTime() || fields.noDeadline();
         ScheduleFields nextSchedule = scheduleTouched
-                ? inferScheduleIfNeeded(nextTitle, nextDescription, nextStartTime, nextDeadline, nextEstimatedMinutes, fields.noDeadline())
+                ? inferScheduleIfNeeded(email, nextTitle, nextDescription, nextStartTime, nextDeadline, nextEstimatedMinutes, fields.noDeadline())
                 : new ScheduleFields(nextStartTime, nextDeadline, nextEstimatedMinutes);
 
         if (fields.title() != null) task.setTitle(fields.title());
@@ -314,7 +316,7 @@ public class TaskServiceImpl implements TaskService {
         return (int) (10 + priority * 40);
     }
 
-    private ScheduleFields inferScheduleIfNeeded(String title, String description,
+    private ScheduleFields inferScheduleIfNeeded(String email, String title, String description,
                                                  LocalDateTime startTime,
                                                  LocalDateTime deadline,
                                                  Integer estimatedMinutes,
@@ -323,7 +325,8 @@ public class TaskServiceImpl implements TaskService {
             // '언젠가' 선언: 마감·시작시간은 추론으로 채우지 않는다 — 유저가 입력한 시작시간만 보존
             Integer minutes = estimatedMinutes != null
                     ? estimatedMinutes
-                    : openAiService.inferSchedule(title, description, startTime, null, null).estimatedMinutes();
+                    : openAiService.inferSchedule(title, description, startTime, null, null,
+                            userSettingsService.activeHours(email)).estimatedMinutes();
             return new ScheduleFields(startTime, null, minutes);
         }
         // 마감이 확정돼 있고 다른 시간 정보도 있으면 AI 호출 없이 그대로 사용.
@@ -332,7 +335,8 @@ public class TaskServiceImpl implements TaskService {
             return new ScheduleFields(startTime, deadline, estimatedMinutes);
         }
         OpenAiService.ScheduleInferenceResult inferred =
-                openAiService.inferSchedule(title, description, startTime, deadline, estimatedMinutes);
+                openAiService.inferSchedule(title, description, startTime, deadline, estimatedMinutes,
+                        userSettingsService.activeHours(email));
         LocalDateTime nextStart = startTime != null ? startTime : parseDateTime(inferred.startTime());
         LocalDateTime nextDeadline = deadline != null ? deadline : parseDateTime(inferred.deadline());
         // AI 추론값이 시작≥마감 쌍을 만들면 추론된 쪽을 버린다 — 유저 입력은 보존
