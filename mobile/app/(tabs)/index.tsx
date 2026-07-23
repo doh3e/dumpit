@@ -5,6 +5,7 @@ import { getApiErrorMessage } from '../../src/api/client';
 import type { TaskResponse, TaskStatus } from '../../src/api/types';
 import { useAuth } from '../../src/auth/AuthContext';
 import { HomeAppBar } from '../../src/components/home/HomeAppBar';
+import { MiniCalendar } from '../../src/components/home/MiniCalendar';
 import { NowHeroCard } from '../../src/components/home/NowHeroCard';
 import { TaskListCard } from '../../src/components/home/TaskListCard';
 import type { TogglePos } from '../../src/components/home/TaskRow';
@@ -145,7 +146,7 @@ export default function HomeScreen() {
               onPressTask={editTask}
               onPressBoard={() => { /* Task 16: router.push('/task-board') 연결 */ }}
             />
-            {/* Task 13: MiniCalendar */}
+            <MiniCalendar tasks={planning.data.tasks} onTaskAdded={() => planning.refetch()} />
           </>
         )}
       </ScrollView>
