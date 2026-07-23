@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { installSilentReauth } from '../reauth';
+import { bypassReauth, installSilentReauth } from '../reauth';
 
 /** 응답 시퀀스를 주입한 axios 인스턴스 — 어댑터 교체로 네트워크 없이 검증 */
 function makeInstance(responses: Array<{ status: number; data?: unknown }>) {
@@ -60,6 +60,29 @@ it('로그인 엔드포인트 자체의 401은 건드리지 않는다', async ()
   await expect(instance.post('/auth/mobile/google', {})).rejects.toBeTruthy();
   expect(reauth).not.toHaveBeenCalled();
   expect(calls()).toBe(1);
+});
+
+it('reauth 내부 요청의 401은 pending을 기다리지 않고 즉시 실패한다 (순환 대기 방지)', async () => {
+  // 원요청 401 → reauth가 같은 인스턴스로 /auth/me 호출(bypassReauth) → 그것도 401
+  const { instance, calls } = makeInstance([{ status: 401 }, { status: 401 }]);
+  const reauth = jest.fn(async () => {
+    try {
+      await instance.get('/auth/me', bypassReauth());
+      return true;
+    } catch {
+      return false;
+    }
+  });
+  installSilentReauth(instance, reauth);
+  // 데드락이면 이 프라미스는 영원히 settle되지 않는다 — 5초 타임아웃 가드
+  await expect(
+    Promise.race([
+      instance.get('/x').catch((e) => e.response?.status),
+      new Promise((_r, rej) => setTimeout(() => rej(new Error('deadlock')), 5000)),
+    ]),
+  ).resolves.toBe(401);
+  expect(reauth).toHaveBeenCalledTimes(1);
+  expect(calls()).toBe(2);   // 원요청 + reauth 내부 /auth/me
 });
 
 it('동시 401 여러 건이면 reauth는 한 번만 돈다', async () => {

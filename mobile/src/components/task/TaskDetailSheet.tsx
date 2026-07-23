@@ -24,8 +24,8 @@ import { SubtaskProposalSheet, type SubtaskProposalSheetHandle } from './Subtask
 
 export type TaskDetailSheetHandle = { present(task: TaskResponse): void };
 
+// 웹 EditTaskModal 패리티 — 수정에서는 AI 재추론 모드 없음 (PATCH가 마감 재추론을 보장하지 않음)
 const DEADLINE_MODES: { id: DeadlineMode; label: string; emoji?: string }[] = [
-  { id: 'AI', label: 'AI가 다시', emoji: '✨' },
   { id: 'TODAY', label: '오늘까지' },
   { id: 'NONE', label: '언젠가', emoji: '🌙' },
   { id: 'CUSTOM', label: '직접', emoji: '📅' },
@@ -39,6 +39,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
   const aiUsage = useAiUsage();
   const sheetRef = useRef<BottomSheetModal>(null);
   const splitRef = useRef<SubtaskProposalSheetHandle>(null);
+  // 지금 열려 있는 태스크 id — 늦게 도착한 응답이 다른 태스크 상태를 오염시키지 않게 가드
+  const presentedIdRef = useRef<string | null>(null);
 
   const [task, setTask] = useState<TaskResponse | null>(null);
   const [title, setTitle] = useState('');
@@ -59,6 +61,10 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
 
   useImperativeHandle(ref, () => ({
     present(target: TaskResponse) {
+      presentedIdRef.current = target.taskId;
+      setStickerBusy(false);
+      setReanalyzing(false);
+      setSaving(false);
       setTask(target);
       setTitle(target.title);
       setDescription(target.description ?? '');
@@ -77,35 +83,42 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
 
   const applySticker = useCallback(async (code: string | null) => {
     if (!task) return;
+    const id = task.taskId;
     setStickerBusy(true);
-    const prev = qc.getQueryData<PlanningResponse>(keys.planning);
-    if (prev) qc.setQueryData(keys.planning, updateTaskInPlanning(prev, task.taskId, { stickerCode: code }));
+    await qc.cancelQueries({ queryKey: keys.planning });
+    const prevTask = qc.getQueryData<PlanningResponse>(keys.planning)?.tasks.find((t) => t.taskId === id) ?? null;
+    qc.setQueryData<PlanningResponse>(keys.planning, (cur) =>
+      cur ? updateTaskInPlanning(cur, id, { stickerCode: code }) : cur);
     try {
-      const updated = await setSticker(task.taskId, code);
-      setTask(updated);
+      const updated = await setSticker(id, code);
       qc.invalidateQueries({ queryKey: keys.planning });
+      if (presentedIdRef.current !== id) return;   // 늦은 응답 — 다른 태스크가 열려 있음
+      setTask(updated);
     } catch (e) {
-      if (prev) qc.setQueryData(keys.planning, prev);
+      qc.setQueryData<PlanningResponse>(keys.planning, (cur) =>
+        cur && prevTask ? updateTaskInPlanning(cur, id, { stickerCode: prevTask.stickerCode }) : cur);
       toast.show(getApiErrorMessage(e, '스티커를 바꾸지 못했어요.'));
     } finally {
-      setStickerBusy(false);
+      if (presentedIdRef.current === id) setStickerBusy(false);
     }
   }, [task, qc, toast]);
 
   const reanalyze = useCallback(async () => {
     if (!task) return;
+    const id = task.taskId;
     setReanalyzing(true);
     try {
-      const updated = await reanalyzeTask(task.taskId);
+      const updated = await reanalyzeTask(id);
       invalidateAfterAi(qc);
       qc.invalidateQueries({ queryKey: keys.planning });
+      if (presentedIdRef.current !== id) return;   // 늦은 응답 가드
       setTask(updated);
       setPriorityScore(updated.aiPriorityScore ?? 0.5);
       toast.show('AI가 중요도를 다시 매겼어요.');
     } catch (e) {
       toast.show(getApiErrorMessage(e, 'AI 재분석에 실패했어요.'));
     } finally {
-      setReanalyzing(false);
+      if (presentedIdRef.current === id) setReanalyzing(false);
     }
   }, [task, qc, toast]);
 
@@ -125,8 +138,6 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       };
       // 원래 고정이었거나 시작시간을 바꾼 경우만 잠금 (웹 EditTaskModal:83 이식)
       payload.isLocked = Boolean(useStart && startTime && (task.isLocked || startTime !== initialStartTime));
-      // PATCH는 부분 업데이트 — AI 모드는 deadline 미포함으로 기존값 유지·재추론에 맡김
-      if (deadlineMode === 'AI') delete payload.deadline;
       await patchTask(task.taskId, payload);
       qc.invalidateQueries({ queryKey: keys.planning });
       toast.show('저장했어요.');
@@ -203,11 +214,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
               <Chip key={m.id} label={m.label} emoji={m.emoji} selected={deadlineMode === m.id} onPress={() => setDeadlineMode(m.id)} />
             ))}
           </View>
-          {deadlineMode === 'AI' && (
-            <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>저장하면 AI가 마감을 다시 잡아요.</Text>
-          )}
           {deadlineMode === 'CUSTOM' && (
-            <DateTimeField value={customDeadline} onChange={setCustomDeadline} placeholder="마감 일시 선택" />
+            <DateTimeField value={customDeadline} onChange={setCustomDeadline} minimumDate={new Date()} placeholder="마감 일시 선택" />
           )}
 
           <View style={styles.optionRow}>

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from 'react-native';
 import type { TaskResponse, TaskStatus } from '../../api/types';
 import { getCategory } from '../../tasks/constants';
@@ -19,7 +20,7 @@ type Props = {
 };
 
 /** 리스트 공용 태스크 행 — 체크박스(완료 토글) + 본문(상세 진입) + 메타 */
-export function TaskRow({ task, overdue = false, child = false, onToggle, onPress }: Props) {
+export const TaskRow = memo(function TaskRow({ task, overdue = false, child = false, onToggle, onPress }: Props) {
   const { colors } = useTheme();
   const done = task.status === 'DONE';
   const category = getCategory(task.category);
@@ -105,7 +106,7 @@ export function TaskRow({ task, overdue = false, child = false, onToggle, onPres
       </Pressable>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 10, paddingVertical: 8, alignItems: 'flex-start' },

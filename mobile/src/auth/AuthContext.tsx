@@ -1,8 +1,9 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import axios from 'axios';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { fetchMe, loginWithGoogleIdToken, logout, type MeResponse } from '../api/auth';
 import { api } from '../api/client';
-import { installSilentReauth } from '../api/reauth';
+import { bypassReauth, installSilentReauth } from '../api/reauth';
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
@@ -14,7 +15,8 @@ async function silentReauth(): Promise<boolean> {
     const result = await GoogleSignin.signInSilently();
     const idToken = result.type === 'success' ? result.data?.idToken : null;
     if (!idToken) return false;
-    await loginWithGoogleIdToken(idToken);
+    // 내부 /auth/me가 다시 401이어도 인터셉터의 pending(자기 자신)을 기다리지 않도록 우회
+    await loginWithGoogleIdToken(idToken, bypassReauth());
     return true;
   } catch {
     return false;
@@ -41,8 +43,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       setMe(await fetchMe()); // 세션 쿠키가 살아있으면 자동 로그인
-    } catch {
-      setMe(null);
+    } catch (e) {
+      // 인증 거부(401/403)만 로그아웃 처리 — 타임아웃·5xx 같은 일시 오류로 쫓아내지 않는다
+      const status = axios.isAxiosError(e) ? e.response?.status : undefined;
+      if (status === 401 || status === 403) setMe(null);
     } finally {
       setLoading(false);
     }

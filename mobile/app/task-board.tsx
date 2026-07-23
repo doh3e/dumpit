@@ -104,7 +104,7 @@ export default function TaskBoardScreen() {
             task={item}
             overdue={section.key === 'overdue'}
             child={!!item.parentTaskId}
-            onToggle={(task, next) => onToggle(task, next)}
+            onToggle={onToggle}
             onPress={onPressTask}
           />
         )}

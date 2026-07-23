@@ -117,7 +117,7 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
     setAddingEventId(event.id);
     try {
       await createTask({
-        title: event.summary!,
+        title: event.summary ?? '(제목 없음)',   // 제목 없는 이벤트도 서버 @NotBlank에 안 걸리게
         description: '구글 캘린더에서 가져옴',
         deadline: event.end ?? event.start ?? null,
         startTime: event.start ?? null,

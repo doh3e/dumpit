@@ -21,7 +21,7 @@ describe('auth api', () => {
     const me = await loginWithGoogleIdToken('tok');
 
     expect(mockedApi.post).toHaveBeenCalledWith('/auth/mobile/google', { idToken: 'tok' });
-    expect(mockedApi.get).toHaveBeenCalledWith('/auth/me');
+    expect(mockedApi.get).toHaveBeenCalledWith('/auth/me', undefined);
     expect(me.email).toBe('a@b.c');
   });
 
@@ -30,7 +30,7 @@ describe('auth api', () => {
       data: { email: 'a@b.c', name: '유저', picture: null, coins: 3, isAdmin: false },
     });
     const me = await fetchMe();
-    expect(mockedApi.get).toHaveBeenCalledWith('/auth/me');
+    expect(mockedApi.get).toHaveBeenCalledWith('/auth/me', undefined);
     expect(me.coins).toBe(3);
   });
 });

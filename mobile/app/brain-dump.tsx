@@ -238,7 +238,8 @@ export default function BrainDumpScreen() {
   const allSelected = tasks.length > 0 && selectedCount === tasks.length;
   const insufficient = aiUsage.data != null
     && aiUsage.data.remaining < AI_COSTS.BRAIN_DUMP;
-  const analysisDisabled = !text.trim() || aiUsage.data == null || insufficient;
+  // usage 조회 실패 시엔 막지 않는다 — 한도는 서버(429)가 최종 판정
+  const analysisDisabled = !text.trim() || insufficient;
 
   const requestExit = useCallback(() => {
     if (text.length === 0) {

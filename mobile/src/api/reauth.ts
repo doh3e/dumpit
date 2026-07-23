@@ -1,8 +1,23 @@
-import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import type { AxiosError, AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
+
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    /** 이 요청의 401에 silent re-auth를 개입시키지 않음 (재시도 요청·reauth 내부 요청) */
+    _reauthRetried?: boolean;
+  }
+}
 
 type RetriableConfig = InternalAxiosRequestConfig & { _reauthRetried?: boolean };
 
 const AUTH_PATHS = ['/auth/mobile/google'];
+
+/**
+ * reauth 플로우 내부에서 같은 인스턴스로 보내는 요청에 붙일 config.
+ * 이 플래그가 없으면 reauth 내부의 401이 자기 자신(pending)을 기다리는 순환 대기가 된다.
+ */
+export function bypassReauth(): AxiosRequestConfig {
+  return { _reauthRetried: true };
+}
 
 /**
  * 세션 만료(401) → silent re-auth 1회 → 원요청 재시도.

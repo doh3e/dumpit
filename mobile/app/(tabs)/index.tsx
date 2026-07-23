@@ -62,7 +62,8 @@ export default function HomeScreen() {
           onError: (e) => toast.show(getApiErrorMessage(e, '상태 변경에 실패했어요.')),
           onSuccess: (data) => {
             if (next !== 'DONE') return;
-            const coins = data.coinsGranted || calcCompletionCoins(task);
+            // 서버 실지급액 신뢰 — 점감으로 0이면 토스트 생략 (|| 폴백 금지)
+            const coins = data.coinsGranted ?? calcCompletionCoins(task);
             if (coins > 0) setCoinToast({ id: Date.now(), coins, taskTitle: task.title });
           },
         },
@@ -99,10 +100,13 @@ export default function HomeScreen() {
     }, [refetchPlanning]),
   );
 
+  // 풀투리프레시 스피너는 수동 제스처 전용 — invalidate로 도는 백그라운드 리페치에 반응하지 않게
+  const [pulling, setPulling] = useState(false);
+  const { refetch: refetchAiUsage } = aiUsage;
   const onRefresh = useCallback(() => {
-    planning.refetch();
-    aiUsage.refetch();
-  }, [planning, aiUsage]);
+    setPulling(true);
+    Promise.all([refetchPlanning(), refetchAiUsage()]).finally(() => setPulling(false));
+  }, [refetchPlanning, refetchAiUsage]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -110,7 +114,7 @@ export default function HomeScreen() {
       <ScrollView
         refreshControl={
           <RefreshControl
-            refreshing={planning.isRefetching}
+            refreshing={pulling}
             onRefresh={onRefresh}
             colors={[colors.accent]}
             tintColor={colors.accent}

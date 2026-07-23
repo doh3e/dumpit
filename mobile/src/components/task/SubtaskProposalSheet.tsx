@@ -26,6 +26,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
     const toast = useToast();
     const qc = useQueryClient();
     const sheetRef = useRef<BottomSheetModal>(null);
+    const presentedIdRef = useRef<string | null>(null);
 
     const [task, setTask] = useState<TaskResponse | null>(null);
     const [items, setItems] = useState<Item[]>([]);
@@ -33,11 +34,13 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
     const [saving, setSaving] = useState(false);
 
     const load = useCallback(async (target: TaskResponse) => {
+      const id = target.taskId;
       setLoading(true);
       setItems([]);
       try {
-        const res = await proposeSplit(target.taskId);
+        const res = await proposeSplit(id);
         invalidateAfterAi(qc);
+        if (presentedIdRef.current !== id) return;   // 늦은 응답 — 다른 태스크로 재열림
         setItems(res.subtasks.map((s) => ({
           include: true,
           title: s.title,
@@ -45,15 +48,18 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
           estimate: s.estimatedMinutes != null ? String(s.estimatedMinutes) : '',
         })));
       } catch (e) {
+        if (presentedIdRef.current !== id) return;
         toast.show(getApiErrorMessage(e, 'AI 제안을 받지 못했어요.'));
         sheetRef.current?.dismiss();
       } finally {
-        setLoading(false);
+        if (presentedIdRef.current === id) setLoading(false);
       }
     }, [qc, toast]);
 
     useImperativeHandle(ref, () => ({
       present(target: TaskResponse) {
+        presentedIdRef.current = target.taskId;
+        setSaving(false);
         setTask(target);
         sheetRef.current?.present();
         load(target);

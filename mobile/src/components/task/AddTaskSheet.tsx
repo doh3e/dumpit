@@ -100,6 +100,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
       enableDynamicSizing
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
+      onDismiss={reset}
       backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
       handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
     >

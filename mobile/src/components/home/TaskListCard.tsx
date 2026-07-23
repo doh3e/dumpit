@@ -63,23 +63,20 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
     [sections.recentDone],
   );
 
-  const childIds = useMemo(() => {
-    const all = [...overdue, ...tabTasks];
-    const ids = new Set(all.map((t) => t.taskId));
-    return new Set(all.filter((t) => t.parentTaskId && ids.has(t.parentTaskId)).map((t) => t.taskId));
-  }, [overdue, tabTasks]);
-
-  const renderRows = (list: TaskResponse[], isOverdue = false) =>
-    list.map((t) => (
+  // 자식 판정은 렌더하는 리스트 기준 — '전부' 탭 섹션에서도 들여쓰기가 유지된다
+  const renderRows = (list: TaskResponse[], isOverdue = false) => {
+    const ids = new Set(list.map((t) => t.taskId));
+    return list.map((t) => (
       <TaskRow
         key={t.taskId}
         task={t}
         overdue={isOverdue}
-        child={childIds.has(t.taskId)}
+        child={!!t.parentTaskId && ids.has(t.parentTaskId)}
         onToggle={onToggle}
         onPress={onPressTask}
       />
     ));
+  };
 
   return (
     <RetroCard style={{ paddingBottom: 10 }}>
@@ -144,7 +141,7 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
                   {t.title}
                 </Text>
                 <Text style={[styles.doneMeta, { color: colors.starlight, fontFamily: fonts.chrome }]}>
-                  +{t.coinsGranted || calcCompletionCoins(t)}
+                  +{t.coinsGranted ?? calcCompletionCoins(t)}
                 </Text>
                 {t.completedAt && (
                   <Text style={[styles.doneMeta, { color: colors.sub, fontFamily: fonts.chrome }]}>
