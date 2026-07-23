@@ -356,8 +356,9 @@ export default function BrainDumpScreen() {
               머릿속 할 일을 형식 없이 자유롭게 쏟아내세요.
             </Text>
             <RetroCard style={styles.inputCard} hero>
+              {/* 한글 IME 조합 보호 — uncontrolled, 분석 실패 복귀 시 defaultValue로 드래프트 복원 */}
               <TextInput
-                value={text}
+                defaultValue={text}
                 onChangeText={setText}
                 multiline
                 maxLength={MAX_LENGTH}

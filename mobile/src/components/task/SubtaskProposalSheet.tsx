@@ -134,7 +134,8 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
               </Pressable>
               <View style={styles.itemBody}>
                 <BottomSheetTextInput
-                  value={item.title}
+                  key={`st-${task?.taskId ?? 'none'}-${idx}`}
+                  defaultValue={item.title}
                   onChangeText={(v) => patchItem(idx, { title: v })}
                   maxLength={200}
                   style={[styles.itemInput, { borderColor: colors.line, color: colors.fg, fontFamily: fonts.body, backgroundColor: colors.bg }]}

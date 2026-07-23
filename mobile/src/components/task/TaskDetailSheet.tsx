@@ -190,15 +190,18 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
         <BottomSheetScrollView contentContainerStyle={styles.body}>
           <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 상세</Text>
 
+          {/* 한글 IME 조합 보호 — uncontrolled, 태스크 바뀌면 key로 리마운트 */}
           <BottomSheetTextInput
-            value={title}
+            key={`title-${task?.taskId ?? 'none'}`}
+            defaultValue={task?.title ?? ''}
             onChangeText={setTitle}
             maxLength={200}
             style={[styles.input, { borderColor: colors.line, color: colors.fg, fontFamily: fonts.body, backgroundColor: colors.bg }]}
             accessibilityLabel="제목"
           />
           <BottomSheetTextInput
-            value={description}
+            key={`memo-${task?.taskId ?? 'none'}`}
+            defaultValue={task?.description ?? ''}
             onChangeText={setDescription}
             maxLength={1000}
             multiline

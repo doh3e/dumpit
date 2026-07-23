@@ -48,6 +48,8 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
   const [estimate, setEstimate] = useState('');
   const [category, setCategory] = useState<Category | null>(null);
   const [saving, setSaving] = useState(false);
+  // 한글 IME 조합 보호: 입력은 uncontrolled — 리셋은 key 교체로 리마운트
+  const [formKey, setFormKey] = useState(0);
 
   const remaining = aiUsage.data?.remaining ?? Infinity;
 
@@ -69,6 +71,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
   const reset = useCallback(() => {
     setTitle(''); setDescription(''); setDeadlineMode('AI'); setCustomDeadline(null);
     setMoreOpen(false); setStartTime(null); setEstimate(''); setCategory(null);
+    setFormKey((k) => k + 1);   // uncontrolled 입력 리마운트
   }, []);
 
   const submit = useCallback(async () => {
@@ -108,7 +111,8 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
         <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 추가</Text>
 
         <BottomSheetTextInput
-          value={title}
+          key={`title-${formKey}`}
+          defaultValue=""
           onChangeText={setTitle}
           maxLength={200}
           autoFocus
@@ -118,7 +122,8 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
           accessibilityLabel="할 일 제목"
         />
         <BottomSheetTextInput
-          value={description}
+          key={`memo-${formKey}`}
+          defaultValue=""
           onChangeText={setDescription}
           maxLength={1000}
           multiline
