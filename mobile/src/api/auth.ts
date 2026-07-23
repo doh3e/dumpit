@@ -18,3 +18,7 @@ export async function loginWithGoogleIdToken(idToken: string): Promise<MeRespons
   await api.post('/auth/mobile/google', { idToken });
   return fetchMe();
 }
+
+export async function logout(): Promise<void> {
+  await api.post('/auth/logout');
+}
