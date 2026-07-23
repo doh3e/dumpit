@@ -80,3 +80,37 @@ export type DumpResponse = { dumpId: string; tasks: DumpTaskItem[] };
 
 /** 시큐리티 계층은 timestamp 없음, RestControllerAdvice 계층은 있음 */
 export type ApiErrorBody = { status: number; code: string; error: string; timestamp?: string };
+
+export type RepeatType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'MONTHLY_WEEKDAY';
+
+/** RoutineResponse.java 대응 — 시각은 "HH:mm(:ss)", 날짜는 "YYYY-MM-DD" */
+export type RoutineResponse = {
+  routineId: string;
+  name: string;
+  description: string | null;
+  enabled: boolean;
+  repeatType: RepeatType;
+  daysOfWeek: number[];            // 월=1..일=7
+  daysOfMonth: number[];
+  monthlyWeekOrdinal: number | null;
+  monthlyWeekDay: number | null;
+  runOnLastDayIfMissing: boolean;
+  createTime: string | null;
+  routineStartTime: string | null; // 서버가 null이면 createTime 폴백해 내려줌
+  routineEndTime: string | null;
+  startDate: string;
+  endDate: string | null;
+  lastGeneratedDate: string | null;
+  nextRunAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type UserSettings = {
+  routineStartHour: number;   // 0~23
+  routineEndHour: number;     // 0~23, start > end = 자정넘김
+  notificationsEnabled: boolean;
+  notificationThresholds: number[];
+};
+
+export type PomodoroSettleResponse = { coins: number; totalCoins: number; settledSessions: number };
