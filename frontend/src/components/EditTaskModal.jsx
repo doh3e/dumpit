@@ -7,6 +7,8 @@ import AiUsageBadge from './AiUsageBadge'
 import { EstimatedMinutesField, TaskDateTimeField } from './TaskTimeInputs'
 import DeadlineModeField, { getTodayDeadline } from './DeadlineModeField'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
+import { effectivePriority } from '../utils/priority'
+import { buildPriorityPatch } from '../utils/priorityPatch'
 
 const TASK_CATEGORIES = CATEGORIES.filter((category) => category.value !== 'ROUTINE')
 
@@ -39,6 +41,9 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   )
   const [category, setCategory] = useState(task.category || 'OTHER')
   const isUserOverridden = task.userPriorityScore != null
+  // 슬라이더를 실제로 움직였을 때만 지정값을 저장한다 — 저장만으로 자동 조정이 꺼지는 함정 방지
+  const [priorityDirty, setPriorityDirty] = useState(false)
+  const [clearOverride, setClearOverride] = useState(false)
   const [saving, setSaving] = useState(false)
   const [reanalyzing, setReanalyzing] = useState(false)
 
@@ -75,9 +80,9 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         deadline: effectiveDeadline || null,
         noDeadline: deadlineMode === 'NONE',
         estimatedMinutes: useEstimatedMinutes && estimatedMinutes ? parseInt(estimatedMinutes) : null,
-        userPriorityScore: priorityScore,
         category,
         startTime: useStartTime ? (startTime || null) : null,
+        ...buildPriorityPatch(priorityDirty, clearOverride, priorityScore),
       }
       // 원래 고정이었거나 사용자가 시작시간을 바꾼 경우만 고정 — 마감에서 파생된 슬롯이 편집 저장으로 잠기지 않게
       payload.isLocked = Boolean(useStartTime && startTime && (task.isLocked || startTime !== initialStartTime))
@@ -89,6 +94,18 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
       setSaving(false)
     }
   }
+
+  // 슬라이더(지정/AI 중요도)와 별개로, 저장 시 실제 적용될 실효값(마감 긴급도 반영)을 미리 보여준다
+  const pinnedMode = !clearOverride && (priorityDirty || isUserOverridden)
+  const hintDeadline =
+    deadlineMode === 'CUSTOM' ? (deadline || null)
+    : deadlineMode === 'TODAY' ? getTodayDeadline()
+    : null
+  const effectiveHint = effectivePriority({
+    userPriorityScore: pinnedMode ? priorityScore : null,
+    aiPriorityScore: priorityScore,
+    deadline: hintDeadline,
+  })
 
   const handleDelete = async () => {
     if (!confirm('정말 삭제할까요?')) return
@@ -209,7 +226,11 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             {isUserOverridden && (
               <button
                 type="button"
-                onClick={() => setPriorityScore(task.aiPriorityScore ?? 0.5)}
+                onClick={() => {
+                  setPriorityScore(task.aiPriorityScore ?? 0.5)
+                  setPriorityDirty(false)
+                  setClearOverride(true)
+                }}
                 className="ml-2 text-[0.625rem] text-primary underline"
               >
                 AI 점수로 초기화
@@ -222,7 +243,11 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             max="1"
             step="0.05"
             value={priorityScore}
-            onChange={(e) => setPriorityScore(parseFloat(e.target.value))}
+            onChange={(e) => {
+              setPriorityScore(parseFloat(e.target.value))
+              setPriorityDirty(true)
+              setClearOverride(false)
+            }}
             className="w-full accent-primary"
           />
           <div className="flex justify-between text-[0.625rem] text-sub font-bold mt-1">
@@ -230,6 +255,9 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             <span>보통</span>
             <span>높음</span>
           </div>
+          <p className="text-[0.625rem] text-sub font-bold mt-1">
+            마감 반영 실효 {Math.round(effectiveHint * 100)}점{pinnedMode ? ' · 지정값 기준' : ''}
+          </p>
           <button
             type="button"
             disabled={reanalyzing || !aiUsage.hasEnough(1)}
@@ -238,6 +266,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
               try {
                 const res = await api.post(`/tasks/${task.taskId}/reanalyze`)
                 setPriorityScore(res.data.aiPriorityScore ?? 0.5)
+                setPriorityDirty(false) // 재분석 결과는 지정이 아니다 — 저장해도 pin되지 않게
                 dispatchAiUsed()
               } catch (err) {
                 alert(getApiErrorMessage(err, 'AI 재분석에 실패했어요.'))
