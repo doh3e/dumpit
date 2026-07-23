@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { getApiErrorMessage } from '../../src/api/client';
@@ -146,7 +146,7 @@ export default function HomeScreen() {
               sections={planning.data.sections}
               onToggle={toggleTask}
               onPressTask={editTask}
-              onPressBoard={() => { /* Task 16: router.push('/task-board') 연결 */ }}
+              onPressBoard={() => router.push('/task-board' as Href)}
             />
             <MiniCalendar tasks={planning.data.tasks} onTaskAdded={() => planning.refetch()} />
           </>
