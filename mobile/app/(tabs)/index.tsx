@@ -1,20 +1,49 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { getApiErrorMessage } from '../../src/api/client';
+import type { TaskResponse } from '../../src/api/types';
 import { useAuth } from '../../src/auth/AuthContext';
 import { HomeAppBar } from '../../src/components/home/HomeAppBar';
+import { NowHeroCard } from '../../src/components/home/NowHeroCard';
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
-import { useAiUsage, usePlanning } from '../../src/query/hooks';
+import { useToast } from '../../src/components/retro/ToastProvider';
+import { useAiUsage, usePlanning, useToggleTask } from '../../src/query/hooks';
+import { isToday } from '../../src/tasks/dates';
 import { fonts } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
   const { me } = useAuth();
+  const toast = useToast();
   const planning = usePlanning();
   const aiUsage = useAiUsage();
+  const toggle = useToggleTask();
+
+  // 오늘 진행률 (웹 DashboardPage 파생 로직 이식)
+  const { todayDone, todayTotal, allDone } = useMemo(() => {
+    const todayTasks = (planning.data?.tasks ?? []).filter(
+      (t) => isToday(t.deadline) && t.status !== 'CANCELLED',
+    );
+    const done = todayTasks.filter((t) => t.status === 'DONE').length;
+    return { todayDone: done, todayTotal: todayTasks.length, allDone: todayTasks.length > 0 && done === todayTasks.length };
+  }, [planning.data]);
+
+  const completeTask = useCallback(
+    (task: TaskResponse) => {
+      toggle.mutate(
+        { taskId: task.taskId, status: 'DONE' },
+        { onError: (e) => toast.show(getApiErrorMessage(e, '완료 처리에 실패했어요.')) },
+      );
+    },
+    [toggle, toast],
+  );
+
+  const editTask = useCallback((_task: TaskResponse) => {
+    /* Task 15: TaskDetailSheet.present(task) 연결 */
+  }, []);
 
   // 탭 재진입 시 리페치 (staleTime 30s 안이면 캐시 즉시 표시 후 조용히 갱신)
   const { refetch: refetchPlanning } = planning;
@@ -58,14 +87,17 @@ export default function HomeScreen() {
         )}
         {planning.data && (
           <>
-            {/* Task 10: NowHeroCard */}
+            <NowHeroCard
+              nowSuggestion={planning.data.nowSuggestion}
+              queue={planning.data.focusRecommendations}
+              todayDone={todayDone}
+              todayTotal={todayTotal}
+              allDone={allDone}
+              onComplete={completeTask}
+              onEdit={editTask}
+            />
             {/* Task 11: TaskListCard */}
             {/* Task 13: MiniCalendar */}
-            <RetroCard>
-              <Text style={{ color: colors.sub, fontFamily: fonts.body, fontSize: 13 }}>
-                할 일 {planning.data.tasks.length}개 로드됨 — 카드가 곧 채워져요
-              </Text>
-            </RetroCard>
           </>
         )}
       </ScrollView>
