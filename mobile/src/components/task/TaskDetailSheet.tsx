@@ -133,6 +133,22 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
     }
   }, [task, qc, toast]);
 
+  // 재분석은 저장과 무관하게 즉시 서버 반영(웹 동일) — 눌렀을 때 명확히 고지하고 진행
+  const confirmReanalyze = useCallback(() => {
+    if (!task) return;
+    const warning = task.userPriorityScore != null
+      ? '\n직접 지정한 중요도는 해제되고 자동 조정으로 돌아가요.'
+      : '';
+    Alert.alert(
+      'AI 재분석',
+      `저장 버튼과 무관하게 지금 바로 적용돼요 (✨1점).${warning}`,
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '재분석', onPress: () => { reanalyze(); } },
+      ],
+    );
+  }, [task, reanalyze]);
+
   const save = useCallback(async () => {
     if (!task) return;
     setSaving(true);
@@ -312,7 +328,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
             )}
             <Chip
               label={reanalyzing ? '재분석 중…' : `✨ AI 재분석 (${AI_COSTS.TASK_REANALYZE}점)`}
-              onPress={reanalyze}
+              onPress={confirmReanalyze}
               disabled={reanalyzing || remaining < AI_COSTS.TASK_REANALYZE}
             />
           </View>
