@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 /**
  * 조회 시점에 규칙 기반 긴급도와 AI 중요도를 합성해 우선순위를 계산한다.
- * - userPriorityScore가 있으면 무조건 그 값을 쓴다 (사용자 통제권 우선).
+ * - userPriorityScore가 있으면 그 값을 바닥으로 보장하되, 마감 임박 시 합성값이 위로 끌어올린다 (2026-07-24 정책).
  * - 긴급도는 마감까지 남은 시간으로 결정적으로 계산되므로 시간이 지나면 자동으로 올라간다.
  * - aiPriorityScore는 LLM이 평가한 "중요도"다 (프롬프트 priority-v2부터 긴급도 미반영).
  */
@@ -21,11 +21,13 @@ public final class PriorityCalculator {
     private PriorityCalculator() {}
 
     public static Double effectivePriority(Task task, LocalDateTime now) {
-        if (task.getUserPriorityScore() != null) {
-            return task.getUserPriorityScore();
+        double urgency = urgencyScore(task.getDeadline(), now);
+        Double userScore = task.getUserPriorityScore();
+        if (userScore != null) {
+            // 바닥+합성: 지정값은 바닥으로 보장하고, 마감이 다가오면 합성값이 그 위로 끌어올린다
+            return Math.max(userScore, URGENCY_WEIGHT * urgency + IMPORTANCE_WEIGHT * userScore);
         }
         double importance = task.getAiPriorityScore() != null ? task.getAiPriorityScore() : DEFAULT_IMPORTANCE;
-        double urgency = urgencyScore(task.getDeadline(), now);
         return URGENCY_WEIGHT * urgency + IMPORTANCE_WEIGHT * importance;
     }
 
