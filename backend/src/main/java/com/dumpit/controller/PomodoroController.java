@@ -65,10 +65,13 @@ public class PomodoroController {
         int newSettled = 0;
         int coins = 0;
         if (user.getPomodoroStartedAt() != null && user.hasPomodoroPlan()) {
+            // 저장값도 클램프를 거쳐 언박싱 — 부분 null 행(수동 편집 등)이 NPE 500을 내지 않게
             PomodoroSettleCalculator.Plan plan = new PomodoroSettleCalculator.Plan(
-                    user.getPomodoroPlanFocusMinutes(), user.getPomodoroPlanBreakMinutes(),
-                    user.getPomodoroPlanLongBreakMinutes(), user.getPomodoroPlanLongBreakEvery(),
-                    user.getPomodoroPlanSetsTarget());
+                    clamp(user.getPomodoroPlanFocusMinutes(), 1, 120, 25),
+                    clamp(user.getPomodoroPlanBreakMinutes(), 1, 120, 5),
+                    clamp(user.getPomodoroPlanLongBreakMinutes(), 1, 120, 15),
+                    clamp(user.getPomodoroPlanLongBreakEvery(), 1, 12, 4),
+                    clamp(user.getPomodoroPlanSetsTarget(), 0, 12, 0));
             long elapsed = Duration.between(user.getPomodoroStartedAt(), LocalDateTime.now()).getSeconds();
             int cap = PomodoroSettleCalculator.settleableCap(plan, elapsed);
             newSettled = Math.max(0, Math.min(claimed, cap) - user.getPomodoroSettledSessions());
@@ -104,6 +107,13 @@ public class PomodoroController {
 
         int focusMinutes = extractFocusMinutes(body);
         User user = findUser(principal);
+
+        // 계획 세션은 settle 전용 — 같은 경과시간을 settle과 complete로 두 번 청구하는 혼용을 서버가 거부한다
+        if (user.hasPomodoroPlan()) {
+            user.clearPomodoro();
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of("coins", 0, "totalCoins", user.getCoinBalance()));
+        }
 
         // 서버가 기록한 시작 시각으로 실제 경과시간 검증 — 클라이언트 focusMinutes만 믿으면
         // complete 반복 호출만으로 무한 파밍이 가능하다. 검증 실패는 에러가 아니라 0코인 응답

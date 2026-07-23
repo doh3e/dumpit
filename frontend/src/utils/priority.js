@@ -1,5 +1,7 @@
 // 백엔드 PriorityCalculator.java 이식 (표시용) — 서버·mobile/src/tasks/priority.ts와 3중 동기화 필수.
 // 자동 모드 실효 = 긴급도 0.6 + 중요도 0.4, 지정 모드 = max(지정값, 긴급도 0.6 + 지정 0.4).
+// 경계 주의: 서버는 Duration.toMinutes() 절단이라 잔여 1분 미만을 "지남(1.0)"으로 보지만
+// 여기는 실수 분으로 0.95 — 경계 1분 창에서만 어긋나는 표시용 오차로 수용한다.
 export function urgencyScore(deadline, now) {
   if (!deadline) return 0.15
   const d = new Date(deadline)

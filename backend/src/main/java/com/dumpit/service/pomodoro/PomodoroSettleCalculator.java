@@ -18,6 +18,7 @@ public final class PomodoroSettleCalculator {
     private PomodoroSettleCalculator() {}
 
     public static int settleableCap(Plan plan, long elapsedSeconds) {
+        if (plan.focusMinutes() < 1) return 0; // 클램프 우회 경로 방어 — focus 0이 cap 폭주하지 않게
         long focusSeconds = plan.focusMinutes() * 60L;
         long grace = Math.min(MAX_GRACE_SECONDS, focusSeconds / 5);
         int max = plan.setsTarget() > 0 ? Math.min(plan.setsTarget(), MAX_SETTLE_SESSIONS) : MAX_SETTLE_SESSIONS;

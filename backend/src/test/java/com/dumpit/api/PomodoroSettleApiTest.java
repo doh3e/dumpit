@@ -151,7 +151,9 @@ class PomodoroSettleApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void 완료가_계획도_소거한다() throws Exception {
+    void 계획_세션의_complete는_정산없이도_0코인_소거() throws Exception {
+        // 계획 세션은 settle 전용 — complete는 거부(0코인)하고 세션을 소거한다
+        // (focus=1 계획으로 settle 파밍 후 complete 한 방으로 추가 청구하는 변형도 함께 차단)
         startWithPlan();
         backdatePomodoroStart(USER_A, 26);
 
@@ -159,11 +161,33 @@ class PomodoroSettleApiTest extends ApiIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 25))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.coins").value(5));
+                .andExpect(jsonPath("$.coins").value(0));
 
         mockMvc.perform(post("/pomodoro/settle").with(asUser(USER_A))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(Map.of("claimedSessions", 1))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(0));
+    }
+
+    @Test
+    void 계획_세션에_complete를_섞으면_0코인_혼용거부() throws Exception {
+        // settle로 정산한 경과시간을 complete로 재청구하는 이중 지급 차단 — 계획 세션은 settle 전용
+        startWithPlan();
+        backdatePomodoroStart(USER_A, 26);
+        settle(1, false);
+
+        mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 25))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(0))
+                .andExpect(jsonPath("$.totalCoins").value(5));
+
+        // 혼용 거부가 세션을 소거하므로 이후 settle도 불가
+        mockMvc.perform(post("/pomodoro/settle").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("claimedSessions", 2))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.coins").value(0));
     }

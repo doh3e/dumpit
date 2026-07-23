@@ -95,14 +95,19 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
     }
   }
 
-  // 슬라이더(지정/AI 중요도)와 별개로, 저장 시 실제 적용될 실효값(마감 긴급도 반영)을 미리 보여준다
-  const pinnedMode = !clearOverride && (priorityDirty || isUserOverridden)
+  // 슬라이더(지정/AI 중요도)와 별개로, 저장 시 실제 적용될 실효값(마감 긴급도 반영)을 미리 보여준다.
+  // 힌트의 지정값은 "저장 후 서버에 남을 값"과 일치해야 한다 — 재분석 직후(dirty 아님)에는
+  // 슬라이더가 새 AI값을 보여줘도 서버의 기존 지정값이 유지되므로 그 값을 기준으로 계산한다.
+  const pinnedValue = priorityDirty
+    ? priorityScore
+    : (!clearOverride && isUserOverridden ? task.userPriorityScore : null)
+  const pinnedMode = pinnedValue != null
   const hintDeadline =
     deadlineMode === 'CUSTOM' ? (deadline || null)
     : deadlineMode === 'TODAY' ? getTodayDeadline()
     : null
   const effectiveHint = effectivePriority({
-    userPriorityScore: pinnedMode ? priorityScore : null,
+    userPriorityScore: pinnedValue,
     aiPriorityScore: priorityScore,
     deadline: hintDeadline,
   })

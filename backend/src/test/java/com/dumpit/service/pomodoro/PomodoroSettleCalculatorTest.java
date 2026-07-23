@@ -55,6 +55,13 @@ class PomodoroSettleCalculatorTest {
     }
 
     @Test
+    void 비정상_집중시간은_0을_반환한다() {
+        // 컨트롤러 클램프(1~120)를 우회한 호출 경로가 생겨도 focus 0이 cap 1000으로 폭주하지 않게
+        assertThat(settleableCap(new Plan(0, 5, 15, 4, 0), 1_000_000L)).isZero();
+        assertThat(settleableCap(new Plan(-5, 5, 15, 4, 0), 1_000_000L)).isZero();
+    }
+
+    @Test
     void 무한_세트도_안전_상한_1000을_넘지_않는다() {
         Plan p = new Plan(1, 1, 1, 4, 0);
         assertThat(settleableCap(p, Long.MAX_VALUE / 2)).isEqualTo(1000);
