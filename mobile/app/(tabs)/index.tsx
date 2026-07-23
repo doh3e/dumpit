@@ -9,6 +9,7 @@ import { MiniCalendar } from '../../src/components/home/MiniCalendar';
 import { NowHeroCard } from '../../src/components/home/NowHeroCard';
 import { TaskListCard } from '../../src/components/home/TaskListCard';
 import type { TogglePos } from '../../src/components/home/TaskRow';
+import { TaskDetailSheet, type TaskDetailSheetHandle } from '../../src/components/task/TaskDetailSheet';
 import { CoinToast } from '../../src/components/fx/CoinToast';
 import { PixelBurst } from '../../src/components/fx/PixelBurst';
 import { RocketLaunch } from '../../src/components/fx/RocketLaunch';
@@ -85,8 +86,9 @@ export default function HomeScreen() {
     [toggleTask],
   );
 
-  const editTask = useCallback((_task: TaskResponse) => {
-    /* Task 15: TaskDetailSheet.present(task) 연결 */
+  const detailRef = useRef<TaskDetailSheetHandle>(null);
+  const editTask = useCallback((task: TaskResponse) => {
+    detailRef.current?.present(task);
   }, []);
 
   // 탭 재진입 시 리페치 (staleTime 30s 안이면 캐시 즉시 표시 후 조용히 갱신)
@@ -168,6 +170,8 @@ export default function HomeScreen() {
         />
       )}
       {showRocket && <RocketLaunch onDone={() => setShowRocket(false)} />}
+
+      <TaskDetailSheet ref={detailRef} />
     </View>
   );
 }

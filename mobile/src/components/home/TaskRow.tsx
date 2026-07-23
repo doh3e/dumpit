@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View, type GestureResponderEvent } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from 'react-native';
 import type { TaskResponse, TaskStatus } from '../../api/types';
-import { getCategory, STICKER_NAMES } from '../../tasks/constants';
+import { getCategory } from '../../tasks/constants';
+import { STICKER_SPRITES } from '../../tasks/stickers';
 import { formatDeadline } from '../../tasks/dates';
 import { calcCompletionCoins } from '../../tasks/rewards';
 import { fonts } from '../../theme/typography';
@@ -61,8 +62,13 @@ export function TaskRow({ task, overdue = false, child = false, onToggle, onPres
           {child && <RetroBadge text="↳ 서브" tone="accent2" />}
           {overdue && <RetroBadge text="마감 지남" tone="accent" />}
           {task.status === 'IN_PROGRESS' && <RetroBadge text="진행 중" tone="accent2" />}
-          {task.stickerCode && STICKER_NAMES[task.stickerCode] && (
-            <RetroBadge text={STICKER_NAMES[task.stickerCode]} tone="starlight" />
+          {task.stickerCode && STICKER_SPRITES[task.stickerCode] && (
+            <Image
+              source={STICKER_SPRITES[task.stickerCode].img}
+              style={styles.sticker}
+              resizeMode="contain"
+              accessibilityLabel={`스티커 ${STICKER_SPRITES[task.stickerCode].name}`}
+            />
           )}
         </View>
         <Text
@@ -109,7 +115,8 @@ const styles = StyleSheet.create({
   },
   check: { fontSize: 13, lineHeight: 15 },
   body: { flex: 1, gap: 3 },
-  titleRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
+  titleRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap', alignItems: 'center' },
+  sticker: { width: 16, height: 16 },
   title: { fontSize: 15, lineHeight: 21 },
   done: { textDecorationLine: 'line-through' },
   meta: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
