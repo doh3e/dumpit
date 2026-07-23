@@ -134,6 +134,20 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
           {doneOpen &&
             todayDoneTasks.map((t) => (
               <View key={t.taskId} style={styles.doneRow}>
+                <Pressable
+                  onPress={() => onToggle(t, 'TODO')}
+                  accessibilityRole="checkbox"
+                  accessibilityLabel={`${t.title} 완료 해제`}
+                  accessibilityState={{ checked: true }}
+                  hitSlop={10}
+                  style={({ pressed }) => [
+                    styles.doneCheckbox,
+                    { borderColor: colors.edge, backgroundColor: colors.accent },
+                    pressed && { transform: [{ scale: 0.9 }] },
+                  ]}
+                >
+                  <Text style={{ color: colors.onAccent, fontSize: 11, fontFamily: fonts.chrome }}>✓</Text>
+                </Pressable>
                 <Text
                   style={[styles.doneTitle, { color: colors.sub, fontFamily: fonts.body }]}
                   numberOfLines={1}
@@ -166,6 +180,10 @@ const styles = StyleSheet.create({
   doneWrap: { borderTopWidth: 1.5, marginTop: 8, paddingTop: 8 },
   doneHeader: { minHeight: 32, justifyContent: 'center' },
   doneRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5 },
+  doneCheckbox: {
+    width: 20, height: 20, borderWidth: 2, borderRadius: 4,
+    alignItems: 'center', justifyContent: 'center',
+  },
   doneTitle: { flex: 1, fontSize: 13, textDecorationLine: 'line-through' },
   doneMeta: { fontSize: 10 },
 });
