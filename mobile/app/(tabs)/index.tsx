@@ -7,6 +7,7 @@ import { useAuth } from '../../src/auth/AuthContext';
 import { HomeAppBar } from '../../src/components/home/HomeAppBar';
 import { MiniCalendar } from '../../src/components/home/MiniCalendar';
 import { NowHeroCard } from '../../src/components/home/NowHeroCard';
+import { PomodoroCard } from '../../src/components/home/PomodoroCard';
 import { TaskListCard } from '../../src/components/home/TaskListCard';
 import type { TogglePos } from '../../src/components/home/TaskRow';
 import { TaskDetailSheet, type TaskDetailSheetHandle } from '../../src/components/task/TaskDetailSheet';
@@ -17,6 +18,8 @@ import { calcCompletionCoins } from '../../src/tasks/rewards';
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
 import { useToast } from '../../src/components/retro/ToastProvider';
+import { deriveState } from '../../src/pomodoro/engine';
+import { getSession, reconcile, subscribe } from '../../src/pomodoro/store';
 import { useAiUsage, usePlanning, useToggleTask } from '../../src/query/hooks';
 import { isToday } from '../../src/tasks/dates';
 import { fonts } from '../../src/theme/typography';
@@ -24,7 +27,7 @@ import { useTheme } from '../../src/theme/useTheme';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
-  const { me } = useAuth();
+  const { me, refresh } = useAuth();
   const toast = useToast();
   const planning = usePlanning();
   const aiUsage = useAiUsage();
@@ -92,12 +95,34 @@ export default function HomeScreen() {
     detailRef.current?.present(task);
   }, []);
 
-  // 탭 재진입 시 리페치 (staleTime 30s 안이면 캐시 즉시 표시 후 조용히 갱신)
+  // 뽀모도로 집중 중이면 히어로가 그 태스크를 표시 (웹 pomodoroFocus 패리티)
+  const [, forcePomodoro] = useState(0);
+  useEffect(() => subscribe(() => forcePomodoro((x) => x + 1)), []);
+  const pomoSession = getSession();
+  const heroFocus =
+    pomoSession && pomoSession.pausedAt == null && pomoSession.taskTitle
+    && deriveState(pomoSession, Date.now()).phase === 'FOCUS'
+      ? { title: pomoSession.taskTitle }
+      : null;
+  // 페이즈 전환은 store 이벤트가 없으므로(시간 경과) 집중 표시 중에만 가볍게 재파생
+  useEffect(() => {
+    if (!heroFocus) return;
+    const t = setInterval(() => forcePomodoro((x) => x + 1), 15_000);
+    return () => clearInterval(t);
+  }, [heroFocus != null]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 탭 재진입 시 리페치 + 백그라운드 경과 세트 정산 (staleTime 30s 안이면 캐시 즉시 표시 후 조용히 갱신)
   const { refetch: refetchPlanning } = planning;
   useFocusEffect(
     useCallback(() => {
       refetchPlanning();
-    }, [refetchPlanning]),
+      reconcile().then((r) => {
+        if (r && r.coins > 0) {
+          toast.show(`밀린 ${r.settledSessions}세트 정산 · +${r.coins} 코인`);
+          refresh();
+        }
+      });
+    }, [refetchPlanning, toast, refresh]),
   );
 
   // 풀투리프레시 스피너는 수동 제스처 전용 — invalidate로 도는 백그라운드 리페치에 반응하지 않게
@@ -143,9 +168,11 @@ export default function HomeScreen() {
               todayDone={todayDone}
               todayTotal={todayTotal}
               allDone={allDone}
+              focus={heroFocus}
               onComplete={completeTask}
               onEdit={editTask}
             />
+            <PomodoroCard />
             <TaskListCard
               sections={planning.data.sections}
               onToggle={toggleTask}

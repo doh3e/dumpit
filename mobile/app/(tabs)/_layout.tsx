@@ -1,16 +1,22 @@
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Redirect, Tabs, router, type Href } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useAuth } from '../../src/auth/AuthContext';
 import { AddTaskSheet } from '../../src/components/task/AddTaskSheet';
 import { RetroTabBar } from '../../src/components/shell/RetroTabBar';
 import { SpeedDial } from '../../src/components/shell/SpeedDial';
+import { initPomodoro } from '../../src/pomodoro/store';
 
 export default function TabsLayout() {
   const { me } = useAuth();
   const [dialOpen, setDialOpen] = useState(false);
   const addSheetRef = useRef<BottomSheetModal>(null);
+
+  // 앱 시작 1회 — 저장된 뽀모도로 세션 복원 + 밀린 정산 (코인 토스트는 홈 reconcile이 담당)
+  useEffect(() => {
+    initPomodoro();
+  }, []);
 
   if (!me) return <Redirect href="/" />;
 

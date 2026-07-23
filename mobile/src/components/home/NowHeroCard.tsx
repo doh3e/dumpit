@@ -15,14 +15,35 @@ type Props = {
   todayDone: number;
   todayTotal: number;
   allDone: boolean;
+  /** 뽀모도로 집중 중이면 히어로가 그 태스크를 표시 (웹 pomodoroFocus 패리티) */
+  focus?: { title: string } | null;
   onComplete: (task: TaskResponse) => void;
   onEdit: (task: TaskResponse) => void;
 };
 
 /** "지금 할 일" 히어로 — 웹 NowHeroCard 3상태(전부 완료/제안/빈 시간) 이식 */
-export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDone, onComplete, onEdit }: Props) {
+export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDone, focus, onComplete, onEdit }: Props) {
   const { colors } = useTheme();
   const task = allDone ? null : nowSuggestion?.task ?? null;
+
+  if (focus) {
+    return (
+      <RetroCard hero>
+        <View style={styles.top}>
+          <View style={styles.main}>
+            <Text style={[styles.eyebrow, { color: colors.accent2, fontFamily: fonts.chrome }]}>집중 타임</Text>
+            <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={2}>
+              지금은 「{focus.title}」 중이에요 🍅
+            </Text>
+            <Text style={[styles.message, { color: colors.sub, fontFamily: fonts.body }]}>
+              타이머가 끝날 때까지 이 일에만 몰입해요.
+            </Text>
+          </View>
+          <OrbitProgress done={todayDone} total={todayTotal} />
+        </View>
+      </RetroCard>
+    );
+  }
   const heroTime = task?.deadline
     ? (isToday(task.deadline) ? `${formatTime(task.deadline)} 마감` : `${formatDeadline(task.deadline)} 마감`)
     : null;
