@@ -9,6 +9,7 @@ import type { Category, TaskResponse } from '../../api/types';
 import { invalidateAfterAi, useAiUsage } from '../../query/hooks';
 import { keys } from '../../query/keys';
 import { AI_COSTS, TASK_CATEGORIES } from '../../tasks/constants';
+import { buildPriorityPatch } from '../../tasks/priorityPatch';
 import { parseDate } from '../../tasks/dates';
 import { buildDeadlinePayload, type DeadlineMode } from '../../tasks/deadlineMode';
 import { updateTaskInPlanning } from '../../tasks/planningCache';
@@ -53,6 +54,9 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
   const [estimate, setEstimate] = useState('');
   const [category, setCategory] = useState<Category>('OTHER');
   const [priorityScore, setPriorityScore] = useState(0.5);
+  // 중요도는 슬라이더를 실제로 움직였을 때만 저장 — 저장만으로 자동 조정이 꺼지지 않게
+  const [priorityDirty, setPriorityDirty] = useState(false);
+  const [clearOverride, setClearOverride] = useState(false);
   const [stickerBusy, setStickerBusy] = useState(false);
   const [reanalyzing, setReanalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -77,6 +81,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       setEstimate(target.estimatedMinutes != null ? String(target.estimatedMinutes) : '');
       setCategory(target.category === 'ROUTINE' ? 'OTHER' : target.category);
       setPriorityScore(target.userPriorityScore ?? target.aiPriorityScore ?? 0.5);
+      setPriorityDirty(false);
+      setClearOverride(false);
       sheetRef.current?.present();
     },
   }), []);
@@ -132,7 +138,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
         description: description.trim() || null,
         deadline, noDeadline,
         estimatedMinutes: estimate ? parseInt(estimate, 10) : null,
-        userPriorityScore: priorityScore,
+        ...buildPriorityPatch(priorityDirty, clearOverride, priorityScore),
         category,
         startTime: useStart ? (startTime || null) : null,
       };
@@ -147,7 +153,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
     } finally {
       setSaving(false);
     }
-  }, [task, title, description, deadlineMode, customDeadline, estimate, priorityScore, category, useStart, startTime, initialStartTime, qc, toast]);
+  }, [task, title, description, deadlineMode, customDeadline, estimate, priorityScore, priorityDirty, clearOverride, category, useStart, startTime, initialStartTime, qc, toast]);
 
   const confirmDelete = useCallback(() => {
     if (!task) return;
@@ -266,7 +272,11 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
           </Text>
           <Slider
             value={priorityScore}
-            onValueChange={setPriorityScore}
+            onValueChange={(v) => {
+              setPriorityScore(v);
+              setPriorityDirty(true);
+              setClearOverride(false);
+            }}
             minimumValue={0}
             maximumValue={1}
             step={0.05}
@@ -276,8 +286,16 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
             accessibilityLabel="중요도 슬라이더"
           />
           <View style={styles.chipRow}>
-            {isUserOverridden && (
-              <Chip label="AI 점수로 초기화" onPress={() => setPriorityScore(task?.aiPriorityScore ?? 0.5)} />
+            {isUserOverridden && !clearOverride && (
+              <Chip
+                label="AI 점수로 초기화"
+                onPress={() => {
+                  // 지정 해제 예약 — 저장 시 userPriorityScore: null 전송 → 자동 조정 복귀
+                  setPriorityScore(task?.aiPriorityScore ?? 0.5);
+                  setClearOverride(true);
+                  setPriorityDirty(false);
+                }}
+              />
             )}
             <Chip
               label={reanalyzing ? '재분석 중…' : `✨ AI 재분석 (${AI_COSTS.TASK_REANALYZE}점)`}
