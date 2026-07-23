@@ -9,7 +9,7 @@ import type { Category, TaskResponse } from '../../api/types';
 import { invalidateAfterAi, useAiUsage } from '../../query/hooks';
 import { keys } from '../../query/keys';
 import { AI_COSTS, TASK_CATEGORIES } from '../../tasks/constants';
-import { autoEffectivePriority } from '../../tasks/priority';
+import { effectivePriority } from '../../tasks/priority';
 import { buildPriorityPatch } from '../../tasks/priorityPatch';
 import { parseDate } from '../../tasks/dates';
 import { buildDeadlinePayload, type DeadlineMode } from '../../tasks/deadlineMode';
@@ -81,8 +81,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       setInitialStartTime(start);
       setEstimate(target.estimatedMinutes != null ? String(target.estimatedMinutes) : '');
       setCategory(target.category === 'ROUTINE' ? 'OTHER' : target.category);
-      // 슬라이더는 항상 "리스트에 보일 값"에서 시작 — 지정값 또는 서버가 계산한 실효값
-      setPriorityScore(target.userPriorityScore ?? target.effectivePriority ?? 0.5);
+      // 슬라이더는 편집 대상 값에서 시작 — 지정값 또는 AI 중요도 (실효값은 힌트 줄이 따로 표시)
+      setPriorityScore(target.userPriorityScore ?? target.aiPriorityScore ?? 0.5);
       setPriorityDirty(false);
       setClearOverride(false);
       sheetRef.current?.present();
@@ -121,8 +121,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       qc.invalidateQueries({ queryKey: keys.planning });
       if (presentedIdRef.current !== id) return;   // 늦은 응답 가드
       setTask(updated);
-      // 재분석은 서버가 사용자 지정을 해제(자동 복귀) — 슬라이더도 자동 합성값으로 정합
-      setPriorityScore(autoEffectivePriority(updated.aiPriorityScore, updated.deadline));
+      // 재분석은 서버가 사용자 지정을 해제(자동 복귀) — 슬라이더는 새 AI 중요도로
+      setPriorityScore(updated.aiPriorityScore ?? 0.5);
       setPriorityDirty(false);
       setClearOverride(false);
       toast.show(`AI 중요도 ${Math.round((updated.aiPriorityScore ?? 0.5) * 100)}점 — 자동 조정으로 반영돼요.`);
@@ -203,8 +203,18 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
   })();
 
   const isUserOverridden = task?.userPriorityScore != null;
-  // 저장 시 이 값으로 고정되는 상태인가 (직접 지정) vs 자동 조정 유지 상태인가
+  // 저장 시 지정값이 남는 상태인가 (직접 지정) vs 자동 조정 유지 상태인가
   const priorityPinned = priorityDirty || (isUserOverridden && !clearOverride);
+  // 실효값 힌트 — "저장 후 서버에 남을 지정값" 기준 (재분석 직후 dirty 아님 상태에선 기존 서버 지정값)
+  const pinnedValue = priorityDirty
+    ? priorityScore
+    : (!clearOverride && isUserOverridden ? (task?.userPriorityScore ?? null) : null);
+  const hintDeadline = buildDeadlinePayload(deadlineMode, customDeadline).deadline;
+  const effectiveHint = effectivePriority({
+    userPriorityScore: pinnedValue,
+    aiPriorityScore: priorityScore,
+    deadline: hintDeadline,
+  });
 
   return (
     <>
@@ -291,7 +301,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
           </View>
 
           <Text style={[styles.label, { color: colors.sub, fontFamily: fonts.chrome }]}>
-            중요도 ({Math.round(priorityScore * 100)}점)
+            중요도 {Math.round(priorityScore * 100)}점 · 실효 {Math.round(effectiveHint * 100)}점
           </Text>
           <Slider
             value={priorityScore}
@@ -310,8 +320,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
           />
           <Text style={[styles.hint, { color: priorityPinned ? colors.warn : colors.accent2, fontFamily: fonts.body }]}>
             {priorityPinned
-              ? '📌 직접 지정 — 마감이 다가와도 이 값으로 고정돼요'
-              : `🔄 자동 조정 — AI 중요도 ${Math.round((task?.aiPriorityScore ?? 0.5) * 100)}점에 마감 여유를 반영한 값이에요 (움직이면 고정)`}
+              ? '📌 직접 지정 — 지정값을 바닥으로 지키고, 마감이 다가오면 실효값이 위로 올라가요'
+              : `🔄 자동 조정 — AI 중요도 ${Math.round((task?.aiPriorityScore ?? 0.5) * 100)}점 + 마감 여유 반영 (움직이면 고정)`}
           </Text>
           <View style={styles.chipRow}>
             {isUserOverridden && !clearOverride && (
@@ -319,8 +329,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
                 label="자동 조정으로 되돌리기"
                 onPress={() => {
                   // 지정 해제 예약 — 저장 시 userPriorityScore: null 전송 → 자동 조정 복귀.
-                  // 슬라이더도 자동 모드가 실제로 보여줄 합성값 위치로 이동 (AI 원점수 아님)
-                  setPriorityScore(autoEffectivePriority(task?.aiPriorityScore ?? null, task?.deadline ?? null));
+                  // 슬라이더는 편집 대상인 AI 중요도로, 실효값은 힌트 줄이 보여준다
+                  setPriorityScore(task?.aiPriorityScore ?? 0.5);
                   setClearOverride(true);
                   setPriorityDirty(false);
                 }}
