@@ -121,8 +121,11 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       qc.invalidateQueries({ queryKey: keys.planning });
       if (presentedIdRef.current !== id) return;   // 늦은 응답 가드
       setTask(updated);
-      setPriorityScore(updated.aiPriorityScore ?? 0.5);
-      toast.show('AI가 중요도를 다시 매겼어요.');
+      // 재분석은 서버가 사용자 지정을 해제(자동 복귀) — 슬라이더도 자동 합성값으로 정합
+      setPriorityScore(autoEffectivePriority(updated.aiPriorityScore, updated.deadline));
+      setPriorityDirty(false);
+      setClearOverride(false);
+      toast.show(`AI 중요도 ${Math.round((updated.aiPriorityScore ?? 0.5) * 100)}점 — 자동 조정으로 반영돼요.`);
     } catch (e) {
       toast.show(getApiErrorMessage(e, 'AI 재분석에 실패했어요.'));
     } finally {
@@ -292,7 +295,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
           <Text style={[styles.hint, { color: priorityPinned ? colors.warn : colors.accent2, fontFamily: fonts.body }]}>
             {priorityPinned
               ? '📌 직접 지정 — 마감이 다가와도 이 값으로 고정돼요'
-              : '🔄 자동 조정 — 마감 여유에 따라 알아서 움직여요 (슬라이더를 움직이면 고정)'}
+              : `🔄 자동 조정 — AI 중요도 ${Math.round((task?.aiPriorityScore ?? 0.5) * 100)}점에 마감 여유를 반영한 값이에요 (움직이면 고정)`}
           </Text>
           <View style={styles.chipRow}>
             {isUserOverridden && !clearOverride && (
