@@ -65,6 +65,17 @@ public class User {
     @Column(nullable = false)
     private Integer pomodoroTotalSessions = 0;
 
+    // 진행 중인 세션 계획 (settle 일괄 정산용) — 계획 없는 레거시 세션은 전부 null
+    private Integer pomodoroPlanFocusMinutes;
+    private Integer pomodoroPlanBreakMinutes;
+    private Integer pomodoroPlanLongBreakMinutes;
+    private Integer pomodoroPlanLongBreakEvery;
+    private Integer pomodoroPlanSetsTarget;
+
+    // 이번 계획에서 이미 정산(지급)한 집중 세트 수 — settle은 이 값 초과분만 델타 지급
+    @Column(nullable = false)
+    private Integer pomodoroSettledSessions = 0;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -110,16 +121,51 @@ public class User {
     }
 
     public void startPomodoro(LocalDateTime startedAt) {
+        // 레거시(계획 없는) 시작 — 이전 미완료 세션·계획 흔적을 모두 덮는다
         this.pomodoroStartedAt = startedAt;
+        clearPomodoroPlan();
+    }
+
+    public void startPomodoroPlan(LocalDateTime startedAt, int focusMinutes, int breakMinutes,
+                                  int longBreakMinutes, int longBreakEvery, int setsTarget) {
+        this.pomodoroStartedAt = startedAt;
+        this.pomodoroPlanFocusMinutes = focusMinutes;
+        this.pomodoroPlanBreakMinutes = breakMinutes;
+        this.pomodoroPlanLongBreakMinutes = longBreakMinutes;
+        this.pomodoroPlanLongBreakEvery = longBreakEvery;
+        this.pomodoroPlanSetsTarget = setsTarget;
+        this.pomodoroSettledSessions = 0;
     }
 
     public void clearPomodoro() {
         this.pomodoroStartedAt = null;
+        clearPomodoroPlan();
+    }
+
+    private void clearPomodoroPlan() {
+        this.pomodoroPlanFocusMinutes = null;
+        this.pomodoroPlanBreakMinutes = null;
+        this.pomodoroPlanLongBreakMinutes = null;
+        this.pomodoroPlanLongBreakEvery = null;
+        this.pomodoroPlanSetsTarget = null;
+        this.pomodoroSettledSessions = 0;
+    }
+
+    public boolean hasPomodoroPlan() {
+        return pomodoroPlanFocusMinutes != null;
+    }
+
+    public void addSettledSessions(int count) {
+        this.pomodoroSettledSessions += count;
     }
 
     public void recordPomodoroFocus(int minutes) {
-        this.pomodoroTotalMinutes += minutes;
-        this.pomodoroTotalSessions += 1;
+        recordPomodoroFocusSessions(minutes, 1);
+    }
+
+    public void recordPomodoroFocusSessions(int minutesPerSession, int sessions) {
+        this.pomodoroTotalMinutes += minutesPerSession * sessions;
+        this.pomodoroTotalSessions += sessions;
     }
 
     public boolean isActive() {
