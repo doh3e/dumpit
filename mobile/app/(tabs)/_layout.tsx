@@ -1,5 +1,5 @@
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, router, type Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useAuth } from '../../src/auth/AuthContext';
@@ -43,7 +43,7 @@ export default function TabsLayout() {
           {
             emoji: '💭',
             label: '브레인 덤프',
-            onPress: () => { setDialOpen(false); /* Task 17: router.push('/brain-dump') 연결 */ },
+            onPress: () => { setDialOpen(false); router.push('/brain-dump' as Href); },
           },
         ]}
       />
