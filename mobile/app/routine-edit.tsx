@@ -1,9 +1,9 @@
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { getApiErrorMessage } from '../src/api/client';
-import type { RepeatType } from '../src/api/types';
+import type { RepeatType, RoutineResponse } from '../src/api/types';
 import { Chip } from '../src/components/retro/Chip';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
@@ -35,16 +35,42 @@ function toggleNumber(list: number[], value: number): number[] {
 /** 루틴 추가·편집 풀스크린 — 폼이 커서 바텀시트 대신 전용 화면 (웹 RoutinePage 폼 패리티) */
 export default function RoutineEditScreen() {
   const { colors } = useTheme();
-  const toast = useToast();
   const { routineId } = useLocalSearchParams<{ routineId?: string }>();
   const routines = useRoutines();
-  const save = useSaveRoutine();
-  const remove = useDeleteRoutine();
 
   const editing = useMemo(
     () => routines.data?.find((r) => r.routineId === routineId) ?? null,
     [routines.data, routineId],
   );
+
+  // 편집 진입인데 대상이 아직 없으면 폼을 만들지 않는다 —
+  // 빈 폼으로 저장하면 PATCH 전체 payload가 기존 루틴을 덮어버린다 (리뷰 M5)
+  if (routineId && !editing) {
+    return (
+      <View style={[styles.screen, styles.centered, { backgroundColor: colors.bg }]}>
+        {routines.isLoading || routines.isFetching ? (
+          <ActivityIndicator color={colors.accent} />
+        ) : (
+          <>
+            <Text style={[styles.notFound, { color: colors.sub, fontFamily: fonts.body }]}>
+              루틴을 찾지 못했어요.
+            </Text>
+            <RetroButton label="돌아가기" size="sm" onPress={() => router.back()} />
+          </>
+        )}
+      </View>
+    );
+  }
+
+  // key 리마운트 — editing이 뒤늦게 도착해도 폼(uncontrolled 포함)이 확실히 초기화된다
+  return <RoutineEditForm key={editing?.routineId ?? 'new'} editing={editing} />;
+}
+
+function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
+  const { colors } = useTheme();
+  const toast = useToast();
+  const save = useSaveRoutine();
+  const remove = useDeleteRoutine();
 
   const [form, setForm] = useState<RoutineFormState>(() =>
     editing ? formFromRoutine(editing) : emptyRoutineForm(toLocalDateString(new Date())),
@@ -286,6 +312,8 @@ export default function RoutineEditScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  centered: { alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 },
+  notFound: { fontSize: 14 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
   back: { fontSize: 22 },
   title: { fontSize: 18, flex: 1, textAlign: 'center' },

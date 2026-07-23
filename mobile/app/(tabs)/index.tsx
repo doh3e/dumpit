@@ -19,7 +19,7 @@ import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
 import { useToast } from '../../src/components/retro/ToastProvider';
 import { deriveState } from '../../src/pomodoro/engine';
-import { getSession, reconcile, subscribe } from '../../src/pomodoro/store';
+import { getSession, reconcile, subscribe, takePendingSettleResult } from '../../src/pomodoro/store';
 import { useAiUsage, usePlanning, useToggleTask } from '../../src/query/hooks';
 import { isToday } from '../../src/tasks/dates';
 import { fonts } from '../../src/theme/typography';
@@ -95,9 +95,21 @@ export default function HomeScreen() {
     detailRef.current?.present(task);
   }, []);
 
-  // 뽀모도로 집중 중이면 히어로가 그 태스크를 표시 (웹 pomodoroFocus 패리티)
+  // 뽀모도로 집중 중이면 히어로가 그 태스크를 표시 (웹 pomodoroFocus 패리티).
+  // 콜드스타트·백그라운드 복귀 정산 결과도 여기서 소비 — 홈은 탭 셸 아래 상시 마운트라 놓치지 않는다
   const [, forcePomodoro] = useState(0);
-  useEffect(() => subscribe(() => forcePomodoro((x) => x + 1)), []);
+  useEffect(
+    () =>
+      subscribe(() => {
+        forcePomodoro((x) => x + 1);
+        const settled = takePendingSettleResult();
+        if (settled) {
+          toast.show(`밀린 ${settled.settledSessions}세트 정산 · +${settled.coins} 코인`);
+          refresh();
+        }
+      }),
+    [toast, refresh],
+  );
   const pomoSession = getSession();
   const heroFocus =
     pomoSession && pomoSession.pausedAt == null && pomoSession.taskTitle
@@ -111,18 +123,13 @@ export default function HomeScreen() {
     return () => clearInterval(t);
   }, [heroFocus != null]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 탭 재진입 시 리페치 + 백그라운드 경과 세트 정산 (staleTime 30s 안이면 캐시 즉시 표시 후 조용히 갱신)
+  // 탭 재진입 시 리페치 + 백그라운드 경과 세트 정산 — 정산 결과 표시는 위 구독(보류 소비)이 담당
   const { refetch: refetchPlanning } = planning;
   useFocusEffect(
     useCallback(() => {
       refetchPlanning();
-      reconcile().then((r) => {
-        if (r && r.coins > 0) {
-          toast.show(`밀린 ${r.settledSessions}세트 정산 · +${r.coins} 코인`);
-          refresh();
-        }
-      });
-    }, [refetchPlanning, toast, refresh]),
+      reconcile();
+    }, [refetchPlanning]),
   );
 
   // 풀투리프레시 스피너는 수동 제스처 전용 — invalidate로 도는 백그라운드 리페치에 반응하지 않게

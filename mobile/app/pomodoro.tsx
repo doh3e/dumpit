@@ -4,7 +4,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getApiErrorMessage } from '../src/api/client';
-import { useAuth } from '../src/auth/AuthContext';
 import { PomodoroSettingsSheet } from '../src/components/pomodoro/PomodoroSettingsSheet';
 import { TaskPickerSheet, type PickedTask } from '../src/components/pomodoro/TaskPickerSheet';
 import { TimerRing } from '../src/components/pomodoro/TimerRing';
@@ -27,7 +26,6 @@ export default function PomodoroScreen() {
   const { colors } = useTheme();
   const toast = useToast();
   const qc = useQueryClient();
-  const { refresh } = useAuth();
   const [, force] = useReducer((x: number) => x + 1, 0);
 
   const [settings, setSettings] = useState<PomodoroSettings>(DEFAULT_SETTINGS);
@@ -52,15 +50,10 @@ export default function PomodoroScreen() {
     return () => clearInterval(t);
   }, [running]);
 
+  // 정산 결과 표시는 홈의 보류 소비가 담당(전역 토스트) — 여기선 정산·알림 재계획만 트리거
   useFocusEffect(
     useCallback(() => {
-      reconcile().then((r) => {
-        if (r && r.coins > 0) {
-          toast.show(`밀린 ${r.settledSessions}세트 정산 · +${r.coins} 코인`);
-          refresh();
-        }
-      });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      reconcile();
     }, []),
   );
 
@@ -94,12 +87,17 @@ export default function PomodoroScreen() {
     await doStart();
   }, [doStart, toast]);
 
+  const doReset = useCallback(async () => {
+    const ok = await resetSession();
+    if (!ok) toast.show('오프라인이라 완료 세트를 정산하지 못했어요. 연결 후 다시 리셋해주세요.');
+  }, [toast]);
+
   const onReset = useCallback(() => {
     Alert.alert('타이머 리셋', '지금까지 완료한 세트는 정산돼요.', [
       { text: '취소', style: 'cancel' },
-      { text: '리셋', style: 'destructive', onPress: () => resetSession() },
+      { text: '리셋', style: 'destructive', onPress: () => { doReset(); } },
     ]);
-  }, []);
+  }, [doReset]);
 
   const applySettings = useCallback((s: PomodoroSettings) => {
     setSettings(s);
@@ -147,7 +145,7 @@ export default function PomodoroScreen() {
                 <Text style={[styles.doneText, { color: colors.fg, fontFamily: fonts.display }]}>
                   🎉 모든 세트 완료! 정산이 안 됐다면 네트워크 연결 후 다시 열어주세요.
                 </Text>
-                <RetroButton label="타이머 정리" onPress={() => resetSession()} />
+                <RetroButton label="타이머 정리" onPress={() => { doReset(); }} />
               </RetroCard>
             ) : (
               <View style={styles.controls}>

@@ -5,7 +5,7 @@ import * as notifications from '../notifications';
 import * as persistence from '../persistence';
 import {
   getSession, initPomodoro, pauseSession, reconcile, resetSession,
-  resetStoreForTest, resumeSession, startSession,
+  resetStoreForTest, resumeSession, startSession, takePendingSettleResult,
 } from '../store';
 
 jest.mock('../notifications');
@@ -102,6 +102,32 @@ describe('reconcile', () => {
     await initPomodoro();
     expect(mockSettle).not.toHaveBeenCalled();
   });
+
+  it('코인 지급 결과는 보류됐다가 1회만 소비된다', async () => {
+    mockLoad.mockResolvedValue(sessionAt({ settings: { ...DEFAULT_SETTINGS, setsTarget: 0 } }));
+    setNow(T0 + 27 * MIN);
+    await initPomodoro();
+    expect(takePendingSettleResult()).toEqual({ coins: 5, settledSessions: 1 });
+    expect(takePendingSettleResult()).toBeNull();
+  });
+
+  it('동시 reconcile은 같은 promise를 공유해 settle이 1회만 나간다', async () => {
+    mockLoad.mockResolvedValue(sessionAt({ settings: { ...DEFAULT_SETTINGS, setsTarget: 0 } }));
+    setNow(T0 + 27 * MIN);
+    await initPomodoro();
+    jest.clearAllMocks();
+    setNow(T0 + 57 * MIN); // 2세트째 완료
+    await Promise.all([reconcile(), reconcile()]);
+    expect(mockSettle).toHaveBeenCalledTimes(1);
+  });
+
+  it('서버가 cap으로 깎으면 인정분만큼만 전진해 다음에 재청구한다', async () => {
+    mockLoad.mockResolvedValue(sessionAt({ settings: { ...DEFAULT_SETTINGS, setsTarget: 0 } }));
+    setNow(T0 + 57 * MIN); // 클라 기준 2세트 완료
+    mockSettle.mockResolvedValue({ coins: 5, totalCoins: 5, settledSessions: 1 }); // 서버는 1세트만 인정
+    await initPomodoro();
+    expect(getSession()?.lastSettled).toBe(1); // 2가 아니라 서버 인정분 1
+  });
 });
 
 describe('pause/resume/reset', () => {
@@ -123,9 +149,34 @@ describe('pause/resume/reset', () => {
     await initPomodoro();
     jest.clearAllMocks();
 
-    await resetSession();
+    await expect(resetSession()).resolves.toBe(true);
     expect(mockSettle).toHaveBeenCalledWith(1, true);
     expect(notifications.cancelAll).toHaveBeenCalled();
+    expect(mockClear).toHaveBeenCalled();
+    expect(getSession()).toBeNull();
+  });
+
+  it('오프라인 리셋: 미정산 세트가 있으면 세션 보존 + false', async () => {
+    mockLoad.mockResolvedValue(sessionAt({ settings: { ...DEFAULT_SETTINGS, setsTarget: 0 } }));
+    setNow(T0 + 27 * MIN); // 1세트 완료, lastSettled 0
+    mockSettle.mockRejectedValue(new Error('offline'));
+    await initPomodoro();
+    jest.clearAllMocks();
+    mockSettle.mockRejectedValue(new Error('offline'));
+
+    await expect(resetSession()).resolves.toBe(false);
+    expect(mockClear).not.toHaveBeenCalled();
+    expect(getSession()).not.toBeNull();
+  });
+
+  it('오프라인 리셋: 정산할 게 없으면 로컬 정리 진행 + true', async () => {
+    mockLoad.mockResolvedValue(sessionAt({ settings: { ...DEFAULT_SETTINGS, setsTarget: 0 } }));
+    setNow(T0 + 10 * MIN); // 완료 세트 없음
+    await initPomodoro();
+    jest.clearAllMocks();
+    mockSettle.mockRejectedValue(new Error('offline'));
+
+    await expect(resetSession()).resolves.toBe(true);
     expect(mockClear).toHaveBeenCalled();
     expect(getSession()).toBeNull();
   });

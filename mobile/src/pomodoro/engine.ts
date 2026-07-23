@@ -54,13 +54,13 @@ export type DerivedState = {
   completedFocusCount: number;
 };
 
-const MAX_PHASES = 2001; // 무한 세트 폭주 방지 (서버 정산 상한 1000세트 × 2)
+const MAX_SETS = 1000; // 무한 세트 폭주 방지 — 서버 정산 상한(claimedSessions 1000)과 정렬
 
 /** anchor부터의 페이즈 시퀀스 — DONE에 닿으면 멈춘다 */
 function* timeline(session: Session): Generator<Phase> {
   const { focusMin, breakMin, setsTarget, longBreakMin, longBreakEvery } = session.settings;
   let cursor = session.anchor;
-  for (let i = 1; i <= MAX_PHASES; i++) {
+  for (let i = 1; i <= MAX_SETS; i++) {
     const focusEnd = cursor + focusMin * 60_000;
     yield { kind: 'FOCUS', index: i, long: false, startsAt: cursor, endsAt: focusEnd };
     cursor = focusEnd;

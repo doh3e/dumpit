@@ -34,6 +34,8 @@ function toContent(n: PlannedNotification) {
       chronometerDirection: 'down' as const,
       showTimestamp: n.countdownTo != null,
       ...(n.countdownTo != null ? { timestamp: n.countdownTo } : {}),
+      // live 릴레이: 이전 페이즈 live는 자기 페이즈 끝에 자동 소멸 (유니크 id라 취소 트리거가 없다)
+      ...(n.timeoutAfterMs != null ? { timeoutAfter: n.timeoutAfterMs } : {}),
     },
   };
 }
@@ -54,12 +56,12 @@ export async function applyPlan(plan: PlannedNotification[]): Promise<void> {
   }
 }
 
+/**
+ * 이 앱의 알림은 현재 뽀모도로뿐이라 전체 취소가 곧 뽀모도로 취소다.
+ * Phase 4에서 FCM 푸시가 들어오면 접두사(pomodoro-) 기반 선별 취소로 바꿔야 한다.
+ */
 export async function cancelAll(): Promise<void> {
-  const triggerIds = await notifee.getTriggerNotificationIds();
-  for (const id of triggerIds.filter((v) => v.startsWith('pomodoro'))) {
-    await notifee.cancelNotification(id);
-  }
-  await notifee.cancelNotification('pomodoro-live');
+  await notifee.cancelAllNotifications();
 }
 
 /** Android 13+ 알림 권한 — 거부여도 타이머는 동작(알림만 침묵) */

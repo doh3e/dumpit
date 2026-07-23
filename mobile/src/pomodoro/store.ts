@@ -18,6 +18,16 @@ export type SettleResult = { coins: number; settledSessions: number };
 let session: Session | null = null;
 const listeners = new Set<() => void>();
 
+// 콜드스타트·백그라운드 복귀 정산 결과는 호출자가 UI 밖일 수 있어 보류해 두고
+// 첫 소비자(홈 구독)가 가져간다 — 토스트·코인 뱃지 갱신 누락 방지 (리뷰 M1)
+let pendingSettle: SettleResult | null = null;
+
+export function takePendingSettleResult(): SettleResult | null {
+  const r = pendingSettle;
+  pendingSettle = null;
+  return r;
+}
+
 function emit() {
   listeners.forEach((fn) => fn());
 }
@@ -88,46 +98,72 @@ export async function resumeSession(): Promise<void> {
   await notifications.applyPlan(buildNotificationPlan(next, Date.now()));
 }
 
-/** 리셋 — 지금까지 완료분은 정산(finished)하고 세션·알림을 걷는다 */
-export async function resetSession(): Promise<void> {
-  if (!session) return;
+/**
+ * 리셋 — 지금까지 완료분을 정산(finished)하고 세션·알림을 걷는다.
+ * 미정산 세트가 있는데 정산이 실패(오프라인)하면 세션을 보존하고 false 반환 — 코인 소실 방지 (리뷰 M3).
+ */
+export async function resetSession(): Promise<boolean> {
+  if (!session) return true;
   const derived = deriveState(session, Date.now());
+  const hasUnsettled = derived.completedFocusCount > session.lastSettled;
   try {
     await settlePomodoro(derived.completedFocusCount, true);
-  } catch { /* 오프라인 — 서버 세션은 다음 start(settle 선행 규약)가 정리 */ }
+  } catch {
+    if (hasUnsettled) return false;
+    // 정산할 게 없으면 서버 잔재는 다음 start가 덮으므로 로컬만 정리해도 안전
+  }
   await notifications.cancelAll();
   await setSession(null);
+  return true;
 }
 
 /**
  * 복귀 정산 — 백그라운드에서 지나간 세트를 서버에 델타 청구하고 알림 창을 재계획한다.
  * settle 실패는 조용히 보류(델타 방식이라 다음 호출이 안전하게 재시도).
+ * 동시 호출은 같은 promise를 공유하고(중복 HTTP 방지), await 사이 세션 교체(리셋·재시작)는
+ * 상태 갱신을 중단한다 (리뷰 M4).
  */
-export async function reconcile(): Promise<SettleResult | null> {
-  if (!session) return null;
-  const now = Date.now();
-  const derived = deriveState(session, now);
+let reconcileInFlight: Promise<SettleResult | null> | null = null;
 
+export function reconcile(): Promise<SettleResult | null> {
+  if (reconcileInFlight) return reconcileInFlight;
+  reconcileInFlight = doReconcile().finally(() => { reconcileInFlight = null; });
+  return reconcileInFlight;
+}
+
+async function doReconcile(): Promise<SettleResult | null> {
+  const current = session;
+  if (!current) return null;
+  const now = Date.now();
+  const derived = deriveState(current, now);
+
+  let updated = current;
   let result: SettleResult | null = null;
-  if (derived.completedFocusCount > session.lastSettled) {
+  if (derived.completedFocusCount > current.lastSettled) {
     try {
       const res = await settlePomodoro(derived.completedFocusCount, derived.phase === 'DONE');
       result = { coins: res.coins, settledSessions: res.settledSessions };
-      session = { ...session, lastSettled: derived.completedFocusCount };
-      await persistence.saveSession(session);
-    } catch { /* 다음 기회에 재시도 */ }
+      if (session !== current) return result;   // 정산 중 리셋·재시작 — 상태는 건드리지 않는다
+      // 서버가 인정한 만큼만 전진 — 클라 시계가 빨라 cap에 깎여도 다음 정산이 잔여분을 재청구
+      updated = { ...current, lastSettled: current.lastSettled + res.settledSessions };
+      session = updated;
+      await persistence.saveSession(updated);
+      if (result.coins > 0) pendingSettle = result;
+    } catch {
+      if (session !== current) return null;
+    }
   }
 
+  if (session !== updated) return result;       // 그 사이 교체 — 알림·정리는 다음 reconcile 몫
   if (derived.phase === 'DONE') {
     await notifications.cancelAll();
-    const settled = session.lastSettled >= derived.completedFocusCount;
-    if (settled) {
+    if (updated.lastSettled >= derived.completedFocusCount) {
       await setSession(null);
     } else {
       emit(); // 정산 실패 — 세션을 남겨 다음 복귀 때 재청구
     }
   } else {
-    await notifications.applyPlan(buildNotificationPlan(session, now));
+    await notifications.applyPlan(buildNotificationPlan(updated, now));
     emit();
   }
   return result;
@@ -136,5 +172,7 @@ export async function reconcile(): Promise<SettleResult | null> {
 /** 테스트 전용 — 모듈 상태 초기화 */
 export function resetStoreForTest(): void {
   session = null;
+  pendingSettle = null;
+  reconcileInFlight = null;
   listeners.clear();
 }
