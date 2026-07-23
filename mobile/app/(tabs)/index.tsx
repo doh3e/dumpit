@@ -2,10 +2,12 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { getApiErrorMessage } from '../../src/api/client';
-import type { TaskResponse } from '../../src/api/types';
+import type { TaskResponse, TaskStatus } from '../../src/api/types';
 import { useAuth } from '../../src/auth/AuthContext';
 import { HomeAppBar } from '../../src/components/home/HomeAppBar';
 import { NowHeroCard } from '../../src/components/home/NowHeroCard';
+import { TaskListCard } from '../../src/components/home/TaskListCard';
+import type { TogglePos } from '../../src/components/home/TaskRow';
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
 import { useToast } from '../../src/components/retro/ToastProvider';
@@ -31,14 +33,20 @@ export default function HomeScreen() {
     return { todayDone: done, todayTotal: todayTasks.length, allDone: todayTasks.length > 0 && done === todayTasks.length };
   }, [planning.data]);
 
-  const completeTask = useCallback(
-    (task: TaskResponse) => {
+  const toggleTask = useCallback(
+    (task: TaskResponse, next: TaskStatus, _pos?: TogglePos) => {
+      // _pos: Task 12에서 PixelBurst 발생 좌표로 사용
       toggle.mutate(
-        { taskId: task.taskId, status: 'DONE' },
-        { onError: (e) => toast.show(getApiErrorMessage(e, '완료 처리에 실패했어요.')) },
+        { taskId: task.taskId, status: next },
+        { onError: (e) => toast.show(getApiErrorMessage(e, '상태 변경에 실패했어요.')) },
       );
     },
     [toggle, toast],
+  );
+
+  const completeTask = useCallback(
+    (task: TaskResponse) => toggleTask(task, 'DONE'),
+    [toggleTask],
   );
 
   const editTask = useCallback((_task: TaskResponse) => {
@@ -96,7 +104,12 @@ export default function HomeScreen() {
               onComplete={completeTask}
               onEdit={editTask}
             />
-            {/* Task 11: TaskListCard */}
+            <TaskListCard
+              sections={planning.data.sections}
+              onToggle={toggleTask}
+              onPressTask={editTask}
+              onPressBoard={() => { /* Task 16: router.push('/task-board') 연결 */ }}
+            />
             {/* Task 13: MiniCalendar */}
           </>
         )}
