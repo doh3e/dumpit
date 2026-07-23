@@ -1,15 +1,34 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { fetchMe, loginWithGoogleIdToken, type MeResponse } from '../api/auth';
+import { fetchMe, loginWithGoogleIdToken, logout, type MeResponse } from '../api/auth';
+import { api } from '../api/client';
+import { installSilentReauth } from '../api/reauth';
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
 });
 
+/** 세션 만료 시(24h) 저장된 구글 계정으로 조용히 재로그인 — 성공하면 원요청이 재시도된다 */
+async function silentReauth(): Promise<boolean> {
+  try {
+    const result = await GoogleSignin.signInSilently();
+    const idToken = result.type === 'success' ? result.data?.idToken : null;
+    if (!idToken) return false;
+    await loginWithGoogleIdToken(idToken);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// 모듈 로드 시 1회 설치 (Provider 리렌더와 무관)
+installSilentReauth(api, silentReauth);
+
 type AuthState = {
   me: MeResponse | null;
   loading: boolean;
   signInWithGoogle(): Promise<void>;
+  signOut(): Promise<void>;
   refresh(): Promise<void>;
 };
 
@@ -42,9 +61,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setMe(await loginWithGoogleIdToken(idToken));
   }, []);
 
+  const signOut = useCallback(async () => {
+    try { await logout(); } catch { /* 서버 실패해도 로컬은 정리 */ }
+    try { await GoogleSignin.signOut(); } catch { /* noop */ }
+    setMe(null);
+  }, []);
+
   const value = useMemo(
-    () => ({ me, loading, signInWithGoogle, refresh }),
-    [me, loading, signInWithGoogle, refresh],
+    () => ({ me, loading, signInWithGoogle, signOut, refresh }),
+    [me, loading, signInWithGoogle, signOut, refresh],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
