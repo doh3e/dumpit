@@ -9,6 +9,7 @@ import type { Category, TaskResponse } from '../../api/types';
 import { invalidateAfterAi, useAiUsage } from '../../query/hooks';
 import { keys } from '../../query/keys';
 import { AI_COSTS, TASK_CATEGORIES } from '../../tasks/constants';
+import { autoEffectivePriority } from '../../tasks/priority';
 import { buildPriorityPatch } from '../../tasks/priorityPatch';
 import { parseDate } from '../../tasks/dates';
 import { buildDeadlinePayload, type DeadlineMode } from '../../tasks/deadlineMode';
@@ -80,7 +81,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       setInitialStartTime(start);
       setEstimate(target.estimatedMinutes != null ? String(target.estimatedMinutes) : '');
       setCategory(target.category === 'ROUTINE' ? 'OTHER' : target.category);
-      setPriorityScore(target.userPriorityScore ?? target.aiPriorityScore ?? 0.5);
+      // 슬라이더는 항상 "리스트에 보일 값"에서 시작 — 지정값 또는 서버가 계산한 실효값
+      setPriorityScore(target.userPriorityScore ?? target.effectivePriority ?? 0.5);
       setPriorityDirty(false);
       setClearOverride(false);
       sheetRef.current?.present();
@@ -182,6 +184,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
   })();
 
   const isUserOverridden = task?.userPriorityScore != null;
+  // 저장 시 이 값으로 고정되는 상태인가 (직접 지정) vs 자동 조정 유지 상태인가
+  const priorityPinned = priorityDirty || (isUserOverridden && !clearOverride);
 
   return (
     <>
@@ -285,13 +289,19 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
             thumbTintColor={colors.accent}
             accessibilityLabel="중요도 슬라이더"
           />
+          <Text style={[styles.hint, { color: priorityPinned ? colors.warn : colors.accent2, fontFamily: fonts.body }]}>
+            {priorityPinned
+              ? '📌 직접 지정 — 마감이 다가와도 이 값으로 고정돼요'
+              : '🔄 자동 조정 — 마감 여유에 따라 알아서 움직여요 (슬라이더를 움직이면 고정)'}
+          </Text>
           <View style={styles.chipRow}>
             {isUserOverridden && !clearOverride && (
               <Chip
-                label="AI 점수로 초기화"
+                label="자동 조정으로 되돌리기"
                 onPress={() => {
-                  // 지정 해제 예약 — 저장 시 userPriorityScore: null 전송 → 자동 조정 복귀
-                  setPriorityScore(task?.aiPriorityScore ?? 0.5);
+                  // 지정 해제 예약 — 저장 시 userPriorityScore: null 전송 → 자동 조정 복귀.
+                  // 슬라이더도 자동 모드가 실제로 보여줄 합성값 위치로 이동 (AI 원점수 아님)
+                  setPriorityScore(autoEffectivePriority(task?.aiPriorityScore ?? null, task?.deadline ?? null));
                   setClearOverride(true);
                   setPriorityDirty(false);
                 }}
