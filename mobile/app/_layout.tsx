@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '../src/auth/AuthContext';
+import { ToastProvider } from '../src/components/retro/ToastProvider';
 import { queryClient } from '../src/query/queryClient';
 
 SplashScreen.preventAutoHideAsync();
@@ -30,8 +31,10 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BottomSheetModalProvider>
-            <StatusBar style="auto" />
-            <Stack screenOptions={{ headerShown: false }} />
+            <ToastProvider>
+              <StatusBar style="auto" />
+              <Stack screenOptions={{ headerShown: false }} />
+            </ToastProvider>
           </BottomSheetModalProvider>
         </AuthProvider>
       </QueryClientProvider>
