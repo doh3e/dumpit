@@ -38,7 +38,8 @@
         }
       ],
       "@react-native-google-signin/google-signin",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "react-native-notify-kit"
     ],
     "experiments": {
       "typedRoutes": true,
