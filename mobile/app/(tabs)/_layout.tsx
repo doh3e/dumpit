@@ -1,13 +1,16 @@
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Redirect, Tabs } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useAuth } from '../../src/auth/AuthContext';
+import { AddTaskSheet } from '../../src/components/task/AddTaskSheet';
 import { RetroTabBar } from '../../src/components/shell/RetroTabBar';
 import { SpeedDial } from '../../src/components/shell/SpeedDial';
 
 export default function TabsLayout() {
   const { me } = useAuth();
   const [dialOpen, setDialOpen] = useState(false);
+  const addSheetRef = useRef<BottomSheetModal>(null);
 
   if (!me) return <Redirect href="/" />;
 
@@ -35,7 +38,7 @@ export default function TabsLayout() {
           {
             emoji: '📝',
             label: '태스크 추가',
-            onPress: () => { setDialOpen(false); /* Task 14: AddTaskSheet.present() 연결 */ },
+            onPress: () => { setDialOpen(false); addSheetRef.current?.present(); },
           },
           {
             emoji: '💭',
@@ -44,6 +47,7 @@ export default function TabsLayout() {
           },
         ]}
       />
+      <AddTaskSheet ref={addSheetRef} />
     </View>
   );
 }
