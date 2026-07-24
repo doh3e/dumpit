@@ -7,9 +7,10 @@ export type MeResponse = {
   picture: string | null;
   coins: number;
   isAdmin: boolean;
+  equipments: Record<string, string>;   // slot → 장착 아이템 코드 (서버가 항상 내려줌)
 };
 
-/** 백엔드 /auth/me 응답 그대로 (equipments 등 추가 필드는 Phase 1에서 확장) */
+/** 백엔드 /auth/me 응답 그대로 */
 export async function fetchMe(config?: AxiosRequestConfig): Promise<MeResponse> {
   const { data } = await api.get('/auth/me', config);
   return data;

@@ -18,7 +18,10 @@ export function getCategory(value: string | null | undefined) {
 }
 
 /** 서버 UsageType 비용표와 일치 (변경 시 백엔드 확인) */
-export const AI_COSTS = { TASK_CREATE: 1, TASK_REANALYZE: 1, SUBTASK_PROPOSAL: 3, BRAIN_DUMP: 5 } as const;
+export const AI_COSTS = {
+  TASK_CREATE: 1, TASK_REANALYZE: 1, SUBTASK_PROPOSAL: 3, BRAIN_DUMP: 5,
+  IDEA_EXTRACT: 5, IDEA_CONVERT: 1,
+} as const;
 
 export const QUEUE_BUCKET_LABEL: Record<RecommendationBucket, string> = {
   OVERDUE: '마감 지남', TODAY: '오늘', TOMORROW: '내일',

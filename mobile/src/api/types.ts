@@ -114,3 +114,83 @@ export type UserSettings = {
 };
 
 export type PomodoroSettleResponse = { coins: number; totalCoins: number; settledSessions: number };
+
+/** IdeaResponse.java 대응 */
+export type IdeaResponse = {
+  ideaId: string;
+  parentIdeaId: string | null;
+  convertedTaskId: string | null;
+  title: string;
+  content: string | null;
+  category: string | null;
+  pinned: boolean;
+  convertedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  stickerCode: string | null;
+};
+
+/** AI 추출 미리보기 노드 (재귀) */
+export type IdeaNode = { title: string; content: string | null; category: string | null; children: IdeaNode[] };
+
+export type ProfileResponse = {
+  email: string;
+  nickname: string;
+  picture: string | null;
+  bio: string | null;
+  coinBalance: number;
+};
+
+export type StatsResponse = {
+  totalDone: number;
+  totalTodo: number;
+  totalInProgress: number;
+  categoryBreakdown: Record<string, number>;
+  streak: number;
+  heatmap: Record<string, number>;   // "yyyy-MM-dd" → 완료 건수 (28주)
+  brainDumpCount: number;
+  ideaCount: number;
+  pomodoroTotalMinutes: number;
+  pomodoroTotalSessions: number;
+  coinBalance: number;
+};
+
+export type OverdueTask = {
+  taskId: string;
+  title: string;
+  category: Category;
+  deadline: string;
+  estimatedMinutes: number | null;
+};
+
+export type NoticeResponse = {
+  noticeId: string;
+  title: string;
+  content: string;
+  pinned: boolean;
+  popup: boolean;
+  publishAt: string | null;
+  createdAt: string;
+};
+
+export type NoticePage = {
+  pinned: NoticeResponse[];
+  notices: NoticeResponse[];
+  page: number;
+  totalPages: number;
+  totalElements: number;
+};
+
+export type CatalogItem = {
+  code: string;
+  type: 'THEME' | 'STICKER';
+  slot: string | null;   // BACKGROUND | CHROME | POMODORO | PLANET | CELEBRATION | STATION (STICKER는 null)
+  name: string;
+  description: string;
+  price: number;
+  tier: 'COLOR' | 'CONCEPT';
+  owned: boolean;
+  equipped: boolean;
+};
+
+export type CatalogResponse = { coinBalance: number; items: CatalogItem[] };
