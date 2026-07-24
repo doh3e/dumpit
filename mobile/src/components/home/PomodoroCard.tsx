@@ -1,5 +1,5 @@
 import { router, type Href } from 'expo-router';
-import { useEffect, useReducer } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { deriveState } from '../../pomodoro/engine';
 import { getSession, subscribe } from '../../pomodoro/store';
@@ -17,16 +17,17 @@ function fmt(sec: number): string {
 /** 홈 뽀모도로 진입 카드 — 대기: 시작 버튼 / 실행 중: 남은 시간 미니 표시 (umbrella §3) */
 export function PomodoroCard() {
   const { colors } = useTheme();
-  const [, force] = useReducer((x: number) => x + 1, 0);
-  useEffect(() => subscribe(force), []);
+  // 렌더 중 Date.now() 직접 읽기는 React Compiler가 캐시해 시간이 멈춰 보인다 — now를 상태로 관리
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => subscribe(() => setNow(Date.now())), []);
 
   const session = getSession();
-  const derived = session ? deriveState(session, Date.now()) : null;
+  const derived = session ? deriveState(session, now) : null;
   const running = !!session && session.pausedAt == null && derived?.phase !== 'DONE';
 
   useEffect(() => {
     if (!running) return;
-    const t = setInterval(force, 1000);
+    const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, [running]);
 

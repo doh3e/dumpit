@@ -1,7 +1,7 @@
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getApiErrorMessage } from '../src/api/client';
 import { PomodoroSettingsSheet } from '../src/components/pomodoro/PomodoroSettingsSheet';
@@ -26,7 +26,8 @@ export default function PomodoroScreen() {
   const { colors } = useTheme();
   const toast = useToast();
   const qc = useQueryClient();
-  const [, force] = useReducer((x: number) => x + 1, 0);
+  // 렌더 중 Date.now() 직접 읽기는 React Compiler가 캐시해 시간이 멈춰 보인다 — now를 상태로 관리
+  const [now, setNow] = useState(() => Date.now());
 
   const [settings, setSettings] = useState<PomodoroSettings>(DEFAULT_SETTINGS);
   const [picked, setPicked] = useState<PickedTask | null>(null);
@@ -34,19 +35,19 @@ export default function PomodoroScreen() {
   const settingsSheet = useRef<BottomSheetModal>(null);
   const pickerSheet = useRef<BottomSheetModal>(null);
 
-  useEffect(() => subscribe(force), []);
+  useEffect(() => subscribe(() => setNow(Date.now())), []);
   useEffect(() => {
     loadSettings().then(setSettings);
   }, []);
 
   const session = getSession();
-  const derived = session ? deriveState(session, Date.now()) : null;
+  const derived = session ? deriveState(session, now) : null;
   const running = !!session && session.pausedAt == null && derived?.phase !== 'DONE';
 
   // 화면에 보이는 동안만 1초 틱 — 시간 자체는 앵커 재계산이라 틱은 표시용
   useEffect(() => {
     if (!running) return;
-    const t = setInterval(force, 1000);
+    const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, [running]);
 

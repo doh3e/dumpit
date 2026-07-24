@@ -96,12 +96,13 @@ export default function HomeScreen() {
   }, []);
 
   // 뽀모도로 집중 중이면 히어로가 그 태스크를 표시 (웹 pomodoroFocus 패리티).
-  // 콜드스타트·백그라운드 복귀 정산 결과도 여기서 소비 — 홈은 탭 셸 아래 상시 마운트라 놓치지 않는다
-  const [, forcePomodoro] = useState(0);
+  // 콜드스타트·백그라운드 복귀 정산 결과도 여기서 소비 — 홈은 탭 셸 아래 상시 마운트라 놓치지 않는다.
+  // Date.now()는 렌더에서 직접 읽지 않는다 (React Compiler 캐시로 시간이 멈춰 보임) — 상태로 관리
+  const [pomoNow, setPomoNow] = useState(() => Date.now());
   useEffect(
     () =>
       subscribe(() => {
-        forcePomodoro((x) => x + 1);
+        setPomoNow(Date.now());
         const settled = takePendingSettleResult();
         if (settled) {
           toast.show(`밀린 ${settled.settledSessions}세트 정산 · +${settled.coins} 코인`);
@@ -113,13 +114,13 @@ export default function HomeScreen() {
   const pomoSession = getSession();
   const heroFocus =
     pomoSession && pomoSession.pausedAt == null && pomoSession.taskTitle
-    && deriveState(pomoSession, Date.now()).phase === 'FOCUS'
+    && deriveState(pomoSession, pomoNow).phase === 'FOCUS'
       ? { title: pomoSession.taskTitle }
       : null;
   // 페이즈 전환은 store 이벤트가 없으므로(시간 경과) 집중 표시 중에만 가볍게 재파생
   useEffect(() => {
     if (!heroFocus) return;
-    const t = setInterval(() => forcePomodoro((x) => x + 1), 15_000);
+    const t = setInterval(() => setPomoNow(Date.now()), 15_000);
     return () => clearInterval(t);
   }, [heroFocus != null]); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -24,14 +24,24 @@ function liveId(phase: Phase): string {
   return `${LIVE_PREFIX}-${phase.kind}-${phase.index}`;
 }
 
+// 크로노미터는 제조사 스킨에 따라 접힌 알림에서 안 보일 수 있어(스펙 §9),
+// 어느 기종에서든 보이도록 종료 시각을 본문에 함께 박는다 (고정값이라 틱 없이도 정확)
+function fmtClock(ms: number): string {
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 function liveContent(phase: Phase, session: Session): { title: string; body: string } {
   if (phase.kind === 'FOCUS') {
     return {
       title: `🍅 집중 중${session.taskTitle ? ` · ${session.taskTitle}` : ''}`,
-      body: '끝나면 알려드릴게요',
+      body: `${fmtClock(phase.endsAt)}까지 집중 — 끝나면 알려드릴게요`,
     };
   }
-  return { title: `☕ ${phase.long ? '긴 ' : ''}휴식 중`, body: '다음 집중까지 쉬어요' };
+  return {
+    title: `☕ ${phase.long ? '긴 ' : ''}휴식 중`,
+    body: `${fmtClock(phase.endsAt)}까지 쉬어요`,
+  };
 }
 
 function boundaryAlert(phase: Phase, next: Phase | null, session: Session): { title: string; body: string } {
