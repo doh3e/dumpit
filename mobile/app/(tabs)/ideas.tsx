@@ -1,5 +1,132 @@
-import { ComingSoon } from '../../src/components/shell/ComingSoon';
+import { useQuery } from '@tanstack/react-query';
+import { router, type Href } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { fetchIdeas } from '../../src/api/ideas';
+import { RetroBadge } from '../../src/components/retro/RetroBadge';
+import { RetroButton } from '../../src/components/retro/RetroButton';
+import { RetroCard } from '../../src/components/retro/RetroCard';
+import { buildTreeRows } from '../../src/ideas/tree';
+import { keys } from '../../src/query/keys';
+import { getCategory } from '../../src/tasks/constants';
+import { STICKER_SPRITES } from '../../src/tasks/stickers';
+import { fonts } from '../../src/theme/typography';
+import { useTheme } from '../../src/theme/useTheme';
 
 export default function IdeasScreen() {
-  return <ComingSoon emoji="💡" title="아이디어는 준비 중" phase="Phase 3에서 만나요" />;
+  const { colors } = useTheme();
+  const ideas = useQuery({ queryKey: keys.ideas, queryFn: fetchIdeas });
+
+  const [query, setQuery] = useState('');
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const toggleExpand = useCallback((ideaId: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(ideaId)) next.delete(ideaId);
+      else next.add(ideaId);
+      return next;
+    });
+  }, []);
+
+  const rows = useMemo(
+    () => buildTreeRows(ideas.data ?? [], query, expandedIds),
+    [ideas.data, query, expandedIds],
+  );
+
+  const [pulling, setPulling] = useState(false);
+  const onRefresh = useCallback(() => {
+    setPulling(true);
+    ideas.refetch().finally(() => setPulling(false));
+  }, [ideas]);
+
+  return (
+    <View style={[styles.screen, { backgroundColor: colors.bg }]}>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={pulling} onRefresh={onRefresh} colors={[colors.accent]} tintColor={colors.accent} />
+        }
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.headerRow}>
+          <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>아이디어</Text>
+          <View style={styles.headerActions}>
+            <RetroButton label="💭 덤프하기" size="sm" variant="ghost" onPress={() => router.push('/idea-dump' as Href)} />
+            <RetroButton label="＋ 새 아이디어" size="sm" onPress={() => router.push('/idea-edit' as Href)} />
+          </View>
+        </View>
+
+        {/* 한글 IME 조합 보호 — uncontrolled */}
+        <TextInput
+          defaultValue=""
+          onChangeText={setQuery}
+          placeholder="🔍 제목·내용 검색"
+          placeholderTextColor={colors.sub}
+          style={[styles.search, { borderColor: colors.line, backgroundColor: colors.card, color: colors.fg, fontFamily: fonts.body }]}
+          accessibilityLabel="아이디어 검색"
+        />
+
+        <RetroCard style={styles.listCard}>
+          {rows.length === 0 && (
+            <Text style={[styles.empty, { color: colors.sub, fontFamily: fonts.body }]}>
+              {query ? '검색 결과가 없어요.' : '떠오른 생각을 아이디어로 붙잡아두세요.\n덤프하기로 쏟아내면 AI가 정리해줘요.'}
+            </Text>
+          )}
+          {rows.map(({ idea, depth, childCount, isExpanded }) => {
+            const sticker = idea.stickerCode ? STICKER_SPRITES[idea.stickerCode] : null;
+            const category = idea.category ? getCategory(idea.category) : null;
+            return (
+              <View key={idea.ideaId} style={[styles.row, { borderTopColor: colors.line, paddingLeft: depth * 14 }]}>
+                {childCount > 0 ? (
+                  <Pressable onPress={() => toggleExpand(idea.ideaId)} hitSlop={8}
+                    accessibilityLabel={isExpanded ? '접기' : `하위 ${childCount}개 펼치기`}>
+                    <Text style={[styles.caret, { color: colors.sub, fontFamily: fonts.chrome }]}>
+                      {isExpanded ? '▾' : '▸'}{childCount}
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <View style={styles.caretSpacer} />
+                )}
+                <Pressable
+                  style={({ pressed }) => [styles.rowMain, { opacity: pressed ? 0.7 : 1 }]}
+                  onPress={() => router.push({ pathname: '/idea-edit', params: { ideaId: idea.ideaId } } as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${idea.title} 편집`}
+                >
+                  {sticker && <Image source={sticker.img} style={styles.sticker} resizeMode="contain" />}
+                  <Text numberOfLines={1} style={[styles.title, { color: colors.fg, fontFamily: fonts.display }]}>
+                    {idea.pinned ? '📌 ' : ''}{idea.title}
+                  </Text>
+                  {category && (
+                    <Text style={[styles.category, { color: colors.sub, fontFamily: fonts.chrome }]}>
+                      {category.emoji}
+                    </Text>
+                  )}
+                  {idea.convertedTaskId && <RetroBadge text="✔︎ 태스크" tone="sub" />}
+                </Pressable>
+              </View>
+            );
+          })}
+        </RetroCard>
+      </ScrollView>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  body: { padding: 16, paddingTop: 60, gap: 12, paddingBottom: 28 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
+  heading: { fontSize: 22 },
+  headerActions: { flexDirection: 'row', gap: 6 },
+  search: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, minHeight: 44 },
+  listCard: { gap: 0 },
+  empty: { fontSize: 13, lineHeight: 20, paddingVertical: 10 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 6, borderTopWidth: 1, paddingVertical: 11, minHeight: 44 },
+  caret: { fontSize: 11, minWidth: 26 },
+  caretSpacer: { minWidth: 26 },
+  rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  sticker: { width: 20, height: 20 },
+  title: { fontSize: 14, flexShrink: 1 },
+  category: { fontSize: 12 },
+});
