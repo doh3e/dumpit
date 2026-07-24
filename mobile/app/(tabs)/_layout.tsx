@@ -1,13 +1,17 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Redirect, Tabs, router, type Href } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useAuth } from '../../src/auth/AuthContext';
+import { NoticePopup } from '../../src/components/notice/NoticePopup';
 import { AddTaskSheet } from '../../src/components/task/AddTaskSheet';
 import { RetroTabBar } from '../../src/components/shell/RetroTabBar';
 import { SpeedDial } from '../../src/components/shell/SpeedDial';
 import { AppState } from 'react-native';
 import { initPomodoro, reconcile } from '../../src/pomodoro/store';
+
+const HELP_SEEN_KEY = 'dumpit_help_seen';
 
 export default function TabsLayout() {
   const { me } = useAuth();
@@ -25,6 +29,16 @@ export default function TabsLayout() {
       if (state === 'active') reconcile();
     });
     return () => sub.remove();
+  }, []);
+
+  // 최초 실행 1회 도움말 자동 노출 (웹 HELP_SEEN 패리티)
+  useEffect(() => {
+    AsyncStorage.getItem(HELP_SEEN_KEY).then((seen) => {
+      if (!seen) {
+        AsyncStorage.setItem(HELP_SEEN_KEY, '1').catch(() => {});
+        router.push('/help' as Href);
+      }
+    }).catch(() => {});
   }, []);
 
   if (!me) return <Redirect href="/" />;
@@ -63,6 +77,7 @@ export default function TabsLayout() {
         ]}
       />
       <AddTaskSheet ref={addSheetRef} />
+      <NoticePopup />
     </View>
   );
 }
