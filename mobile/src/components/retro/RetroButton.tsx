@@ -6,7 +6,7 @@ import { useTheme } from '../../theme/useTheme';
 type Props = {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'ghost' | 'danger' | 'focus';
   size?: 'md' | 'sm';
   disabled?: boolean;
   busy?: boolean;
@@ -20,6 +20,7 @@ export function RetroButton({ label, onPress, variant = 'primary', size = 'md', 
     primary: { bg: colors.accent, fg: colors.onAccent },
     ghost: { bg: colors.card, fg: colors.fg },
     danger: { bg: colors.warn, fg: colors.onAccent },
+    focus: { bg: colors.accent2, fg: colors.onAccent },   // 진행 중 상태 표시용 (틸)
   }[variant];
   const blocked = disabled || busy;
 

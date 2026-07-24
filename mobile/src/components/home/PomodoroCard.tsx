@@ -44,29 +44,29 @@ export function PomodoroCard() {
     );
   }
 
-  const phaseEmoji = derived.phase === 'FOCUS' ? '🍅' : derived.phase === 'BREAK' ? '☕' : '🎉';
-  const phaseLabel =
-    derived.phase === 'DONE' ? '모든 세트 완료!'
-    : session.pausedAt != null ? '일시정지됨'
-    : derived.phase === 'FOCUS' ? '집중 중' : derived.long ? '긴 휴식 중' : '휴식 중';
+  // 실행 중엔 버튼이 상태를 입는다 — 라벨·색(틸)로 "지금 돌아가는 중"을 표시 (사용자 피드백 2026-07-24)
+  const paused = session.pausedAt != null;
+  const buttonLabel =
+    derived.phase === 'DONE' ? '🎉 완료 · 정리하기'
+    : paused ? '⏸ 일시정지 · 확인하기'
+    : derived.phase === 'FOCUS' ? '🍅 집중 중 · 확인하기'
+    : derived.long ? '☕ 긴 휴식 중 · 확인하기' : '☕ 휴식 중 · 확인하기';
+  const statusLine =
+    derived.phase === 'DONE'
+      ? '모든 세트 완료!'
+      : `${fmt(derived.remainingSec)} 남음${session.taskTitle ? ` · 🎯 ${session.taskTitle}` : ''}`;
 
   return (
     <Pressable onPress={goTimer} accessibilityRole="button" accessibilityLabel="뽀모도로 타이머 열기">
       {({ pressed }) => (
-        <RetroCard style={[styles.runCard, pressed && { opacity: 0.85 }]}>
-          <Text style={[styles.runTime, { color: colors.fg, fontFamily: fonts.display }]}>
-            {phaseEmoji} {derived.phase === 'DONE' ? '완료' : fmt(derived.remainingSec)}
-          </Text>
-          <View style={styles.runText}>
-            <Text style={[styles.runLabel, { color: colors.sub, fontFamily: fonts.chrome }]}>
-              {session.pausedAt != null ? '⏸️ ' : ''}{phaseLabel}
+        <RetroCard style={[styles.idleCard, pressed && { opacity: 0.85 }]}>
+          <View style={styles.idleText}>
+            <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>🍅 뽀모도로</Text>
+            <Text numberOfLines={1} style={[styles.sub, { color: paused ? colors.sub : colors.fg, fontFamily: fonts.chrome }]}>
+              {statusLine}
             </Text>
-            {session.taskTitle && (
-              <Text numberOfLines={1} style={[styles.sub, { color: colors.fg, fontFamily: fonts.body }]}>
-                🎯 {session.taskTitle}
-              </Text>
-            )}
           </View>
+          <RetroButton label={buttonLabel} size="sm" variant={derived.phase === 'DONE' ? 'primary' : 'focus'} onPress={goTimer} />
         </RetroCard>
       )}
     </Pressable>
@@ -78,8 +78,4 @@ const styles = StyleSheet.create({
   idleText: { flex: 1, gap: 3 },
   title: { fontSize: 15 },
   sub: { fontSize: 12 },
-  runCard: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  runTime: { fontSize: 26 },
-  runText: { flex: 1, gap: 3 },
-  runLabel: { fontSize: 11 },
 });
