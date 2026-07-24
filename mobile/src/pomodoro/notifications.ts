@@ -9,26 +9,32 @@ import type { PlannedNotification } from './notificationPlan';
 
 /** notify-kit 래퍼 — 알림 "무엇을/언제"는 notificationPlan 순수 함수가 결정하고 여기는 적용만 한다 */
 
-const CHANNELS = [
-  { id: 'pomodoro-ongoing', name: '뽀모도로 진행 상황', importance: AndroidImportance.LOW },
-  { id: 'pomodoro-alert', name: '뽀모도로 전환 알림', importance: AndroidImportance.HIGH },
-] as const;
+// 채널은 최초 생성 시 설정이 동결된다 — 소리·진동을 명시하지 않고 만든 v1 alert 채널이
+// 기기에서 무음이 될 수 있어 v2로 재생성 (기존 설치자도 새 채널로 갈아탄다. 2026-07-24 스모크 픽스)
+const ONGOING_CHANNEL = 'pomodoro-ongoing';
+const ALERT_CHANNEL = 'pomodoro-alert-v2';
 
 export async function ensureChannels(): Promise<void> {
-  for (const ch of CHANNELS) {
-    await notifee.createChannel({ id: ch.id, name: ch.name, importance: ch.importance });
-  }
+  await notifee.createChannel({
+    id: ONGOING_CHANNEL, name: '뽀모도로 진행 상황', importance: AndroidImportance.LOW,
+  });
+  await notifee.createChannel({
+    id: ALERT_CHANNEL, name: '뽀모도로 전환 알림', importance: AndroidImportance.HIGH,
+    sound: 'default', vibration: true,
+  });
 }
 
 function toContent(n: PlannedNotification) {
+  const isAlert = n.channel === 'pomodoro-alert';
   return {
     id: n.id,
     title: n.title,
     body: n.body,
     android: {
-      channelId: n.channel,
+      channelId: isAlert ? ALERT_CHANNEL : ONGOING_CHANNEL,
       ongoing: n.ongoing,
-      onlyAlertOnce: true,
+      // 전환 알림은 매번 울려야 한다 — onlyAlertOnce는 무음 ongoing 채널에만
+      onlyAlertOnce: !isAlert,
       pressAction: { id: 'default' as const, launchActivity: 'default' as const },
       showChronometer: n.countdownTo != null,
       chronometerDirection: 'down' as const,
