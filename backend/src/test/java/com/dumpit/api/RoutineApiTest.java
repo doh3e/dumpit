@@ -86,6 +86,26 @@ class RoutineApiTest extends ApiIntegrationTestBase {
     // ---------- POST /routines ----------
 
     @Test
+    void 생성된_태스크의_기본_마감은_활동_종료_시각이다_wrap유저() throws Exception {
+        // 야행성(22~05) 일과 — dayEnd가 항상 미래(내일 새벽)라 실행 시각과 무관하게 결정적
+        mockMvc.perform(patch("/me/settings").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of("routineStartHour", 22, "routineEndHour", 5))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/routines").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(dailyBody("야행성 루틴"))))
+                .andExpect(status().isCreated());
+
+        String expected = LocalDate.now().plusDays(1).atTime(5, 0).toString();
+        mockMvc.perform(get("/tasks").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].category").value("ROUTINE"))
+                .andExpect(jsonPath("$[0].deadline").value(org.hamcrest.Matchers.startsWith(expected)));
+    }
+
+    @Test
     void 생성_DAILY_201_응답_필드shape() throws Exception {
         mockMvc.perform(post("/routines").with(asUser(USER_A))
                         .contentType(MediaType.APPLICATION_JSON)

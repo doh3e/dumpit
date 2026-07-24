@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import { parseDate } from '../utils/dates'
 
@@ -458,13 +458,13 @@ export default function RoutinePage() {
                     />
                   ) : (
                     <div className="rounded-lg border-2 border-line bg-accent px-3 py-2 text-xs font-extrabold text-sub">
-                      종료 시간 없음 · 마감 23:59
+                      종료 시간 없음 · 일과 끝나는 시각 마감
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="rounded-lg border-2 border-line bg-accent px-3 py-2 text-xs font-extrabold text-sub">
-                  오늘 안에 완료 · 마감 23:59
+                  오늘 안에 완료 · 일과 끝나는 시각 마감
                 </div>
               )}
             </div>
