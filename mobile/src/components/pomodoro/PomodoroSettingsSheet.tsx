@@ -46,6 +46,10 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
 
     const patch = (p: Partial<PomodoroSettings>) => setDraft((d) => clampSettings({ ...d, ...p }));
 
+    // 5분 단위 눈금 스냅 — 최소값(1)에서 올릴 때 1→6→11로 어긋나지 않게 (1→5→10…)
+    const step5 = (value: number, direction: number) =>
+      direction > 0 ? (Math.floor(value / 5) + 1) * 5 : (Math.ceil(value / 5) - 1) * 5;
+
     return (
       <BottomSheetModal
         ref={ref}
@@ -56,13 +60,13 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
       >
         <BottomSheetView style={styles.body}>
           <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>타이머 설정</Text>
-          <StepperRow label="집중 (분)" value={draft.focusMin} onDelta={(d) => patch({ focusMin: draft.focusMin + d * 5 })} />
+          <StepperRow label="집중 (분)" value={draft.focusMin} onDelta={(d) => patch({ focusMin: step5(draft.focusMin, d) })} />
           <StepperRow label="휴식 (분)" value={draft.breakMin} onDelta={(d) => patch({ breakMin: draft.breakMin + d })} />
           <StepperRow label="세트 수" value={draft.setsTarget} display={draft.setsTarget === 0 ? '∞' : String(draft.setsTarget)}
             onDelta={(d) => patch({ setsTarget: draft.setsTarget + d })} />
           {draft.setsTarget !== 1 && (
             <>
-              <StepperRow label="긴 휴식 (분)" value={draft.longBreakMin} onDelta={(d) => patch({ longBreakMin: draft.longBreakMin + d * 5 })} />
+              <StepperRow label="긴 휴식 (분)" value={draft.longBreakMin} onDelta={(d) => patch({ longBreakMin: step5(draft.longBreakMin, d) })} />
               <StepperRow label="긴 휴식 주기 (세트)" value={draft.longBreakEvery} onDelta={(d) => patch({ longBreakEvery: draft.longBreakEvery + d })} />
             </>
           )}
