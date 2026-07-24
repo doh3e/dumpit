@@ -35,11 +35,11 @@ export function repeatSummary(r: RepeatFields): string {
 
 type TimeFields = Pick<RoutineResponse, 'routineStartTime' | 'createTime' | 'routineEndTime'>;
 
-/** 시각 요약 — "HH:mm:ss"도 앞 5자만 표시 */
+/** 시각 요약 — "HH:mm:ss"도 앞 5자만 표시. 종료 미지정 기본 마감 = 활동 종료 시각 (서버 2026-07-24) */
 export function timeSummary(r: TimeFields): string {
   const start = (r.routineStartTime ?? r.createTime)?.slice(0, 5) ?? null;
   const end = r.routineEndTime?.slice(0, 5) ?? null;
   if (start && end) return `${start} 시작 · ${end} 마감`;
-  if (start) return `${start} 시작 · 23:59 마감`;
-  return '오늘 안에 · 23:59 마감';
+  if (start) return `${start} 시작 · 일과 끝 마감`;
+  return '오늘 안에 · 일과 끝 마감';
 }

@@ -258,8 +258,8 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
             {form.hasStartTime
               ? form.hasEndTime
                 ? '시작~종료로 잠긴 일정이 만들어져요.'
-                : '시작 시각으로 생성되고 마감은 23:59예요.'
-              : '오늘 안에 완료 · 마감 23:59로 만들어져요.'}
+                : '시작 시각으로 생성되고 마감은 일과 끝나는 시각이에요.'
+              : '오늘 안에 완료 · 일과 끝나는 시각 마감으로 만들어져요.'}
           </Text>
         </RetroCard>
 

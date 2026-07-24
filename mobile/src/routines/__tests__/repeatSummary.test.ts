@@ -34,8 +34,8 @@ describe('timeSummary', () => {
     expect(timeSummary({ routineStartTime: '18:00:00', createTime: null, routineEndTime: '20:30:00' }))
       .toBe('18:00 시작 · 20:30 마감');
     expect(timeSummary({ routineStartTime: null, createTime: '06:00', routineEndTime: null }))
-      .toBe('06:00 시작 · 23:59 마감');
+      .toBe('06:00 시작 · 일과 끝 마감');
     expect(timeSummary({ routineStartTime: null, createTime: null, routineEndTime: null }))
-      .toBe('오늘 안에 · 23:59 마감');
+      .toBe('오늘 안에 · 일과 끝 마감');
   });
 });
