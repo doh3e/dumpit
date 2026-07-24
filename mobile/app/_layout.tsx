@@ -9,6 +9,14 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '../src/auth/AuthContext';
 import { ToastProvider } from '../src/components/retro/ToastProvider';
 import { queryClient } from '../src/query/queryClient';
+import { ThemeProvider } from '../src/theme/ThemeProvider';
+import { useTheme } from '../src/theme/useTheme';
+
+/** 수동 다크 모드에서도 상태바 아이콘이 배경과 맞게 — Provider 안쪽에서 scheme 구독 */
+function ThemedStatusBar() {
+  const { scheme } = useTheme();
+  return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />;
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,16 +36,18 @@ export default function RootLayout() {
   if (!loaded) return null;
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <BottomSheetModalProvider>
-            <ToastProvider>
-              <StatusBar style="auto" />
-              <Stack screenOptions={{ headerShown: false }} />
-            </ToastProvider>
-          </BottomSheetModalProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <BottomSheetModalProvider>
+              <ToastProvider>
+                <ThemedStatusBar />
+                <Stack screenOptions={{ headerShown: false }} />
+              </ToastProvider>
+            </BottomSheetModalProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

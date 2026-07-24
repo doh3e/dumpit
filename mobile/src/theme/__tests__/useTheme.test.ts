@@ -3,6 +3,8 @@ jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
   __esModule: true,
   default: jest.fn(),
 }));
+// 렌더 밖 직접 호출 테스트 — ThemeProvider 부재(ctx null) 폴백 경로를 검증한다
+jest.mock('react', () => ({ ...jest.requireActual('react'), useContext: () => null }));
 
 import { palettes } from '../tokens';
 import { useTheme } from '../useTheme';
