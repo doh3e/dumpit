@@ -1,11 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../../src/api/client';
 import { fetchOverdueTasks, fetchProfile, fetchStats, patchProfile } from '../../src/api/profile';
 import { patchTask } from '../../src/api/tasks';
 import { useAuth } from '../../src/auth/AuthContext';
+import { CoinIcon } from '../../src/components/common/CoinIcon';
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
 import { useToast } from '../../src/components/retro/ToastProvider';
@@ -33,6 +35,9 @@ export default function MyScreen() {
   const toast = useToast();
   const qc = useQueryClient();
   const { me, refresh } = useAuth();
+
+  const insets = useSafeAreaInsets();
+  const heatScroll = useRef<ScrollView>(null);
 
   const profile = useQuery({ queryKey: keys.profile, queryFn: fetchProfile });
   const stats = useQuery({ queryKey: keys.stats, queryFn: fetchStats });
@@ -89,12 +94,12 @@ export default function MyScreen() {
   const weeks = s ? heatmapWeeks(s.heatmap, todayKey) : [];
   const bars = s ? categoryBars(s.categoryBreakdown) : [];
 
-  const tiles = s
+  const tiles: { label: string; value: string; sub?: string; coin?: boolean }[] = s
     ? [
         { label: '완료한 태스크', value: String(s.totalDone) },
         { label: '뽀모도로 집중', value: `${s.pomodoroTotalSessions}회`, sub: `누적 ${formatFocusTotal(s.pomodoroTotalMinutes)}` },
         { label: '연속 완료', value: `${s.streak}일`, sub: '오늘 기준' },
-        { label: '보유 코인', value: `🪙 ${s.coinBalance}` },
+        { label: '보유 코인', value: String(s.coinBalance), coin: true },
         { label: '브레인 덤프', value: String(s.brainDumpCount) },
         { label: '저장한 아이디어', value: String(s.ideaCount) },
       ]
@@ -106,7 +111,7 @@ export default function MyScreen() {
         refreshControl={
           <RefreshControl refreshing={pulling} onRefresh={onRefresh} colors={[colors.accent]} tintColor={colors.accent} />
         }
-        contentContainerStyle={styles.body}
+        contentContainerStyle={[styles.body, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.stationRow}>
@@ -162,7 +167,10 @@ export default function MyScreen() {
               {tiles.map((t) => (
                 <RetroCard key={t.label} style={styles.tile}>
                   <Text style={[styles.tileLabel, { color: colors.sub, fontFamily: fonts.chrome }]}>{t.label}</Text>
-                  <Text style={[styles.tileValue, { color: colors.fg, fontFamily: fonts.display }]}>{t.value}</Text>
+                  <View style={styles.tileValueRow}>
+                    {t.coin && <CoinIcon size={18} />}
+                    <Text style={[styles.tileValue, { color: colors.fg, fontFamily: fonts.display }]}>{t.value}</Text>
+                  </View>
                   {t.sub && <Text style={[styles.tileSub, { color: colors.sub, fontFamily: fonts.body }]}>{t.sub}</Text>}
                 </RetroCard>
               ))}
@@ -170,7 +178,13 @@ export default function MyScreen() {
 
             <RetroCard style={styles.card}>
               <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>🌟 완료 히트맵</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {/* 최신(오늘)이 오른쪽 끝 — 처음부터 오늘이 보이도록 끝으로 붙여둔다 */}
+              <ScrollView
+                ref={heatScroll}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                onContentSizeChange={() => heatScroll.current?.scrollToEnd({ animated: false })}
+              >
                 <View style={styles.heatRow}>
                   {weeks.map((week, wi) => (
                     <View key={wi} style={styles.heatCol}>
@@ -271,7 +285,7 @@ export default function MyScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  body: { padding: 16, paddingTop: 48, gap: 14, paddingBottom: 28 },
+  body: { padding: 16, gap: 14 },
   stationRow: { alignItems: 'center' },
   card: { gap: 10 },
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -286,6 +300,7 @@ const styles = StyleSheet.create({
   tileGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tile: { flexBasis: '47%', flexGrow: 1, gap: 4, paddingVertical: 12 },
   tileLabel: { fontSize: 10 },
+  tileValueRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   tileValue: { fontSize: 20 },
   tileSub: { fontSize: 10 },
   sectionTitle: { fontSize: 14 },

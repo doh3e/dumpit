@@ -2,6 +2,7 @@ import DateTimePicker, { type DateTimePickerEvent } from '@react-native-communit
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
 import type { RepeatType, RoutineResponse } from '../src/api/types';
 import { Chip } from '../src/components/retro/Chip';
@@ -68,6 +69,7 @@ export default function RoutineEditScreen() {
 
 function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const save = useSaveRoutine();
   const remove = useDeleteRoutine();
@@ -122,7 +124,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.bg }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
           <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
         </Pressable>
@@ -132,7 +134,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard style={styles.card}>
           {sectionTitle('이름 *')}
           {/* 한글 IME 조합 보호 — uncontrolled */}
@@ -314,7 +316,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 },
   notFound: { fontSize: 14 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
   back: { fontSize: 22 },
   title: { fontSize: 18, flex: 1, textAlign: 'center' },
   headerSpacer: { width: 22 },

@@ -1,8 +1,9 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
 import { convertIdeaToTask, createIdea, deleteIdea, fetchIdeas, patchIdea, setIdeaSticker } from '../src/api/ideas';
 import type { IdeaResponse } from '../src/api/types';
@@ -79,6 +80,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
   initialParentId: string | null;
 }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
@@ -181,7 +183,8 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
           try {
             await deleteIdea(editing.ideaId);
             qc.invalidateQueries({ queryKey: keys.ideas });
-            router.back();
+            // 뒤로 가면 방금 지운 아이디어의 읽기 화면이라 목록으로 보낸다
+            router.replace('/ideas' as Href);
           } catch (e) {
             toast.show(getApiErrorMessage(e, '삭제하지 못했어요.'));
             setBusy(false);
@@ -193,7 +196,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.bg }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
           <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
         </Pressable>
@@ -203,7 +206,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard style={styles.card}>
           {/* 한글 IME 조합 보호 — uncontrolled */}
           <TextInput
@@ -322,7 +325,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 },
   notFound: { fontSize: 14 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
   back: { fontSize: 22 },
   headerTitle: { fontSize: 18, flex: 1, textAlign: 'center' },
   headerSpacer: { width: 22 },

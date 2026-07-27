@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
 import { deleteAccount } from '../src/api/profile';
 import { useAuth } from '../src/auth/AuthContext';
@@ -22,6 +23,7 @@ const THEME_MODES: { id: ThemeMode; label: string; emoji: string }[] = [
 
 export default function SettingsScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { mode, setMode } = useThemeMode();
   const { signOut } = useAuth();
   const toast = useToast();
@@ -57,7 +59,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.bg }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
           <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
         </Pressable>
@@ -65,7 +67,7 @@ export default function SettingsScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>🎨 테마</Text>
           <View style={styles.chipRow}>
@@ -123,7 +125,7 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
   back: { fontSize: 22 },
   title: { fontSize: 18, flex: 1, textAlign: 'center' },
   headerSpacer: { width: 22 },

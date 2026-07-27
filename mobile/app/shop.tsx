@@ -2,10 +2,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
 import { equipItem, fetchCatalog, purchaseItem, unequipSlot } from '../src/api/shop';
 import type { CatalogItem } from '../src/api/types';
 import { useAuth } from '../src/auth/AuthContext';
+import { CoinIcon } from '../src/components/common/CoinIcon';
 import { Chip } from '../src/components/retro/Chip';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { RetroButton } from '../src/components/retro/RetroButton';
@@ -46,6 +48,7 @@ function ItemPreview({ item }: { item: CatalogItem }) {
 
 export default function ShopScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
   const { refresh } = useAuth();
@@ -75,7 +78,7 @@ export default function ShopScreen() {
   };
 
   const confirmPurchase = (item: CatalogItem) => {
-    Alert.alert('구매', `"${item.name}"을(를) ${item.price}🪙에 구매할까요?`, [
+    Alert.alert('구매', `"${item.name}"을(를) ${item.price}코인에 구매할까요?`, [
       { text: '취소', style: 'cancel' },
       {
         text: '구매',
@@ -112,12 +115,15 @@ export default function ShopScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.bg }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
           <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
         </Pressable>
         <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>🛒 상점</Text>
-        <Text style={[styles.coin, { color: colors.fg, fontFamily: fonts.chrome }]}>🪙 {coin}</Text>
+        <View style={styles.coinRow}>
+          <CoinIcon size={13} />
+          <Text style={[styles.coin, { color: colors.fg, fontFamily: fonts.chrome }]}>{coin}</Text>
+        </View>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar} contentContainerStyle={styles.tabRow}>
@@ -126,7 +132,7 @@ export default function ShopScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView contentContainerStyle={styles.body}>
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         {themeNotApplied && (
           <Text style={[styles.notice, { color: colors.sub, fontFamily: fonts.body }]}>
             이 슬롯은 웹에 즉시 적용돼요 · 앱 화면 적용은 곧 지원됩니다
@@ -152,7 +158,8 @@ export default function ShopScreen() {
             <View style={styles.itemAction}>
               {!item.owned ? (
                 <RetroButton
-                  label={`${item.price}🪙`}
+                  label={String(item.price)}
+                  icon={<CoinIcon size={12} />}
                   size="sm"
                   onPress={() => confirmPurchase(item)}
                   busy={busyCode === item.code}
@@ -182,9 +189,10 @@ export default function ShopScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8, gap: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8, gap: 8 },
   back: { fontSize: 22 },
   title: { fontSize: 18, flex: 1, textAlign: 'center' },
+  coinRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   coin: { fontSize: 13 },
   tabBar: { flexGrow: 0 },
   tabRow: { paddingHorizontal: 16, gap: 6, paddingVertical: 6 },

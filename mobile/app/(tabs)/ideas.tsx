@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { router, type Href } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchIdeas } from '../../src/api/ideas';
 import { RetroBadge } from '../../src/components/retro/RetroBadge';
 import { RetroButton } from '../../src/components/retro/RetroButton';
@@ -15,6 +16,7 @@ import { useTheme } from '../../src/theme/useTheme';
 
 export default function IdeasScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const ideas = useQuery({ queryKey: keys.ideas, queryFn: fetchIdeas });
 
   const [query, setQuery] = useState('');
@@ -45,7 +47,7 @@ export default function IdeasScreen() {
         refreshControl={
           <RefreshControl refreshing={pulling} onRefresh={onRefresh} colors={[colors.accent]} tintColor={colors.accent} />
         }
-        contentContainerStyle={styles.body}
+        contentContainerStyle={[styles.body, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.headerRow}>
@@ -78,10 +80,19 @@ export default function IdeasScreen() {
             return (
               <View key={idea.ideaId} style={[styles.row, { borderTopColor: colors.line, paddingLeft: depth * 14 }]}>
                 {childCount > 0 ? (
-                  <Pressable onPress={() => toggleExpand(idea.ideaId)} hitSlop={8}
-                    accessibilityLabel={isExpanded ? '접기' : `하위 ${childCount}개 펼치기`}>
-                    <Text style={[styles.caret, { color: colors.sub, fontFamily: fonts.chrome }]}>
-                      {isExpanded ? '▾' : '▸'}{childCount}
+                  <Pressable
+                    onPress={() => toggleExpand(idea.ideaId)}
+                    hitSlop={10}
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded: isExpanded }}
+                    accessibilityLabel={isExpanded ? '하위 접기' : `하위 ${childCount}개 펼치기`}
+                    style={({ pressed }) => [
+                      styles.caretBtn,
+                      { borderColor: colors.accent2, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 },
+                    ]}
+                  >
+                    <Text style={[styles.caretText, { color: colors.accent2, fontFamily: fonts.chrome }]}>
+                      {isExpanded ? '▾' : '▸'} {childCount}
                     </Text>
                   </Pressable>
                 ) : (
@@ -89,9 +100,9 @@ export default function IdeasScreen() {
                 )}
                 <Pressable
                   style={({ pressed }) => [styles.rowMain, { opacity: pressed ? 0.7 : 1 }]}
-                  onPress={() => router.push({ pathname: '/idea-edit', params: { ideaId: idea.ideaId } } as never)}
+                  onPress={() => router.push({ pathname: '/idea-view', params: { ideaId: idea.ideaId } } as never)}
                   accessibilityRole="button"
-                  accessibilityLabel={`${idea.title} 편집`}
+                  accessibilityLabel={`${idea.title} 열기`}
                 >
                   {sticker && <Image source={sticker.img} style={styles.sticker} resizeMode="contain" />}
                   <Text numberOfLines={1} style={[styles.title, { color: colors.fg, fontFamily: fonts.display }]}>
@@ -115,7 +126,7 @@ export default function IdeasScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  body: { padding: 16, paddingTop: 60, gap: 12, paddingBottom: 28 },
+  body: { padding: 16, gap: 12 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
   heading: { fontSize: 22 },
   headerActions: { flexDirection: 'row', gap: 6 },
@@ -123,8 +134,12 @@ const styles = StyleSheet.create({
   listCard: { gap: 0 },
   empty: { fontSize: 13, lineHeight: 20, paddingVertical: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6, borderTopWidth: 1, paddingVertical: 11, minHeight: 44 },
-  caret: { fontSize: 11, minWidth: 26 },
-  caretSpacer: { minWidth: 26 },
+  caretBtn: {
+    minWidth: 38, height: 27, borderWidth: 1.5, borderRadius: 6,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5,
+  },
+  caretText: { fontSize: 12 },
+  caretSpacer: { minWidth: 38 },
   rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
   sticker: { width: 20, height: 20 },
   title: { fontSize: 14, flexShrink: 1 },

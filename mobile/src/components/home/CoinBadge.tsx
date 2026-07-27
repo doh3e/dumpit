@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { CoinIcon } from '../common/CoinIcon';
 
 const COUNT_STEPS = 7;
 const COUNT_MS = 240;
@@ -39,7 +40,7 @@ export function CoinBadge({ coins }: { coins: number }) {
       style={[styles.badge, { backgroundColor: colors.chip, borderColor: colors.edge }, animStyle]}
       accessibilityLabel={`코인 ${coins}개`}
     >
-      <Text style={styles.emoji}>🪙</Text>
+      <CoinIcon size={13} />
       <Text style={[styles.count, { color: colors.fg, fontFamily: fonts.chrome }]}>{shown}</Text>
     </Animated.View>
   );
@@ -50,6 +51,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 4,
     borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 5,
   },
-  emoji: { fontSize: 12 },
   count: { fontSize: 12 },
 });

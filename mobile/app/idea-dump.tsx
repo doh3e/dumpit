@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
 import { confirmExtract, extractIdeas } from '../src/api/ideas';
 import type { IdeaNode } from '../src/api/types';
@@ -46,6 +47,7 @@ const previewStyles = StyleSheet.create({
 /** 아이디어 덤프 — 쏟아내기 → AI 계층 정리(5점) → 선택 확정 (웹 IdeaDumpPage 덤프 모드 패리티) */
 export default function IdeaDumpScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
@@ -118,7 +120,7 @@ export default function IdeaDumpScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.bg }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
           <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
         </Pressable>
@@ -126,7 +128,7 @@ export default function IdeaDumpScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         {stage === 'input' ? (
           <>
             <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
@@ -187,7 +189,7 @@ export default function IdeaDumpScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
   back: { fontSize: 22 },
   title: { fontSize: 18, flex: 1, textAlign: 'center' },
   headerSpacer: { width: 22 },

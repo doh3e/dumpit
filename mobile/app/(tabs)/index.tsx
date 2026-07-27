@@ -1,6 +1,7 @@
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../../src/api/client';
 import type { TaskResponse, TaskStatus } from '../../src/api/types';
 import { useAuth } from '../../src/auth/AuthContext';
@@ -27,6 +28,7 @@ import { useTheme } from '../../src/theme/useTheme';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { me, refresh } = useAuth();
   const toast = useToast();
   const planning = usePlanning();
@@ -153,7 +155,7 @@ export default function HomeScreen() {
             tintColor={colors.accent}
           />
         }
-        contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 16, paddingBottom: 28 }}
+        contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 16, paddingBottom: insets.bottom + 40 }}
       >
         {planning.isLoading && (
           <View style={{ paddingVertical: 48 }}>

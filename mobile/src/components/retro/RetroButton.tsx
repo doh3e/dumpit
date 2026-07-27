@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
+import type { ReactNode } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { retroShadow } from '../../theme/tokens';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
@@ -11,10 +12,12 @@ type Props = {
   disabled?: boolean;
   busy?: boolean;
   style?: StyleProp<ViewStyle>;
+  /** 라벨 앞 아이콘 (코인 등) — 접근성 라벨은 label만 읽는다 */
+  icon?: ReactNode;
 };
 
 /** 웹 .btn-retro 이식 — 누르면 3px 밀리며 오프셋 섀도가 접힌다 (login.tsx 패턴) */
-export function RetroButton({ label, onPress, variant = 'primary', size = 'md', disabled, busy, style }: Props) {
+export function RetroButton({ label, onPress, variant = 'primary', size = 'md', disabled, busy, style, icon }: Props) {
   const { colors } = useTheme();
   const palette = {
     primary: { bg: colors.accent, fg: colors.onAccent },
@@ -43,6 +46,13 @@ export function RetroButton({ label, onPress, variant = 'primary', size = 'md', 
     >
       {busy ? (
         <ActivityIndicator color={palette.fg} />
+      ) : icon ? (
+        <View style={styles.iconRow}>
+          {icon}
+          <Text style={[size === 'sm' ? styles.smText : styles.mdText, { color: palette.fg, fontFamily: fonts.displayBold }]}>
+            {label}
+          </Text>
+        </View>
       ) : (
         <Text style={[size === 'sm' ? styles.smText : styles.mdText, { color: palette.fg, fontFamily: fonts.displayBold }]}>
           {label}
@@ -58,4 +68,5 @@ const styles = StyleSheet.create({
   sm: { paddingHorizontal: 12, paddingVertical: 7, minHeight: 34 },
   mdText: { fontSize: 15 },
   smText: { fontSize: 12 },
+  iconRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 });

@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
 import { PomodoroSettingsSheet } from '../src/components/pomodoro/PomodoroSettingsSheet';
 import { TaskPickerSheet, type PickedTask } from '../src/components/pomodoro/TaskPickerSheet';
@@ -24,6 +25,7 @@ import { useTheme } from '../src/theme/useTheme';
 
 export default function PomodoroScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
   // 렌더 중 Date.now() 직접 읽기는 React Compiler가 캐시해 시간이 멈춰 보인다 — now를 상태로 관리
@@ -118,7 +120,7 @@ export default function PomodoroScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.bg }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
           <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
         </Pressable>
@@ -126,7 +128,7 @@ export default function PomodoroScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.body}>
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         {session && derived ? (
           <>
             <TimerRing remainingSec={derived.remainingSec} totalSec={totalSec} phase={derived.phase} long={derived.long} />
@@ -188,7 +190,7 @@ export default function PomodoroScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
   back: { fontSize: 22 },
   title: { fontSize: 18, flex: 1, textAlign: 'center' },
   headerSpacer: { width: 22 },

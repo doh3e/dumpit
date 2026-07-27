@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { fonts } from '../src/theme/typography';
@@ -27,9 +28,10 @@ const FEATURES = [
 
 export default function HelpScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <View style={[styles.screen, { backgroundColor: colors.bg }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
           <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
         </Pressable>
@@ -37,7 +39,7 @@ export default function HelpScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.body}>
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard style={[styles.card, { backgroundColor: colors.chip }] as never}>
           <Text style={[styles.betaTitle, { color: colors.accent, fontFamily: fonts.displayBold }]}>🎉 베타 서비스 안내</Text>
           <Text style={[styles.betaText, { color: colors.sub, fontFamily: fonts.body }]}>
@@ -84,7 +86,7 @@ export default function HelpScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
   back: { fontSize: 22 },
   title: { fontSize: 18, flex: 1, textAlign: 'center' },
   headerSpacer: { width: 22 },
