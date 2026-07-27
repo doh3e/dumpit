@@ -3,8 +3,7 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { setPomodoroFocus, clearPomodoroFocus } from '../services/pomodoroFocus'
 import { nextAfterFocus, autoStartNextFocus } from '../utils/pomodoroCycle'
-import settingImage from '../assets/setting_image.png'
-import arrowheadImage from '../assets/arrowheads.png'
+import { iconProps } from '../assets/icons'
 
 const DEFAULT_FOCUS_MIN = 25
 const DEFAULT_BREAK_MIN = 5
@@ -394,7 +393,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
             aria-label="뽀모도로 위젯 열기"
             title="뽀모도로 위젯 열기"
           >
-            <img src={arrowheadImage} alt="" className="w-3.5 h-3.5 object-contain" />
+            <img {...iconProps('arrowhead', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
           </button>
         )}
         <button
@@ -403,7 +402,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           aria-label="타이머 설정"
           title="타이머 설정"
         >
-          <img src={settingImage} alt="설정" className="w-5 h-5 object-contain" />
+          <img {...iconProps('setting', 20)} alt="설정" className="w-5 h-5 object-contain" />
         </button>
       </div>
 

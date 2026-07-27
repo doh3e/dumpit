@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
-import coinImage from '../assets/coin_image.png'
+import { iconProps } from '../assets/icons'
 import PixelStation from '../components/PixelStation'
 import { useAuth } from '../context/AuthContext'
 
@@ -62,7 +62,7 @@ const STAT_CARDS = (stats) => [
   { theme: '수거한 생각', label: '완료한 태스크', value: stats.totalDone, bg: 'bg-primary', text: 'text-on-accent' },
   { theme: '집중 관제', label: '뽀모도로 집중', value: `${stats.pomodoroTotalSessions ?? 0}회`, sub: `누적 ${formatFocusTotal(stats.pomodoroTotalMinutes)}`, bg: 'bg-secondary', text: 'text-on-accent' },
   { theme: '궤도 유지', label: '연속 완료', value: `${stats.streak}일`, bg: 'bg-chip', text: 'text-dark', sub: '오늘 기준' },
-  { theme: '자원', label: '보유 코인', value: stats.coinBalance, bg: 'bg-card', text: 'text-dark', icon: coinImage },
+  { theme: '자원', label: '보유 코인', value: stats.coinBalance, bg: 'bg-card', text: 'text-dark', icon: iconProps('coin', 24) },
   { label: '브레인 덤프', value: stats.brainDumpCount, bg: 'bg-card', text: 'text-dark' },
   { label: '저장한 아이디어', value: stats.ideaCount, bg: 'bg-card', text: 'text-dark' },
 ]
@@ -365,7 +365,7 @@ export default function MyPage() {
                 className={`snap-start flex-shrink-0 w-32 h-32 rounded-2xl shadow-retro ${bg} flex flex-col items-center justify-center gap-1 p-3 transition-transform duration-150 active:scale-95`}
                 style={{ border: '1.5px solid var(--edge)' }}
               >
-                {icon && <img src={icon} alt="" className="w-6 h-6 object-contain mb-0.5" />}
+                {icon && <img {...icon} alt="" className="w-6 h-6 object-contain mb-0.5" />}
                 <p className={`font-dungeon text-3xl leading-none ${text}`}>{value}</p>
                 {theme && (
                   <p className={`font-dungeon text-[0.625rem] text-center leading-tight ${text}`}>{theme}</p>

@@ -4,7 +4,7 @@ import api from '../services/api'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
 import { getUserSettings } from '../services/userSettings'
 import { parseDate } from '../utils/dates'
-import deadlineAlarm from '../assets/deadline_alarm.png'
+import { iconProps } from '../assets/icons'
 
 const NOTIFIED_KEY = 'dumpit.deadlineNudges.notified'
 const THRESHOLD_WINDOW_MIN = 5
@@ -164,7 +164,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
       >
         {isCard ? (
           <>
-            <img src={deadlineAlarm} alt="" className="mx-auto mb-1 h-5 w-5 object-contain" />
+            <img {...iconProps('deadline', 20)} alt="" className="mx-auto mb-1 h-5 w-5 object-contain" />
             <p className="text-[0.625rem] font-black text-sub">마감</p>
             <p className={`font-dungeon text-sm ${urgentCount > 0 ? 'text-dark' : 'text-sub'}`}>
               {urgentCount > 9 ? '9+' : urgentCount}
@@ -172,7 +172,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
           </>
         ) : (
           <>
-            <img src={deadlineAlarm} alt="" className="w-4 h-4 object-contain" />
+            <img {...iconProps('deadline', 16)} alt="" className="w-4 h-4 object-contain" />
             {urgentCount > 0 && (
               <span className="text-sm leading-none">
                 {urgentCount > 9 ? '9+' : urgentCount}

@@ -4,7 +4,7 @@ import { calcCompletionCoins } from '../../utils/taskRewards'
 import { parseDate, formatDeadline, formatTime, isToday } from '../../utils/dates'
 import { STICKER_SPRITES } from '../../shop/registry'
 import StickerPicker from '../StickerPicker'
-import coinImage from '../../assets/coin_image.png'
+import { iconProps } from '../../assets/icons'
 
 const TABS = [
   { id: 'today', label: '오늘' },
@@ -114,7 +114,7 @@ function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
           {coins > 0 && (
             <>
               {' · '}
-              <img src={coinImage} alt="코인" className="inline-block w-3 h-3 object-contain align-text-bottom" />
+              <img {...iconProps('coin', 12)} alt="코인" className="inline-block w-3 h-3 object-contain align-text-bottom" />
               <span className="font-bold text-dark">{` +${coins}`}</span>
             </>
           )}
@@ -157,7 +157,7 @@ function DoneRow({ task, onToggle, onEdit }) {
           {coins > 0 && (
             <>
               {' · '}
-              <img src={coinImage} alt="코인" className="inline-block w-3 h-3 object-contain align-text-bottom" />
+              <img {...iconProps('coin', 12)} alt="코인" className="inline-block w-3 h-3 object-contain align-text-bottom" />
               <span className="font-bold">{` +${coins}`}</span>
             </>
           )}
