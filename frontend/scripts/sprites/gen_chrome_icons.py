@@ -1,17 +1,22 @@
 # gen_chrome_icons.py — 크롬 아이콘(코인·AI 토큰 번개·설정 톱니·화살촉) 클린 도트 재생성기
 # 사용: python gen_chrome_icons.py                    → src/assets/ 아래 4파일 (100×100)
 #       python gen_chrome_icons.py --preview OUT.png  → 8배 확대 검수 시트
-# 배경: 기존 파일들은 안티앨리어싱 낀 도트"풍" 이미지(수천 색)라 소형 축소 시 자글거렸다.
-#       deadline_alarm과 동일 규격(20×20 로지컬 도트 + 5배 NEAREST 확대)으로 다시 그린다.
-#       팔레트는 기존 이미지에서 샘플한 값 유지. 재생성 후 gen_icon_sizes.py 재실행 필수.
-#       (menu·download는 도트가 아닌 평면 벡터풍이라 재생성 대상 아님)
+# 배경: 기존 파일들은 셀 경계에 블렌딩 노이즈가 낀 도트 이미지(수천 색)라 소형 축소 시 자글거렸다.
+#       deadline_alarm과 동일 규격(20×20 로지컬 도트 + 5배 NEAREST 확대)으로 정리한다.
+#       재생성 후 gen_icon_sizes.py 재실행 필수. (menu·download는 도트가 아닌 평면 벡터풍이라 대상 아님)
+# 소스 이원화:
+#   코인·번개 — 코드로 재드로잉 (팔레트는 기존 이미지 샘플값)
+#   톱니·화살촉 — 원본 도트 무손실 복원본(logical/*_20.png)을 5배 확대만 한다.
+#     원본이 정확히 20격자(셀 내부 균일, 경계 1px만 노이즈)라 각 5×5 셀의 중심 픽셀을
+#     추출하면 원작 그대로 나온다(git bda9345 시점 원본에서 추출). 톱니는 셀 단위
+#     소프트 셰이딩(326색·반투명 포함)이 원작의 질감이므로 팔레트 축소 없이 유지.
 import argparse
-import math
 from pathlib import Path
 
 from PIL import Image, ImageDraw
 
 ASSET_DIR = Path(__file__).resolve().parents[2] / 'src' / 'assets'
+LOGICAL_DIR = Path(__file__).resolve().parent / 'logical'
 GRID = 20
 SCALE = 5  # 20×20 → 100×100 (크롬 아이콘군 공통 규격)
 
@@ -22,11 +27,6 @@ GOLD_PALE = '#FDF6A0'
 SHADE = '#EE9414'
 LETTER = '#6E2508'  # 코인 'C' 각인
 
-STEEL_EDGE = '#101822'   # 설정 톱니 — 한색 근흑 외곽 (기존 샘플)
-STEEL = '#9BA1A8'
-STEEL_HI = '#C9CED4'
-STEEL_SHADE = '#565C68'
-ARROW_GRAY = '#4A4A4A'   # 화살촉 — 원본과 동일한 플랫 단색
 
 
 def hx(code):
@@ -119,54 +119,19 @@ def draw_token():
     return img
 
 
-def draw_setting():
-    """8치 톱니 기어 — 몸통 원 + 45° 간격 사각 이빨 − 중앙 구멍."""
-    cx = cy = 10.0
-    teeth = []
-    for k in range(8):
-        a = math.radians(k * 45)
-        teeth.append((cx + 7.3 * math.cos(a), cy + 7.3 * math.sin(a)))
-
-    def filled(x, y):
-        if not (0 <= x < GRID and 0 <= y < GRID):
-            return False
-        dx, dy = x + 0.5 - cx, y + 0.5 - cy
-        d2 = dx * dx + dy * dy
-        if d2 <= 3.0 ** 2:
-            return False  # 중앙 구멍
-        if d2 <= 6.4 ** 2:
-            return True
-        return any(abs(x + 0.5 - tx) <= 1.5 and abs(y + 0.5 - ty) <= 1.5 for tx, ty in teeth)
-
-    img = shade_outline(filled, STEEL, STEEL_HI, STEEL_SHADE, STEEL_EDGE)
-    # 좌상단 림 반짝임
-    put(img, 6, 4, hx('#E8ECF0'))
+def load_logical(name):
+    """원본 도트 무손실 복원본(20×20) 로드 — 헤더의 '소스 이원화' 참조."""
+    img = Image.open(LOGICAL_DIR / name).convert('RGBA')
+    assert img.size == (GRID, GRID), f'{name}: expected {GRID}x{GRID}, got {img.size}'
     return img
+
+
+def draw_setting():
+    return load_logical('setting_20.png')
 
 
 def draw_arrowhead():
-    """뽀모도로 위젯 열기(팝아웃) — 좌하단으로 나는 화살 + 우상단 다이아 궤적. 원본과 동일한 플랫 단색."""
-    img = Image.new('RGBA', (GRID, GRID), (0, 0, 0, 0))
-    c = hx(ARROW_GRAY)
-
-    # 다이아 궤적: 상단 4개 + 우측 3개 (원본 모티프 유지) — 중심 간격 4로 팔 끝 사이 1px 띄움
-    for dx_, dy_ in [(5, 2), (9, 2), (13, 2), (17, 2), (17, 6), (17, 10), (17, 14)]:
-        put(img, dx_, dy_ - 1, c)
-        put(img, dx_ - 1, dy_, c)
-        put(img, dx_, dy_, c)
-        put(img, dx_ + 1, dy_, c)
-        put(img, dx_, dy_ + 1, c)
-
-    # 화살촉 — 좌하단 꼭짓점(2,17)이 촉끝인 직각삼각형 (빗변 y=x+7)
-    for y in range(9, 18):
-        for x in range(2, 2 + (y - 9) + 1):
-            put(img, x, y, c)
-
-    # 화살대 — 촉 빗변(6,13)에 물려서 우상단으로 2px 대각선
-    for x in range(6, 13):
-        put(img, x, 19 - x, c)
-        put(img, x + 1, 19 - x, c)
-    return img
+    return load_logical('arrowheads_20.png')
 
 
 def upscale(img, factor):
