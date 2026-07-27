@@ -14,7 +14,7 @@ import type { TogglePos } from '../../src/components/home/TaskRow';
 import { TaskDetailSheet, type TaskDetailSheetHandle } from '../../src/components/task/TaskDetailSheet';
 import { CoinToast } from '../../src/components/fx/CoinToast';
 import { PixelBurst } from '../../src/components/fx/PixelBurst';
-import { RocketLaunch } from '../../src/components/fx/RocketLaunch';
+import { CelebrationOverlay } from '../../src/components/fx/CelebrationOverlay';
 import { calcCompletionCoins } from '../../src/tasks/rewards';
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
@@ -144,7 +144,7 @@ export default function HomeScreen() {
   }, [refetchPlanning, refetchAiUsage]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1 }}>
       <HomeAppBar me={me} aiUsage={aiUsage.data} />
       <ScrollView
         refreshControl={
@@ -210,7 +210,7 @@ export default function HomeScreen() {
           onDone={() => setCoinToast(null)}
         />
       )}
-      {showRocket && <RocketLaunch onDone={() => setShowRocket(false)} />}
+      {showRocket && <CelebrationOverlay onDone={() => setShowRocket(false)} />}
 
       <TaskDetailSheet ref={detailRef} />
     </View>

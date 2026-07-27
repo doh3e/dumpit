@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { retroShadow } from '../../theme/tokens';
@@ -28,7 +28,7 @@ type Props = TabBarProps & {
 
 /** 4탭 + 중앙 FAB. 탭 순서: 홈 · 루틴 · ＋ · 아이디어 · MY (2:2 대칭) */
 export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
-  const { colors } = useTheme();
+  const { colors, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
 
   const fabIconStyle = useAnimatedStyle(() => ({
@@ -65,9 +65,15 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
     <View
       style={[
         styles.bar,
-        { backgroundColor: colors.card, borderTopColor: colors.edge, paddingBottom: insets.bottom },
+        { backgroundColor: colors.chromeBg, borderTopColor: colors.edge, paddingBottom: insets.bottom },
       ]}
     >
+      {/* CHROME 스킨 장식 타일 — 웹 .app-sidebar background-image 대응 */}
+      {chromeDeco && (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <Image source={chromeDeco} style={StyleSheet.absoluteFill} resizeMode="repeat" />
+        </View>
+      )}
       {renderTab('index')}
       {renderTab('routine')}
       <View style={styles.fabSlot}>

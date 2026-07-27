@@ -14,7 +14,7 @@ type Props = {
 export function ComingSoon({ emoji, title, phase, children }: Props) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View style={styles.container}>
       <Text style={styles.emoji}>{emoji}</Text>
       <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>{title}</Text>
       <View style={styles.dots}>

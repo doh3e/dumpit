@@ -22,10 +22,11 @@ function fmt(sec: number): string {
 
 /** 뽀모도로 픽셀 링 — OrbitProgress 확장판. 경과 비율만큼 도트가 차오른다 (SVG 없이) */
 export function TimerRing({ remainingSec, totalSec, phase, long = false }: Props) {
-  const { colors } = useTheme();
+  const { colors, pomo } = useTheme();
   const elapsed = totalSec > 0 ? (totalSec - remainingSec) / totalSec : 1;
   const filled = phase === 'DONE' ? DOTS : Math.round(elapsed * DOTS);
-  const fillColor = phase === 'FOCUS' ? colors.accent : long ? colors.starlight : colors.accent2;
+  // POMODORO 스킨 팔레트 — 긴 휴식만 전역 starlight를 유지(스킨엔 대응 색이 없다)
+  const fillColor = phase === 'FOCUS' ? pomo.focus : long ? colors.starlight : pomo.rest;
   const label = phase === 'FOCUS' ? '집중' : phase === 'BREAK' ? (long ? '긴 휴식' : '휴식') : '완료';
 
   return (
@@ -38,7 +39,7 @@ export function TimerRing({ remainingSec, totalSec, phase, long = false }: Props
             style={[
               styles.dot,
               {
-                backgroundColor: i < filled ? fillColor : colors.line,
+                backgroundColor: i < filled ? fillColor : pomo.ring,
                 transform: [
                   { translateX: Math.cos(angle) * RADIUS },
                   { translateY: Math.sin(angle) * RADIUS },

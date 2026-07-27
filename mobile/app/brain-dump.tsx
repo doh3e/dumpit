@@ -327,7 +327,7 @@ export default function BrainDumpScreen() {
   }, [isSaving, qc, result, selectedCount, selectedIndexes, toast]);
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.bg, paddingTop: insets.top }]}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <Stack.Screen options={{ animation: 'slide_from_bottom' }} />
 
       <View style={styles.header}>
@@ -442,7 +442,8 @@ export default function BrainDumpScreen() {
             style={[
               styles.confirmBar,
               {
-                backgroundColor: colors.bg,
+                // 목록 위에 뜨는 고정 바 — 배경 무늬가 비치면 안 되므로 불투명 카드색
+                backgroundColor: colors.card,
                 borderTopColor: colors.line,
                 paddingBottom: Math.max(insets.bottom, 12),
               },

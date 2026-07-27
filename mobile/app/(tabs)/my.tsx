@@ -106,7 +106,7 @@ export default function MyScreen() {
     : [];
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.bg }]}>
+    <View style={styles.screen}>
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={pulling} onRefresh={onRefresh} colors={[colors.accent]} tintColor={colors.accent} />

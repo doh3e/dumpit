@@ -1,13 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
 import { equipItem, fetchCatalog, purchaseItem, unequipSlot } from '../src/api/shop';
 import type { CatalogItem } from '../src/api/types';
 import { useAuth } from '../src/auth/AuthContext';
+import { celebrationFor } from '../src/celebration/registry';
 import { CoinIcon } from '../src/components/common/CoinIcon';
+import { CelebrationOverlay } from '../src/components/fx/CelebrationOverlay';
 import { Chip } from '../src/components/retro/Chip';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { RetroButton } from '../src/components/retro/RetroButton';
@@ -17,6 +19,8 @@ import { PixelSprite } from '../src/components/shop/PixelSprite';
 import { keys } from '../src/query/keys';
 import { PLANET_SPRITES, STATION_SPRITES } from '../src/shop/spriteRegistry';
 import { STICKER_SPRITES } from '../src/tasks/stickers';
+import { useSkinPreview } from '../src/theme/ThemeProvider';
+import { BG_SKINS, CHROME_SKINS, POMO_SKINS, skinKey } from '../src/theme/skins';
 import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
@@ -33,7 +37,26 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]['key'];
 
-function ItemPreview({ item }: { item: CatalogItem }) {
+/** 테마 슬롯은 스프라이트가 없으므로 스킨 팔레트에서 대표 색을 뽑아 보여준다 */
+function swatchesFor(item: CatalogItem, scheme: 'light' | 'dark'): string[] | null {
+  const key = skinKey(item.code);
+  if (!key) return null;
+  if (item.slot === 'BACKGROUND') {
+    const p = BG_SKINS[key][scheme];
+    return [p.bg!, p.accent!, p.accent2!];
+  }
+  if (item.slot === 'CHROME') {
+    const c = CHROME_SKINS[key][scheme];
+    return [c.chromeBg, c.chromeLine];
+  }
+  if (item.slot === 'POMODORO') {
+    const p = POMO_SKINS[key][scheme];
+    return [p.focus, p.rest];
+  }
+  return null;
+}
+
+function ItemPreview({ item, scheme }: { item: CatalogItem; scheme: 'light' | 'dark' }) {
   if (item.slot === 'PLANET' && PLANET_SPRITES[item.code]) {
     return <PixelSprite sprite={PLANET_SPRITES[item.code]} size={44} />;
   }
@@ -43,19 +66,40 @@ function ItemPreview({ item }: { item: CatalogItem }) {
   if (item.type === 'STICKER' && STICKER_SPRITES[item.code]) {
     return <Image source={STICKER_SPRITES[item.code].img} style={{ width: 40, height: 40 }} resizeMode="contain" />;
   }
+  if (item.slot === 'CELEBRATION') {
+    return <Image source={celebrationFor(item.code).img} style={{ width: 40, height: 40 }} resizeMode="contain" />;
+  }
+  const swatches = swatchesFor(item, scheme);
+  if (swatches) {
+    return (
+      <View style={styles.swatchWrap}>
+        {swatches.map((c, i) => (
+          <View key={i} style={[styles.swatch, { backgroundColor: c }]} />
+        ))}
+      </View>
+    );
+  }
   return <Text style={{ fontSize: 26 }}>🎨</Text>;
 }
 
+/** 테마 미리보기를 지원하는 슬롯 — 화면 전체가 즉시 바뀐다 */
+const PREVIEWABLE = new Set(['BACKGROUND', 'CHROME', 'POMODORO']);
+
 export default function ShopScreen() {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
-  const { refresh } = useAuth();
+  const { me, refresh } = useAuth();
+  const { preview, setPreview } = useSkinPreview();
   const catalog = useQuery({ queryKey: keys.catalog, queryFn: fetchCatalog });
 
   const [tab, setTab] = useState<TabKey>('BACKGROUND');
   const [busyCode, setBusyCode] = useState<string | null>(null);
+  const [playing, setPlaying] = useState<string | null>(null);
+
+  // 화면을 벗어나면 실제 장착으로 되돌린다 (웹 applySkinsTransient와 같은 취지)
+  useEffect(() => () => setPreview(null), [setPreview]);
 
   const items = useMemo(() => {
     const all = catalog.data?.items ?? [];
@@ -111,10 +155,22 @@ export default function ShopScreen() {
     }
   };
 
-  const themeNotApplied = tab === 'BACKGROUND' || tab === 'CHROME' || tab === 'POMODORO' || tab === 'CELEBRATION';
+  /** 카드를 누르면 미리보기 — 테마는 화면 전체에 임시 적용, 축하는 연출 재생 */
+  const onPreview = (item: CatalogItem) => {
+    if (item.slot === 'CELEBRATION') {
+      setPlaying(item.code);
+      return;
+    }
+    if (!item.slot || !PREVIEWABLE.has(item.slot)) return;
+    const base = me?.equipments ?? {};
+    const already = preview?.[item.slot] === item.code;
+    setPreview(already ? null : { ...base, ...preview, [item.slot]: item.code });
+  };
+
+  const previewing = !!preview;
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.bg }]}>
+    <View style={styles.screen}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
           <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
@@ -133,16 +189,26 @@ export default function ShopScreen() {
       </ScrollView>
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
-        {themeNotApplied && (
+        {(PREVIEWABLE.has(tab) || tab === 'CELEBRATION') && (
           <Text style={[styles.notice, { color: colors.sub, fontFamily: fonts.body }]}>
-            이 슬롯은 웹에 즉시 적용돼요 · 앱 화면 적용은 곧 지원됩니다
+            {tab === 'CELEBRATION' ? '카드를 누르면 연출을 미리 볼 수 있어요' : '카드를 누르면 화면에 미리 입혀봐요'}
           </Text>
         )}
-        {items.map((item) => (
-          <RetroCard key={item.code} style={styles.itemCard}>
-            <View style={[styles.previewBox, { backgroundColor: colors.chip, borderColor: colors.line }]}>
-              <ItemPreview item={item} />
-            </View>
+        {items.map((item) => {
+          const isPreviewed = !!item.slot && preview?.[item.slot] === item.code;
+          return (
+          <RetroCard key={item.code} style={[styles.itemCard, isPreviewed && { borderColor: colors.accent2 }] as never}>
+            <Pressable
+              onPress={() => onPreview(item)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.name} 미리보기`}
+              style={({ pressed }) => [
+                styles.previewBox,
+                { backgroundColor: colors.chip, borderColor: isPreviewed ? colors.accent2 : colors.line, opacity: pressed ? 0.7 : 1 },
+              ]}
+            >
+              <ItemPreview item={item} scheme={scheme} />
+            </Pressable>
             <View style={styles.itemText}>
               <View style={styles.itemTitleRow}>
                 <Text numberOfLines={1} style={[styles.itemName, { color: colors.fg, fontFamily: fonts.display }]}>
@@ -150,6 +216,7 @@ export default function ShopScreen() {
                 </Text>
                 {item.tier === 'CONCEPT' && <RetroBadge text="컨셉" tone="sub" />}
                 {item.equipped && <RetroBadge text="장착중" tone="accent" />}
+                {isPreviewed && <RetroBadge text="미리보기" tone="sub" />}
               </View>
               <Text numberOfLines={2} style={[styles.itemDesc, { color: colors.sub, fontFamily: fonts.body }]}>
                 {item.description}
@@ -178,11 +245,23 @@ export default function ShopScreen() {
               )}
             </View>
           </RetroCard>
-        ))}
+          );
+        })}
         {items.length === 0 && !catalog.isLoading && (
           <Text style={[styles.notice, { color: colors.sub, fontFamily: fonts.body }]}>이 슬롯엔 아이템이 없어요.</Text>
         )}
       </ScrollView>
+
+      {previewing && (
+        <View style={[styles.previewBar, { backgroundColor: colors.card, borderColor: colors.edge, paddingBottom: insets.bottom + 10 }]}>
+          <Text style={[styles.previewBarText, { color: colors.fg, fontFamily: fonts.body }]}>
+            👀 미리보기 중 — 아직 장착되지 않았어요
+          </Text>
+          <RetroButton label="원래대로" size="sm" variant="ghost" onPress={() => setPreview(null)} />
+        </View>
+      )}
+
+      {playing && <CelebrationOverlay codeOverride={playing} onDone={() => setPlaying(null)} />}
     </View>
   );
 }
@@ -206,4 +285,12 @@ const styles = StyleSheet.create({
   itemDesc: { fontSize: 11, lineHeight: 15 },
   itemAction: { alignItems: 'flex-end' },
   ownedText: { fontSize: 11 },
+  swatchWrap: { flexDirection: 'row', gap: 3 },
+  swatch: { width: 11, height: 30, borderRadius: 2 },
+  previewBar: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+    borderTopWidth: 2, paddingHorizontal: 16, paddingTop: 10,
+  },
+  previewBarText: { fontSize: 12, flex: 1 },
 });

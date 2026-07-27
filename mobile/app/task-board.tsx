@@ -60,7 +60,7 @@ export default function TaskBoardScreen() {
   const onPressTask = useCallback((task: TaskResponse) => detailRef.current?.present(task), []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top }}>
+    <View style={{ flex: 1, paddingTop: insets.top }}>
       <Stack.Screen options={{ animation: 'slide_from_right' }} />
       <View style={styles.header}>
         <Pressable

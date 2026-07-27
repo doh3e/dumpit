@@ -25,7 +25,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View style={styles.container}>
       <View style={styles.logoRow}>
         <Text style={[styles.logo, { color: colors.fg, fontFamily: fonts.displayBold }]}>DUMPIT!</Text>
         <Text style={[styles.star, { color: colors.starlight, fontFamily: fonts.display }]}>★</Text>

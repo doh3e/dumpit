@@ -48,7 +48,7 @@ export default function RoutineEditScreen() {
   // 빈 폼으로 저장하면 PATCH 전체 payload가 기존 루틴을 덮어버린다 (리뷰 M5)
   if (routineId && !editing) {
     return (
-      <View style={[styles.screen, styles.centered, { backgroundColor: colors.bg }]}>
+      <View style={[styles.screen, styles.centered]}>
         {routines.isLoading || routines.isFetching ? (
           <ActivityIndicator color={colors.accent} />
         ) : (
@@ -123,7 +123,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
   );
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.bg }]}>
+    <View style={styles.screen}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
           <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>

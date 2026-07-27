@@ -1,30 +1,45 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
-import { palettes, type Palette } from './tokens';
+import { useAuth } from '../auth/AuthContext';
+import { composeTheme, type Equipments } from './compose';
+import { ThemeContext, type ThemeMode } from './context';
 
-export type ThemeMode = 'light' | 'dark' | 'system';
 const MODE_KEY = 'dumpit_theme_mode';
+/** 서버(me.equipments)가 원본, 이 캐시는 첫 페인트 번쩍임 방지용 (웹 localStorage dumpit_equipments 대응) */
+const EQUIP_KEY = 'dumpit_equipments';
 
-type ThemeContextValue = {
-  colors: Palette;
-  scheme: 'light' | 'dark';
-  mode: ThemeMode;
-  setMode: (m: ThemeMode) => void;
-};
-
-export const ThemeContext = createContext<ThemeContextValue | null>(null);
-
-/** 테마 모드(라이트/다크/시스템) — 기기별 설정(AsyncStorage). Provider 밖에서는 useTheme이 시스템 값 폴백 */
+/**
+ * 테마 모드(기기별 AsyncStorage) + 장착 스킨(서버 me.equipments) 합성.
+ * AuthProvider 안쪽에 두어야 equipments를 읽을 수 있다 — app/_layout.tsx의 Provider 순서 참고.
+ */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const { me } = useAuth();
   const [mode, setModeState] = useState<ThemeMode>('system');
+  const [cachedEquip, setCachedEquip] = useState<Equipments>(null);
+  const [previewEquipments, setPreviewEquipments] = useState<Equipments>(null);
 
   useEffect(() => {
     AsyncStorage.getItem(MODE_KEY).then((v) => {
       if (v === 'light' || v === 'dark' || v === 'system') setModeState(v);
     }).catch(() => {});
+    AsyncStorage.getItem(EQUIP_KEY).then((v) => {
+      if (v) setCachedEquip(JSON.parse(v) as Equipments);
+    }).catch(() => {});
   }, []);
+
+  // 로그인 상태가 확정되면 캐시를 서버 값으로 맞춘다 (로그아웃 시 비워 다음 계정에 새지 않게)
+  useEffect(() => {
+    if (me) {
+      const eq = me.equipments ?? {};
+      setCachedEquip(eq);
+      AsyncStorage.setItem(EQUIP_KEY, JSON.stringify(eq)).catch(() => {});
+    } else {
+      setCachedEquip(null);
+      AsyncStorage.removeItem(EQUIP_KEY).catch(() => {});
+    }
+  }, [me]);
 
   const setMode = (m: ThemeMode) => {
     setModeState(m);
@@ -32,14 +47,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const scheme = mode === 'system' ? system : mode;
-  return (
-    <ThemeContext.Provider value={{ colors: palettes[scheme], scheme, mode, setMode }}>
-      {children}
-    </ThemeContext.Provider>
+  const equipments = previewEquipments ?? me?.equipments ?? cachedEquip;
+  const composed = useMemo(() => composeTheme(scheme, equipments), [scheme, equipments]);
+
+  const value = useMemo(
+    () => ({ ...composed, scheme, mode, setMode, previewEquipments, setPreviewEquipments }),
+    // setMode는 매 렌더 새로 만들어지지만 상태만 건드리므로 의존성에서 제외
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [composed, scheme, mode, previewEquipments],
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
-export function useThemeMode(): { mode: ThemeMode; setMode: (m: ThemeMode) => void } {
-  const ctx = useContext(ThemeContext);
-  return ctx ? { mode: ctx.mode, setMode: ctx.setMode } : { mode: 'system', setMode: () => {} };
-}
+export { useSkinPreview, useThemeMode, type ThemeMode } from './context';

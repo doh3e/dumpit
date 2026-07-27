@@ -5,9 +5,11 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '../src/auth/AuthContext';
 import { ToastProvider } from '../src/components/retro/ToastProvider';
+import { AppBackground } from '../src/components/shell/AppBackground';
 import { queryClient } from '../src/query/queryClient';
 import { ThemeProvider } from '../src/theme/ThemeProvider';
 import { useTheme } from '../src/theme/useTheme';
@@ -36,18 +38,28 @@ export default function RootLayout() {
   if (!loaded) return null;
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        {/* ThemeProvider는 me.equipments(장착 스킨)를 읽으므로 AuthProvider 안쪽이어야 한다 */}
+        <AuthProvider>
+          <ThemeProvider>
             <BottomSheetModalProvider>
               <ToastProvider>
                 <ThemedStatusBar />
-                <Stack screenOptions={{ headerShown: false }} />
+                <View style={{ flex: 1 }}>
+                  <AppBackground />
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      // 화면이 불투명하면 전역 배경 무늬가 가려진다
+                      contentStyle: { backgroundColor: 'transparent' },
+                    }}
+                  />
+                </View>
               </ToastProvider>
             </BottomSheetModalProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MeResponse } from '../../api/auth';
 import type { AiUsage } from '../../api/types';
@@ -13,13 +13,24 @@ const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
 /** 홈 상단 앱바 — 날짜·인사 + 코인/AI 배지 (웹 Header 대응) */
 export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: AiUsage | undefined }) {
-  const { colors } = useTheme();
+  const { colors, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}월 ${now.getDate()}일 ${DAY_NAMES[now.getDay()]}`;
 
   return (
-    <View style={[styles.bar, { paddingTop: insets.top + 10, backgroundColor: colors.bg }]}>
+    <View
+      style={[
+        styles.bar,
+        { paddingTop: insets.top + 10, backgroundColor: colors.chromeBg, borderBottomColor: colors.chromeLine },
+      ]}
+    >
+      {/* CHROME 스킨 장식 타일 — 웹 .app-header background-image 대응 */}
+      {chromeDeco && (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <Image source={chromeDeco} style={StyleSheet.absoluteFill} resizeMode="repeat" />
+        </View>
+      )}
       <View style={styles.left}>
         {/* 장착 행성 — 웹 대시보드 행성 패리티, 상점에서 바꾸면 refresh()로 반영 */}
         <PixelSprite sprite={spriteFor(PLANET_SPRITES, me?.equipments?.PLANET)} size={34} />
@@ -42,7 +53,7 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
 const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingBottom: 10,
+    paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1.5,
   },
   left: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   leftText: { gap: 2, flexShrink: 1 },

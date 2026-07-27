@@ -33,7 +33,7 @@ export default function IdeaEditScreen() {
   // 편집 진입인데 대상 미로드 — 빈 폼 저장이 기존 아이디어를 덮지 않게 가드 (routine-edit 패턴)
   if (ideaId && !editing) {
     return (
-      <View style={[styles.screen, styles.centered, { backgroundColor: colors.bg }]}>
+      <View style={[styles.screen, styles.centered]}>
         {ideas.isLoading || ideas.isFetching ? (
           <ActivityIndicator color={colors.accent} />
         ) : (
@@ -195,7 +195,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
   };
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.bg }]}>
+    <View style={styles.screen}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
           <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
