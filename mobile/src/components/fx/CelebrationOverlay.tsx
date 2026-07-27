@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming,
   type SharedValue,
@@ -24,11 +25,16 @@ export function CelebrationOverlay({ onDone, codeOverride }: { onDone: () => voi
   const { colors } = useTheme();
   const { me } = useAuth();
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
+
+  // 바닥에 붙는 파티클(모닥불·새싹·캔디)이 OS 내비게이션 바에 깔리지 않도록 그리기 영역을 줄인다.
+  // 탭 화면은 탭바가 이미 자리를 차지하지만, 스택 화면(상점 미리보기)은 화면 끝까지가 영역이다.
+  const stageHeight = Math.max(height - insets.bottom, 1);
 
   const sprite = celebrationFor(codeOverride ?? me?.equipments?.CELEBRATION);
   const [particles] = useState<Particle[]>(() =>
-    reduceMotion ? [] : buildParticles(sprite, { width, height }),
+    reduceMotion ? [] : buildParticles(sprite, { width, height: stageHeight }),
   );
 
   const progress = useSharedValue(0);
@@ -44,9 +50,11 @@ export function CelebrationOverlay({ onDone, codeOverride }: { onDone: () => voi
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.overlay]}>
-      {particles.map((p) => (
-        <ParticleView key={p.key} p={p} progress={progress} height={height} />
-      ))}
+      <View style={[StyleSheet.absoluteFill, { bottom: insets.bottom }]}>
+        {particles.map((p) => (
+          <ParticleView key={p.key} p={p} progress={progress} height={stageHeight} />
+        ))}
+      </View>
       <View style={[styles.banner, { backgroundColor: colors.card, borderColor: colors.edge }, retroShadow(5, colors.shadowHero)]}>
         {reduceMotion && (
           <View style={styles.staticRow}>
