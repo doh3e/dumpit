@@ -1,13 +1,13 @@
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { AuthProvider } from '../src/auth/AuthContext';
+import { AuthProvider, useAuth } from '../src/auth/AuthContext';
 import { ToastProvider } from '../src/components/retro/ToastProvider';
 import { AppBackground } from '../src/components/shell/AppBackground';
 import { queryClient } from '../src/query/queryClient';
@@ -18,6 +18,24 @@ import { useTheme } from '../src/theme/useTheme';
 function ThemedStatusBar() {
   const { scheme } = useTheme();
   return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />;
+}
+
+/**
+ * 세션이 끊기면 쌓여 있던 화면을 걷어내고 인증 게이트로 한 번만 보낸다.
+ * 각 화면이 렌더 중에 Redirect를 반환하면 서로 튕기며 무한 루프가 되므로 이동은 여기서만 한다.
+ */
+function AuthRouteGate() {
+  const { me, loading } = useAuth();
+  useEffect(() => {
+    if (loading || me) return;
+    try {
+      if (router.canDismiss()) router.dismissAll();
+    } catch {
+      // 스택이 이미 루트면 무시
+    }
+    router.replace('/');
+  }, [me, loading]);
+  return null;
 }
 
 SplashScreen.preventAutoHideAsync();
@@ -45,6 +63,7 @@ export default function RootLayout() {
             <BottomSheetModalProvider>
               <ToastProvider>
                 <ThemedStatusBar />
+                <AuthRouteGate />
                 <View style={{ flex: 1 }}>
                   <AppBackground />
                   <Stack

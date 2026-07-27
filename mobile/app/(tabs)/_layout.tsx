@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Redirect, Tabs, router, type Href } from 'expo-router';
+import { Tabs, router, type Href } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useAuth } from '../../src/auth/AuthContext';
@@ -41,7 +41,9 @@ export default function TabsLayout() {
     }).catch(() => {});
   }, []);
 
-  if (!me) return <Redirect href="/" />;
+  // 렌더 중 Redirect를 반환하면 replace가 맨 위 화면만 갈아끼워 이 레이아웃이 살아남고,
+  // 다시 렌더 → 또 replace로 무한 루프가 된다. 실제 이동은 루트의 AuthRouteGate가 맡는다.
+  if (!me) return null;
 
   return (
     <View style={{ flex: 1 }}>
