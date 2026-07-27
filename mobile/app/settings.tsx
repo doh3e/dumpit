@@ -1,7 +1,6 @@
 import Constants from 'expo-constants';
-import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
 import { deleteAccount } from '../src/api/profile';
@@ -11,6 +10,7 @@ import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { ActiveHoursCard } from '../src/components/routine/ActiveHoursCard';
+import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { useThemeMode, type ThemeMode } from '../src/theme/ThemeProvider';
 import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
@@ -59,13 +59,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
-          <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>⚙️ 설정</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="⚙️ 설정" />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard style={styles.card}>
@@ -125,10 +119,6 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
-  back: { fontSize: 22 },
-  title: { fontSize: 18, flex: 1, textAlign: 'center' },
-  headerSpacer: { width: 22 },
   body: { padding: 16, gap: 14, paddingBottom: 40 },
   card: { gap: 10 },
   sectionTitle: { fontSize: 14 },

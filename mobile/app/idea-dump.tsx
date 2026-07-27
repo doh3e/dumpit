@@ -10,6 +10,7 @@ import type { IdeaNode } from '../src/api/types';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
+import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, getCategory } from '../src/tasks/constants';
@@ -120,13 +121,7 @@ export default function IdeaDumpScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
-          <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>💭 아이디어 덤프</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="💭 아이디어 덤프" />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         {stage === 'input' ? (

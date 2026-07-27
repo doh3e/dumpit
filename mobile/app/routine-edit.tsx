@@ -9,6 +9,7 @@ import { Chip } from '../src/components/retro/Chip';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
+import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { TimeField } from '../src/components/task/TimeField';
 import { useDeleteRoutine, useRoutines, useSaveRoutine } from '../src/query/routineHooks';
 import {
@@ -124,15 +125,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
-          <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-          {editing ? '루틴 수정' : '새 루틴'}
-        </Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title={editing ? '루틴 수정' : '새 루틴'} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard style={styles.card}>

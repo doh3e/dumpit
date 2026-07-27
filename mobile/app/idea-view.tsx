@@ -9,6 +9,7 @@ import { MarkdownView } from '../src/components/common/MarkdownView';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
+import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { keys } from '../src/query/keys';
 import { getCategory } from '../src/tasks/constants';
 import { STICKER_SPRITES } from '../src/tasks/stickers';
@@ -58,19 +59,18 @@ export default function IdeaViewScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
-          <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>아이디어</Text>
-        <Pressable
-          onPress={() => router.push({ pathname: '/idea-edit', params: { ideaId: idea.ideaId } } as never)}
-          hitSlop={12}
-          accessibilityLabel="편집"
-        >
-          <Text style={[styles.edit, { color: colors.accent, fontFamily: fonts.chrome }]}>✏️</Text>
-        </Pressable>
-      </View>
+      <ScreenHeader
+        title="아이디어"
+        right={
+          <Pressable
+            onPress={() => router.push({ pathname: '/idea-edit', params: { ideaId: idea.ideaId } } as never)}
+            hitSlop={12}
+            accessibilityLabel="편집"
+          >
+            <Text style={[styles.edit, { color: colors.accent, fontFamily: fonts.chrome }]}>✏️</Text>
+          </Pressable>
+        }
+      />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard style={styles.card}>
@@ -161,9 +161,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 },
   notFound: { fontSize: 14 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
-  back: { fontSize: 22 },
-  headerTitle: { fontSize: 18, flex: 1, textAlign: 'center' },
   edit: { fontSize: 18 },
   body: { padding: 16, gap: 14 },
   card: { gap: 10 },

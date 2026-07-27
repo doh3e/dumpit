@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
+import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
@@ -31,13 +32,7 @@ export default function HelpScreen() {
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
-          <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>❓ 도움말</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="❓ 도움말" />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard style={[styles.card, { backgroundColor: colors.chip }] as never}>
@@ -86,10 +81,6 @@ export default function HelpScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
-  back: { fontSize: 22 },
-  title: { fontSize: 18, flex: 1, textAlign: 'center' },
-  headerSpacer: { width: 22 },
   body: { padding: 16, gap: 10, paddingBottom: 40 },
   card: { gap: 6 },
   betaTitle: { fontSize: 13 },

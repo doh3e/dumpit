@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +14,7 @@ import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
+import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { PixelSprite } from '../src/components/shop/PixelSprite';
 import { keys } from '../src/query/keys';
 import { PLANET_SPRITES, STATION_SPRITES } from '../src/shop/spriteRegistry';
@@ -171,16 +171,15 @@ export default function ShopScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
-          <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>🛒 상점</Text>
-        <View style={styles.coinRow}>
-          <CoinIcon size={13} />
-          <Text style={[styles.coin, { color: colors.fg, fontFamily: fonts.chrome }]}>{coin}</Text>
-        </View>
-      </View>
+      <ScreenHeader
+        title="🛒 상점"
+        right={
+          <View style={styles.coinRow}>
+            <CoinIcon size={13} />
+            <Text style={[styles.coin, { color: colors.fg, fontFamily: fonts.chrome }]}>{coin}</Text>
+          </View>
+        }
+      />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar} contentContainerStyle={styles.tabRow}>
         {TABS.map((t) => (
@@ -268,9 +267,6 @@ export default function ShopScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8, gap: 8 },
-  back: { fontSize: 22 },
-  title: { fontSize: 18, flex: 1, textAlign: 'center' },
   coinRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   coin: { fontSize: 13 },
   tabBar: { flexGrow: 0 },

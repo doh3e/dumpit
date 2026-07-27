@@ -12,6 +12,7 @@ import { Chip } from '../src/components/retro/Chip';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
+import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { StickerPicker } from '../src/components/task/StickerPicker';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
@@ -196,15 +197,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
-          <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-          {editing ? '아이디어 수정' : '새 아이디어'}
-        </Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title={editing ? '아이디어 수정' : '새 아이디어'} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard style={styles.card}>
@@ -325,10 +318,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 },
   notFound: { fontSize: 14 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
-  back: { fontSize: 22 },
-  headerTitle: { fontSize: 18, flex: 1, textAlign: 'center' },
-  headerSpacer: { width: 22 },
   body: { padding: 16, gap: 14, paddingBottom: 40 },
   card: { gap: 10 },
   input: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, minHeight: 44 },

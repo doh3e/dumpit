@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +8,7 @@ import { MarkdownView } from '../src/components/common/MarkdownView';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
+import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { parseDate } from '../src/tasks/dates';
 import { keys } from '../src/query/keys';
 import { fonts } from '../src/theme/typography';
@@ -41,13 +41,7 @@ export default function NoticesScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="뒤로">
-          <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>📢 공지사항</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="📢 공지사항" />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard style={styles.listCard}>
@@ -89,10 +83,6 @@ export default function NoticesScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8 },
-  back: { fontSize: 22 },
-  title: { fontSize: 18, flex: 1, textAlign: 'center' },
-  headerSpacer: { width: 22 },
   body: { padding: 16, gap: 12, paddingBottom: 40 },
   listCard: { gap: 0 },
   empty: { fontSize: 13, paddingVertical: 8 },
