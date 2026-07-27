@@ -48,7 +48,12 @@ export default function TabsLayout() {
   return (
     <View style={{ flex: 1 }}>
       <Tabs
-        screenOptions={{ headerShown: false }}
+        screenOptions={{
+          headerShown: false,
+          // 탭 씬은 내비게이션 기본 테마색으로 칠해진다 — 비워야 전역 배경(AppBackground)이 보인다.
+          // Stack의 contentStyle과 짝이며, 한쪽만 빠지면 그 화면만 배경 스킨이 안 먹는다.
+          sceneStyle: { backgroundColor: 'transparent' },
+        }}
         tabBar={(props) => (
           <RetroTabBar
             {...props}
