@@ -1,9 +1,10 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { retroShadow } from '../../theme/tokens';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { TiledImage } from '../common/TiledImage';
 
 const TAB_META: Record<string, { emoji: string; label: string }> = {
   index: { emoji: '🏠', label: '홈' },
@@ -69,11 +70,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
       ]}
     >
       {/* CHROME 스킨 장식 타일 — 웹 .app-sidebar background-image 대응 */}
-      {chromeDeco && (
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <Image source={chromeDeco} style={StyleSheet.absoluteFill} resizeMode="repeat" />
-        </View>
-      )}
+      {chromeDeco && <TiledImage source={chromeDeco} />}
       {renderTab('index')}
       {renderTab('routine')}
       <View style={styles.fabSlot}>
