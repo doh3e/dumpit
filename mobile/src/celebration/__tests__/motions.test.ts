@@ -92,6 +92,17 @@ describe('buildParticles', () => {
     });
   });
 
+  it('새싹은 전부 화면 안에 들어온다 (마지막 새싹 잘림 방지)', () => {
+    [VP, { width: 320, height: 640 }].forEach((vp) => {
+      buildParticles(celebrationFor('celeb.sprout-bloom'), vp, seeded(5))
+        .filter((p) => p.kind === 'sprout')
+        .forEach((p) => {
+          expect(p.left).toBeGreaterThanOrEqual(0);
+          expect(p.left + p.size).toBeLessThanOrEqual(vp.width);
+        });
+    });
+  });
+
   it('모닥불은 글로우가 화염보다 먼저 와서 뒤에 깔린다', () => {
     const parts = buildParticles(celebrationFor('celeb.bonfire'), VP, seeded());
     expect(parts[0].kind).toBe('glow');

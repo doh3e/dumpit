@@ -107,15 +107,20 @@ function petal(sprite: CelebrationSprite, vp: Viewport, rand: Rand): Particle[] 
 }
 
 function sprout(sprite: CelebrationSprite, vp: Viewport, rand: Rand): Particle[] {
-  const sprouts = Array.from({ length: 9 }, (_, i) => ({
-    key: `sprout-${i}`,
-    src: sprite.img,
-    kind: 'sprout' as const,
-    left: (0.04 + i * 0.11 + rand() * 0.04) * vp.width,
-    bottom: 0,
-    size: 28 + rand() * 16,
-    delay: i * 130 + rand() * 50,
-  }));
+  const sprouts = Array.from({ length: 9 }, (_, i) => {
+    const size = 28 + rand() * 16;
+    // 마지막 새싹은 left가 화면 우측 끝에 가까워 스프라이트 폭만큼 잘린다 — 폭을 빼고 붙인다
+    const left = Math.min((0.04 + i * 0.11 + rand() * 0.04) * vp.width, vp.width - size);
+    return {
+      key: `sprout-${i}`,
+      src: sprite.img,
+      kind: 'sprout' as const,
+      left,
+      bottom: 0,
+      size,
+      delay: i * 130 + rand() * 50,
+    };
+  });
   const sparkles = Array.from({ length: 3 }, (_, i) => ({
     key: `sparkle-${i}`,
     src: sprite.parts?.sparkle ?? sprite.img,
