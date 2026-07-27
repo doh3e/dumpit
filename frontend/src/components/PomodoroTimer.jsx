@@ -503,7 +503,10 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`font-dungeon text-xl text-dark tracking-wider ${blinking ? 'px-blink' : ''}`}>
+          <span
+            data-testid="pomodoro-clock"
+            className={`font-dungeon text-xl text-dark tracking-wider ${blinking ? 'px-blink' : ''}`}
+          >
             {min}:{sec}
           </span>
         </div>
