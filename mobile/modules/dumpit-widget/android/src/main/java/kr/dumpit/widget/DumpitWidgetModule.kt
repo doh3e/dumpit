@@ -21,8 +21,11 @@ class DumpitWidgetModule : Module() {
             TodayTasksWidget().updateAll(ctx)
         }
 
-        AsyncFunction("mirrorPomodoro") { json: String? ->
-            appContext.reactContext?.let { WidgetStore.save(it, WidgetStore.KEY_POMODORO, json) }
+        AsyncFunction("mirrorPomodoro") Coroutine { json: String? ->
+            val ctx = appContext.reactContext ?: return@Coroutine
+            WidgetStore.save(ctx, WidgetStore.KEY_POMODORO, json)
+            PomodoroWidget().updateAll(ctx)
+            PomodoroAlarms.reschedule(ctx)
         }
     }
 }

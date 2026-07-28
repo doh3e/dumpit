@@ -26,3 +26,11 @@ class RefreshTodayAction : ActionCallback {
         TodayTasksWidget().updateAll(context)
     }
 }
+
+// 뼈대만 — Task 7에서 HeadlessJS 연결(명령 전달 → RN 뽀모도로 스토어 조작)로 실구현한다.
+class PomodoroCommandAction : ActionCallback {
+    override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
+        // Task 7에서 HeadlessJS 연결
+    }
+    companion object { val CommandParam = ActionParameters.Key<String>("command") }
+}
