@@ -46,6 +46,7 @@ public abstract class ApiIntegrationTestBase {
     @MockitoBean protected GoogleCalendarService googleCalendarService;
     @MockitoBean protected EmailService emailService;
     @MockitoBean protected OAuthRevocationService oauthRevocationService;
+    @MockitoBean protected com.dumpit.push.PushSender pushSender;
     // Redis 기반 실구현(RedisOAuth2AuthorizedClientRepository)이 테스트 환경 Redis에 연결을 시도하는 것을 막는다
     @MockitoBean protected OAuth2AuthorizedClientRepository authorizedClientRepository;
 
