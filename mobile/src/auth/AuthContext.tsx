@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { fetchMe, loginWithGoogleIdToken, logout, type MeResponse } from '../api/auth';
 import { api } from '../api/client';
 import { bypassReauth, installSilentReauth } from '../api/reauth';
+import { registerPushDevice, unregisterPushDevice } from '../push/fcm';
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       setMe(await fetchMe()); // 세션 쿠키가 살아있으면 자동 로그인
+      void registerPushDevice();
     } catch (e) {
       // 인증 거부(401/403)만 로그아웃 처리 — 타임아웃·5xx 같은 일시 오류로 쫓아내지 않는다
       const status = axios.isAxiosError(e) ? e.response?.status : undefined;
@@ -63,9 +65,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const idToken = result.data?.idToken;
     if (!idToken) throw new Error('구글에서 ID 토큰을 받지 못했어요.');
     setMe(await loginWithGoogleIdToken(idToken));
+    void registerPushDevice();
   }, []);
 
   const signOut = useCallback(async () => {
+    await unregisterPushDevice(); // 세션이 살아있는 동안 서버에서 기기 토큰을 지운다
     try { await logout(); } catch { /* 서버 실패해도 로컬은 정리 */ }
     try { await GoogleSignin.signOut(); } catch { /* noop */ }
     setMe(null);

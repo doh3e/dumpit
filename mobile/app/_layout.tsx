@@ -1,7 +1,7 @@
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from '../src/auth/AuthContext';
 import { ToastProvider } from '../src/components/retro/ToastProvider';
 import { AppBackground } from '../src/components/shell/AppBackground';
+import { initPushHandlers } from '../src/push/fcm';
 import { queryClient } from '../src/query/queryClient';
 import { ThemeProvider } from '../src/theme/ThemeProvider';
 import { useTheme } from '../src/theme/useTheme';
@@ -35,6 +36,13 @@ function AuthRouteGate() {
     }
     router.replace('/');
   }, [me, loading]);
+  return null;
+}
+
+/** 포그라운드 표시·알림 탭 딥링크 핸들러를 앱 전체에서 1회 설치 */
+function PushHandlerGate() {
+  const pushRouter = useRouter();
+  useEffect(() => initPushHandlers(pushRouter), [pushRouter]);
   return null;
 }
 
@@ -64,6 +72,7 @@ export default function RootLayout() {
               <ToastProvider>
                 <ThemedStatusBar />
                 <AuthRouteGate />
+                <PushHandlerGate />
                 <View style={{ flex: 1 }}>
                   <AppBackground />
                   <Stack
