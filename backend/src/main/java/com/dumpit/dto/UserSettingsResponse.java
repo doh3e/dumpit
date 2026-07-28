@@ -8,19 +8,19 @@ public record UserSettingsResponse(
         int routineStartHour,
         int routineEndHour,
         boolean notificationsEnabled,
-        boolean briefingEnabled,
-        List<Integer> notificationThresholds
+        List<Integer> notificationThresholds,
+        boolean briefingEnabled
 ) {
     public static final UserSettingsResponse DEFAULTS =
-            new UserSettingsResponse(9, 22, true, true, List.of(60));
+            new UserSettingsResponse(9, 22, true, List.of(60), true);
 
     public static UserSettingsResponse from(UserSettings settings) {
         return new UserSettingsResponse(
                 settings.getRoutineStartHour(),
                 settings.getRoutineEndHour(),
                 settings.getNotificationsEnabled(),
-                settings.getBriefingEnabled(),
-                settings.getNotificationThresholds()
+                settings.getNotificationThresholds(),
+                settings.getBriefingEnabled()
         );
     }
 }

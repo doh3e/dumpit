@@ -83,11 +83,11 @@ class UserSettingsServiceImplTest {
         when(userSettingsRepository.findById(any())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.updateSettings(EMAIL,
-                new UserSettingsUpdateRequest(null, null, null, null, List.of(45))))
+                new UserSettingsUpdateRequest(null, null, null, List.of(45), null)))
                 .isInstanceOf(BadRequestException.class);
 
         UserSettingsResponse res = service.updateSettings(EMAIL,
-                new UserSettingsUpdateRequest(null, null, null, null, List.of(30, 720, 30)));
+                new UserSettingsUpdateRequest(null, null, null, List.of(30, 720, 30), null));
         assertThat(res.notificationThresholds()).containsExactly(720, 30);
     }
 
@@ -96,7 +96,7 @@ class UserSettingsServiceImplTest {
         when(userSettingsRepository.findById(any())).thenReturn(Optional.empty());
 
         UserSettingsResponse res = service.updateSettings(EMAIL,
-                new UserSettingsUpdateRequest(null, null, null, null, List.of()));
+                new UserSettingsUpdateRequest(null, null, null, List.of(), null));
 
         assertThat(res.notificationThresholds()).isEmpty();
     }
