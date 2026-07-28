@@ -12,7 +12,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -33,8 +32,8 @@ public class BriefingScheduler {
     private final PushDispatchService pushDispatchService;
     private final StringRedisTemplate redisTemplate;
 
+    // readOnly 트랜잭션을 걸면 하위 무효 토큰 deleteAll이 무플러시로 증발한다 — 하위 호출은 각자 트랜잭션을 가진다
     @Scheduled(cron = "${app.push.briefing-cron:0 0 * * * *}", zone = "Asia/Seoul")
-    @Transactional(readOnly = true)
     public void run() {
         runAt(LocalDateTime.now(ZONE));
     }

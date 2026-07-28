@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -28,8 +27,8 @@ public class DeadlinePushScheduler {
     private final DeadlineNudgeService deadlineNudgeService;
     private final PushDispatchService pushDispatchService;
 
+    // readOnly 트랜잭션을 걸면 하위 무효 토큰 deleteAll이 무플러시로 증발한다 — 하위 호출은 각자 트랜잭션을 가진다
     @Scheduled(cron = "${app.push.deadline-cron:0 * * * * *}", zone = "Asia/Seoul")
-    @Transactional(readOnly = true)
     public void run() {
         runAt(LocalDateTime.now(ZONE));
     }
