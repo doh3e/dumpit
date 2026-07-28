@@ -5,6 +5,7 @@ import com.dumpit.entity.Inquiry;
 import com.dumpit.entity.User;
 import com.dumpit.exception.NotFoundException;
 import com.dumpit.repository.BrainDumpRepository;
+import com.dumpit.repository.DeviceTokenRepository;
 import com.dumpit.repository.IdeaRepository;
 import com.dumpit.repository.InquiryRepository;
 import com.dumpit.repository.RoutineRepository;
@@ -35,6 +36,7 @@ public class AccountServiceImpl implements AccountService {
     private final InquiryRepository inquiryRepository;
     private final ActivityLogService activityLogService;
     private final UserSettingsRepository userSettingsRepository;
+    private final DeviceTokenRepository deviceTokenRepository;
 
     @Override
     @Transactional
@@ -71,6 +73,8 @@ public class AccountServiceImpl implements AccountService {
 
         // 소프트 탈퇴(행 유지)라 FK CASCADE가 타지 않는다 — 설정 행은 직접 삭제
         userSettingsRepository.findById(user.getUserId()).ifPresent(userSettingsRepository::delete);
+        // 탈퇴 후에도 기기 토큰이 남으면 익명화된 계정으로 푸시가 계속 나간다 — 직접 삭제
+        deviceTokenRepository.deleteByUser(user);
         user.withdraw();
         return userRepository.save(user);
     }

@@ -5,6 +5,7 @@ import com.dumpit.entity.Idea;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.repository.BrainDumpRepository;
+import com.dumpit.repository.DeviceTokenRepository;
 import com.dumpit.repository.IdeaRepository;
 import com.dumpit.repository.TaskRepository;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,6 +32,7 @@ class AuthProfileApiTest extends ApiIntegrationTestBase {
     @Autowired private TaskRepository taskRepository;
     @Autowired private BrainDumpRepository brainDumpRepository;
     @Autowired private IdeaRepository ideaRepository;
+    @Autowired private DeviceTokenRepository deviceTokenRepository;
 
     // ---------- GET /auth/me ----------
 
@@ -204,6 +207,19 @@ class AuthProfileApiTest extends ApiIntegrationTestBase {
         assertThat(withdrawn.getStatus()).isEqualTo(User.Status.WITHDRAWN);
         assertThat(withdrawn.getEmail()).startsWith("withdrawn+");
         verify(oauthRevocationService).revokeGoogle(any());
+    }
+
+    @Test
+    void 탈퇴하면_기기_토큰도_지워진다() throws Exception {
+        mockMvc.perform(post("/me/devices").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"tok-withdraw\", \"platform\": \"android\"}"))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(delete("/me/account").with(asUser(USER_A)))
+                .andExpect(status().isNoContent());
+
+        assertThat(deviceTokenRepository.findAll()).isEmpty();
     }
 
     @Test

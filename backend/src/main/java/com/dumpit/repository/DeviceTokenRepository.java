@@ -12,6 +12,7 @@ public interface DeviceTokenRepository extends JpaRepository<DeviceToken, Long> 
     Optional<DeviceToken> findByToken(String token);
     List<DeviceToken> findAllByUser(User user);
     void deleteByUserAndToken(User user, String token);
+    void deleteByUser(User user);
 
     @Query("select distinct dt.user from DeviceToken dt")
     List<User> findDistinctUsers();
