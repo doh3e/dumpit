@@ -15,7 +15,4 @@ public interface DeviceTokenRepository extends JpaRepository<DeviceToken, Long> 
 
     @Query("select distinct dt.user from DeviceToken dt")
     List<User> findDistinctUsers();
-
-    @Query("select dt from DeviceToken dt join fetch dt.user where dt.token = ?1")
-    Optional<DeviceToken> findByTokenWithUser(String token);
 }

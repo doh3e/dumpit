@@ -34,9 +34,10 @@ class DeviceApiTest extends ApiIntegrationTestBase {
     void 같은_토큰을_다른_유저가_등록하면_소유가_이전된다() throws Exception {
         register(USER_A, TOKEN);
         register(USER_B, TOKEN);
-        var token = deviceTokenRepository.findByTokenWithUser(TOKEN).orElseThrow();
+        var userBId = userRepository.findByEmail(USER_B).orElseThrow().getUserId();
+        var token = deviceTokenRepository.findByToken(TOKEN).orElseThrow();
         assertThat(deviceTokenRepository.findAll()).hasSize(1);
-        assertThat(token.getUser().getEmail()).isEqualTo(USER_B);
+        assertThat(token.getUser().getUserId()).isEqualTo(userBId);
     }
 
     @Test
