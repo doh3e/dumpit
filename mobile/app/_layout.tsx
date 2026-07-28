@@ -14,6 +14,8 @@ import { initPushHandlers } from '../src/push/fcm';
 import { queryClient } from '../src/query/queryClient';
 import { ThemeProvider } from '../src/theme/ThemeProvider';
 import { useTheme } from '../src/theme/useTheme';
+import { mirrorConfig } from '../src/widget/mirror';
+import { installTodayMirror } from '../src/widget/todayMirror';
 
 /** 수동 다크 모드에서도 상태바 아이콘이 배경과 맞게 — Provider 안쪽에서 scheme 구독 */
 function ThemedStatusBar() {
@@ -46,6 +48,15 @@ function PushHandlerGate() {
   return null;
 }
 
+/** 위젯 미러 — 설정값 1회 전달 + planning 캐시 갱신 구독 설치 */
+function WidgetMirrorGate() {
+  useEffect(() => {
+    void mirrorConfig();
+    return installTodayMirror(queryClient);
+  }, []);
+  return null;
+}
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -73,6 +84,7 @@ export default function RootLayout() {
                 <ThemedStatusBar />
                 <AuthRouteGate />
                 <PushHandlerGate />
+                <WidgetMirrorGate />
                 <View style={{ flex: 1 }}>
                   <AppBackground />
                   <Stack

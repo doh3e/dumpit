@@ -8,6 +8,7 @@ import {
 import { buildNotificationPlan } from './notificationPlan';
 import * as notifications from './notifications';
 import * as persistence from './persistence';
+import { mirrorPomodoro } from '../widget/mirror';
 
 /**
  * 뽀모도로 세션 컨트롤러 — 모듈 싱글턴 pub/sub (웹 pomodoroFocus 패턴).
@@ -46,6 +47,7 @@ async function setSession(next: Session | null): Promise<void> {
   if (next) await persistence.saveSession(next);
   else await persistence.clearSession();
   emit();
+  void mirrorPomodoro(next); // 위젯 미러 — 실패는 무시(fire-and-forget)
 }
 
 /** 앱 시작 1회 — 저장된 세션 복원 후 밀린 정산까지 */
@@ -146,8 +148,7 @@ async function doReconcile(): Promise<SettleResult | null> {
       if (session !== current) return result;   // 정산 중 리셋·재시작 — 상태는 건드리지 않는다
       // 서버가 인정한 만큼만 전진 — 클라 시계가 빨라 cap에 깎여도 다음 정산이 잔여분을 재청구
       updated = { ...current, lastSettled: current.lastSettled + res.settledSessions };
-      session = updated;
-      await persistence.saveSession(updated);
+      await setSession(updated); // 저장·emit·미러 훅 단일화 (같은 값 재렌더라 무해)
       if (result.coins > 0) pendingSettle = result;
     } catch {
       if (session !== current) return null;
