@@ -6,6 +6,8 @@ import org.springframework.http.MediaType;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.after;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -88,5 +90,22 @@ class NoticePushApiTest extends ApiIntegrationTestBase {
 
         // @Async — 두 기기 모두 send() 호출됨 (예외 발생해도 계속)
         verify(pushSender, timeout(2000).times(2)).send(any(), any());
+    }
+
+    @Test
+    void DRAFT_공지는_브로드캐스트되지_않는다() throws Exception {
+        // USER_A 기기 등록
+        mockMvc.perform(post("/me/devices").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"tok-a\"}"))
+                .andExpect(status().isNoContent());
+
+        // 관리자가 DRAFT 상태로 공지 생성 — 공개 목록에 아직 노출되지 않으므로 푸시도 나가면 안 된다
+        mockMvc.perform(post("/admin/notices").with(asUser(ADMIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\": \"점검 안내\", \"content\": \"오늘 밤 점검합니다.\", \"status\": \"DRAFT\"}"))
+                .andExpect(status().isCreated());
+
+        verify(pushSender, after(500).never()).send(any(), any());
     }
 }

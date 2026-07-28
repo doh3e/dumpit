@@ -55,7 +55,10 @@ public class AdminNoticeController {
                 Boolean.TRUE.equals(request.popup())
         );
         noticeRepository.save(notice);
-        noticePushService.broadcastNewNotice(notice.getTitle());
+        // DRAFT나 미래 publishAt은 공개 목록에 아직 노출되지 않으므로 즉시 브로드캐스트하면 안 된다(PATCH 발행 전환 훅은 후속)
+        if (notice.getStatus() == Notice.Status.PUBLISHED && !notice.getPublishAt().isAfter(LocalDateTime.now())) {
+            noticePushService.broadcastNewNotice(notice.getTitle());
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(NoticeResponse.from(notice));
     }
 
