@@ -51,7 +51,7 @@ class UserSettingsServiceImplTest {
         when(userSettingsRepository.findById(any())).thenReturn(Optional.empty());
 
         UserSettingsResponse res = service.updateSettings(EMAIL,
-                new UserSettingsUpdateRequest(22, 2, null, null));
+                new UserSettingsUpdateRequest(22, 2, null, null, null));
 
         assertThat(res.routineStartHour()).isEqualTo(22);
         assertThat(res.routineEndHour()).isEqualTo(2);
@@ -64,7 +64,7 @@ class UserSettingsServiceImplTest {
         when(userSettingsRepository.findById(any())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.updateSettings(EMAIL,
-                new UserSettingsUpdateRequest(9, 9, null, null)))
+                new UserSettingsUpdateRequest(9, 9, null, null, null)))
                 .isInstanceOf(BadRequestException.class);
     }
 
@@ -74,7 +74,7 @@ class UserSettingsServiceImplTest {
         when(userSettingsRepository.findById(any())).thenReturn(Optional.of(existing));
 
         assertThatThrownBy(() -> service.updateSettings(EMAIL,
-                new UserSettingsUpdateRequest(22, null, null, null)))
+                new UserSettingsUpdateRequest(22, null, null, null, null)))
                 .isInstanceOf(BadRequestException.class);
     }
 
@@ -83,11 +83,11 @@ class UserSettingsServiceImplTest {
         when(userSettingsRepository.findById(any())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.updateSettings(EMAIL,
-                new UserSettingsUpdateRequest(null, null, null, List.of(45))))
+                new UserSettingsUpdateRequest(null, null, null, null, List.of(45))))
                 .isInstanceOf(BadRequestException.class);
 
         UserSettingsResponse res = service.updateSettings(EMAIL,
-                new UserSettingsUpdateRequest(null, null, null, List.of(30, 720, 30)));
+                new UserSettingsUpdateRequest(null, null, null, null, List.of(30, 720, 30)));
         assertThat(res.notificationThresholds()).containsExactly(720, 30);
     }
 
@@ -96,7 +96,7 @@ class UserSettingsServiceImplTest {
         when(userSettingsRepository.findById(any())).thenReturn(Optional.empty());
 
         UserSettingsResponse res = service.updateSettings(EMAIL,
-                new UserSettingsUpdateRequest(null, null, null, List.of()));
+                new UserSettingsUpdateRequest(null, null, null, null, List.of()));
 
         assertThat(res.notificationThresholds()).isEmpty();
     }
