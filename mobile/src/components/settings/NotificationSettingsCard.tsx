@@ -52,6 +52,7 @@ export function NotificationSettingsCard() {
                 key={t.min}
                 label={t.label}
                 selected={settings.notificationThresholds.includes(t.min)}
+                disabled={pending}
                 onPress={() => patch({ notificationThresholds: toggleThreshold(settings.notificationThresholds, t.min) })}
               />
             ))}
