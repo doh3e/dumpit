@@ -1,0 +1,38 @@
+// Glance(위젯 UI)는 Compose 컴파일러가 필요하다. Kotlin 2.x에서는 버전을 rootProject의
+// expo-root-project 플러그인이 채워둔 `kotlinVersion` ext 프로퍼티에서 그대로 가져온다
+// (expo-modules-core/expo-dev-menu 등 이 저장소의 다른 expo 모듈과 동일한 패턴).
+buildscript {
+  repositories {
+    google()
+    mavenCentral()
+  }
+  dependencies {
+    classpath("org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:${kotlinVersion}")
+  }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'expo-module-gradle-plugin'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+
+group = 'kr.dumpit.widget'
+version = '0.1.0'
+
+android {
+  namespace "kr.dumpit.widget"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+  buildFeatures {
+    compose true
+  }
+}
+
+dependencies {
+  implementation "androidx.glance:glance-appwidget:1.1.1"
+  implementation "com.squareup.okhttp3:okhttp:4.12.0"
+}
