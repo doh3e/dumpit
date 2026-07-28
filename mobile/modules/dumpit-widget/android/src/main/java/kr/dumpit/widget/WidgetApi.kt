@@ -18,9 +18,16 @@ object WidgetApi {
             .getString("apiBaseUrl").trimEnd('/')
     }.getOrNull()
 
-    /** RN 네트워킹의 쿠키 저장소(webkit CookieManager)에서 세션 쿠키를 읽는다 */
-    private fun cookieFor(url: String): String? =
-        CookieManager.getInstance().getCookie(url)?.takeIf { it.isNotBlank() }
+    /**
+     * RN 네트워킹의 쿠키 저장소(webkit CookieManager)에서 세션 쿠키를 읽는다.
+     * WebView 프로바이더 비활성/미설치(MissingWebViewPackageException)나 콜드 프로세스에서
+     * 첫 WebView 엔진 초기화가 걸리는 경우 CookieManager.getInstance()/getCookie() 자체가
+     * 예외를 던질 수 있다 — runCatching으로 감싸 null로 수렴시켜야 호출부의
+     * `?: run { markLoggedOut; return false }` 안전망이 실제로 동작한다.
+     */
+    private fun cookieFor(url: String): String? = runCatching {
+        CookieManager.getInstance().getCookie(url)
+    }.getOrNull()?.takeIf { it.isNotBlank() }
 
     fun completeTask(context: Context, taskId: String): Boolean {
         val base = baseUrl(context) ?: return false
