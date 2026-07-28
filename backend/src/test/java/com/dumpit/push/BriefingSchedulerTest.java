@@ -86,10 +86,14 @@ class BriefingSchedulerTest {
         when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
         when(planning.todayTasks("a@test")).thenReturn(List.of(mock(com.dumpit.dto.TaskResponse.class)));
         when(nudges.getNudges("a@test")).thenReturn(List.of());
-        when(dispatch.drainHeldCount(any())).thenReturn(0L);
+        when(dispatch.drainHeldCount(any())).thenReturn(2L);  // 보류 2건 있을 때 "밤사이 알림 2건" 포함됨
         when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(true).thenReturn(false);
         scheduler.runAt(nineAm);
         scheduler.runAt(nineAm);
-        verify(dispatch, times(1)).sendToUserDevices(any(), any());
+        verify(dispatch, times(1)).sendToUserDevices(any(), argThat(m ->
+                m.channelId().equals("push-briefing")
+                        && m.body().contains("오늘 할 일 1개")
+                        && m.body().contains("밤사이 알림 2건")));
+        verify(dispatch, times(1)).drainHeldCount(any());  // dedup 성공 후 첫 라운드에서만 drain
     }
 }
