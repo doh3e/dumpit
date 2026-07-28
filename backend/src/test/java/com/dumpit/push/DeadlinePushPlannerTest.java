@@ -48,4 +48,40 @@ class DeadlinePushPlannerTest {
         var threshold = out.stream().filter(c -> c.dedupKey().endsWith(":60")).findFirst().orElseThrow();
         assertThat(threshold.body()).contains("리포트 쓰기").contains("1시간 전");
     }
+
+    @Test
+    void 이십사시간_창_경계값_1440분() {
+        // 정확히 1440분 (24시간) → 첫감지 후보 O
+        var at1440 = DeadlinePushPlanner.plan(List.of(task("t1", NOW.plusMinutes(1440))), List.of(60), NOW);
+        assertThat(at1440).anyMatch(c -> c.dedupKey().endsWith(":first"));
+
+        // 1441분 (24시간 1분) → 후보 X
+        var beyond1440 = DeadlinePushPlanner.plan(List.of(task("t1", NOW.plusMinutes(1441))), List.of(60), NOW);
+        assertThat(beyond1440).isEmpty();
+    }
+
+    @Test
+    void 임계값_일치_경계값_diff_equals_zero() {
+        // minutesLeft == threshold (diff == 0) → 임계값 발화 O
+        var atThreshold = DeadlinePushPlanner.plan(List.of(task("t1", NOW.plusMinutes(60))), List.of(60), NOW);
+        assertThat(atThreshold).anyMatch(c -> c.dedupKey().endsWith(":60"));
+    }
+
+    @Test
+    void 임계값_창_경계값_diff_minus_5() {
+        // diff == -5 (minutesLeft == threshold - 5) → 발화 O
+        var atMinus5 = DeadlinePushPlanner.plan(List.of(task("t1", NOW.plusMinutes(55))), List.of(60), NOW);
+        assertThat(atMinus5).anyMatch(c -> c.dedupKey().endsWith(":60"));
+
+        // diff == -6 (minutesLeft == threshold - 6) → 발화 X
+        var beyondMinus5 = DeadlinePushPlanner.plan(List.of(task("t1", NOW.plusMinutes(54))), List.of(60), NOW);
+        assertThat(beyondMinus5).noneMatch(c -> c.dedupKey().endsWith(":60"));
+    }
+
+    @Test
+    void 정확히_마감_시각_경계값() {
+        // minutesLeft == 0 (정확히 마감) → 아무 후보도 없음
+        var atDeadline = DeadlinePushPlanner.plan(List.of(task("t1", NOW)), List.of(60), NOW);
+        assertThat(atDeadline).isEmpty();
+    }
 }
