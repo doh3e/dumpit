@@ -8,9 +8,14 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.Duration
 
 object WidgetApi {
-    private val client = OkHttpClient()
+    // 기본 타임아웃(connect/read 각 10s)은 completeTask→refreshToday 직렬 호출에서
+    // Glance ActionCallback 실행 창을 넘길 수 있다 — 콜 전체를 7초로 상한.
+    private val client = OkHttpClient.Builder()
+        .callTimeout(Duration.ofSeconds(7))
+        .build()
     private val JSON_TYPE = "application/json; charset=utf-8".toMediaType()
 
     private fun baseUrl(context: Context): String? = runCatching {

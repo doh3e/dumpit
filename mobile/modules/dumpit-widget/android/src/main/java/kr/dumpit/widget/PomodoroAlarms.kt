@@ -2,6 +2,8 @@ package kr.dumpit.widget
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -15,6 +17,13 @@ object PomodoroAlarms {
         val pi = PendingIntent.getBroadcast(
             context, REQUEST_CODE, Intent(context, WidgetTickReceiver::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+        // 위젯이 홈에 하나도 없으면 정확 알람 릴레이를 돌릴 이유가 없다 —
+        // 앱만 쓰는(위젯 미설치) 유저까지 페이즈 경계마다 RTC_WAKEUP 기상을 강제하지 않는다.
+        val widgetIds = AppWidgetManager.getInstance(context)
+            .getAppWidgetIds(ComponentName(context, PomodoroWidgetReceiver::class.java))
+        if (widgetIds.isEmpty()) { am.cancel(pi); return }  // 위젯 없으면 기상 예약 안 함(기존 예약도 걷기)
+
         am.cancel(pi)
 
         val snap = PomodoroSnapshot.from(WidgetStore.read(context, WidgetStore.KEY_POMODORO)) ?: return
