@@ -127,7 +127,15 @@ def load_logical(name):
 
 
 def draw_setting():
-    return load_logical('setting_20.png')
+    # 복원 원본은 몸통 대부분이 α~93%(224~254)라 배경이 비쳐 뿌옇게 보였다(2026-07-28 피드백).
+    # 몸통(α≥192)은 완전 불투명으로 경화하고, 바깥 유령 테두리(α<192, 21셀)는 제거한다.
+    img = load_logical('setting_20.png')
+    px = img.load()
+    for y in range(GRID):
+        for x in range(GRID):
+            r, g, b, a = px[x, y]
+            px[x, y] = (r, g, b, 255) if a >= 192 else (0, 0, 0, 0)
+    return img
 
 
 def draw_arrowhead():
