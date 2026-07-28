@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import {
   createRoutine, deleteRoutine, fetchRoutines, patchRoutine, toggleRoutine, type RoutinePayload,
 } from '../api/routines';
-import { fetchSettings, patchSettings } from '../api/settings';
-import type { RoutineResponse, UserSettings } from '../api/types';
+import { fetchSettings, patchSettings, type SettingsPatch } from '../api/settings';
+import type { RoutineResponse } from '../api/types';
 import { keys } from './keys';
 
 export function useRoutines() {
@@ -78,8 +78,7 @@ export function useDeleteRoutine() {
 export function useSaveSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: Partial<Pick<UserSettings, 'routineStartHour' | 'routineEndHour'>>) =>
-      patchSettings(patch),
+    mutationFn: (patch: SettingsPatch) => patchSettings(patch),
     onSuccess: (data) => {
       qc.setQueryData(keys.settings, data);
     },

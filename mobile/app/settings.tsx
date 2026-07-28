@@ -10,6 +10,7 @@ import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { ActiveHoursCard } from '../src/components/routine/ActiveHoursCard';
+import { NotificationSettingsCard } from '../src/components/settings/NotificationSettingsCard';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { useThemeMode, type ThemeMode } from '../src/theme/ThemeProvider';
 import { fonts } from '../src/theme/typography';
@@ -75,6 +76,8 @@ export default function SettingsScreen() {
         </RetroCard>
 
         <ActiveHoursCard />
+
+        <NotificationSettingsCard />
 
         <RetroCard style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>👤 계정</Text>

@@ -111,6 +111,7 @@ export type UserSettings = {
   routineEndHour: number;     // 0~23, start > end = 자정넘김
   notificationsEnabled: boolean;
   notificationThresholds: number[];
+  briefingEnabled: boolean;
 };
 
 export type PomodoroSettleResponse = { coins: number; totalCoins: number; settledSessions: number };
