@@ -63,11 +63,20 @@ export async function applyPlan(plan: PlannedNotification[]): Promise<void> {
 }
 
 /**
- * 이 앱의 알림은 현재 뽀모도로뿐이라 전체 취소가 곧 뽀모도로 취소다.
- * Phase 4에서 FCM 푸시가 들어오면 접두사(pomodoro-) 기반 선별 취소로 바꿔야 한다.
+ * 뽀모도로 알림만 걷는다 — FCM 푸시 표시분(Phase 4)은 남긴다.
+ * 트리거·표시 양쪽에서 pomodoro- 접두사 id만 선별 취소.
  */
 export async function cancelAll(): Promise<void> {
-  await notifee.cancelAllNotifications();
+  const triggerIds = await notifee.getTriggerNotificationIds();
+  await Promise.all(
+    triggerIds.filter((id) => id.startsWith('pomodoro-')).map((id) => notifee.cancelNotification(id)),
+  );
+  const displayed = await notifee.getDisplayedNotifications();
+  await Promise.all(
+    displayed
+      .filter((d) => d.notification.id?.startsWith('pomodoro-'))
+      .map((d) => notifee.cancelNotification(d.notification.id!)),
+  );
 }
 
 /** Android 13+ 알림 권한 — 거부여도 타이머는 동작(알림만 침묵) */
