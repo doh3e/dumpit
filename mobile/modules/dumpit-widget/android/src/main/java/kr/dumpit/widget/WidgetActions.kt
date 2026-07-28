@@ -32,8 +32,12 @@ class PomodoroCommandAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val command = parameters[CommandParam] ?: return
         val intent = Intent(context, PomodoroCommandService::class.java).putExtra("command", command)
-        // 위젯 상호작용은 일시적 백그라운드 예외가 허용되는 창구다
-        context.startService(intent)
+        // 위젯 상호작용은 일시적 백그라운드 예외가 허용되는 창구다 — 그래도 Android 8+ 백그라운드
+        // 제한 창을 벗어나면 startService가 IllegalStateException을 던질 수 있어 다른 WidgetApi
+        // 호출부와 동일하게 runCatching으로 감싼다(무가드면 예외가 코루틴 밖으로 침묵 전파해
+        // 진단 로그 0줄로 버튼이 죽는다).
+        runCatching { context.startService(intent) }
+            .onFailure { android.util.Log.w("DumpitWidget", "뽀모도로 커맨드 서비스 시작 실패", it) }
     }
     companion object { val CommandParam = ActionParameters.Key<String>("command") }
 }
