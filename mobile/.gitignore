@@ -44,3 +44,6 @@ example
 
 # 로컬 환경 변수 (LAN IP·클라이언트 ID)
 .env
+
+# Firebase 클라이언트 설정 (public 리포 노출 방지)
+google-services.json
