@@ -31,7 +31,10 @@ public class DeadlinePushScheduler {
     @Scheduled(cron = "${app.push.deadline-cron:0 * * * * *}", zone = "Asia/Seoul")
     @Transactional(readOnly = true)
     public void run() {
-        LocalDateTime now = LocalDateTime.now(ZONE);
+        runAt(LocalDateTime.now(ZONE));
+    }
+
+    void runAt(LocalDateTime now) {
         for (User user : deviceTokenRepository.findDistinctUsers()) {
             try {
                 processUser(user, now);

@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.eq;
 
 class DeadlinePushSchedulerTest {
 
@@ -35,23 +36,24 @@ class DeadlinePushSchedulerTest {
         when(tokens.findDistinctUsers()).thenReturn(List.of(TestUsers.withEmail("a@test")));
         when(settings.getSettings("a@test"))
                 .thenReturn(new UserSettingsResponse(9, 22, false, List.of(60), true));
-        scheduler.run();
+        scheduler.runAt(NOW);
         verify(nudges, never()).getNudges(anyString());
         verify(dispatch, never()).dispatchDeadlines(any(), anyList(), anyBoolean());
     }
 
     @Test
     void 켠_유저는_활동시간_판정과_함께_디스패치된다() throws Exception {
+        // NOW = 14:00 (활동 시간 9~22 범위 내) → quiet=false
         when(tokens.findDistinctUsers()).thenReturn(List.of(TestUsers.withEmail("a@test")));
         when(settings.getSettings("a@test"))
                 .thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
         when(settings.activeHours("a@test")).thenReturn(new ActiveHours(9, 22));
-        // 현재 시간 + 10시간 후 마감 = 24시간 이내, 임계값 창 밖
+        // 현재 시간 + 10시간 후 마감 = 24시간 이내
         when(nudges.getNudges("a@test")).thenReturn(List.of(
                 nudge("550e8400-e29b-41d4-a716-446655440000", NOW.plusHours(10))
         ));
-        scheduler.run();
-        verify(dispatch).dispatchDeadlines(any(), anyList(), anyBoolean());
+        scheduler.runAt(NOW);
+        verify(dispatch).dispatchDeadlines(any(), anyList(), eq(false));
     }
 
     @Test
@@ -65,7 +67,23 @@ class DeadlinePushSchedulerTest {
         when(nudges.getNudges("b@test")).thenReturn(List.of(
                 nudge("550e8400-e29b-41d4-a716-446655440000", NOW.plusHours(10))
         ));
-        scheduler.run();
-        verify(dispatch, times(1)).dispatchDeadlines(any(), anyList(), anyBoolean());
+        scheduler.runAt(NOW);
+        verify(dispatch, times(1)).dispatchDeadlines(any(), anyList(), eq(false));
+    }
+
+    @Test
+    void 활동시간_밖에서는_보류판정이_참이다() throws Exception {
+        // NOW = 03:00 (활동 시간 9~22 범위 밖) → quiet=true
+        LocalDateTime earlyMorning = NOW.withHour(3);
+        when(tokens.findDistinctUsers()).thenReturn(List.of(TestUsers.withEmail("a@test")));
+        when(settings.getSettings("a@test"))
+                .thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
+        when(settings.activeHours("a@test")).thenReturn(new ActiveHours(9, 22));
+        // 현재 시간 + 10시간 후 마감
+        when(nudges.getNudges("a@test")).thenReturn(List.of(
+                nudge("550e8400-e29b-41d4-a716-446655440001", earlyMorning.plusHours(10))
+        ));
+        scheduler.runAt(earlyMorning);
+        verify(dispatch).dispatchDeadlines(any(), anyList(), eq(true));
     }
 }
