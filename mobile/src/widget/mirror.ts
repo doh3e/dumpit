@@ -43,3 +43,13 @@ export function buildTodayMirror(tasks: TaskResponse[], now: number): string {
 export async function mirrorTodayTasks(tasks: TaskResponse[]): Promise<void> {
   await widgetNative?.mirrorTodayTasks(buildTodayMirror(tasks, Date.now()));
 }
+
+/**
+ * 로그아웃 시 위젯 미러를 비운다 — 지우지 않으면 다음 401 응답까지(최대 30분)
+ * 이전 유저의 할 일 목록이 위젯에 그대로 남는다.
+ * updatedAt은 0 고정 — 로그아웃 스냅샷은 시각 정보가 필요 없어 Date.now() 규약을 적용하지 않는다.
+ */
+export async function clearWidgetMirrors(): Promise<void> {
+  await widgetNative?.mirrorTodayTasks(JSON.stringify({ updatedAt: 0, loggedIn: false, tasks: [] }));
+  await widgetNative?.mirrorPomodoro(null);
+}

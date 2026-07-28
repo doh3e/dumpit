@@ -5,6 +5,7 @@ import { fetchMe, loginWithGoogleIdToken, logout, type MeResponse } from '../api
 import { api } from '../api/client';
 import { bypassReauth, installSilentReauth } from '../api/reauth';
 import { registerPushDevice, unregisterPushDevice } from '../push/fcm';
+import { clearWidgetMirrors } from '../widget/mirror';
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     await unregisterPushDevice(); // 세션이 살아있는 동안 서버에서 기기 토큰을 지운다
+    void clearWidgetMirrors(); // 위젯 미러도 함께 비운다 — 다음 401까지 이전 유저 목록이 남지 않도록
     try { await logout(); } catch { /* 서버 실패해도 로컬은 정리 */ }
     try { await GoogleSignin.signOut(); } catch { /* noop */ }
     setMe(null);

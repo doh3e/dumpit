@@ -1,5 +1,14 @@
-import { buildPomodoroMirror, buildTodayMirror } from '../mirror';
+import { buildPomodoroMirror, buildTodayMirror, clearWidgetMirrors } from '../mirror';
+import { widgetNative } from '../native';
 import type { Session } from '../../pomodoro/engine';
+
+jest.mock('../native', () => ({
+  widgetNative: {
+    mirrorConfig: jest.fn(async () => {}),
+    mirrorTodayTasks: jest.fn(async () => {}),
+    mirrorPomodoro: jest.fn(async () => {}),
+  },
+}));
 
 const NOW = 1_753_776_000_000;
 
@@ -40,5 +49,15 @@ describe('buildTodayMirror', () => {
     ] as never, NOW));
     expect(json.loggedIn).toBe(true);
     expect(json.tasks[0]).toEqual({ taskId: 't1', title: '리포트', deadline: '14:30', status: 'TODO' });
+  });
+});
+
+describe('clearWidgetMirrors', () => {
+  it('로그아웃 형태로 두 미러를 모두 비운다', async () => {
+    await clearWidgetMirrors();
+    expect(widgetNative!.mirrorTodayTasks).toHaveBeenCalledWith(
+      JSON.stringify({ updatedAt: 0, loggedIn: false, tasks: [] }),
+    );
+    expect(widgetNative!.mirrorPomodoro).toHaveBeenCalledWith(null);
   });
 });
