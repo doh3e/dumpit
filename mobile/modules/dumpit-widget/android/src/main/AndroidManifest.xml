@@ -26,5 +26,8 @@
         <receiver
             android:name="kr.dumpit.widget.WidgetTickReceiver"
             android:exported="false" />
+        <service
+            android:name="kr.dumpit.widget.PomodoroCommandService"
+            android:exported="false" />
     </application>
 </manifest>

@@ -35,4 +35,7 @@ android {
 dependencies {
   implementation "androidx.glance:glance-appwidget:1.1.1"
   implementation "com.squareup.okhttp3:okhttp:4.12.0"
+  // PomodoroCommandService(HeadlessJsTaskService) — 위젯 버튼이 RN 헤드리스 태스크를 기동한다.
+  // 버전은 React Native Gradle Plugin이 루트에서 해석(app/build.gradle과 동일 패턴).
+  implementation "com.facebook.react:react-android"
 }

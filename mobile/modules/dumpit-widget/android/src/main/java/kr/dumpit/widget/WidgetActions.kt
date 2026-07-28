@@ -1,6 +1,7 @@
 package kr.dumpit.widget
 
 import android.content.Context
+import android.content.Intent
 import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
@@ -27,10 +28,12 @@ class RefreshTodayAction : ActionCallback {
     }
 }
 
-// 뼈대만 — Task 7에서 HeadlessJS 연결(명령 전달 → RN 뽀모도로 스토어 조작)로 실구현한다.
 class PomodoroCommandAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        // Task 7에서 HeadlessJS 연결
+        val command = parameters[CommandParam] ?: return
+        val intent = Intent(context, PomodoroCommandService::class.java).putExtra("command", command)
+        // 위젯 상호작용은 일시적 백그라운드 예외가 허용되는 창구다
+        context.startService(intent)
     }
     companion object { val CommandParam = ActionParameters.Key<String>("command") }
 }
