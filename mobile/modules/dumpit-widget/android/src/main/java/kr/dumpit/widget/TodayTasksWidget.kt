@@ -28,7 +28,7 @@ object WidgetPalette {
     val bg = Color(0xFFF7EFDF)
     val card = Color(0xFFFFFDF6)
     val fg = Color(0xFF33271E)
-    val sub = Color(0xFF8A7A66)
+    val sub = Color(0xFF8C7C66)
     val accent = Color(0xFFD95F52)
 }
 
