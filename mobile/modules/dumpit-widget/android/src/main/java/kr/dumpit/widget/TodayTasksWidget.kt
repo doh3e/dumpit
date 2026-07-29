@@ -42,14 +42,19 @@ fun deepLinkIntent(url: String): Intent =
 
 class TodayTasksWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        var snapshot = TodaySnapshot.from(WidgetStore.read(context, WidgetStore.KEY_TODAY))
-        // 주기 onUpdate(30분)·재부팅 등으로 렌더될 때 미러가 오래됐으면 서버에서 직접 갱신.
-        // 앱발 미러 직후(updatedAt 신선)는 건너뛰어 불필요한 네트워크를 막는다.
-        if (snapshot == null || snapshot.isStale()) {
+        // 세션 시작 시 1회: 주기 onUpdate(30분)·재부팅 등으로 렌더될 때 미러가 오래됐으면
+        // 서버에서 직접 갱신. 앱발 미러 직후(updatedAt 신선)는 건너뛰어 불필요한 네트워크를 막는다.
+        // suspend 문맥(네트워크 fetch)이 필요해 provideGlance 본문에 유지한다.
+        val initial = TodaySnapshot.from(WidgetStore.read(context, WidgetStore.KEY_TODAY))
+        if (initial == null || initial.isStale()) {
             withContext(Dispatchers.IO) { WidgetApi.refreshToday(context) }
-            snapshot = TodaySnapshot.from(WidgetStore.read(context, WidgetStore.KEY_TODAY))
         }
-        provideContent { TodayContent(snapshot) }
+        provideContent {
+            // 재구성마다 신선한 스냅샷을 읽는다 — 밖에서 캡처하면 세션 생존 중 스테일 (실기기 확정 버그).
+            // remember로 감싸지 말 것 — 감싸면 다시 스테일해진다.
+            val snapshot = TodaySnapshot.from(WidgetStore.read(context, WidgetStore.KEY_TODAY))
+            TodayContent(snapshot)
+        }
     }
 }
 

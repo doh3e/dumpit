@@ -26,9 +26,11 @@ import androidx.glance.unit.ColorProvider
 
 class PomodoroWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val snapshot = PomodoroSnapshot.from(WidgetStore.read(context, WidgetStore.KEY_POMODORO))
-        val now = System.currentTimeMillis()
-        provideContent { PomodoroContent(snapshot, now) }
+        provideContent {
+            // 재구성마다 신선한 스냅샷을 읽는다 — 밖에서 캡처하면 세션 생존 중 스테일 (실기기 확정 버그)
+            val snapshot = PomodoroSnapshot.from(WidgetStore.read(context, WidgetStore.KEY_POMODORO))
+            PomodoroContent(snapshot, System.currentTimeMillis())
+        }
     }
 }
 
