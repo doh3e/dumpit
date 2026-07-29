@@ -5,7 +5,6 @@ import android.content.Intent
 import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
-import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -16,7 +15,9 @@ class ToggleTaskAction : ActionCallback {
             WidgetApi.completeTask(context, taskId)   // 실패 시에도 재조회로 실상태 복원
             WidgetApi.refreshToday(context)
         }
-        TodayTasksWidget().updateAll(context)
+        // updateAll() 단독으로는 활성 세션을 재구성하지 않는다(실기기 확정 버그) — 최신
+        // SharedPreferences 스냅샷을 Glance 상태로 다시 push해 무효화를 강제한다.
+        WidgetStore.pushTodayState(context, WidgetStore.read(context, WidgetStore.KEY_TODAY))
     }
     companion object { val TaskIdParam = ActionParameters.Key<String>("taskId") }
 }
@@ -24,7 +25,7 @@ class ToggleTaskAction : ActionCallback {
 class RefreshTodayAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         withContext(Dispatchers.IO) { WidgetApi.refreshToday(context) }
-        TodayTasksWidget().updateAll(context)
+        WidgetStore.pushTodayState(context, WidgetStore.read(context, WidgetStore.KEY_TODAY))
     }
 }
 

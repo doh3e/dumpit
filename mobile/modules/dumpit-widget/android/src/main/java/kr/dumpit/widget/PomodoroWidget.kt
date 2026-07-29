@@ -6,6 +6,7 @@ import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.LocalContext
@@ -17,18 +18,32 @@ import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
+import androidx.glance.currentState
 import androidx.glance.layout.*
+import androidx.glance.state.GlanceStateDefinition
+import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 
 class PomodoroWidget : GlanceAppWidget() {
+    // TodayTasksWidget과 동일한 이유 — Glance가 보장하는 무효화 경로는 상태 변경 → update()뿐.
+    override val stateDefinition: GlanceStateDefinition<Preferences> = PreferencesGlanceStateDefinition
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        // 세션 시작 시 SharedPreferences의 최신 스냅샷을 Glance 상태로 동기화해둔다(TodayTasksWidget과
+        // 동일한 이유 — 앱 업데이트 직후처럼 이 GlanceId에 상태가 한 번도 쓰인 적 없을 수 있다).
+        val latest = WidgetStore.read(context, WidgetStore.KEY_POMODORO)
+        updateAppWidgetState(context, id) { prefs ->
+            if (latest == null) prefs.remove(WidgetStore.POMODORO_STATE_KEY) else prefs[WidgetStore.POMODORO_STATE_KEY] = latest
+        }
         provideContent {
-            // 재구성마다 신선한 스냅샷을 읽는다 — 밖에서 캡처하면 세션 생존 중 스테일 (실기기 확정 버그)
-            val snapshot = PomodoroSnapshot.from(WidgetStore.read(context, WidgetStore.KEY_POMODORO))
+            // 재구성마다 Glance 상태를 읽는다 — SharedPreferences 직접 읽기(구 방식)는 활성 세션
+            // 생존 중 스테일해질 수 있다(실기기 확정 버그).
+            val snapshot = PomodoroSnapshot.from(currentState<Preferences>()[WidgetStore.POMODORO_STATE_KEY])
             PomodoroContent(snapshot, System.currentTimeMillis())
         }
     }

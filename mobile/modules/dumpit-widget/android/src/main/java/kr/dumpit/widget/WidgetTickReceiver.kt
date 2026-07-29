@@ -3,7 +3,6 @@ package kr.dumpit.widget
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -13,11 +12,12 @@ class WidgetTickReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.Default).launch {
             try {
-                // 주의(브리프 대비 편차): 확장함수는 Kotlin 호출부에서 완전정규명(FQN) 함수
-                // 스타일로 부를 수 없다(`androidx.glance.appwidget.updateAll(receiver, ctx)`는
-                // Java 상호운용에서만 유효) — 브리프 Step 3 주의사항이 예고한 대로 리시버.함수()
-                // 점 표기로 고쳤다. DumpitWidgetModule.mirrorTodayTasks와 동일한 호출 형태.
-                PomodoroWidget().updateAll(context)
+                // 페이즈 경계 틱은 phases 내용이 바뀌지 않은 채(taskTitle·phases 등 동일) 재렌더가
+                // 필요한 경우다 — updateAll()만으로는 재구성이 보장되지 않는다(Glance 확정 버그:
+                // 활성 세션에서 외부 데이터만 바뀐 update()/updateAll()은 재구성을 일으키지 않는다).
+                // SharedPreferences의 현재 스냅샷을 Glance 상태로 다시 push해(넛지 키 포함) 무효화를
+                // 강제한다.
+                WidgetStore.pushPomodoroState(context, WidgetStore.read(context, WidgetStore.KEY_POMODORO))
             } finally {
                 PomodoroAlarms.reschedule(context)
                 pending.finish()
