@@ -1,27 +1,12 @@
 package kr.dumpit.widget
 
-import android.appwidget.AppWidgetManager
-import android.content.Context
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.updateAll
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
+// 주의: GlanceAppWidgetReceiver는 자신의 onReceive에서 이미 goAsync()를 사용한다.
+// 여기서 onUpdate를 오버라이드해 goAsync()를 또 부르면 null이 반환되어
+// pending.finish()가 NPE를 던지고 앱 프로세스가 죽는다(실기기 확인, 30분 주기·위젯 추가 시마다).
+// 주기 갱신은 TodayTasksWidget.provideGlance의 신선도 게이트(TodaySnapshot.isStale)로 옮겼다.
 class TodayTasksWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = TodayTasksWidget()
-
-    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        super.onUpdate(context, appWidgetManager, appWidgetIds)
-        val pending = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                WidgetApi.refreshToday(context)      // 앱이 안 떠 있어도 목록 신선도 유지
-                TodayTasksWidget().updateAll(context)
-            } finally {
-                pending.finish()
-            }
-        }
-    }
 }

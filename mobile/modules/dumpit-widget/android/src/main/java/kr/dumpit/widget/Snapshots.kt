@@ -3,12 +3,16 @@ package kr.dumpit.widget
 import org.json.JSONObject
 
 data class TodayTask(val taskId: String, val title: String, val deadline: String?, val status: String)
-data class TodaySnapshot(val loggedIn: Boolean, val tasks: List<TodayTask>) {
+data class TodaySnapshot(val updatedAt: Long, val loggedIn: Boolean, val tasks: List<TodayTask>) {
+    /** 30분 주기 onUpdate·재부팅 등으로 렌더될 때 미러가 오래됐으면 신선도 게이트가 서버에서 직접 갱신하도록 판정한다. */
+    fun isStale(now: Long = System.currentTimeMillis()): Boolean = now - updatedAt > 25 * 60_000L
+
     companion object {
         fun from(json: String?): TodaySnapshot? = runCatching {
             val o = JSONObject(json ?: return null)
             val arr = o.getJSONArray("tasks")
             TodaySnapshot(
+                updatedAt = o.optLong("updatedAt", 0L),
                 loggedIn = o.optBoolean("loggedIn", true),
                 tasks = (0 until arr.length()).map { i ->
                     val t = arr.getJSONObject(i)

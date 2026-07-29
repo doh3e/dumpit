@@ -23,6 +23,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object WidgetPalette {
     val bg = Color(0xFFF7EFDF)
@@ -40,7 +42,13 @@ fun deepLinkIntent(url: String): Intent =
 
 class TodayTasksWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val snapshot = TodaySnapshot.from(WidgetStore.read(context, WidgetStore.KEY_TODAY))
+        var snapshot = TodaySnapshot.from(WidgetStore.read(context, WidgetStore.KEY_TODAY))
+        // 주기 onUpdate(30분)·재부팅 등으로 렌더될 때 미러가 오래됐으면 서버에서 직접 갱신.
+        // 앱발 미러 직후(updatedAt 신선)는 건너뛰어 불필요한 네트워크를 막는다.
+        if (snapshot == null || snapshot.isStale()) {
+            withContext(Dispatchers.IO) { WidgetApi.refreshToday(context) }
+            snapshot = TodaySnapshot.from(WidgetStore.read(context, WidgetStore.KEY_TODAY))
+        }
         provideContent { TodayContent(snapshot) }
     }
 }
