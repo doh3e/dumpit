@@ -83,8 +83,12 @@ private fun RunningContent(snapshot: PomodoroSnapshot, now: Long) {
         setChronometer(R.id.widget_chronometer,
             SystemClock.elapsedRealtime() + (phase.endsAt - now), null, true)
     }
-    AndroidRemoteViews(remoteViews = rv)
-    Spacer(GlanceModifier.height(6.dp))
+    // 실기기(갤럭시 S23U, 2x2)에서 크로노미터(AndroidRemoteViews)가 세로 공간을 독식해
+    // 아래 CommandButton이 화면 밖으로 밀려 안 보이는 문제 — 높이를 고정해 공간을 제한한다.
+    Box(modifier = GlanceModifier.height(40.dp), contentAlignment = Alignment.Center) {
+        AndroidRemoteViews(remoteViews = rv)
+    }
+    Spacer(GlanceModifier.height(4.dp))
     CommandButton(label = "일시정지", command = "pause")
 }
 
