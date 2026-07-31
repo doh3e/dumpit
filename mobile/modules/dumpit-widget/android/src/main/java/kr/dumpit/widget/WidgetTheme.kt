@@ -1,3 +1,5 @@
+// 웹 skins.ts·tokens.ts 전사본 — 원본 변경 시 함께 갱신할 것 (PriorityCalculator와 같은 동기화 부채)
+
 package kr.dumpit.widget
 
 import androidx.compose.ui.graphics.Color
