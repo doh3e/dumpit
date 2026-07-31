@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
+import { mirrorTheme } from '../widget/mirror';
 import { composeTheme, type Equipments } from './compose';
 import { ThemeContext, type ThemeMode } from './context';
 
@@ -49,6 +50,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const scheme = mode === 'system' ? system : mode;
   const equipments = previewEquipments ?? me?.equipments ?? cachedEquip;
   const composed = useMemo(() => composeTheme(scheme, equipments), [scheme, equipments]);
+
+  // 위젯도 같은 테마를 보도록 미러 (프리뷰는 제외 — 위젯은 실장착만 따른다)
+  useEffect(() => {
+    void mirrorTheme(mode, me?.equipments ?? cachedEquip);
+  }, [mode, me, cachedEquip]);
 
   const value = useMemo(
     () => ({ ...composed, scheme, mode, setMode, previewEquipments, setPreviewEquipments }),

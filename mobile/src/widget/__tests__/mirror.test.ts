@@ -1,4 +1,4 @@
-import { buildPomodoroMirror, buildTodayMirror, clearWidgetMirrors } from '../mirror';
+import { buildPomodoroMirror, buildThemeMirror, buildTodayMirror, clearWidgetMirrors } from '../mirror';
 import { widgetNative } from '../native';
 import type { Session } from '../../pomodoro/engine';
 
@@ -7,8 +7,21 @@ jest.mock('../native', () => ({
     mirrorConfig: jest.fn(async () => {}),
     mirrorTodayTasks: jest.fn(async () => {}),
     mirrorPomodoro: jest.fn(async () => {}),
+    mirrorTheme: jest.fn(async () => {}),
   },
 }));
+
+test('buildThemeMirror가 장착 코드를 접미사로 변환한다', () => {
+  const json = JSON.parse(buildThemeMirror('dark', {
+    BACKGROUND: 'bg.galaxy', POMODORO: 'pomo.candy', PLANET: 'planet.earth',
+  }));
+  expect(json).toEqual({ mode: 'dark', bgSkin: 'galaxy', pomoSkin: 'candy', planet: 'earth' });
+});
+
+test('buildThemeMirror가 미장착을 null로 둔다', () => {
+  const json = JSON.parse(buildThemeMirror('system', null));
+  expect(json).toEqual({ mode: 'system', bgSkin: null, pomoSkin: null, planet: null });
+});
 
 const NOW = 1_753_776_000_000;
 
@@ -59,5 +72,12 @@ describe('clearWidgetMirrors', () => {
       JSON.stringify({ updatedAt: 0, loggedIn: false, tasks: [] }),
     );
     expect(widgetNative!.mirrorPomodoro).toHaveBeenCalledWith(null);
+  });
+
+  it('장착 스킨 유출 방지를 위해 테마도 비운다 (mode는 system 고정 — 기기 설정이라 초기화 무관)', async () => {
+    await clearWidgetMirrors();
+    expect(widgetNative!.mirrorTheme).toHaveBeenCalledWith(
+      JSON.stringify({ mode: 'system', bgSkin: null, pomoSkin: null, planet: null }),
+    );
   });
 });

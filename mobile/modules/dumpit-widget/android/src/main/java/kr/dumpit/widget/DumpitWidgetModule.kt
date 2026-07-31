@@ -29,5 +29,11 @@ class DumpitWidgetModule : Module() {
             WidgetStore.pushPomodoroState(ctx, json)
             PomodoroAlarms.reschedule(ctx)  // 알람은 SharedPreferences를 읽으므로 dual-write 필수
         }
+
+        AsyncFunction("mirrorTheme") Coroutine { json: String ->
+            val ctx = appContext.reactContext ?: return@Coroutine
+            WidgetStore.save(ctx, WidgetStore.KEY_THEME, json)
+            WidgetStore.pushThemeState(ctx, json)
+        }
     }
 }

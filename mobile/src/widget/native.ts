@@ -4,6 +4,7 @@ type DumpitWidgetNative = {
   mirrorConfig(json: string): Promise<void>;
   mirrorTodayTasks(json: string): Promise<void>;
   mirrorPomodoro(json: string | null): Promise<void>;
+  mirrorTheme(json: string): Promise<void>;
 };
 
 let native: DumpitWidgetNative | null = null;

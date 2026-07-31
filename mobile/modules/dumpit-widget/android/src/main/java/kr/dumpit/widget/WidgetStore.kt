@@ -11,12 +11,14 @@ object WidgetStore {
     const val KEY_CONFIG = "config"
     const val KEY_TODAY = "today"
     const val KEY_POMODORO = "pomodoro"
+    const val KEY_THEME = "theme"
 
     // Glance 상태(stateDefinition=PreferencesGlanceStateDefinition) 키 — composable은 이 키로
     // currentState()를 읽는다. SharedPreferences(KEY_TODAY/KEY_POMODORO)는 부트·비컴포즈 문맥
     // (신선도 게이트, 알람 재예약)에서 계속 쓰이므로 폐기하지 않고 이원화(dual-write)한다.
     val TODAY_STATE_KEY: Preferences.Key<String> = stringPreferencesKey("today")
     val POMODORO_STATE_KEY: Preferences.Key<String> = stringPreferencesKey("pomodoro")
+    val THEME_STATE_KEY: Preferences.Key<String> = stringPreferencesKey("theme")
 
     // 뽀모도로 페이즈 경계 틱(WidgetTickReceiver)은 phases 내용이 바뀌지 않은 채(taskTitle·phases
     // 등 동일) 재렌더가 필요하다 — Preferences DataStore가 바이트 동일 재기록을 델타로 안 취급할
@@ -55,6 +57,23 @@ object WidgetStore {
             updateAppWidgetState(context, id) { prefs ->
                 if (json == null) prefs.remove(POMODORO_STATE_KEY) else prefs[POMODORO_STATE_KEY] = json
                 prefs[POMODORO_TICK_KEY] = System.currentTimeMillis().toString()
+            }
+            PomodoroWidget().update(context, id)
+        }
+    }
+
+    /** 테마는 두 위젯 모두에 반영한다 */
+    suspend fun pushThemeState(context: Context, json: String?) {
+        val manager = GlanceAppWidgetManager(context)
+        manager.getGlanceIds(TodayTasksWidget::class.java).forEach { id ->
+            updateAppWidgetState(context, id) { prefs ->
+                if (json == null) prefs.remove(THEME_STATE_KEY) else prefs[THEME_STATE_KEY] = json
+            }
+            TodayTasksWidget().update(context, id)
+        }
+        manager.getGlanceIds(PomodoroWidget::class.java).forEach { id ->
+            updateAppWidgetState(context, id) { prefs ->
+                if (json == null) prefs.remove(THEME_STATE_KEY) else prefs[THEME_STATE_KEY] = json
             }
             PomodoroWidget().update(context, id)
         }
