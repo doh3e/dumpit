@@ -7,8 +7,12 @@ import { bypassReauth, installSilentReauth } from '../api/reauth';
 import { registerPushDevice, unregisterPushDevice } from '../push/fcm';
 import { clearWidgetMirrors } from '../widget/mirror';
 
+/** 웹 클라이언트 ID는 공개 식별자 — .env 없이 빌드되는 EAS preview/production에서도 로그인이 되도록 프로드 값을 폴백으로 둔다(api/client.ts의 PROD_API_URL과 같은 패턴) */
+const PROD_GOOGLE_WEB_CLIENT_ID =
+  '372628852315-pnrv63va69uf2daq101t7utjh93h1abo.apps.googleusercontent.com';
+
 GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? PROD_GOOGLE_WEB_CLIENT_ID,
 });
 
 /** 세션 만료 시(24h) 저장된 구글 계정으로 조용히 재로그인 — 성공하면 원요청이 재시도된다 */
