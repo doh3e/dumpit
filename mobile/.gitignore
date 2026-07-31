@@ -45,6 +45,7 @@ example
 # 로컬 expo module(모듈 자체는 커밋, gradle 빌드 산출물은 제외)
 modules/*/android/build/
 modules/*/android/.cxx/
+modules/*/android/.gradle/
 
 # 로컬 환경 변수 (LAN IP·클라이언트 ID)
 .env
