@@ -6,7 +6,6 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -38,15 +37,6 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-// Task 9에서 제거 예정 — PomodoroWidget이 아직 이 고정 팔레트를 쓴다(테마 전환은 Task 9에서 WTheme로 이관).
-object WidgetPalette {
-    val bg = Color(0xFFF7EFDF)
-    val card = Color(0xFFFFFDF6)
-    val fg = Color(0xFF33271E)
-    val sub = Color(0xFF8C7C66)
-    val accent = Color(0xFFD95F52)
-}
 
 const val DEEPLINK_HOME = "dumpit:///"
 const val DEEPLINK_POMODORO = "dumpit:///pomodoro"
