@@ -37,6 +37,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import kotlin.math.roundToInt
 
 class PomodoroWidget : GlanceAppWidget() {
     // TodayTasksWidget과 동일한 이유 — Glance가 보장하는 무효화 경로는 상태 변경 → update()뿐.
@@ -188,17 +189,27 @@ private fun RunningContent(snapshot: PomodoroSnapshot, theme: WTheme, now: Long)
  * FOCUS만 담고 있어(이미 끝난 FOCUS는 재미러 시점에 걸러짐) 예전엔 "찍는 점 개수"까지
  * phases 안 FOCUS 수를 썼다 — 재미러마다 점 개수 자체가 줄어들었다(총 세트 수가 아니게 됨).
  * focusDone(+focusTotal)을 얹어 "완료 수"와 "찍을 점 개수" 둘 다 세션 전체 기준으로 고정한다.
+ *
+ * 주의(리뷰 Critical 수정 2 — Glance 10자식 상한): total(focusTotal)을 그대로 점 개수로 쓰면
+ * 안 된다 — 링(비율 분모)과 달리 도트는 total개만큼 Row 직속 자식(점 Box + 간격 Spacer)을
+ * 낳아 2*total-1개가 된다. 세트 수 스테퍼는 setsTarget 최대 12를 허용하고(clampSettings,
+ * engine.ts) focusTotal=12면 23개 — TodayTasksWidget.kt의 QueueSection과 같은 자식-10개
+ * 런타임 예외 사고가 난다. 무한 세션(focusTotal null)도 focusDone이 시간이 갈수록 커져 같은
+ * 위험이다. 그려지는 점 개수를 4개로 캡하고, 실제 완료 비율만 그 안에서 반올림해 채운다
+ * (세트 4개 이하 세션은 세트당 점 1개로 자연히 정확히 맞아떨어진다).
  */
 @Composable
 private fun SetDots(snapshot: PomodoroSnapshot, now: Long, theme: WTheme) {
     val focusVisible = snapshot.phases.count { it.kind == "FOCUS" }
     val completed = snapshot.focusDone + snapshot.phases.count { it.kind == "FOCUS" && it.endsAt <= now }
-    val total = snapshot.focusTotal ?: (snapshot.focusDone + focusVisible).coerceAtLeast(1)
+    val total = (snapshot.focusTotal ?: (snapshot.focusDone + focusVisible)).coerceAtLeast(1)
+    val drawn = minOf(total, 4)
+    val filled = ((completed.toFloat() / total) * drawn).roundToInt().coerceIn(0, drawn)
     Row(verticalAlignment = Alignment.CenterVertically) {
-        for (i in 0 until total) {
+        for (i in 0 until drawn) {
             if (i > 0) Spacer(GlanceModifier.width(6.dp))
             Box(modifier = GlanceModifier.size(10.dp).cornerRadius(5.dp)
-                .background(if (i < completed) theme.pomo.focus else theme.pomo.ring)) {}
+                .background(if (i < filled) theme.pomo.focus else theme.pomo.ring)) {}
         }
     }
 }
