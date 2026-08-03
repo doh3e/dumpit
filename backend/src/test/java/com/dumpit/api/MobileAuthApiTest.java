@@ -6,6 +6,8 @@ import com.dumpit.service.MobileGoogleTokenVerifier.InvalidMobileTokenException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -39,6 +41,30 @@ class MobileAuthApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(get("/auth/me").session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("mobile@test.dumpit.local"));
+    }
+
+    @Test
+    void 로그인_후_principal_name이_구글_sub와_일치한다() throws Exception {
+        // 웹 oauth2Login()은 principal.getName()이 구글 sub가 된다(등록 시 user-name-attribute
+        // 오버라이드 없음, Spring 기본값). RedisOAuth2AuthorizedClientRepository는 캘린더 토큰을
+        // 오직 principal.getName()으로만 색인하므로(다른 소비처 없음), 모바일 로그인도 같은 값(sub)을
+        // 써야 웹에서 연결한 구글 캘린더 토큰을 모바일 세션에서 찾을 수 있다.
+        given(mobileGoogleTokenVerifier.verify("good-token"))
+                .willReturn(new GoogleIdClaims("mob-sub-2", "mobile2@test.dumpit.local", "모바일유저2", null));
+
+        MvcResult result = mockMvc.perform(post("/auth/mobile/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"good-token\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+
+        SecurityContext context = (SecurityContext) session.getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        assertThat(context).isNotNull();
+        assertThat(context.getAuthentication().getName()).isEqualTo("mob-sub-2");
     }
 
     @Test

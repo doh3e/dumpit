@@ -58,8 +58,12 @@ public class MobileAuthController {
         if (user.getNickname() != null) attributes.put("name", user.getNickname());
         if (user.getPicture() != null) attributes.put("picture", user.getPicture());
 
+        // nameAttributeKey는 "sub" — 웹 oauth2Login()의 principal.getName()과 동일한 값으로 맞춰야
+        // RedisOAuth2AuthorizedClientRepository(principal.getName()으로만 색인)가 웹에서 저장한
+        // 구글 캘린더 토큰을 모바일 세션에서도 찾는다. 유저 식별 자체는 여전히 attributes의 email로 함
+        // (컨트롤러 전반이 getAttribute("email") 사용, getName()의 유일한 소비처는 위 Redis 리포지토리).
         DefaultOAuth2User principal = new DefaultOAuth2User(
-                List.of(new SimpleGrantedAuthority("OAUTH2_USER")), attributes, "email");
+                List.of(new SimpleGrantedAuthority("OAUTH2_USER")), attributes, "sub");
         OAuth2AuthenticationToken authentication =
                 new OAuth2AuthenticationToken(principal, principal.getAuthorities(), "google");
 
