@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCalendarEvents, type CalendarEvent } from '../../api/calendar';
-import { getApiErrorMessage } from '../../api/client';
+import { API_BASE_URL, getApiErrorMessage } from '../../api/client';
 import { createTask } from '../../api/tasks';
 import type { TaskResponse } from '../../api/types';
 import { keys } from '../../query/keys';
@@ -19,6 +19,14 @@ const CALENDAR_PERMISSION_CODES = [
   'CALENDAR_PERMISSION_REQUIRED',
   'GOOGLE_CALENDAR_RECONNECT_REQUIRED',
 ] as const;
+
+/**
+ * 웹의 MiniCalendar.jsx(frontend/src/components/MiniCalendar.jsx:83)와 동일한 URL 조합.
+ * API_BASE_URL이 이미 서버 context-path(`/api`, backend/application.yml)를 포함하고,
+ * SecurityConfig의 oauth2 authorization 엔드포인트도 그 context-path 아래에 등록되므로
+ * `/api`를 떼어낼 필요 없이 그대로 이어 붙이면 된다.
+ */
+const GOOGLE_CALENDAR_CONNECT_URL = `${API_BASE_URL}/oauth2/authorization/google?calendar_consent=1`;
 
 type AxiosLikeError = {
   isAxiosError?: boolean;
@@ -99,6 +107,12 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
   const selectedEvents = selectedDay === null ? [] : (googleByDay.get(selectedDay) ?? []);
   const showCalendarHint =
     calendarQuery.isError && isCalendarPermissionError(calendarQuery.error);
+
+  const connectGoogleCalendar = () => {
+    Linking.openURL(GOOGLE_CALENDAR_CONNECT_URL).catch(() => {
+      toast.show('브라우저를 열지 못했어요. 잠시 후 다시 시도해주세요.');
+    });
+  };
 
   const moveMonth = (offset: number) => {
     setSelectedDay(null);
@@ -226,9 +240,17 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
       </View>
 
       {showCalendarHint && (
-        <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
-          구글 캘린더는 웹에서 연결하면 보여요
-        </Text>
+        <View style={styles.calendarHintRow}>
+          <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
+            구글 캘린더를 연결하면 일정이 여기 보여요
+          </Text>
+          <RetroButton
+            label="구글 캘린더 연결하기"
+            size="sm"
+            variant="ghost"
+            onPress={connectGoogleCalendar}
+          />
+        </View>
       )}
 
       {selectedDay !== null && (
@@ -319,7 +341,8 @@ const styles = StyleSheet.create({
   dayNumber: { fontSize: 12 },
   dots: { minHeight: 5, flexDirection: 'row', justifyContent: 'center', gap: 3 },
   dot: { width: 5, height: 5 },
-  hint: { fontSize: 12, textAlign: 'center', marginTop: 10 },
+  calendarHintRow: { alignItems: 'center', gap: 8, marginTop: 10 },
+  hint: { fontSize: 12, textAlign: 'center' },
   panel: { borderTopWidth: 1.5, marginTop: 12, paddingTop: 10, gap: 8 },
   panelTitle: { fontSize: 11, marginBottom: 2 },
   itemRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
