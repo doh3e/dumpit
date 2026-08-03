@@ -32,7 +32,9 @@ class ToggleTaskAction : ActionCallback {
             if (hero != null && hero.getString("taskId") == taskId) {
                 o.put("hero", JSONObject.NULL)
                 o.put("todayDone", o.optInt("todayDone") + 1)
-                if (o.optInt("todayDone") >= o.optInt("todayTotal")) o.put("allDone", true)
+                // todayTotal=0(완료한 항목의 마감이 오늘이 아닌 경우)이면 0>=0으로 오발화하므로
+                // 서버 정의(WidgetApi: total > 0 && done == total)와 동일하게 total>0 가드 필요
+                if (o.optInt("todayTotal") > 0 && o.optInt("todayDone") >= o.optInt("todayTotal")) o.put("allDone", true)
             } else {
                 val queue = o.optJSONArray("queue") ?: return null
                 for (i in 0 until queue.length()) {
