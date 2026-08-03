@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- minResize*를 생략하면 기본값이 minWidth/minHeight라 250dp 아래로 축소가 막힌다 —
+     COMPACT(2x2) 반응형 분기에 도달하려면 명시가 필수다. 기본 배치는 targetCell 4x2 유지. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="250dp"
     android:minHeight="110dp"
     android:targetCellWidth="4"
     android:targetCellHeight="2"
     android:resizeMode="horizontal|vertical"
+    android:minResizeWidth="140dp"
+    android:minResizeHeight="110dp"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen" />

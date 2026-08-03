@@ -60,10 +60,15 @@ object WidgetStore {
             }
             PomodoroWidget().update(context, id)
         }
-        // 히어로 위젯의 "집중 타임" 표시도 뽀모도로 상태를 따른다
+        // 히어로 위젯의 "집중 타임" 표시도 뽀모도로 상태를 따른다.
+        // 넛지 키는 여기에도 반드시 써야 한다 — Glance 상태는 GlanceId별로 분리돼 있어 위 루프가
+        // PomodoroWidget에 쓴 넛지가 히어로에는 닿지 않는다. 페이즈 경계 틱(WidgetTickReceiver)은
+        // phases 내용이 그대로인 무변경 재push라, 넛지가 없으면 히어로가 "집중 타임"에 고착한다
+        // (FOCUS→휴식 전환이 화면에 반영되지 않음).
         manager.getGlanceIds(TodayTasksWidget::class.java).forEach { id ->
             updateAppWidgetState(context, id) { prefs ->
                 if (json == null) prefs.remove(POMODORO_STATE_KEY) else prefs[POMODORO_STATE_KEY] = json
+                prefs[POMODORO_TICK_KEY] = System.currentTimeMillis().toString()
             }
             TodayTasksWidget().update(context, id)
         }
