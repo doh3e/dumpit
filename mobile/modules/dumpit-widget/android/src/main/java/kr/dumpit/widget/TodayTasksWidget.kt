@@ -181,10 +181,11 @@ private fun HeroContent(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: Stri
                     // 반대가 된다 — 4x2(세로 110dp)에서 큐가 자리를 다 먹고 본문(제목·완료 버튼)이
                     // 0으로 눌린다. 위쪽이 살고 꼬리(큐)가 잘리는 쪽이 안전하다.
                     Spacer(GlanceModifier.defaultWeight())
-                    // 큐는 "지금 할 일"이 있는 상태에서만 — 집중 중에는 방해가 되고, 빈 시간엔 채울 게 없다.
-                    val queue = if (focusTitle == null && snap.hero != null) {
-                        snap.queue.take(if (tall) 3 else 2)
-                    } else emptyList()
+                    // 큐 노출 규칙은 앱 NowHeroCard와 동일하게 맞춘다 — 거긴 `!allDone && queue.length > 0`
+                    // 뿐이라 "지금 할 일"이 없는 빈 시간에도 다음 후보를 보여주고 체크할 수 있다.
+                    // allDone은 위 분기에서 이미 걸러졌으므로 여기선 집중 중만 제외하면 된다
+                    // (집중 화면에 큐를 얹으면 방해가 된다).
+                    val queue = if (focusTitle == null) snap.queue.take(if (tall) 3 else 2) else emptyList()
                     if (!compact && queue.isNotEmpty()) QueueSection(queue, theme)
                 }
             }
