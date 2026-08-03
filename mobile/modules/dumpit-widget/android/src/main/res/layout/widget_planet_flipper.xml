@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/widget_planet_flipper.xml — RemoteViews 허용 애니메이션(자동 플립). 미지원 런처는 첫 프레임 정지가 폴백 -->
+<ViewFlipper xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_planet_flipper"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:autoStart="true"
+    android:flipInterval="1200">
+    <ImageView
+        android:id="@+id/widget_planet_f1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter" />
+    <ImageView
+        android:id="@+id/widget_planet_f2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter" />
+</ViewFlipper>

@@ -60,6 +60,13 @@ object WidgetStore {
             }
             PomodoroWidget().update(context, id)
         }
+        // 히어로 위젯의 "집중 타임" 표시도 뽀모도로 상태를 따른다
+        manager.getGlanceIds(TodayTasksWidget::class.java).forEach { id ->
+            updateAppWidgetState(context, id) { prefs ->
+                if (json == null) prefs.remove(POMODORO_STATE_KEY) else prefs[POMODORO_STATE_KEY] = json
+            }
+            TodayTasksWidget().update(context, id)
+        }
     }
 
     /** 테마는 두 위젯 모두에 반영한다 */
