@@ -103,8 +103,11 @@ describe('buildPomodoroMirror', () => {
   });
 });
 
+// isToday()는 LOCAL 날짜로 비교하므로(dates.ts) 픽스처도 로컬 필드로 조립한다.
+// toISOString()은 UTC 변환이라 KST 자정~09시엔 날짜가 하루 밀려 todayTotal 계산이 깨진다.
 const today = new Date();
-const iso = (h: number) => `${today.toISOString().slice(0, 10)}T${String(h).padStart(2, '0')}:00:00`;
+const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+const iso = (h: number) => `${localDate}T${String(h).padStart(2, '0')}:00:00`;
 
 function makePlanning(): PlanningResponse {
   return {
