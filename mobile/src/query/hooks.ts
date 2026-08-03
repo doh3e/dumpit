@@ -9,7 +9,12 @@ import { toLocalDateTimeString } from '../tasks/dates';
 import { keys } from './keys';
 
 export function usePlanning() {
-  return useQuery({ queryKey: keys.planning, queryFn: fetchPlanning });
+  return useQuery({
+    queryKey: keys.planning,
+    queryFn: fetchPlanning,
+    // 위젯에서 체크하고 돌아온 직후 stale 판정과 무관하게 항상 재조회
+    refetchOnWindowFocus: 'always',
+  });
 }
 
 export function useAiUsage() {
