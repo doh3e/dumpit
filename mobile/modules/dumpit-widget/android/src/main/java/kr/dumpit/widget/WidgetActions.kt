@@ -7,19 +7,42 @@ import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 class ToggleTaskAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val taskId = parameters[TaskIdParam] ?: return
+        // 낙관 반영: 스냅샷에서 해당 항목만 done으로 바꿔 즉시 렌더
+        val current = WidgetStore.read(context, WidgetStore.KEY_TODAY)
+        optimisticJson(current, taskId)?.let { WidgetStore.pushTodayState(context, it) }
         withContext(Dispatchers.IO) {
-            WidgetApi.completeTask(context, taskId)   // 실패 시에도 재조회로 실상태 복원
+            WidgetApi.completeTask(context, taskId)   // 실패해도 아래 재조회가 실상태 복원
             WidgetApi.refreshToday(context)
         }
-        // updateAll() 단독으로는 활성 세션을 재구성하지 않는다(실기기 확정 버그) — 최신
-        // SharedPreferences 스냅샷을 Glance 상태로 다시 push해 무효화를 강제한다.
         WidgetStore.pushTodayState(context, WidgetStore.read(context, WidgetStore.KEY_TODAY))
     }
-    companion object { val TaskIdParam = ActionParameters.Key<String>("taskId") }
+
+    companion object {
+        val TaskIdParam = ActionParameters.Key<String>("taskId")
+
+        /** hero면 hero 제거+진행 +1, 큐면 done=true. 파싱 실패 시 null(낙관 생략) */
+        fun optimisticJson(json: String?, taskId: String): String? = runCatching {
+            val o = JSONObject(json ?: return null)
+            val hero = o.optJSONObject("hero")
+            if (hero != null && hero.getString("taskId") == taskId) {
+                o.put("hero", JSONObject.NULL)
+                o.put("todayDone", o.optInt("todayDone") + 1)
+                if (o.optInt("todayDone") >= o.optInt("todayTotal")) o.put("allDone", true)
+            } else {
+                val queue = o.optJSONArray("queue") ?: return null
+                for (i in 0 until queue.length()) {
+                    val q = queue.getJSONObject(i)
+                    if (q.getString("taskId") == taskId) q.put("done", true)
+                }
+            }
+            o.toString()
+        }.getOrNull()
+    }
 }
 
 class RefreshTodayAction : ActionCallback {
