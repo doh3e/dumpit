@@ -51,12 +51,12 @@ object WidgetApi {
         }.getOrDefault(false)
     }
 
-    /** GET /tasks/today → KEY_TODAY 갱신. 401이면 loggedIn=false 기록. */
+    /** GET /dashboard/planning → HeroSnapshot 스키마로 KEY_TODAY 갱신. 401이면 loggedIn=false 기록. */
     fun refreshToday(context: Context): Boolean {
         val base = baseUrl(context) ?: return false
         val cookie = cookieFor(base) ?: run { markLoggedOut(context); return false }
         val request = Request.Builder()
-            .url("$base/tasks/today")
+            .url("$base/dashboard/planning")
             .header("Cookie", cookie)
             .header("X-Requested-With", "XMLHttpRequest")
             .build()
@@ -64,31 +64,66 @@ object WidgetApi {
             client.newCall(request).execute().use { res ->
                 if (res.code == 401 || res.code == 403) { markLoggedOut(context); return false }
                 if (!res.isSuccessful) return false
-                val body = JSONArray(res.body?.string() ?: return false)
-                val tasks = JSONArray()
-                for (i in 0 until body.length()) {
-                    val t = body.getJSONObject(i)
-                    tasks.put(JSONObject().apply {
-                        put("taskId", t.getString("taskId"))
-                        put("title", t.getString("title"))
-                        val deadline = if (t.isNull("deadline")) null else t.getString("deadline")
-                        put("deadline", if (deadline != null && deadline.length >= 16) deadline.substring(11, 16) else JSONObject.NULL)
-                        put("status", t.optString("status", "TODO"))
-                    })
-                }
-                val snapshot = JSONObject().apply {
-                    put("updatedAt", System.currentTimeMillis())
-                    put("loggedIn", true)
-                    put("tasks", tasks)
-                }
-                WidgetStore.save(context, WidgetStore.KEY_TODAY, snapshot.toString())
+                val o = JSONObject(res.body?.string() ?: return false)
+                WidgetStore.save(context, WidgetStore.KEY_TODAY, heroJsonFrom(o).toString())
                 true
             }
         }.getOrDefault(false)
     }
 
+    /** planning 응답 → 히어로 스냅샷. 규칙은 JS buildHeroMirror(mirror.ts)와 동일해야 한다. */
+    private fun heroJsonFrom(o: JSONObject): JSONObject {
+        val today = java.time.LocalDate.now()
+        val tasks = o.optJSONArray("tasks") ?: JSONArray()
+        fun isTodayDeadline(t: JSONObject): Boolean {
+            val d = if (t.isNull("deadline")) null else t.getString("deadline")
+            return d != null && d.length >= 10 && java.time.LocalDate.parse(d.substring(0, 10)) == today
+        }
+        var total = 0; var done = 0
+        for (i in 0 until tasks.length()) {
+            val t = tasks.getJSONObject(i)
+            if (!isTodayDeadline(t) || t.optString("status") == "CANCELLED") continue
+            total++
+            if (t.optString("status") == "DONE") done++
+        }
+        val allDone = total > 0 && done == total
+        val sug = o.optJSONObject("nowSuggestion")
+        val heroTask = if (allDone) null else sug?.optJSONObject("task")
+        val recs = o.optJSONArray("focusRecommendations") ?: JSONArray()
+        val queue = JSONArray()
+        for (i in 0 until minOf(3, recs.length())) {
+            val r = recs.getJSONObject(i)
+            val t = r.getJSONObject("task")
+            queue.put(JSONObject().apply {
+                put("taskId", t.getString("taskId")); put("title", t.getString("title"))
+                put("bucket", r.optString("bucket", "TODAY")); put("done", false)
+            })
+        }
+        return JSONObject().apply {
+            put("updatedAt", System.currentTimeMillis())
+            put("loggedIn", true); put("allDone", allDone)
+            put("todayDone", done); put("todayTotal", total)
+            put("hero", heroTask?.let { t ->
+                JSONObject().apply {
+                    put("taskId", t.getString("taskId")); put("title", t.getString("title"))
+                    val d = if (t.isNull("deadline")) null else t.getString("deadline")
+                    put("deadlineLabel", when {
+                        d == null || d.length < 16 -> JSONObject.NULL
+                        java.time.LocalDate.parse(d.substring(0, 10)) == today -> "${d.substring(11, 16)} 마감"
+                        else -> "${d.substring(5, 7).trimStart('0')}/${d.substring(8, 10).trimStart('0')} 마감"
+                    })
+                }
+            } ?: JSONObject.NULL)
+            put("suggestion", JSONObject().apply {
+                put("title", sug?.optString("title") ?: "지금은 비어 있는 시간이에요.")
+                put("message", sug?.optString("message") ?: "가벼운 일부터 하나 시작해볼까요?")
+            })
+            put("queue", queue)
+        }
+    }
+
     private fun markLoggedOut(context: Context) {
         WidgetStore.save(context, WidgetStore.KEY_TODAY,
-            """{"updatedAt":${System.currentTimeMillis()},"loggedIn":false,"tasks":[]}""")
+            """{"updatedAt":${System.currentTimeMillis()},"loggedIn":false,"allDone":false,"todayDone":0,"todayTotal":0,"hero":null,"suggestion":null,"queue":[]}""")
     }
 }
