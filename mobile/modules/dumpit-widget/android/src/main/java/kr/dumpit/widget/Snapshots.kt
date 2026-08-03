@@ -49,6 +49,17 @@ data class PomodoroSnapshot(
     val remainingSecAtPause: Long?,
     val done: Boolean,
     val phases: List<PomodoroPhase>,
+    // phaseDone/focusDone(+total) — engine.ts phaseProgress() 전사. phases는 phasesFrom()이 돌려주는
+    // "남은" 타임라인뿐이라(이미 끝난 페이즈는 미러 작성 시점에 걸러짐, 재미러마다 재생성) 그것만으로
+    // "완료 수"를 셈하면 일시정지·재개·reconcile 직후 항상 0으로 보인다(세션 링·세트 도트 버그의
+    // 원인). 이 필드들이 "이미 끝난 만큼"을 별도로 실어보낸다. total류는 무한 세션(setsTarget=0)이면
+    // null — 위젯 쪽에서 굴러가는(rolling) 근사치로 대체한다.
+    // 구 미러(이 필드가 없는 옛 앱 버전 JSON)는 isNull/optInt가 그대로 null/0으로 떨어져, 위젯이
+    // phases만으로 근사하던 예전 동작으로 자연히 폴백한다.
+    val phaseDone: Int,
+    val phaseTotal: Int?,
+    val focusDone: Int,
+    val focusTotal: Int?,
 ) {
     fun currentPhase(now: Long): PomodoroPhase? = phases.firstOrNull { now >= it.startsAt && now < it.endsAt }
 
@@ -66,6 +77,10 @@ data class PomodoroSnapshot(
                     PomodoroPhase(p.getString("kind"), p.getInt("index"), p.getBoolean("long"),
                         p.getLong("startsAt"), p.getLong("endsAt"))
                 },
+                phaseDone = o.optInt("phaseDone", 0),
+                phaseTotal = if (o.isNull("phaseTotal")) null else o.optInt("phaseTotal"),
+                focusDone = o.optInt("focusDone", 0),
+                focusTotal = if (o.isNull("focusTotal")) null else o.optInt("focusTotal"),
             )
         }.getOrNull()
     }

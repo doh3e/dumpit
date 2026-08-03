@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, clampSettings, deriveState, pause, phasesFrom, resume, type Session } from '../engine';
+import { DEFAULT_SETTINGS, clampSettings, deriveState, pause, phaseProgress, phasesFrom, resume, type Session } from '../engine';
 
 const MIN = 60_000;
 const base: Session = {
@@ -67,6 +67,47 @@ describe('phasesFrom', () => {
     const phases = phasesFrom(base, at(0), 10); // 2세트: F,B,F = 3개
     expect(phases).toHaveLength(3);
     expect(phases[2]).toMatchObject({ kind: 'FOCUS', index: 2, endsAt: at(55) });
+  });
+});
+
+describe('phaseProgress', () => {
+  // 위젯 세션 링·세트 도트가 재미러(일시정지·재개·reconcile)마다 완료 수를 잃던 버그의 데이터
+  // 원천 수정 — phasesFrom()과 달리 "이미 끝난 페이즈 수"·"세션 전체 수"를 그대로 실어보낸다.
+  it('세션 시작 시점엔 완료 0, 전체는 고정(2세트=페이즈 3개·FOCUS 2개)', () => {
+    expect(phaseProgress(base, at(0))).toEqual({ done: 0, total: 3, focusDone: 0, focusTotal: 2 });
+  });
+
+  it('집중1 완료 후(휴식1 진행 중)', () => {
+    expect(phaseProgress(base, at(26))).toEqual({ done: 1, total: 3, focusDone: 1, focusTotal: 2 });
+  });
+
+  it('세션 종료(DONE) 시점엔 done===total', () => {
+    expect(phaseProgress(base, at(56))).toEqual({ done: 3, total: 3, focusDone: 2, focusTotal: 2 });
+  });
+
+  it('일시정지 중엔 pausedAt 기준으로 고정된다(now가 흘러도 안 변함)', () => {
+    const p = pause(base, at(10));
+    expect(phaseProgress(p, at(1000))).toEqual(phaseProgress(p, at(10)));
+    expect(phaseProgress(p, at(10))).toEqual({ done: 0, total: 3, focusDone: 0, focusTotal: 2 });
+  });
+
+  it('재개해도 이미 완료한 만큼은 유지된다 — 리셋되지 않는다', () => {
+    const before = phaseProgress(base, at(26));
+    const paused = pause(base, at(26));
+    const resumed = resume(paused, at(34)); // 8분 정지 후 재개
+    const after = phaseProgress(resumed, at(34));
+    expect(after).toEqual(before);
+    expect(after.done).toBeGreaterThan(0); // 자명하게 둘 다 0인 비교가 아님을 보장
+  });
+
+  it('무한 세션(setsTarget=0)은 total/focusTotal이 null이고 크래시하지 않는다', () => {
+    const s = { ...base, settings: { ...base.settings, setsTarget: 0 } };
+    expect(() => phaseProgress(s, at(1000))).not.toThrow();
+    const p = phaseProgress(s, at(130)); // 여러 세트 지난 시점
+    expect(p.total).toBeNull();
+    expect(p.focusTotal).toBeNull();
+    expect(p.done).toBeGreaterThan(0);
+    expect(p.focusDone).toBeGreaterThan(0);
   });
 });
 

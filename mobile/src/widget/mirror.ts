@@ -1,6 +1,6 @@
 import { widgetNative } from './native';
 import { API_BASE_URL } from '../api/client';
-import { deriveState, phasesFrom, type Session } from '../pomodoro/engine';
+import { deriveState, phasesFrom, phaseProgress, type Session } from '../pomodoro/engine';
 import type { PlanningResponse } from '../api/types';
 import { formatDeadline, formatTime, isToday } from '../tasks/dates';
 import { skinKey } from '../theme/skins';
@@ -17,12 +17,19 @@ export async function mirrorConfig(): Promise<void> {
 export function buildPomodoroMirror(session: Session | null, now: number): string | null {
   if (!session) return null;
   const d = deriveState(session, now);
+  // phaseDone/focusDone(+total)은 phasesFrom()이 못 담는 "이미 끝난 만큼"을 실어보낸다 — 위젯
+  // 세션 링·세트 도트가 재미러(일시정지·재개·reconcile)마다 리셋되던 버그의 원인이 이 누락이었다.
+  const progress = phaseProgress(session, now);
   return JSON.stringify({
     taskTitle: session.taskTitle,
     pausedAt: session.pausedAt,
     remainingSecAtPause: session.pausedAt != null ? d.remainingSec : null,
     done: d.phase === 'DONE',
     phases: phasesFrom(session, now, PHASE_HORIZON),
+    phaseDone: progress.done,
+    phaseTotal: progress.total,
+    focusDone: progress.focusDone,
+    focusTotal: progress.focusTotal,
   });
 }
 
