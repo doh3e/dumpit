@@ -56,7 +56,7 @@ class TodayTasksWidget : GlanceAppWidget() {
         // 세션 시작 시 1회: 주기 onUpdate(30분)·재부팅 등으로 렌더될 때 미러가 오래됐으면
         // 서버에서 직접 갱신. 앱발 미러 직후(updatedAt 신선)는 건너뛰어 불필요한 네트워크를 막는다.
         // 신선도 판정은 SharedPreferences(비컴포즈 문맥) 읽기로 한다.
-        val initial = TodaySnapshot.from(WidgetStore.read(context, WidgetStore.KEY_TODAY))
+        val initial = HeroSnapshot.from(WidgetStore.read(context, WidgetStore.KEY_TODAY))
         if (initial == null || initial.isStale()) {
             withContext(Dispatchers.IO) { WidgetApi.refreshToday(context) }
         }
@@ -72,19 +72,21 @@ class TodayTasksWidget : GlanceAppWidget() {
             // 재구성마다 Glance 상태를 읽는다 — SharedPreferences 직접 읽기(구 방식)는 활성 세션
             // 생존 중 스테일해질 수 있다(실기기 확정 버그). remember로 감싸지 말 것 — 감싸면 다시
             // 스테일해진다.
-            val snapshot = TodaySnapshot.from(currentState<Preferences>()[WidgetStore.TODAY_STATE_KEY])
+            val snapshot = HeroSnapshot.from(currentState<Preferences>()[WidgetStore.TODAY_STATE_KEY])
             TodayContent(snapshot)
         }
     }
 }
 
+// 임시 placeholder(Task 4): HeroSnapshot으로 스키마만 갈아끼워 컴파일을 유지한다 — 히어로 카드·
+// 제안 문구를 반영한 실제 UI는 Task 6-7에서 교체된다.
 @Composable
-private fun TodayContent(snapshot: TodaySnapshot?) {
+private fun TodayContent(snapshot: HeroSnapshot?) {
     Column(
         modifier = GlanceModifier.fillMaxSize().background(WidgetPalette.bg).cornerRadius(12.dp).padding(10.dp),
     ) {
         Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("☀️ 오늘 할 일", style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 14.sp,
+            Text("☀️ 지금 할 일", style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 14.sp,
                 color = ColorProvider(WidgetPalette.fg)),
                 modifier = GlanceModifier.defaultWeight().clickable(actionStartActivity(deepLinkIntent(DEEPLINK_HOME))))
             Text("↻", style = TextStyle(fontSize = 14.sp, color = ColorProvider(WidgetPalette.sub)),
@@ -94,9 +96,10 @@ private fun TodayContent(snapshot: TodaySnapshot?) {
         Spacer(modifier = GlanceModifier.height(6.dp))
         when {
             snapshot == null || !snapshot.loggedIn -> Message("로그인이 필요해요 — 탭해서 열기")
-            snapshot.tasks.isEmpty() -> Message("오늘 할 일이 없어요 🎉")
+            snapshot.allDone -> Message("오늘 할 일을 모두 마쳤어요 🎉")
+            snapshot.queue.isEmpty() -> Message("오늘 할 일이 없어요 🎉")
             else -> LazyColumn {
-                items(snapshot.tasks, itemId = { it.taskId.hashCode().toLong() }) { task -> TaskRow(task) }
+                items(snapshot.queue, itemId = { it.taskId.hashCode().toLong() }) { item -> QueueRow(item) }
             }
         }
     }
@@ -115,22 +118,19 @@ private fun Message(text: String) {
 // "본문 실패: content emitted multiple layouts" 계열 컴파일/런타임 오류가 난다. Column으로 감싸
 // 단일 루트로 만들고 그 안에서 Row + Spacer 순서를 유지했다.
 @Composable
-private fun TaskRow(task: TodayTask) {
+private fun QueueRow(item: QueueItem) {
     Column {
         Row(
             modifier = GlanceModifier.fillMaxWidth().background(WidgetPalette.card).cornerRadius(8.dp)
                 .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("☐", style = TextStyle(fontSize = 16.sp, color = ColorProvider(WidgetPalette.accent)),
+            Text(if (item.done) "☑" else "☐", style = TextStyle(fontSize = 16.sp, color = ColorProvider(WidgetPalette.accent)),
                 modifier = GlanceModifier.padding(end = 8.dp)
                     .clickable(actionRunCallback<ToggleTaskAction>(
-                        androidx.glance.action.actionParametersOf(ToggleTaskAction.TaskIdParam to task.taskId))))
-            Text(task.title, maxLines = 1, style = TextStyle(fontSize = 13.sp, color = ColorProvider(WidgetPalette.fg)),
+                        androidx.glance.action.actionParametersOf(ToggleTaskAction.TaskIdParam to item.taskId))))
+            Text(item.title, maxLines = 1, style = TextStyle(fontSize = 13.sp, color = ColorProvider(WidgetPalette.fg)),
                 modifier = GlanceModifier.defaultWeight().clickable(actionStartActivity(deepLinkIntent(DEEPLINK_HOME))))
-            if (task.deadline != null) {
-                Text(task.deadline, style = TextStyle(fontSize = 11.sp, color = ColorProvider(WidgetPalette.sub)))
-            }
         }
         Spacer(modifier = GlanceModifier.height(4.dp))
     }

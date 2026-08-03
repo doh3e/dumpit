@@ -1,6 +1,7 @@
-import { buildPomodoroMirror, buildThemeMirror, buildTodayMirror, clearWidgetMirrors } from '../mirror';
+import { buildHeroMirror, buildPomodoroMirror, buildThemeMirror, clearWidgetMirrors } from '../mirror';
 import { widgetNative } from '../native';
 import type { Session } from '../../pomodoro/engine';
+import type { PlanningResponse } from '../../api/types';
 
 jest.mock('../native', () => ({
   widgetNative: {
@@ -55,21 +56,43 @@ describe('buildPomodoroMirror', () => {
   });
 });
 
-describe('buildTodayMirror', () => {
-  it('표시용 필드만 추려 담는다', () => {
-    const json = JSON.parse(buildTodayMirror([
-      { taskId: 't1', title: '리포트', deadline: '2026-07-29T14:30:00', status: 'TODO' },
-    ] as never, NOW));
-    expect(json.loggedIn).toBe(true);
-    expect(json.tasks[0]).toEqual({ taskId: 't1', title: '리포트', deadline: '14:30', status: 'TODO' });
-  });
+const today = new Date();
+const iso = (h: number) => `${today.toISOString().slice(0, 10)}T${String(h).padStart(2, '0')}:00:00`;
+
+function makePlanning(): PlanningResponse {
+  return {
+    now: iso(9), availableFocusMinutes: 60,
+    tasks: [
+      { taskId: 'a', title: '히어로', status: 'TODO', deadline: iso(18) } as any,
+      { taskId: 'b', title: '완료됨', status: 'DONE', deadline: iso(12) } as any,
+      { taskId: 'c', title: '취소됨', status: 'CANCELLED', deadline: iso(13) } as any,
+    ],
+    nowSuggestion: { type: 'OPEN_SLOT', title: '집중 타임', message: '몰입!', task: { taskId: 'a', title: '히어로', status: 'TODO', deadline: iso(18) } as any, focusMinutes: 25 },
+    focusRecommendations: [
+      { task: { taskId: 'q1', title: '다음1' } as any, score: 1, bucket: 'TODAY', reasons: [] },
+      { task: { taskId: 'q2', title: '다음2' } as any, score: 1, bucket: 'LATER', reasons: [] },
+    ],
+    sections: { overdue: [], today: [], tomorrow: [], next7Days: [], later: [], someday: [], recentDone: [] },
+  };
+}
+
+test('buildHeroMirror가 히어로·큐·진행률을 담는다', () => {
+  const s = JSON.parse(buildHeroMirror(makePlanning(), 1234));
+  expect(s.updatedAt).toBe(1234);
+  expect(s.hero).toMatchObject({ taskId: 'a', title: '히어로' });
+  expect(s.hero.deadlineLabel).toContain('마감');
+  expect(s.todayDone).toBe(1);       // DONE 1
+  expect(s.todayTotal).toBe(2);      // CANCELLED 제외
+  expect(s.allDone).toBe(false);
+  expect(s.queue).toHaveLength(2);
+  expect(s.queue[0]).toEqual({ taskId: 'q1', title: '다음1', bucket: 'TODAY', done: false });
 });
 
 describe('clearWidgetMirrors', () => {
-  it('로그아웃 형태로 두 미러를 모두 비운다', async () => {
+  it('로그아웃 형태로 히어로 미러를 비운다', async () => {
     await clearWidgetMirrors();
     expect(widgetNative!.mirrorTodayTasks).toHaveBeenCalledWith(
-      JSON.stringify({ updatedAt: 0, loggedIn: false, tasks: [] }),
+      JSON.stringify({ updatedAt: 0, loggedIn: false, allDone: false, todayDone: 0, todayTotal: 0, hero: null, suggestion: null, queue: [] }),
     );
     expect(widgetNative!.mirrorPomodoro).toHaveBeenCalledWith(null);
   });
