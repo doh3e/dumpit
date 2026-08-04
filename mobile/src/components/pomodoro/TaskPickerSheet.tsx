@@ -1,6 +1,7 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { forwardRef, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { TaskResponse, TaskStatus } from '../../api/types';
 import { usePlanning } from '../../query/hooks';
 import { fonts } from '../../theme/typography';
@@ -16,6 +17,7 @@ type Props = {
 export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
   function TaskPickerSheet({ onPick }, ref) {
     const { colors } = useTheme();
+    const insets = useSafeAreaInsets();
     const planning = usePlanning();
 
     const candidates = useMemo(() => {
@@ -33,7 +35,8 @@ export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
         backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
-        <BottomSheetView style={styles.body}>
+        {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마지막 행이 OS 내비 바에 가려진다 */}
+        <BottomSheetView style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
           <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>무엇에 집중할까요?</Text>
           <ScrollView style={styles.list}>
             <Pressable

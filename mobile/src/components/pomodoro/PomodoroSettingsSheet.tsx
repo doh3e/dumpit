@@ -1,6 +1,7 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { forwardRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { clampSettings, type PomodoroSettings } from '../../pomodoro/engine';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
@@ -42,6 +43,7 @@ function StepperRow({ label, value, display, onDelta }: RowProps) {
 export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
   function PomodoroSettingsSheet({ initial, onApply }, ref) {
     const { colors } = useTheme();
+    const insets = useSafeAreaInsets();
     const [draft, setDraft] = useState(initial);
 
     const patch = (p: Partial<PomodoroSettings>) => setDraft((d) => clampSettings({ ...d, ...p }));
@@ -58,7 +60,8 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
         backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
-        <BottomSheetView style={styles.body}>
+        {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 적용 버튼이 OS 내비 바에 가려진다 */}
+        <BottomSheetView style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
           <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>타이머 설정</Text>
           <StepperRow label="집중 (분)" value={draft.focusMin} onDelta={(d) => patch({ focusMin: step5(draft.focusMin, d) })} />
           <StepperRow label="휴식 (분)" value={draft.breakMin} onDelta={(d) => patch({ breakMin: draft.breakMin + d })} />
