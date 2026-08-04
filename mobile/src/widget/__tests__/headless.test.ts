@@ -8,6 +8,7 @@ jest.mock('../../pomodoro/store', () => ({
   startSession: jest.fn(async () => {}),
   pauseSession: jest.fn(async () => {}),
   resumeSession: jest.fn(async () => {}),
+  resetSession: jest.fn(async () => true),
 }));
 jest.mock('../../pomodoro/persistence', () => ({
   loadSettings: jest.fn(async () => ({ focusMin: 25, breakMin: 5, setsTarget: 2, longBreakMin: 15, longBreakEvery: 4 })),
@@ -33,5 +34,10 @@ describe('runPomodoroCommand', () => {
     expect(store.pauseSession).toHaveBeenCalled();
     await runPomodoroCommand({ command: 'resume' });
     expect(store.resumeSession).toHaveBeenCalled();
+  });
+
+  it('reset 위임 — 위젯 초기화 버튼이 정산 포함 리셋을 태운다', async () => {
+    await runPomodoroCommand({ command: 'reset' });
+    expect(store.resetSession).toHaveBeenCalled();
   });
 });
