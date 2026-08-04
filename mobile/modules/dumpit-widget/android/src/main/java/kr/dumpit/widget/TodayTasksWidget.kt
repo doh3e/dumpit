@@ -41,8 +41,13 @@ import kotlinx.coroutines.withContext
 const val DEEPLINK_HOME = "dumpit:///"
 const val DEEPLINK_POMODORO = "dumpit:///pomodoro"
 
+// setPackage로 우리 앱에 고정한다 — dumpit 스킴은 검증되지 않은 커스텀 스킴이라, 암시적
+// 인텐트로 두면 같은 스킴을 선언한 다른 앱이 위젯 탭의 후보로 끼어들 수 있다.
+@Composable
 fun deepLinkIntent(url: String): Intent =
-    Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        .setPackage(LocalContext.current.packageName)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
 class TodayTasksWidget : GlanceAppWidget() {
     // Glance가 보장하는 무효화 경로는 "위젯 상태(stateDefinition) 변경 → update()" 조합뿐이다 —
