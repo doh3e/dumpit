@@ -23,6 +23,7 @@ import { deriveState } from '../../src/pomodoro/engine';
 import { getSession, reconcile, subscribe, takePendingSettleResult } from '../../src/pomodoro/store';
 import { useAiUsage, usePlanning, useToggleTask } from '../../src/query/hooks';
 import { isToday } from '../../src/tasks/dates';
+import { buildHeroQueue } from '../../src/tasks/heroQueue';
 import { fonts } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
 
@@ -174,7 +175,10 @@ export default function HomeScreen() {
           <>
             <NowHeroCard
               nowSuggestion={planning.data.nowSuggestion}
-              queue={planning.data.focusRecommendations}
+              queue={buildHeroQueue(
+                planning.data,
+                allDone ? null : planning.data.nowSuggestion?.task?.taskId ?? null,
+              )}
               todayDone={todayDone}
               todayTotal={todayTotal}
               allDone={allDone}

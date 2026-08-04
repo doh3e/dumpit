@@ -89,11 +89,30 @@ object WidgetApi {
         val allDone = total > 0 && done == total
         val sug = o.optJSONObject("nowSuggestion")
         val heroTask = if (allDone) null else sug?.optJSONObject("task")
-        val recs = o.optJSONArray("focusRecommendations") ?: JSONArray()
+        // 큐 — JS buildHeroQueue(tasks/heroQueue.ts, 웹 DashboardPage 패리티)의 전사: 히어로 제외
+        // (seen 선등록), 오늘 섹션 마감순 우선, 모자라면 추천 상위로 보충. 추천 원본을 그대로 쓰면
+        // 히어로(=최상위 추천)가 큐에 중복 등장한다.
+        val seen = mutableSetOf<String>()
+        heroTask?.optString("taskId")?.takeIf { it.isNotEmpty() }?.let { seen.add(it) }
         val queue = JSONArray()
-        for (i in 0 until minOf(3, recs.length())) {
+        val todayArr = o.optJSONObject("sections")?.optJSONArray("today") ?: JSONArray()
+        val todaySorted = (0 until todayArr.length()).map { todayArr.getJSONObject(it) }
+            // ISO 문자열은 사전순=시간순, 마감 없음은 맨 뒤
+            .sortedBy { t -> if (t.isNull("deadline")) "9999" else t.getString("deadline") }
+        for (t in todaySorted) {
+            if (queue.length() >= 3) break
+            if (!seen.add(t.getString("taskId"))) continue
+            queue.put(JSONObject().apply {
+                put("taskId", t.getString("taskId")); put("title", t.getString("title"))
+                put("bucket", "TODAY"); put("done", false)
+            })
+        }
+        val recs = o.optJSONArray("focusRecommendations") ?: JSONArray()
+        for (i in 0 until recs.length()) {
+            if (queue.length() >= 3) break
             val r = recs.getJSONObject(i)
-            val t = r.getJSONObject("task")
+            val t = r.optJSONObject("task") ?: continue
+            if (!seen.add(t.getString("taskId"))) continue
             queue.put(JSONObject().apply {
                 put("taskId", t.getString("taskId")); put("title", t.getString("title"))
                 put("bucket", r.optString("bucket", "TODAY")); put("done", false)

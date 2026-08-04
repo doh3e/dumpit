@@ -3,6 +3,7 @@ import { API_BASE_URL } from '../api/client';
 import { deriveState, phasesFrom, phaseProgress, type Session } from '../pomodoro/engine';
 import type { PlanningResponse } from '../api/types';
 import { formatDeadline, formatTime, isToday } from '../tasks/dates';
+import { buildHeroQueue } from '../tasks/heroQueue';
 import { skinKey } from '../theme/skins';
 import type { ThemeMode } from '../theme/context';
 import type { Equipments } from '../theme/compose';
@@ -62,7 +63,8 @@ export function buildHeroMirror(data: PlanningResponse, now: number): string {
       title: data.nowSuggestion?.title ?? '지금은 비어 있는 시간이에요.',
       message: data.nowSuggestion?.message ?? '가벼운 일부터 하나 시작해볼까요?',
     },
-    queue: (data.focusRecommendations ?? []).slice(0, 3).map((r) => ({
+    // 추천 원본이 아니라 웹 패리티 큐(buildHeroQueue) — 히어로 태스크가 큐에 중복 등장하지 않는다.
+    queue: buildHeroQueue(data, task?.taskId ?? null).map((r) => ({
       taskId: r.task.taskId, title: r.task.title, bucket: r.bucket, done: false,
     })),
   });
