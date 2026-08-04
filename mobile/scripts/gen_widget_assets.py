@@ -33,7 +33,7 @@ PHRASES = [
     ("w_t_pomodoro", "POMODORO", DGM, 11), ("w_t_mode_focus", "FOCUS", DGM, 11),
     ("w_t_mode_break", "BREAK", DGM, 11), ("w_t_nth_focus", "번째 집중", GALMURI, 11),
     ("w_t_rest", "휴식", GALMURI, 11), ("w_t_rest_long", "긴 휴식", GALMURI, 11),
-    ("w_t_pomo_done", "오늘의 집중 완료!", GALMURI, 11),
+    ("w_t_pomo_done", "집중 완료!", GALMURI, 11),
     ("w_b_overdue", "마감 지남", DGM, 10), ("w_b_today", "오늘", DGM, 10),
     ("w_b_tomorrow", "내일", DGM, 10), ("w_b_next7", "일주일 내", DGM, 10),
     ("w_b_later", "그 외", DGM, 10), ("w_b_someday", "언젠가", DGM, 10),
