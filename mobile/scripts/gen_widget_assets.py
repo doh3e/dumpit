@@ -57,6 +57,43 @@ icon("w_i_sparkle",   ["...X....", "...X....", "..XXX...", "XXXXXXX.", "..XXX...
 icon("w_i_tomato_f1", ["...XX...", "..XXXX..", ".XXXXXX.", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", ".XXXXXX.", "..XXXX.."])
 icon("w_i_tomato_f2", ["..XX.X..", ".XXXX...", ".XXXXXX.", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", ".XXXXXX.", "..XXXX.."])
 
+# 컬러 토마토 2프레임 — idle·done 전용. 흰 글리프+단색 tint(구 w_i_tomato_*)는 실기기에서
+# "덩어리"로 보인다는 지적 — 원색(빨강 몸통·초록 꼭지·하이라이트)으로 굽고 tint 없이 쓴다.
+# f2 = 1px 위 시프트(바운스).
+TOMATO_PALETTE = {
+    "R": (222, 74, 56, 255),    # 몸통
+    "D": (176, 48, 38, 255),    # 음영
+    "G": (94, 170, 88, 255),    # 꼭지
+    "H": (255, 235, 224, 230),  # 하이라이트
+}
+TOMATO_ROWS = [
+    "................",
+    ".......GG.......",
+    "...GG..GG..GG...",
+    "....GGGGGGGG....",
+    "......GGGG......",
+    "....RRRGGRRR....",
+    "...RRRRRRRRRR...",
+    "..RRHHRRRRRRRR..",
+    "..RHHRRRRRRRRD..",
+    "..RHHRRRRRRRRD..",
+    "..RRHRRRRRRRRD..",
+    "..RRRRRRRRRRDD..",
+    "...RRRRRRRRDD...",
+    "....RRRRRRDD....",
+    ".....RRRRRR.....",
+    "................",
+]
+def tomato(name: str, shift_up: int):
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y, row in enumerate(TOMATO_ROWS):
+        for x, c in enumerate(row):
+            if c in TOMATO_PALETTE and 0 <= y - shift_up < 16:
+                img.putpixel((x, y - shift_up), TOMATO_PALETTE[c])
+    img.resize((128, 128), Image.NEAREST).save(os.path.join(OUT, f"{name}.png"))
+tomato("w_i_tomato_c_f1", 0)
+tomato("w_i_tomato_c_f2", 1)
+
 # 행성 2프레임 — 정사각 원본은 f1 원본 + f2 = 24px 위 시프트(부양 느낌, 6px는 실기기에서 체감 불가).
 # 일부 상점 행성(blackhole·sun·whale)은 가로 n프레임 애니메이션 시트(예: 3072×384)라 통째로 쓰면
 # "작은 행성 n개 띠"로 렌더된다 — 시트는 첫 프레임/중간 프레임을 잘라 진짜 2프레임 플립으로 쓴다.

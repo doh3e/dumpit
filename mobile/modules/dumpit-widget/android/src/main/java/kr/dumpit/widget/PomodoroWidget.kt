@@ -127,7 +127,7 @@ fun PomodoroCompact(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
 
 @Composable
 private fun IdleContent(theme: WTheme) {
-    TomatoFlipper(theme, 48.dp)
+    TomatoFlipper(48.dp)
     Spacer(GlanceModifier.height(8.dp))
     PixelButton(
         labelRes = "w_t_start", theme = theme, primary = true, accentOverride = theme.pomo.focus,
@@ -140,7 +140,7 @@ private fun IdleContent(theme: WTheme) {
 private fun DoneContent(theme: WTheme) {
     PixelText("w_t_pomo_done", theme.palette.fg, 14.dp)
     Spacer(GlanceModifier.height(8.dp))
-    PixelIcon("w_i_tomato_f1", theme.pomo.focus, 40.dp)
+    TomatoFlipper(40.dp)
 }
 
 @Composable
@@ -220,23 +220,18 @@ private fun SetDots(snapshot: PomodoroSnapshot, now: Long, theme: WTheme) {
 
 /**
  * 토마토 2프레임 자동 플립 — 히어로 위젯 PlanetFlipper와 같은 RemoteViews(ViewFlipper) 우회.
- * 행성 에셋과 달리 토마토 흰 글리프는 스킨색 tint가 필요해 setColorFilter를 얹는다(PixelIcon과
- * 동일한 착색이지만 AndroidRemoteViews 내부라 Glance ColorFilter를 못 쓴다).
+ * 컬러 스프라이트(w_i_tomato_c_*, 빨강 몸통·초록 꼭지)를 tint 없이 쓴다 — 흰 글리프+스킨색
+ * tint(구 w_i_tomato_*)는 실기기에서 "덩어리"로 보인다는 지적.
  */
 @Composable
-private fun TomatoFlipper(theme: WTheme, size: Dp) {
+private fun TomatoFlipper(size: Dp) {
     val context = LocalContext.current
-    val f1 = drawableId("w_i_tomato_f1")
-    val f2 = drawableId("w_i_tomato_f2")
-    val tint = theme.pomo.focus.toArgb()
     val rv = RemoteViews(context.packageName, R.layout.widget_planet_flipper).apply {
-        setImageViewResource(R.id.widget_planet_f1, f1)
-        setImageViewResource(R.id.widget_planet_f2, f2)
-        setInt(R.id.widget_planet_f1, "setColorFilter", tint)
-        setInt(R.id.widget_planet_f2, "setColorFilter", tint)
+        setImageViewResource(R.id.widget_planet_f1, drawableId("w_i_tomato_c_f1"))
+        setImageViewResource(R.id.widget_planet_f2, drawableId("w_i_tomato_c_f2"))
     }
-    // fillMaxSize 필수 — AndroidRemoteViews 기본은 wrap이라 nodpi 64px 토마토가 18dp로 쪼그라든다
-    // (PlanetFlipper와 동일 증상·동일 수정).
+    // fillMaxSize 필수 — AndroidRemoteViews 기본은 wrap이라 nodpi 비트맵이 intrinsic 크기로
+    // 쪼그라든다(PlanetFlipper와 동일 증상·동일 수정).
     Box(modifier = GlanceModifier.size(size)) {
         AndroidRemoteViews(remoteViews = rv, modifier = GlanceModifier.fillMaxSize())
     }
@@ -433,7 +428,8 @@ private fun SessionRing(
         Image(provider = ImageProvider(bmp), contentDescription = null, modifier = GlanceModifier.size(ringSize))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             when {
-                isIdle -> {}
+                // idle은 링 중앙이 비어 허전하다는 실기기 지적 — 컴팩트 idle과 동일한 토마토 플리퍼
+                isIdle -> TomatoFlipper(40.dp)
                 done -> PixelText("w_t_pomo_done", theme.palette.fg, 11.dp)
                 // paused는 항상 남은 시간을 보여준다(PausedContent와 동일 — activePhase가 정확히
                 // 페이즈 경계에서 null로 풀리는 드문 경우에도 시간 표시는 계속 나와야 한다).
