@@ -44,15 +44,17 @@ class PomodoroWidget : GlanceAppWidget() {
     override val stateDefinition: GlanceStateDefinition<Preferences> = PreferencesGlanceStateDefinition
 
     companion object {
-        // COMPACT(2x2)·EXPANDED(2x3, 기본 배치) — 폭은 동일하고 높이만 갈라 세션 링을 보일지를 정한다.
-        // EXPANDED 230dp — 헤더·밑줄·링(120dp)·태스크 칩·버튼 행을 다 쌓으면 실측 ~242dp라
-        // 180dp로는 하단(버튼 행)이 밀도 높은 런처에서 잘린다(리뷰 지적, Task 12 실기기 미세조정 전
-        // 안전 기본값).
+        // COMPACT(2x2)·EXPANDED_TALL(2x3+, 세로 링)·EXPANDED_WIDE(3x2+, 가로 링) 3버킷.
+        // 실측(갤럭시 S23U, Samsung DIY 런처 hsResizeRatio=0.8 — 보고 크기의 80%로 실렌더):
+        //   2x2 보고 175×192, 3x2 보고 262×192(실 ~210×154), 2x3 보고 175×289(실 ~140×231).
+        // 그래서 3x2는 높이 230 버킷에 절대 못 닿는다 — 가로 버킷(폭 230)을 따로 둬야 링 레이아웃이
+        // 나온다. 2x2는 둘 다 안 맞아 COMPACT로 떨어진다(의도: 도트 레이아웃 유지).
         private val COMPACT = DpSize(110.dp, 110.dp)
-        private val EXPANDED = DpSize(110.dp, 230.dp)
+        private val EXPANDED_WIDE = DpSize(230.dp, 140.dp)
+        private val EXPANDED_TALL = DpSize(150.dp, 230.dp)
     }
 
-    override val sizeMode: SizeMode = SizeMode.Responsive(setOf(COMPACT, EXPANDED))
+    override val sizeMode: SizeMode = SizeMode.Responsive(setOf(COMPACT, EXPANDED_WIDE, EXPANDED_TALL))
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         // 세션 시작 시 SharedPreferences의 최신 스냅샷을 Glance 상태로 동기화해둔다(TodayTasksWidget과
@@ -89,11 +91,12 @@ private fun PomodoroContent(snapshot: PomodoroSnapshot?, theme: WTheme, now: Lon
                 .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))),
             contentAlignment = Alignment.Center,
         ) {
-            // Responsive(COMPACT 110x110 / EXPANDED 110x230) — 폭이 같으니 높이만으로 갈라진다.
-            if (LocalSize.current.height >= 230.dp) {
-                PomodoroExpanded(snapshot, theme, now)
-            } else {
-                PomodoroCompact(snapshot, theme, now)
+            // 3버킷 분기 — 높이 230↑(2x3+)는 세로 링, 폭 230↑(3x2+)는 가로 링, 나머지(2x2)는 도트.
+            val size = LocalSize.current
+            when {
+                size.height >= 230.dp -> PomodoroExpanded(snapshot, theme, now)
+                size.width >= 230.dp -> PomodoroExpandedWide(snapshot, theme, now)
+                else -> PomodoroCompact(snapshot, theme, now)
             }
         }
     }
@@ -231,7 +234,11 @@ private fun TomatoFlipper(theme: WTheme, size: Dp) {
         setInt(R.id.widget_planet_f1, "setColorFilter", tint)
         setInt(R.id.widget_planet_f2, "setColorFilter", tint)
     }
-    Box(modifier = GlanceModifier.size(size)) { AndroidRemoteViews(remoteViews = rv) }
+    // fillMaxSize 필수 — AndroidRemoteViews 기본은 wrap이라 nodpi 64px 토마토가 18dp로 쪼그라든다
+    // (PlanetFlipper와 동일 증상·동일 수정).
+    Box(modifier = GlanceModifier.size(size)) {
+        AndroidRemoteViews(remoteViews = rv, modifier = GlanceModifier.fillMaxSize())
+    }
 }
 
 /**
@@ -271,12 +278,17 @@ private fun chronometerRemoteViews(context: Context, theme: WTheme, phase: Pomod
 private fun px(context: Context, value: Dp): Int = (value.value * context.resources.displayMetrics.density).toInt()
 
 /**
- * 뽀모도로 확장형(세로 180dp 이상) — POMODORO 타이틀·모드 필·세션 링을 갖춘 데스크탑 아이덴티티.
- * RetroFrame·바깥 클릭(딥링크)은 PomodoroContent가 이미 씌워주므로 여기선 Column 내용만 채운다.
+ * 확장형 공용 상태 — 세로(PomodoroExpanded)·가로(PomodoroExpandedWide)가 같은 파생 규칙을 쓴다.
+ * nullable snapshot을 자식에 직접 넘기지 않고 원시값만 담는다 — when 분기 사이에는 스마트
+ * 캐스트가 이어지지 않아 자식 컴포저블 안에서 snapshot!!를 반복하면 컴파일 에러거나 취약해진다.
  */
-@Composable
-fun PomodoroExpanded(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
-    val p = theme.palette
+private data class ExpandedState(
+    val activePhase: PomodoroPhase?, val resting: Boolean, val isIdle: Boolean,
+    val done: Boolean, val paused: Boolean, val remainingSec: Long,
+    val taskTitle: String?, val fraction: Float,
+)
+
+private fun deriveExpandedState(snapshot: PomodoroSnapshot?, now: Long): ExpandedState {
     // 일시정지 중엔 pausedAt을 now로 고정해 계산한다 — 실시간 now를 그대로 쓰면 일시정지 중에도
     // 링·페이즈 판정이 몰래 전진해버린다("paused = compute with now frozen" 브리프 명시 사항).
     val effectiveNow = snapshot?.pausedAt ?: now
@@ -302,30 +314,87 @@ fun PomodoroExpanded(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
             completed.toFloat() / total
         }
     }
-    // 아래로는 nullable snapshot을 직접 넘기지 않고 원시값만 넘긴다 — when 분기 사이에는 스마트
-    // 캐스트가 이어지지 않아(isIdle 같은 별도 Boolean 플래그로는 컴파일러가 non-null을 못 좁힌다)
-    // 자식 컴포저블 안에서 snapshot!!를 반복하면 컴파일 에러거나 취약해진다.
-    val done = snapshot?.done == true
-    val paused = snapshot?.pausedAt != null
-    val remainingSec = snapshot?.remainingSecAtPause ?: 0L
-    val taskTitle = snapshot?.taskTitle
+    return ExpandedState(
+        activePhase = activePhase, resting = resting, isIdle = isIdle,
+        done = snapshot?.done == true, paused = snapshot?.pausedAt != null,
+        remainingSec = snapshot?.remainingSecAtPause ?: 0L,
+        taskTitle = snapshot?.taskTitle, fraction = fraction,
+    )
+}
 
+/**
+ * 뽀모도로 확장형·세로(높이 230dp 버킷, 2x3+) — POMODORO 타이틀·모드 필·세션 링을 갖춘 데스크탑
+ * 아이덴티티. RetroFrame·바깥 클릭(딥링크)은 PomodoroContent가 이미 씌워주므로 여기선 Column
+ * 내용만 채운다. 링 104dp — 실기기 2x3 실높이 ~231dp에서 프레임(27)+헤더·칩·버튼(~95)을 빼면
+ * 109dp가 상한이다(120dp였을 때 하단 버튼이 잘렸다).
+ */
+@Composable
+fun PomodoroExpanded(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
+    val p = theme.palette
+    val s = deriveExpandedState(snapshot, now)
     // horizontalAlignment 명시 — Glance Column 기본은 Start라, 없으면 위젯을 옆으로 늘렸을 때
     // 링·버튼 행이 왼쪽에 붙는다(PomodoroCompact는 이미 이걸 명시하고 있다. 리뷰 지적).
     Column(modifier = GlanceModifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             PixelText("w_t_pomodoro", p.sub, 11.dp)
             Spacer(GlanceModifier.defaultWeight())
-            ModePill(resting, isIdle, theme)
+            ModePill(s.resting, s.isIdle, theme)
         }
         Spacer(GlanceModifier.height(4.dp))
         Box(modifier = GlanceModifier.fillMaxWidth().height(2.dp).background(p.accent2)) {}
-        Spacer(GlanceModifier.height(6.dp))
-        SessionRing(theme, now, activePhase, resting, isIdle, done, paused, remainingSec, fraction)
-        Spacer(GlanceModifier.height(6.dp))
-        if (taskTitle != null) TaskChip(taskTitle, theme)
+        // 남는 높이를 링 위·아래(weight 쌍)로 나눠 링+칩 블록을 중앙에 둔다 — 위에만 붙이면
+        // 세로로 큰 배치에서 하단이 비어 보인다(실기기 지적).
         Spacer(GlanceModifier.defaultWeight())
-        ExpandedButtons(isIdle, done, paused, theme)
+        SessionRing(theme, now, s.activePhase, s.resting, s.isIdle, s.done, s.paused, s.remainingSec, s.fraction, 104.dp)
+        Spacer(GlanceModifier.height(6.dp))
+        if (s.taskTitle != null) TaskChip(s.taskTitle, theme)
+        Spacer(GlanceModifier.defaultWeight())
+        ExpandedButtons(s.isIdle, s.done, s.paused, theme)
+    }
+}
+
+/**
+ * 뽀모도로 확장형·가로(폭 230dp 버킷, 3x2+) — 세로 버킷(230dp)에 못 닿는 낮고 넓은 배치에서도
+ * 링 아이덴티티를 유지한다. 좌우 분할(링 왼쪽 + 텍스트 오른쪽)은 비대칭이라 어색하다는 실기기
+ * 지적으로 링을 정중앙 주인공으로 두는 대칭 구성으로 재설계: 중앙 링(90dp) + 아래 버튼 행.
+ * 상단 오버레이 행에 집중 중 태스크 칩(좌)·모드 필(우)을 얹는다 — 세로로 쌓을 예산이 없어
+ * (아래 링 90dp 산정 참조) 코너 유휴 공간을 쓴다. 긴 제목은 칩이 링 상단 얇은 호를 일부
+ * 가로지르는데, 카드 배경이 있어 플로팅 라벨로 읽힌다.
+ * 링 90dp — 상한은 폭이 아니라 높이다: 2칸 실높이 예산 127dp(154-프레임 27)에서 버튼 행(30)+
+ * 간격(6)을 빼면 91dp. 폭을 4칸으로 늘려도(버킷 동일) 높이가 그대로라 이 이상은 버튼이 잘린다.
+ */
+@Composable
+fun PomodoroExpandedWide(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
+    val s = deriveExpandedState(snapshot, now)
+    Box(modifier = GlanceModifier.fillMaxSize()) {
+        Column(
+            modifier = GlanceModifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(GlanceModifier.defaultWeight())
+            SessionRing(theme, now, s.activePhase, s.resting, s.isIdle, s.done, s.paused, s.remainingSec, s.fraction, 90.dp)
+            Spacer(GlanceModifier.height(6.dp))
+            ExpandedButtons(s.isIdle, s.done, s.paused, theme)
+            Spacer(GlanceModifier.defaultWeight())
+        }
+        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (s.taskTitle != null) {
+                // 자리(weight)와 칩(wrap)을 분리 — 칩 자체에 weight를 주면 짧은 제목도 풀폭 카드가 된다.
+                Box(modifier = GlanceModifier.defaultWeight()) {
+                    Box(
+                        modifier = GlanceModifier.background(theme.palette.card).cornerRadius(8.dp)
+                            .padding(horizontal = 6.dp, vertical = 3.dp),
+                    ) {
+                        Text(s.taskTitle, maxLines = 1,
+                            style = TextStyle(fontSize = 11.sp, color = ColorProvider(theme.palette.fg)))
+                    }
+                }
+                Spacer(GlanceModifier.width(8.dp))
+            } else {
+                Spacer(GlanceModifier.defaultWeight())
+            }
+            ModePill(s.resting, s.isIdle, theme)
+        }
     }
 }
 
@@ -344,20 +413,20 @@ private fun ModePill(resting: Boolean, isIdle: Boolean, theme: WTheme) {
 }
 
 /**
- * 세션 링 — WidgetRing 비트맵(120dp, 10dp 스트로크)을 Box 중앙에 놓고 그 위에 페이즈 라벨 +
+ * 세션 링 — WidgetRing 비트맵(ringSize, 10dp 스트로크)을 Box 중앙에 놓고 그 위에 페이즈 라벨 +
  * 크로노미터(running)/남은 시간(paused)를 얹는다. idle이면 라벨·타이머를 생략(링만 0%로 표시).
  */
 @Composable
 private fun SessionRing(
     theme: WTheme, now: Long, activePhase: PomodoroPhase?, resting: Boolean, isIdle: Boolean,
-    done: Boolean, paused: Boolean, remainingSec: Long, fraction: Float,
+    done: Boolean, paused: Boolean, remainingSec: Long, fraction: Float, ringSize: Dp,
 ) {
     val context = LocalContext.current
     val progressColor = (if (resting) theme.pomo.rest else theme.pomo.focus).toArgb()
     val bmp = WidgetRing.bitmap(
-        px(context, 120.dp), theme.pomo.ring.toArgb(), progressColor, fraction, px(context, 10.dp))
+        px(context, ringSize), theme.pomo.ring.toArgb(), progressColor, fraction, px(context, 10.dp))
     Box(contentAlignment = Alignment.Center) {
-        Image(provider = ImageProvider(bmp), contentDescription = null, modifier = GlanceModifier.size(120.dp))
+        Image(provider = ImageProvider(bmp), contentDescription = null, modifier = GlanceModifier.size(ringSize))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             when {
                 isIdle -> {}

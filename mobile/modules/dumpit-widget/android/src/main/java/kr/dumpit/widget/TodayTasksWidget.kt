@@ -53,13 +53,17 @@ class TodayTasksWidget : GlanceAppWidget() {
 
     companion object {
         // 반응형 브레이크포인트 — 런처가 준 크기에 가장 가까운 값이 LocalSize로 들어온다.
-        // 각 크기마다 RemoteViews를 미리 만들어두는 방식이라 후보를 3개로 제한한다.
+        // 주의: Samsung DIY 런처(hsResizeRatio=0.8)는 appWidgetSizes로 보고한 값의 80%로만
+        // 실제 렌더한다(실측: 4x2 보고 452×192 → 실제 ~352×150). 그래서 각 버킷의 콘텐츠는
+        // "보고 크기 × 0.8 - RetroFrame 오버헤드(~27dp)" 예산 안에 들어가게 짠다 — 큐 줄 수를
+        // 버킷별로 1/2/3으로 가른 이유다(WIDE에 2줄을 넣으면 실기기에서 둘째 줄이 반쯤 잘린다).
         private val COMPACT = DpSize(150.dp, 110.dp) // 2x2 — 헤더·제목·완료 버튼만
-        private val WIDE = DpSize(250.dp, 110.dp)    // 4x2 — + 행성·진행률·큐 2줄
-        private val TALL = DpSize(250.dp, 220.dp)    // 4x4 — 큰 행성·큐 3줄
+        private val WIDE = DpSize(250.dp, 110.dp)    // 4x2 — + 행성·진행률·큐 1줄
+        private val TALL = DpSize(250.dp, 220.dp)    // 4x3 — 큰 행성·제안 문구·큐 2줄
+        private val XTALL = DpSize(250.dp, 300.dp)   // 4x4+ — 큐 3줄
     }
 
-    override val sizeMode: SizeMode = SizeMode.Responsive(setOf(COMPACT, WIDE, TALL))
+    override val sizeMode: SizeMode = SizeMode.Responsive(setOf(COMPACT, WIDE, TALL, XTALL))
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         // 세션 시작 시 1회: 주기 onUpdate(30분)·재부팅 등으로 렌더될 때 미러가 오래됐으면
@@ -110,8 +114,11 @@ class TodayTasksWidget : GlanceAppWidget() {
 @Composable
 private fun HeroContent(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?, compact: Boolean) {
     val p = theme.palette
-    // 4x4(TALL)에서만 큐 3줄·큰 행성. 4x2는 세로 110dp뿐이라 2줄로 줄인다.
-    val tall = LocalSize.current.height >= 220.dp
+    // 세로 예산(버킷별 큐 줄 수 근거는 companion 주석 참조): TALL(220)부터 큰 행성·제안 문구,
+    // XTALL(300)부터 큐 3줄.
+    val h = LocalSize.current.height
+    val tall = h >= 220.dp
+    val queueRows = when { h >= 300.dp -> 3; tall -> 2; else -> 1 }
     // 로그인 안 된 스냅샷은 null과 같게 취급 — 지역 val로 받아야 아래 분기에서 스마트 캐스트가 산다.
     val snap = snapshot?.takeIf { it.loggedIn }
     RetroFrame(theme) {
@@ -148,17 +155,21 @@ private fun HeroContent(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: Stri
                     // 컴팩트는 헤더에 이미 행성이 있어 중복 배치하지 않는다.
                     if (!compact) {
                         Spacer(GlanceModifier.height(8.dp))
-                        PlanetFlipper(theme, 64.dp)
+                        PlanetFlipper(theme, 80.dp)
                     }
                 }
 
                 // 3) 집중 타임 / 지금 할 일 / 빈 시간 — 좌: 본문, 우: 행성+진행률
                 else -> {
+                    // 남는 높이를 본문 위·아래로 반씩 나눈다(아래 단독 Spacer와 쌍) — 한쪽에만 두면
+                    // 세로로 키웠을 때 본문과 큐 사이에 큰 구멍이 생긴다(실기기 지적). 좁은 배치에선
+                    // 둘 다 0으로 접혀 위쪽부터 차곡차곡 쌓이는 기존 동작 그대로다.
+                    Spacer(GlanceModifier.defaultWeight())
                     Row(modifier = GlanceModifier.fillMaxWidth()) {
                         Column(modifier = GlanceModifier.defaultWeight()) {
                             when {
                                 focusTitle != null -> FocusBody(focusTitle, p, compact)
-                                snap.hero != null -> HeroBody(snap.hero, snap.suggestionMessage, theme, compact)
+                                snap.hero != null -> HeroBody(snap.hero, snap.suggestionMessage, theme, compact, tall)
                                 else -> SuggestionBody(snap, p)
                             }
                         }
@@ -167,15 +178,15 @@ private fun HeroContent(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: Stri
                             PlanetBlock(theme, snap, tall)
                         }
                     }
-                    // 남는 높이는 여기서 흡수해 큐를 아래에 붙인다. 본문 Row에 weight를 주면
-                    // 반대가 된다 — 4x2(세로 110dp)에서 큐가 자리를 다 먹고 본문(제목·완료 버튼)이
-                    // 0으로 눌린다. 위쪽이 살고 꼬리(큐)가 잘리는 쪽이 안전하다.
+                    // 위 Spacer와 쌍으로 남는 높이를 흡수해 큐를 아래에 붙인다. 본문 Row 자체에
+                    // weight를 주면 안 된다 — 4x2(세로 110dp)에서 큐가 자리를 다 먹고 본문(제목·완료
+                    // 버튼)이 0으로 눌린다. 위쪽이 살고 꼬리(큐)가 잘리는 쪽이 안전하다.
                     Spacer(GlanceModifier.defaultWeight())
                     // 큐 노출 규칙은 앱 NowHeroCard와 동일하게 맞춘다 — 거긴 `!allDone && queue.length > 0`
                     // 뿐이라 "지금 할 일"이 없는 빈 시간에도 다음 후보를 보여주고 체크할 수 있다.
                     // allDone은 위 분기에서 이미 걸러졌으므로 여기선 집중 중만 제외하면 된다
                     // (집중 화면에 큐를 얹으면 방해가 된다).
-                    val queue = if (focusTitle == null) snap.queue.take(if (tall) 3 else 2) else emptyList()
+                    val queue = if (focusTitle == null) snap.queue.take(queueRows) else emptyList()
                     if (!compact && queue.isNotEmpty()) QueueSection(queue, theme)
                 }
             }
@@ -191,20 +202,27 @@ private fun FocusBody(focusTitle: String, p: WPalette, compact: Boolean) {
         Text(
             "「$focusTitle」 집중 중",
             maxLines = if (compact) 2 else 3,
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)),
+            // 18sp — 히어로 제목과 동일(위젯의 주인공 텍스트, 16sp는 실기기에서 작다는 지적).
+            // 컴팩트(2x2)만 예산이 빠듯해 16sp 유지.
+            style = TextStyle(fontSize = if (compact) 16.sp else 18.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)),
         )
     }
 }
 
-/** 지금 할 일 — 제목·마감·제안 문구 + 완료 버튼. 컴팩트는 제목+버튼만 남겨 잘림을 막는다. */
+/**
+ * 지금 할 일 — 제목·마감·제안 문구 + 완료 버튼. 컴팩트는 제목+버튼만 남겨 잘림을 막는다.
+ * WIDE(세로 110dp 버킷·실기기 실높이 ~150dp)는 제목 1줄·제안 문구 생략 — 2줄 제목+제안까지
+ * 쌓으면 하단 큐가 실기기에서 잘린다(제안 문구·2줄 제목은 tall부터).
+ */
 @Composable
-private fun HeroBody(hero: HeroTask, suggestionMessage: String?, theme: WTheme, compact: Boolean) {
+private fun HeroBody(hero: HeroTask, suggestionMessage: String?, theme: WTheme, compact: Boolean, tall: Boolean) {
     val p = theme.palette
     Column(modifier = GlanceModifier.fillMaxWidth()) {
         Text(
             hero.title,
-            maxLines = if (compact) 1 else 2,
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)),
+            maxLines = if (tall) 2 else 1,
+            // 18sp — 위젯의 주인공 텍스트(16sp는 실기기에서 작다는 지적). 컴팩트(2x2)만 16sp 유지.
+            style = TextStyle(fontSize = if (compact) 16.sp else 18.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)),
             modifier = GlanceModifier.fillMaxWidth()
                 .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_HOME))),
         )
@@ -214,7 +232,7 @@ private fun HeroBody(hero: HeroTask, suggestionMessage: String?, theme: WTheme, 
                 Text(hero.deadlineLabel, maxLines = 1,
                     style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.warn)))
             }
-            if (!suggestionMessage.isNullOrBlank()) {
+            if (tall && !suggestionMessage.isNullOrBlank()) {
                 Spacer(GlanceModifier.height(2.dp))
                 Text(suggestionMessage, maxLines = 1,
                     style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.sub)))
@@ -251,11 +269,12 @@ private fun SuggestionBody(snapshot: HeroSnapshot, p: WPalette) {
 /** 우상단 블록 — 행성 플리퍼 + 오늘 진행률(완료/전체). */
 @Composable
 private fun PlanetBlock(theme: WTheme, snapshot: HeroSnapshot, tall: Boolean) {
+    // 행성이 위젯 꾸미기의 핵심이라 과감하게 크게 — 실기기에서 "더 컸으면" 지적 2회 반영.
     Column(
-        modifier = GlanceModifier.width(if (tall) 64.dp else 48.dp),
+        modifier = GlanceModifier.width(if (tall) 96.dp else 72.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        PlanetFlipper(theme, if (tall) 56.dp else 40.dp)
+        PlanetFlipper(theme, if (tall) 88.dp else 64.dp)
         Spacer(GlanceModifier.height(2.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("${snapshot.todayDone}/${snapshot.todayTotal}", maxLines = 1,
@@ -282,7 +301,11 @@ private fun PlanetFlipper(theme: WTheme, size: Dp) {
         setImageViewResource(R.id.widget_planet_f1, if (f1 != 0) f1 else fallback1)
         setImageViewResource(R.id.widget_planet_f2, if (f2 != 0) f2 else fallback2)
     }
-    Box(modifier = GlanceModifier.size(size)) { AndroidRemoteViews(remoteViews = rv) }
+    // fillMaxSize 필수 — AndroidRemoteViews 기본은 wrap이라 nodpi 비트맵의 intrinsic 크기
+    // (픽셀=dp 그대로)로 렌더돼 박스 크기를 무시한다(실기기: 토마토 18dp·행성 시트 띠 증상).
+    Box(modifier = GlanceModifier.size(size)) {
+        AndroidRemoteViews(remoteViews = rv, modifier = GlanceModifier.fillMaxSize())
+    }
 }
 
 /**

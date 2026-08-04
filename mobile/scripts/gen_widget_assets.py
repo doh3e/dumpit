@@ -57,15 +57,25 @@ icon("w_i_sparkle",   ["...X....", "...X....", "..XXX...", "XXXXXXX.", "..XXX...
 icon("w_i_tomato_f1", ["...XX...", "..XXXX..", ".XXXXXX.", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", ".XXXXXX.", "..XXXX.."])
 icon("w_i_tomato_f2", ["..XX.X..", ".XXXX...", ".XXXXXX.", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", ".XXXXXX.", "..XXXX.."])
 
-# 행성 2프레임 — f1 원본, f2 = 6px 위로 시프트(부양 느낌)
+# 행성 2프레임 — 정사각 원본은 f1 원본 + f2 = 24px 위 시프트(부양 느낌, 6px는 실기기에서 체감 불가).
+# 일부 상점 행성(blackhole·sun·whale)은 가로 n프레임 애니메이션 시트(예: 3072×384)라 통째로 쓰면
+# "작은 행성 n개 띠"로 렌더된다 — 시트는 첫 프레임/중간 프레임을 잘라 진짜 2프레임 플립으로 쓴다.
 for path in glob.glob(os.path.join(SHOP, "planet_*.png")):
     base = os.path.splitext(os.path.basename(path))[0]           # planet_earth
     suffix = base.replace("planet_", "")
     img = Image.open(path).convert("RGBA")
-    img.save(os.path.join(OUT, f"w_planet_{suffix}_f1.png"))
-    up = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    up.paste(img, (0, -6))
-    up.save(os.path.join(OUT, f"w_planet_{suffix}_f2.png"))
+    n = img.width // img.height if img.height > 0 and img.width % img.height == 0 else 1
+    if n >= 2:
+        w = img.height
+        f1 = img.crop((0, 0, w, img.height))
+        mid = n // 2
+        f2 = img.crop((mid * w, 0, mid * w + w, img.height))
+    else:
+        f1 = img
+        f2 = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        f2.paste(img, (0, -24))
+    f1.save(os.path.join(OUT, f"w_planet_{suffix}_f1.png"))
+    f2.save(os.path.join(OUT, f"w_planet_{suffix}_f2.png"))
 
 # 프리타일 패턴 — Glance 배경은 repeat이 없어 960×480으로 미리 타일링(Crop으로 깐다)
 for skin in ["sprout", "galaxy", "wood", "candy"]:
