@@ -115,7 +115,8 @@ fun PomodoroCompact(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
     ) {
         when {
             snapshot == null -> IdleContent(theme)
-            snapshot.done -> DoneContent(theme)
+            // effectivelyDone — JS 미러 done 플래그 + 위젯 단독 시간 경과 완료 파생(음수 크로노미터 방지)
+            snapshot.effectivelyDone(now) -> DoneContent(theme)
             snapshot.pausedAt != null -> PausedContent(snapshot, theme)
             snapshot.currentPhase(now) != null -> RunningContent(snapshot, theme, now)
             // 페이즈 사이(예: 세션 시작 전) — done도 아니고 일시정지도 아니고 진행 중 페이즈도 없음.
@@ -295,8 +296,11 @@ private fun deriveExpandedState(snapshot: PomodoroSnapshot?, now: Long): Expande
     val activePhase = snapshot?.takeIf { !it.done }?.currentPhase(effectiveNow)
     // 링 색·모드 필 배경 공용 — 진행 중 페이즈가 없으면(세션 없음/종료) 항상 focus 취급.
     val resting = activePhase != null && activePhase.kind != "FOCUS"
+    // effectivelyDone — JS 미러 done 플래그 + 위젯 단독 시간 경과 완료 파생. isIdle보다 먼저
+    // 판정해야 최종 완료가 idle(링 0%·시작 버튼)로 오인되지 않는다.
+    val done = snapshot?.effectivelyDone(now) == true
     // PomodoroCompact의 IdleContent 분기(스냅샷 없음 OR 페이즈 사이 빈틈)와 동일 조건.
-    val isIdle = snapshot == null || (!snapshot.done && snapshot.pausedAt == null && activePhase == null)
+    val isIdle = snapshot == null || (!done && snapshot.pausedAt == null && activePhase == null)
     // 전체 페이즈 기준 진행률(브리프 명시: FOCUS만이 아니라 phases 전체).
     // 주의(리뷰 Critical 수정): snapshot.phases는 phasesFrom()이 돌려주는 "남은" 타임라인뿐이라
     // (이미 끝난 페이즈는 JS 미러 작성 시점에 걸러짐, 재미러마다 재생성) phases만으로 완료 수를
@@ -307,7 +311,7 @@ private fun deriveExpandedState(snapshot: PomodoroSnapshot?, now: Long): Expande
     // phaseDone+phases.size로 굴러가는(rolling) 분모를 근사한다.
     val fraction = when {
         snapshot == null -> 0f
-        snapshot.done -> 1f
+        done -> 1f
         else -> {
             val completed = snapshot.phaseDone + snapshot.phases.count { it.endsAt <= effectiveNow }
             val total = snapshot.phaseTotal ?: (snapshot.phaseDone + snapshot.phases.size).coerceAtLeast(1)
@@ -316,7 +320,7 @@ private fun deriveExpandedState(snapshot: PomodoroSnapshot?, now: Long): Expande
     }
     return ExpandedState(
         activePhase = activePhase, resting = resting, isIdle = isIdle,
-        done = snapshot?.done == true, paused = snapshot?.pausedAt != null,
+        done = done, paused = snapshot?.pausedAt != null,
         remainingSec = snapshot?.remainingSecAtPause ?: 0L,
         taskTitle = snapshot?.taskTitle, fraction = fraction,
     )

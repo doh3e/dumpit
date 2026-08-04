@@ -63,6 +63,17 @@ data class PomodoroSnapshot(
 ) {
     fun currentPhase(now: Long): PomodoroPhase? = phases.firstOrNull { now >= it.startsAt && now < it.endsAt }
 
+    /**
+     * 위젯 단독(앱 미기동) 완료 판정 — done 플래그는 JS 미러가 상태 전이 때만 실어주므로 마지막
+     * 페이즈가 "시간 경과"로 끝난 경우엔 여기서 파생해야 한다. 유한 세션(focusTotal 있음)에서 남은
+     * 타임라인이 전부 지났으면 완료로 취급한다 — 안 하면 최종 완료 후 틱 재렌더가 idle(집중 시작)로
+     * 떨어지고, 틱 전까지 크로노미터가 음수로 흘러가 보인다(실기기 지적).
+     * 무한 세션(focusTotal=null)은 phases가 HORIZON 롤링 윈도우일 뿐이라 만료=완료가 아니다 — 제외.
+     * 일시정지 중엔 시간이 얼어 있으므로 경과 판정을 하지 않는다.
+     */
+    fun effectivelyDone(now: Long): Boolean =
+        done || (pausedAt == null && focusTotal != null && phases.isNotEmpty() && phases.all { it.endsAt <= now })
+
     companion object {
         fun from(json: String?): PomodoroSnapshot? = runCatching {
             val o = JSONObject(json ?: return null)
