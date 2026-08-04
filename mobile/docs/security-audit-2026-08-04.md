@@ -56,6 +56,14 @@ prebuild 템플릿과 RN debug 오버레이가 넣던 `SYSTEM_ALERT_WINDOW`,
   `c2dm.permission.RECEIVE`, 자체 동적 리시버 권한으로 전부 실사용분
 - 참고: debug 소스셋 선언은 우선순위가 높아 유지되므로 dev-client 오버레이는 그대로 동작
 
+**정정(2026-08-04 오후)**: 위 "남은 권한" 목록은 로컬 gradle 병합 결과 기준이며, 실제 EAS
+빌드 산출 APK(5c7167d5)를 `aapt2 dump permissions`로 확인하니 `ACCESS_NOTIFICATION_POLICY`가
+하나 더 들어 있었다(notify-kit 기여분, 로컬 병합에는 나타나지 않음 — 의존성 해석 차이).
+앱에는 방해금지(DND) 정책을 읽거나 바꾸는 코드가 0건이고, 활동시간 밖 알림 억제는 서버가
+판단하므로 이 권한이 필요한 경로가 없다. `blockedPermissions`에 추가해 제거했다.
+로컬 병합 매니페스트에서 `tools:node="remove"` 적용을 확인했으며, 최종 확인은 다음 빌드의
+APK에서 이뤄진다.
+
 ### 2. `allowBackup=false`
 
 `android:allowBackup="true"` 상태에서는 세션 쿠키 DB(`app_webview`)와 AsyncStorage가
