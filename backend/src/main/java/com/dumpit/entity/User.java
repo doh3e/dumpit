@@ -55,6 +55,13 @@ public class User {
 
     private LocalDateTime withdrawnAt;
 
+    // 완전 삭제 예정 시각 — 이 시각이 지나야 purge 스케줄러가 계정과 콘텐츠를 실제로 지운다.
+    private LocalDateTime purgeAfter;
+
+    // 탈퇴가 콘텐츠에 찍은 소프트 삭제 시각 — 복구 대상을 이 값으로 식별한다.
+    // 사용자가 탈퇴 전에 직접 지운 행은 deletedAt이 다르므로 부활하지 않는다.
+    private LocalDateTime withdrawalMarkedAt;
+
     // 진행 중인 뽀모도로 집중 세션 시작 시각 — 완료 시 경과시간 검증 후 소거 (동시 1세션)
     private LocalDateTime pomodoroStartedAt;
 
@@ -189,24 +196,39 @@ public class User {
         }
     }
 
-    public void withdraw() {
+    /**
+     * 탈퇴 1단계 — 계정을 잠그고 완전 삭제 예정일을 건다.
+     * <p>
+     * 이메일·구글 sub·코인·뽀모도로 누적은 그대로 둔다. 유예 기간에 같은 구글 계정으로
+     * 다시 로그인하면 원래 계정을 그대로 되살려야 하는데, 여기서 덮어쓰면 복구할 원본이
+     * 사라지기 때문이다. 실제 파기는 purgeAfter가 지난 뒤 행 삭제로 이뤄진다.
+     * 유예 중 서비스 접근은 status가 ACTIVE가 아니라는 사실만으로 이미 차단된다.
+     */
+    public void blockForGrace(LocalDateTime purgeAfter, LocalDateTime withdrawalMarkedAt) {
         if (Boolean.TRUE.equals(this.isAdmin)) {
             throw new IllegalStateException("Admin users cannot withdraw through this flow.");
         }
-        LocalDateTime now = LocalDateTime.now();
-        String suffix = this.userId != null ? this.userId.toString() : UUID.randomUUID().toString();
         this.status = Status.WITHDRAWN;
-        this.withdrawnAt = now;
-        this.email = "withdrawn+" + suffix + "@deleted.dumpit.local";
-        this.nickname = "탈퇴한 사용자";
-        this.picture = null;
-        this.bio = null;
-        this.providerId = "withdrawn:" + suffix;
-        this.coinBalance = 0;
-        this.pomodoroTotalMinutes = 0;
-        this.pomodoroTotalSessions = 0;
+        this.withdrawnAt = LocalDateTime.now();
+        this.purgeAfter = purgeAfter;
+        this.withdrawalMarkedAt = withdrawalMarkedAt;
         this.bannedAt = null;
         this.banReason = null;
+    }
+
+    /** 유예 기간 안에 돌아온 계정을 원상 복구한다. 콘텐츠 복구는 서비스가 따로 처리한다. */
+    public void restoreFromWithdrawal() {
+        this.status = Status.ACTIVE;
+        this.withdrawnAt = null;
+        this.purgeAfter = null;
+        this.withdrawalMarkedAt = null;
+    }
+
+    /** 유예가 끝나 완전 삭제 대상인지 — 경계값은 포함하지 않는다(지정 시각이 지나야 삭제). */
+    public boolean isPurgeDue(LocalDateTime now) {
+        return this.status == Status.WITHDRAWN
+                && this.purgeAfter != null
+                && this.purgeAfter.isBefore(now);
     }
 
     private String normalizeReason(String reason) {

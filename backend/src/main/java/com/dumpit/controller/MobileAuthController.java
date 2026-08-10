@@ -43,14 +43,17 @@ public class MobileAuthController {
             new HttpSessionSecurityContextRepository();
 
     public record MobileGoogleLoginRequest(@NotBlank String idToken) {}
-    public record MobileLoginResponse(String email, String nickname, String picture) {}
+    /** @param restored 탈퇴 유예 기간 안에 돌아와 계정이 복구됐는지 — 앱에서 안내 다이얼로그를 띄운다 */
+    public record MobileLoginResponse(String email, String nickname, String picture, boolean restored) {}
 
     @PostMapping("/google")
     public ResponseEntity<MobileLoginResponse> google(@Valid @RequestBody MobileGoogleLoginRequest body,
                                                       HttpServletRequest request,
                                                       HttpServletResponse response) {
         GoogleIdClaims claims = tokenVerifier.verify(body.idToken());
-        User user = googleUserUpserter.upsert(claims.sub(), claims.email(), claims.name(), claims.picture());
+        GoogleUserUpserter.UpsertResult upserted =
+                googleUserUpserter.upsert(claims.sub(), claims.email(), claims.name(), claims.picture());
+        User user = upserted.user();
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("sub", claims.sub());
@@ -77,6 +80,7 @@ public class MobileAuthController {
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
 
-        return ResponseEntity.ok(new MobileLoginResponse(user.getEmail(), user.getNickname(), user.getPicture()));
+        return ResponseEntity.ok(new MobileLoginResponse(
+                user.getEmail(), user.getNickname(), user.getPicture(), upserted.restored()));
     }
 }

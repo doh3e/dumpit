@@ -38,7 +38,7 @@ public class DeadlinePushScheduler {
             try {
                 processUser(user, now);
             } catch (Exception e) {
-                log.warn("마감 푸시 처리 실패 user={}: {}", user.getEmail(), e.getMessage());
+                log.warn("마감 푸시 처리 실패 userId={}: {}", user.getUserId(), e.getMessage());
             }
         }
     }

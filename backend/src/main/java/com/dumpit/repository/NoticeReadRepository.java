@@ -4,6 +4,7 @@ import com.dumpit.entity.Notice;
 import com.dumpit.entity.NoticeRead;
 import com.dumpit.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -28,4 +29,8 @@ public interface NoticeReadRepository extends JpaRepository<NoticeRead, UUID> {
         ORDER BY n.publishAt DESC, n.createdAt DESC
     """)
     List<Notice> findUnreadPublished(@Param("user") User user, @Param("now") LocalDateTime now);
+
+    @Modifying
+    @Query("DELETE FROM NoticeRead r WHERE r.user = :user")
+    int hardDeleteByUser(@Param("user") User user);
 }

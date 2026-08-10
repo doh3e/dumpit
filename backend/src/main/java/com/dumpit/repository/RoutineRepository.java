@@ -52,13 +52,29 @@ public interface RoutineRepository extends JpaRepository<Routine, UUID> {
     """)
     List<Routine> findEnabledRoutinesMissingNextRunAt();
 
+    // enabled는 건드리지 않는다 — 생성 쿼리(findDueRoutines·findEnabledRoutinesMissingNextRunAt)가
+    // deletedAt IS NULL도 함께 보므로 억제에는 이미 충분하고, 여기서 false로 덮으면
+    // 사용자가 원래 꺼둔 루틴인지 탈퇴가 끈 루틴인지 구분할 수 없어 복구가 부정확해진다.
     @Modifying
     @Query("""
         UPDATE Routine r
-        SET r.deletedAt = :deletedAt,
-            r.enabled = false
+        SET r.deletedAt = :deletedAt
         WHERE r.user = :user
           AND r.deletedAt IS NULL
     """)
     int softDeleteByUser(@Param("user") User user, @Param("deletedAt") LocalDateTime deletedAt);
+
+    // 탈퇴가 찍은 시각과 정확히 일치하는 행만 되살린다 — 사용자가 직접 지운 루틴은 부활하지 않는다.
+    @Modifying
+    @Query("""
+        UPDATE Routine r
+        SET r.deletedAt = NULL
+        WHERE r.user = :user
+          AND r.deletedAt = :deletedAt
+    """)
+    int restoreByUser(@Param("user") User user, @Param("deletedAt") LocalDateTime deletedAt);
+
+    @Modifying
+    @Query("DELETE FROM Routine r WHERE r.user = :user")
+    int hardDeleteByUser(@Param("user") User user);
 }
