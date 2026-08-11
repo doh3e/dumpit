@@ -34,6 +34,13 @@ export default function Footer() {
               서비스 이용약관
             </Link>
             <span className="text-line">|</span>
+            <Link
+              to="/account-deletion"
+              className="text-sub hover:text-primary transition-colors"
+            >
+              계정 삭제
+            </Link>
+            <span className="text-line">|</span>
             <button
               type="button"
               onClick={() => setShowContact(true)}

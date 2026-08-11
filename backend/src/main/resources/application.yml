@@ -71,16 +71,22 @@ app:
   cors:
     allowed-origins: http://localhost:5173
   retention:
-    withdrawn-activity-log-days: ${WITHDRAWN_ACTIVITY_LOG_RETENTION_DAYS:90}
-    withdrawn-ai-usage-log-days: ${WITHDRAWN_AI_USAGE_LOG_RETENTION_DAYS:180}
+    # 기록 자신의 생성일 기준 보관 기간 — 개인정보처리방침 고지값과 일치해야 한다
+    activity-log-days: ${ACTIVITY_LOG_RETENTION_DAYS:90}
+    ai-usage-log-days: ${AI_USAGE_LOG_RETENTION_DAYS:180}
+    inquiry-days: ${INQUIRY_RETENTION_DAYS:365}
     cleanup-cron: ${LOG_RETENTION_CLEANUP_CRON:0 30 3 * * *}
+    # 탈퇴 철회(복구) 대응 유예 — 지나면 계정·콘텐츠·로그를 완전 파기한다
+    withdrawal-grace-days: ${WITHDRAWAL_GRACE_DAYS:30}
+    account-purge-cron: ${ACCOUNT_PURGE_CRON:0 0 4 * * *}
 
 sentry:
   dsn: ${SENTRY_DSN:}
   debug: ${SENTRY_DEBUG:false}
   environment: ${SENTRY_ENVIRONMENT:${spring.profiles.active:local}}
   exception-resolver-order: ${SENTRY_EXCEPTION_RESOLVER_ORDER:-2147483647}
-  max-request-body-size: ${SENTRY_MAX_REQUEST_BODY_SIZE:small}
+  # 요청 본문을 붙이면 브레인덤프 원문·문의 본문이 오류 이벤트에 실려 국외로 나간다 — 기본 차단
+  max-request-body-size: ${SENTRY_MAX_REQUEST_BODY_SIZE:none}
   traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.0}
   send-default-pii: ${SENTRY_SEND_DEFAULT_PII:false}
 

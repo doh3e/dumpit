@@ -36,6 +36,18 @@ public class TaskPlanningServiceImpl implements TaskPlanningService {
         return getPlanning(email, LocalDateTime.now());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskResponse> todayTasks(String email) {
+        LocalDateTime now = LocalDateTime.now();
+        return taskService.getTasksForUser(email, RECENT_DONE_DAYS).stream()
+                .filter(this::isActive)
+                .filter((task) -> bucketOf(task, now) == Bucket.TODAY)
+                .sorted(planningComparator(now))
+                .map(TaskResponse::from)
+                .toList();
+    }
+
     TaskPlanningResponse getPlanning(String email, LocalDateTime now) {
         List<Task> tasks = taskService.getTasksForUser(email, RECENT_DONE_DAYS);
         ActiveHours activeHours = userSettingsService.activeHours(email);

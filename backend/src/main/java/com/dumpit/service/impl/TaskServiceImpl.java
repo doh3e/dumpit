@@ -15,6 +15,7 @@ import com.dumpit.service.OpenAiService;
 import com.dumpit.service.ShopService;
 import com.dumpit.service.TaskService;
 import com.dumpit.service.UserSettingsService;
+import com.dumpit.service.priority.PriorityCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -312,7 +313,9 @@ public class TaskServiceImpl implements TaskService {
         if (deadline != null && deadline.isBefore(LocalDateTime.now())) {
             return 5;
         }
-        double priority = task.getEffectivePriority() != null ? task.getEffectivePriority() : 0.5;
+        // 리스트 +N 미리보기(TaskResponse)와 같은 실시간 합성값 — 표시·지급 불일치 방지
+        Double effective = PriorityCalculator.effectivePriority(task, LocalDateTime.now());
+        double priority = effective != null ? effective : 0.5;
         return (int) (10 + priority * 40);
     }
 

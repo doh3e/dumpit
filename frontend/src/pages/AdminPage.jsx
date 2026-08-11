@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import MarkdownRenderer from '../components/MarkdownRenderer'
+import { iconProps } from '../assets/icons'
 
 const STATUS_LABEL = {
   PENDING: { label: '대기 중', color: 'tone-urgent-soon text-warn' },
@@ -95,6 +96,8 @@ export default function AdminPage() {
   const [userStatusFilter, setUserStatusFilter] = useState('ALL')
   const [userSort, setUserSort] = useState('createdAtDesc')
   const [banReasonInput, setBanReasonInput] = useState('')
+  const [coinAmountInput, setCoinAmountInput] = useState('')
+  const [coinReasonInput, setCoinReasonInput] = useState('')
   const [savingNotice, setSavingNotice] = useState(false)
   const [editingNoticeId, setEditingNoticeId] = useState(null)
   const [noticeForm, setNoticeForm] = useState({
@@ -193,6 +196,34 @@ export default function AdminPage() {
   const openUserManage = (user) => {
     setManagingUser(user)
     setBanReasonInput(user.banReason || '')
+    setCoinAmountInput('')
+    setCoinReasonInput('')
+  }
+
+  const handleGrantCoins = async () => {
+    if (!managingUser) return
+    const amount = Number(coinAmountInput)
+    if (!Number.isInteger(amount) || amount < 1 || amount > 10000) {
+      alert('지급 코인은 1~10,000 사이 정수로 입력해주세요.')
+      return
+    }
+    if (!window.confirm(`${managingUser.email} 사용자에게 ${amount}코인을 지급할까요?`)) return
+    const user = managingUser
+    setWorkingUserId(user.userId)
+    try {
+      const res = await api.post(`/admin/users/${user.userId}/coins`, {
+        amount,
+        reason: coinReasonInput.trim() || null,
+      })
+      setManagingUser(res.data) // 갱신된 잔액을 모달에 즉시 반영
+      setCoinAmountInput('')
+      setCoinReasonInput('')
+      fetchUsers()
+    } catch (err) {
+      alert(getApiErrorMessage(err, '코인 지급에 실패했어요.'))
+    } finally {
+      setWorkingUserId(null)
+    }
   }
 
   const handleBan = async () => {
@@ -689,7 +720,10 @@ export default function AdminPage() {
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, pinned: e.target.checked }))}
                     className="h-4 w-4 accent-primary"
                   />
-                  <span className="text-xs font-bold text-dark">📌 상단 고정</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-dark">
+                    <img {...iconProps('pin', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+                    상단 고정
+                  </span>
                 </label>
                 <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-card px-3 py-2">
                   <input
@@ -737,8 +771,9 @@ export default function AdminPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           {notice.pinned && (
-                            <span className="flex-shrink-0 rounded border border-line bg-accent px-1 py-0.5 text-[0.5625rem] font-black text-dark">
-                              📌 고정
+                            <span className="inline-flex flex-shrink-0 items-center gap-0.5 rounded border border-line bg-accent px-1 py-0.5 text-[0.5625rem] font-black text-dark">
+                              <img {...iconProps('pin', 12)} alt="" className="w-3 h-3 object-contain" />
+                              고정
                             </span>
                           )}
                           {notice.popup && (
@@ -831,6 +866,38 @@ export default function AdminPage() {
                   {managingUser.isAdmin ? '관리자' : USER_STATUS[managingUser.status]?.label || managingUser.status}
                 </p>
               </div>
+
+              {managingUser.status === 'ACTIVE' && (
+                <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+                  <p className="text-xs font-black text-sub">이벤트 코인 지급</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={10000}
+                      value={coinAmountInput}
+                      onChange={(e) => setCoinAmountInput(e.target.value)}
+                      placeholder="지급량"
+                      className="w-24 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                    />
+                    <input
+                      value={coinReasonInput}
+                      onChange={(e) => setCoinReasonInput(e.target.value)}
+                      maxLength={200}
+                      placeholder="지급 사유 (운영 기록용, 선택)"
+                      className="min-w-[160px] flex-1 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGrantCoins}
+                      disabled={workingUserId === managingUser.userId || !coinAmountInput}
+                      className="btn-retro-secondary px-4 py-2 text-xs disabled:opacity-50"
+                    >
+                      {workingUserId === managingUser.userId ? '처리 중...' : '지급'}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {managingUser.status !== 'BANNED' && (
                 <div>

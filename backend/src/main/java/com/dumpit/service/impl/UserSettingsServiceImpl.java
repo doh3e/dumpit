@@ -51,6 +51,9 @@ public class UserSettingsServiceImpl implements UserSettingsService {
         if (request.notificationsEnabled() != null) {
             settings.updateNotificationsEnabled(request.notificationsEnabled());
         }
+        if (request.briefingEnabled() != null) {
+            settings.updateBriefingEnabled(request.briefingEnabled());
+        }
         if (request.notificationThresholds() != null) {
             settings.updateNotificationThresholds(normalizeThresholds(request.notificationThresholds()));
         }

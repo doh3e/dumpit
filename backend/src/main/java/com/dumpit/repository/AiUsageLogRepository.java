@@ -13,9 +13,14 @@ public interface AiUsageLogRepository extends JpaRepository<AiUsageLog, UUID> {
 
     long countByCreatedAtGreaterThanEqual(LocalDateTime since);
 
+    // 기준은 로그 자신의 생성 시각이다 — ActivityLogRepository와 같은 이유.
     @Modifying
-    @Query("DELETE FROM AiUsageLog l WHERE l.user.withdrawnAt < :cutoff")
-    int deleteWithdrawnUserLogsBefore(@Param("cutoff") LocalDateTime cutoff);
+    @Query("DELETE FROM AiUsageLog l WHERE l.createdAt < :cutoff")
+    int deleteLogsCreatedBefore(@Param("cutoff") LocalDateTime cutoff);
+
+    @Modifying
+    @Query("DELETE FROM AiUsageLog l WHERE l.user = :user")
+    int hardDeleteByUser(@Param("user") com.dumpit.entity.User user);
 
     @Query("""
         SELECT COALESCE(SUM(l.cost), 0) FROM AiUsageLog l

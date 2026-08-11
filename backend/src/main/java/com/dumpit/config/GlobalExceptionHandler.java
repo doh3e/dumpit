@@ -2,6 +2,8 @@ package com.dumpit.config;
 
 import com.dumpit.exception.ApiException;
 import com.dumpit.service.AiUsageLimitExceededException;
+import com.dumpit.service.GoogleUserUpserter;
+import com.dumpit.service.MobileGoogleTokenVerifier;
 import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -68,6 +71,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AiUsageLimitExceededException.class)
     public ResponseEntity<Map<String, Object>> handleAiUsageLimit(AiUsageLimitExceededException ex) {
         return error(HttpStatus.TOO_MANY_REQUESTS, "AI_USAGE_LIMIT_EXCEEDED", ex.getMessage());
+    }
+
+    @ExceptionHandler(MobileGoogleTokenVerifier.InvalidMobileTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidMobileToken(
+            MobileGoogleTokenVerifier.InvalidMobileTokenException ex) {
+        return error(HttpStatus.UNAUTHORIZED, "INVALID_GOOGLE_TOKEN",
+                "구글 로그인 검증에 실패했습니다. 다시 시도해주세요.");
+    }
+
+    @ExceptionHandler(GoogleUserUpserter.AccountInactiveException.class)
+    public ResponseEntity<Map<String, Object>> handleAccountInactive(
+            GoogleUserUpserter.AccountInactiveException ex) {
+        return error(HttpStatus.FORBIDDEN, "ACCOUNT_INACTIVE", "사용할 수 없는 계정입니다.");
+    }
+
+    // 매핑 없는 경로는 인증 유저 기준 여기까지 내려온다(미인증은 시큐리티가 401로 먼저 끊음) —
+    // 핸들러가 없으면 catch-all이 500 + ERROR 로그 + Sentry 전송으로 부풀리므로 404로 고정.
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNoResource(NoResourceFoundException ex) {
+        return error(HttpStatus.NOT_FOUND, "NOT_FOUND", "요청한 경로를 찾을 수 없습니다.");
     }
 
     @ExceptionHandler(Exception.class)

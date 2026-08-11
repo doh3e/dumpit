@@ -38,7 +38,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public boolean send(String to, String subject, String html) {
         if (!enabled) {
-            log.warn("Email send skipped (RESEND_API_KEY not configured): to={}, subject={}", to, subject);
+            log.warn("Email send skipped (RESEND_API_KEY not configured): subject={}", subject);
             return false;
         }
 
@@ -58,7 +58,8 @@ public class EmailServiceImpl implements EmailService {
                     .retrieve()
                     .toBodilessEntity();
 
-            log.info("Email sent: to={}, subject={}", to, subject);
+            // 수신자 주소는 남기지 않는다 — 운영 로그에 이용자 이메일이 쌓이면 안 된다
+            log.info("Email sent: subject={}", subject);
             return true;
 
         } catch (RestClientResponseException e) {

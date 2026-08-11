@@ -150,4 +150,18 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
           AND t.deletedAt IS NULL
     """)
     int softDeleteByUser(@Param("user") User user, @Param("deletedAt") LocalDateTime deletedAt);
+
+    // 탈퇴가 찍은 시각과 정확히 일치하는 행만 되살린다 — 사용자가 직접 지운 태스크는 부활하지 않는다.
+    @Modifying
+    @Query("""
+        UPDATE Task t
+        SET t.deletedAt = NULL
+        WHERE t.user = :user
+          AND t.deletedAt = :deletedAt
+    """)
+    int restoreByUser(@Param("user") User user, @Param("deletedAt") LocalDateTime deletedAt);
+
+    @Modifying
+    @Query("DELETE FROM Task t WHERE t.user = :user")
+    int hardDeleteByUser(@Param("user") User user);
 }

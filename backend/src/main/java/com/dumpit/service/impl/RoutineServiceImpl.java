@@ -1,5 +1,6 @@
 package com.dumpit.service.impl;
 
+import com.dumpit.common.ActiveHours;
 import com.dumpit.common.SnapshotText;
 import com.dumpit.dto.RoutineRequest;
 import com.dumpit.entity.Routine;
@@ -14,6 +15,7 @@ import com.dumpit.repository.UserRepository;
 import com.dumpit.service.ActivityLogService;
 import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.RoutineService;
+import com.dumpit.service.UserSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,7 @@ public class RoutineServiceImpl implements RoutineService {
     private final UserRepository userRepository;
     private final DeadlineNudgeService deadlineNudgeService;
     private final ActivityLogService activityLogService;
+    private final UserSettingsService userSettingsService;
 
     @Override
     @Transactional(readOnly = true)
@@ -207,7 +210,11 @@ public class RoutineServiceImpl implements RoutineService {
 
         LocalTime startTime = routineStartTime(routine);
         LocalTime endTime = routine.getRoutineEndTime();
-        LocalDateTime deadline = LocalDateTime.of(date, endTime != null ? endTime : LocalTime.of(23, 59));
+        // 종료시각을 지정하지 않은 루틴의 기본 마감 = 사용자 활동 종료 시각 (2026-07-24 사용자 피드백,
+        // AI "오늘까지" 해석과 동일 철학). wrap(야행성)이면 다음날 새벽까지.
+        LocalDateTime deadline = endTime != null
+                ? LocalDateTime.of(date, endTime)
+                : defaultDeadline(userSettingsService.activeHours(routine.getUser().getEmail()), date, startTime, now);
         Task task = Task.of(
                 routine.getUser(),
                 routine.getName(),
@@ -239,6 +246,19 @@ public class RoutineServiceImpl implements RoutineService {
             routine.setNextRunAt(calculateNextRunAt(routine, now));
             return false;
         }
+    }
+
+    /**
+     * 종료시각 미지정 루틴의 기본 마감. 활동 종료가 이미 지났거나(늦은 생성) 태스크 시작시각보다
+     * 이르면 종전 기본(23:59)으로 폴백해 시작>마감 역전을 막는다.
+     */
+    static LocalDateTime defaultDeadline(ActiveHours activeHours, LocalDate date, LocalTime startTime, LocalDateTime now) {
+        LocalDateTime deadline = activeHours.dayEnd(date);
+        LocalDateTime startAt = startTime != null ? LocalDateTime.of(date, startTime) : null;
+        if (!deadline.isAfter(now) || (startAt != null && !deadline.isAfter(startAt))) {
+            return LocalDateTime.of(date, LocalTime.of(23, 59));
+        }
+        return deadline;
     }
 
     private LocalDateTime calculateNextRunAt(Routine routine, LocalDateTime after) {

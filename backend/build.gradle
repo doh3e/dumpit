@@ -44,6 +44,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
 
+    // 모바일 구글 ID 토큰 JWKS 로컬 검증
+    implementation 'org.springframework.security:spring-security-oauth2-jose'
+
     // Spring Data Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.session:spring-session-data-redis'
@@ -65,6 +68,9 @@ dependencies {
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // FCM v1 직접 발송 (스프링 BOM 밖 — 버전 명시)
+    implementation 'com.google.firebase:firebase-admin:9.4.3'
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

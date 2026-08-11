@@ -289,10 +289,12 @@ class TaskApiTest extends ApiIntegrationTestBase {
 
         mockMvc.perform(get("/auth/me").with(asUser(USER_A)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.coins").value(30));
+                .andExpect(jsonPath("$.coins").value(32));
     }
 
     // ---------- 코인 지급·회수·점감 (docs/superpowers/specs/2026-07-14-coin-anti-farming-design.md) ----------
+    // seedTask(마감 +3일, AI점수 없음)의 지급액: 실시간 합성 p = 0.6*0.6 + 0.4*0.5 = 0.56 → (int)(10 + 22.4) = 32
+    // (2026-07-24 코인 지급을 미리보기와 같은 PriorityCalculator 실시간 값으로 통일)
 
     private void completeTask(Task task, int expectedCoins) throws Exception {
         mockMvc.perform(patch("/tasks/" + task.getTaskId()).with(asUser(USER_A))
@@ -311,7 +313,7 @@ class TaskApiTest extends ApiIntegrationTestBase {
     @Test
     void 완료_해제하면_지급액_그대로_회수_마감조작해도_무효() throws Exception {
         Task task = seedTask(userA, "완료 후 해제");
-        completeTask(task, 30);
+        completeTask(task, 32);
 
         // 완료 후 마감을 과거로 조작 — 회수액이 재계산(마감지남 5코인)되면 +25 증식 구멍
         jdbcTemplate.update("UPDATE tasks SET deadline = ? WHERE task_id = ?",
@@ -329,7 +331,7 @@ class TaskApiTest extends ApiIntegrationTestBase {
     @Test
     void 오늘_완료한_태스크_삭제하면_코인회수() throws Exception {
         Task task = seedTask(userA, "완료 후 삭제");
-        completeTask(task, 30);
+        completeTask(task, 32);
 
         mockMvc.perform(delete("/tasks/" + task.getTaskId()).with(asUser(USER_A)))
                 .andExpect(status().isNoContent());
@@ -340,29 +342,29 @@ class TaskApiTest extends ApiIntegrationTestBase {
     @Test
     void 어제_완료한_태스크_삭제는_회수하지_않는다() throws Exception {
         Task task = seedTask(userA, "어제 완료분 정리");
-        completeTask(task, 30);
+        completeTask(task, 32);
         jdbcTemplate.update("UPDATE tasks SET completed_at = ? WHERE task_id = ?",
                 LocalDateTime.now().minusDays(1), task.getTaskId());
 
         mockMvc.perform(delete("/tasks/" + task.getTaskId()).with(asUser(USER_A)))
                 .andExpect(status().isNoContent());
 
-        assertCoinBalance(30);
+        assertCoinBalance(32);
     }
 
     @Test
     void 점감_하루_10개_초과_완료부터_5코인() throws Exception {
         for (int i = 0; i < 10; i++) {
-            completeTask(seedTask(userA, "할일 " + i), 30);
+            completeTask(seedTask(userA, "할일 " + i), 32);
         }
         completeTask(seedTask(userA, "11번째"), 5);
-        assertCoinBalance(10 * 30 + 5);
+        assertCoinBalance(10 * 32 + 5);
     }
 
     @Test
     void 잔액부족해도_해제_회수는_그대로_차감_음수허용() throws Exception {
         Task task = seedTask(userA, "벌고 쓰고 해제");
-        completeTask(task, 30);
+        completeTask(task, 32);
         // 지급받은 코인을 써버린 상황 재현 — 회수를 잔액에서 클램프하면 무한 증식 구멍
         jdbcTemplate.update("UPDATE users SET coin_balance = 10 WHERE email = ?", USER_A);
 
@@ -371,7 +373,7 @@ class TaskApiTest extends ApiIntegrationTestBase {
                         .content(objectMapper.writeValueAsBytes(Map.of("status", "TODO"))))
                 .andExpect(status().isOk());
 
-        assertCoinBalance(-20);
+        assertCoinBalance(-22);
     }
 
     @Test
