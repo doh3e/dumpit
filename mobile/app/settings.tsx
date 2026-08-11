@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
@@ -27,12 +27,20 @@ export default function SettingsScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { mode, setMode } = useThemeMode();
-  const { signOut } = useAuth();
+  const { me, signOut } = useAuth();
   const toast = useToast();
 
   const [withdrawStage, setWithdrawStage] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
+
+  // 로그인 계정이 바뀌면(로그아웃·탈퇴·재로그인) 탈퇴 확인 단계를 처음으로 되돌린다.
+  // 탈퇴는 되돌리기 어려운 결정이라, 확인 입력창만 남은 채로 재진입해 안내 다이얼로그를
+  // 건너뛰는 일이 없어야 한다.
+  useEffect(() => {
+    setWithdrawStage(false);
+    setConfirmText('');
+  }, [me?.email]);
 
   const confirmSignOut = () => {
     Alert.alert('로그아웃', '정말 로그아웃할까요?', [
@@ -56,7 +64,7 @@ export default function SettingsScreen() {
     setWithdrawing(true);
     try {
       await deleteAccount();          // 서버가 계정을 잠그고 30일 뒤 완전 삭제를 예약
-      await signOut();                // 구글 세션 해제 + 로컬 정리 → 로그인 화면
+      await signOut({ afterWithdrawal: true });   // 구글 세션 해제 + 로컬 정리 → 로그인 화면
     } catch (e) {
       toast.show(getApiErrorMessage(e, '탈퇴 처리에 실패했어요.'));
       setWithdrawing(false);

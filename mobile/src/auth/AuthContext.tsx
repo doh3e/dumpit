@@ -37,7 +37,7 @@ type AuthState = {
   me: MeResponse | null;
   loading: boolean;
   signInWithGoogle(): Promise<void>;
-  signOut(): Promise<void>;
+  signOut(opts?: { afterWithdrawal?: boolean }): Promise<void>;
   refresh(): Promise<void>;
 };
 
@@ -79,8 +79,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const signOut = useCallback(async () => {
-    await unregisterPushDevice(); // 세션이 살아있는 동안 서버에서 기기 토큰을 지운다
+  /**
+   * @param afterWithdrawal 탈퇴 직후 호출 — 서버가 탈퇴 처리에서 이미 기기 토큰을 지웠고 계정도
+   *   비활성이라, 기기 토큰 해제 요청은 어차피 401로 막힌다. 헛되이 보내지 않는다.
+   */
+  const signOut = useCallback(async ({ afterWithdrawal = false } = {}) => {
+    // 세션이 살아있는 동안 서버에서 기기 토큰을 지운다
+    if (!afterWithdrawal) await unregisterPushDevice();
     void clearWidgetMirrors(); // 위젯 미러도 함께 비운다 — 다음 401까지 이전 유저 목록이 남지 않도록
     try { await logout(); } catch { /* 서버 실패해도 로컬은 정리 */ }
     try { await GoogleSignin.signOut(); } catch { /* noop */ }

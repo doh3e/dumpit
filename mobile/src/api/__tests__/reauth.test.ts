@@ -85,6 +85,23 @@ it('reauth 내부 요청의 401은 pending을 기다리지 않고 즉시 실패�
   expect(calls()).toBe(2);   // 원요청 + reauth 내부 /auth/me
 });
 
+it('탈퇴·밴 계정의 401(SESSION_INVALIDATED)은 조용히 재로그인하지 않는다', async () => {
+  const { instance, calls } = makeInstance([{ status: 401, data: { code: 'SESSION_INVALIDATED' } }]);
+  const reauth = jest.fn();
+  installSilentReauth(instance, reauth);
+  await expect(instance.delete('/push/devices/abc')).rejects.toMatchObject({ response: { status: 401 } });
+  expect(reauth).not.toHaveBeenCalled();
+  expect(calls()).toBe(1);
+});
+
+it('본문이 JSON이 아닌 401은 종전대로 reauth를 시도한다', async () => {
+  const { instance } = makeInstance([{ status: 401, data: '<html>gateway</html>' }, { status: 200, data: 'ok' }]);
+  const reauth = jest.fn().mockResolvedValue(true);
+  installSilentReauth(instance, reauth);
+  await expect(instance.get('/x')).resolves.toMatchObject({ data: 'ok' });
+  expect(reauth).toHaveBeenCalledTimes(1);
+});
+
 it('동시 401 여러 건이면 reauth는 한 번만 돈다', async () => {
   const { instance } = makeInstance([
     { status: 401 }, { status: 401 }, { status: 200, data: 1 }, { status: 200, data: 2 },
