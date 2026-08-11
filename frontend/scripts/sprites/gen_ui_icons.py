@@ -757,6 +757,228 @@ def draw_checkbox_on():
     return img
 
 
+def draw_clipboard():
+    """📋 대시보드 — 크림 보드 + 스틸 클립 + 체크 줄."""
+    img = new_canvas()
+    rect(img, 4, 3, 15, 17, hx(AMBER))
+    rect(img, 5, 4, 14, 16, hx(CREAM_HI))
+    # 클립
+    rect(img, 7, 2, 12, 4, hx(STEEL))
+    row(img, 8, 11, 2, hx(STEEL_HI))
+    # 줄 + 체크 점
+    for y in (7, 10, 13):
+        put(img, 7, y, hx(TEAL))
+        row(img, 9, 12, y, hx(STEEL))
+    outline(img, EDGE)
+    return img
+
+
+def draw_rocket():
+    """🚀 다 비웠어요 — 레드 노즈 + 크림 몸통 + 불꽃."""
+    img = new_canvas()
+    # 노즈 콘
+    for i, (x0, x1) in enumerate([(9, 10), (8, 11), (8, 11)]):
+        row(img, x0, x1, 1 + i, hx(RED))
+    # 몸통
+    rect(img, 7, 4, 12, 12, hx(CREAM_HI))
+    col(img, 7, 4, 12, hx(CREAM))
+    # 창
+    disc(img, 10.0, 7.0, 1.7, hx(TEAL))
+    put(img, 9, 6, hx(TEAL_HI))
+    # 핀 (좌우 날개)
+    for i in range(3):
+        put(img, 6 - i if i < 2 else 4, 10 + i, hx(RED))
+        put(img, 6, 10 + i, hx(RED))
+        put(img, 13, 10 + i, hx(RED_DK))
+        put(img, 13 + (i if i < 2 else 1), 10 + i, hx(RED_DK))
+    row(img, 4, 6, 12, hx(RED))
+    row(img, 13, 15, 12, hx(RED_DK))
+    # 불꽃
+    rect(img, 8, 13, 11, 14, hx(GOLD))
+    row(img, 9, 10, 15, hx(AMBER))
+    put(img, 9, 16, hx(RED))
+    put(img, 10, 16, hx(RED))
+    put(img, 9, 17, hx(GOLD_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_target():
+    """🎯 집중 대상 — 레드·크림 동심원 과녁."""
+    img = new_canvas()
+    disc(img, 9.5, 9.5, 7.2, hx(RED))
+    disc(img, 9.5, 9.5, 5.2, hx(CREAM_HI))
+    disc(img, 9.5, 9.5, 3.2, hx(RED))
+    disc(img, 9.5, 9.5, 1.4, hx(GRAPHITE))
+    put(img, 6, 5, hx(RED_HI))
+    put(img, 7, 4, hx(RED_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_coffee():
+    """☕ 휴식 — 틸 머그 + 김."""
+    img = new_canvas()
+    # 머그
+    rect(img, 4, 8, 12, 16, hx(TEAL))
+    col(img, 4, 8, 16, hx(TEAL_HI))
+    row(img, 4, 12, 16, hx(TEAL_DK))
+    # 커피 표면
+    row(img, 5, 11, 8, hx(AMBER))
+    # 손잡이
+    for (x, y) in [(13, 10), (14, 10), (15, 11), (15, 12), (14, 13), (13, 13)]:
+        put(img, x, y, hx(TEAL_DK))
+    # 김 두 줄
+    for (x, y) in [(6, 5), (6, 4), (7, 3), (10, 5), (10, 4), (9, 3)]:
+        put(img, x, y, hx(STEEL_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_party():
+    """🎉 축하 — 좌하단 꼭짓점에서 우상단으로 벌어지는 폭죽 콘 + 색색 콘페티."""
+    img = new_canvas()
+    # 콘 — 꼭짓점 O(2,17), 우상 방향 쐐기
+    for y in range(GRID):
+        for x in range(GRID):
+            u, v = x - 2, 17 - y
+            if u < 0 or v < 0:
+                continue
+            if v <= 1.4 * u and v >= 0.4 * u and u + v <= 11:
+                put(img, x, y, hx(AMBER))
+    # 콘 줄무늬 (입구 쪽)
+    for y in range(GRID):
+        for x in range(GRID):
+            u, v = x - 2, 17 - y
+            if 0 <= u and 0 <= v and 1.4 * u >= v >= 0.4 * u:
+                if 9 <= u + v <= 11:
+                    put(img, x, y, hx(GOLD))
+                elif 6 <= u + v <= 7:
+                    put(img, x, y, hx(RED))
+    put(img, 2, 17, hx(AMBER_HI))
+    put(img, 3, 16, hx(AMBER_HI))
+    # 콘페티
+    for (x, y, c) in [
+        (7, 4, GOLD), (10, 2, TEAL), (13, 4, RED), (16, 2, GOLD_HI),
+        (12, 7, GREEN_HI), (15, 7, TEAL_HI), (17, 5, RED_HI),
+        (14, 10, GOLD), (17, 9, TEAL), (16, 13, RED),
+    ]:
+        put(img, x, y, hx(c))
+        put(img, x + 1, y, hx(c))
+    outline(img, EDGE)
+    return img
+
+
+def draw_star5():
+    """🌟 별 기록 — 골드 5각 별."""
+    img = new_canvas()
+    import math as _math
+    cx, cy, r_out, r_in = 9.5, 10.0, 7.6, 3.2
+    pts = []
+    for i in range(10):
+        ang = -_math.pi / 2 + i * _math.pi / 5
+        r = r_out if i % 2 == 0 else r_in
+        pts.append((cx + r * _math.cos(ang), cy + r * _math.sin(ang)))
+    # 폴리곤 채움 (짝수-홀수 규칙)
+    for y in range(GRID):
+        for x in range(GRID):
+            px, py = x + 0.5, y + 0.5
+            inside = False
+            j = len(pts) - 1
+            for i in range(len(pts)):
+                xi, yi = pts[i]
+                xj, yj = pts[j]
+                if (yi > py) != (yj > py) and px < (xj - xi) * (py - yi) / (yj - yi) + xi:
+                    inside = not inside
+                j = i
+            if inside:
+                put(img, x, y, hx(GOLD))
+    put(img, 8, 6, hx(GOLD_HI))
+    put(img, 9, 5, hx(GOLD_HI))
+    put(img, 8, 7, hx(GOLD_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_chart():
+    """📊 통계 — 3색 막대그래프."""
+    img = new_canvas()
+    # 바닥선
+    row(img, 3, 16, 16, hx(STEEL_DK))
+    # 막대: 레드(낮음)·골드(중간)·틸(높음)
+    rect(img, 4, 11, 6, 15, hx(RED))
+    row(img, 4, 6, 11, hx(RED_HI))
+    rect(img, 8, 7, 10, 15, hx(GOLD))
+    row(img, 8, 10, 7, hx(GOLD_HI))
+    rect(img, 12, 4, 14, 15, hx(TEAL))
+    row(img, 12, 14, 4, hx(TEAL_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_palette():
+    """🎨 테마 — 앰버 팔레트 + 물감 4점."""
+    img = new_canvas()
+    disc(img, 9.5, 10.0, 7.0, hx(WOOD))
+    # 엄지 구멍 (우하단 파냄)
+    for y in range(GRID):
+        for x in range(GRID):
+            dx, dy = x + 0.5 - 14.0, y + 0.5 - 13.5
+            if dx * dx + dy * dy <= 2.6 * 2.6:
+                put(img, x, y, (0, 0, 0, 0))
+    put(img, 5, 5, hx(CREAM_HI))
+    put(img, 6, 4, hx(CREAM_HI))
+    # 물감
+    for (x, y, c) in [(6, 7, RED), (10, 5, TEAL), (13, 7, GOLD), (5, 12, GREEN)]:
+        put(img, x, y, hx(c))
+        put(img, x + 1, y, hx(c))
+        put(img, x, y + 1, hx(c))
+        put(img, x + 1, y + 1, hx(c))
+    outline(img, EDGE)
+    return img
+
+
+def draw_bell():
+    """🔔 알림 — 골드 종 + 추."""
+    img = new_canvas()
+    # 꼭지
+    rect(img, 9, 2, 10, 3, hx(GOLD))
+    # 몸통 — 위가 좁고 아래로 벌어지는 종
+    disc(img, 9.5, 8.0, 4.2, hx(GOLD))
+    for dy in range(4):
+        y = 10 + dy
+        half = 4 + (dy // 2)
+        row(img, 10 - half - 0, 9 + half, y, hx(GOLD))
+    disc(img, 7.8, 6.2, 1.5, hx(GOLD_HI))
+    # 치마단
+    row(img, 4, 15, 13, hx(AMBER))
+    # 추
+    rect(img, 9, 14, 10, 15, hx(GRAPHITE))
+    outline(img, EDGE)
+    return img
+
+
+def draw_clock():
+    """🕐 시간 — 크림 문자반 + 스틸 링 + 바늘."""
+    img = new_canvas()
+    disc(img, 9.5, 9.5, 7.2, hx(STEEL))
+    disc(img, 9.5, 9.5, 6.0, hx(CREAM_HI))
+    # 눈금 4방향
+    put(img, 9, 4, hx(STEEL_DK))
+    put(img, 9, 15, hx(STEEL_DK))
+    put(img, 4, 9, hx(STEEL_DK))
+    put(img, 15, 9, hx(STEEL_DK))
+    # 바늘 — 10시 10분
+    col(img, 9, 6, 9, hx(GRAPHITE))
+    put(img, 9, 9, hx(GRAPHITE))
+    put(img, 10, 9, hx(GRAPHITE))
+    for t in range(3):
+        put(img, 10 + t, 9 - (t + 1) // 2, hx(GRAPHITE))
+    put(img, 6, 5, hx(CREAM_HI))
+    outline(img, EDGE)
+    return img
+
+
 ICONS = {
     'ui_sparkle': draw_sparkle,
     'ui_pencil': draw_pencil,
@@ -789,6 +1011,16 @@ ICONS = {
     'ui_ban': draw_ban,
     'ui_checkbox_off': draw_checkbox_off,
     'ui_checkbox_on': draw_checkbox_on,
+    'ui_clipboard': draw_clipboard,
+    'ui_rocket': draw_rocket,
+    'ui_target': draw_target,
+    'ui_coffee': draw_coffee,
+    'ui_party': draw_party,
+    'ui_star': draw_star5,
+    'ui_chart': draw_chart,
+    'ui_palette': draw_palette,
+    'ui_bell': draw_bell,
+    'ui_clock': draw_clock,
 }
 
 

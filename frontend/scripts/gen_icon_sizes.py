@@ -38,11 +38,21 @@ ICONS = {
     'study': ('ui_books.png', [12, 14]),
     'appointment': ('ui_calendar.png', [12, 14]),
     'chore': ('ui_broom.png', [12, 14]),
-    'routine': ('ui_loop.png', [12, 14]),
+    'routine': ('ui_loop.png', [12, 14, 16]),
     'health': ('ui_dumbbell.png', [12, 14]),
     'hobby': ('ui_gamepad.png', [12, 14]),
     'other': ('ui_pin.png', [12, 14]),
     'eye': ('ui_eye.png', [16]),
+    # 문구·도움말 장식 (Phase C)
+    'sparkle': ('ui_sparkle.png', [14]),
+    'moon': ('ui_moon.png', [14]),
+    'pin': ('ui_pin.png', [12, 14]),
+    'bulb': ('ui_bulb.png', [16]),
+    'bubble': ('ui_bubble.png', [16]),
+    'clipboard': ('ui_clipboard.png', [16]),
+    'tomato': ('ui_tomato.png', [16]),
+    'party': ('ui_party.png', [14]),
+    'rocket': ('ui_rocket.png', [24]),
 }
 DPRS = [1, 1.25, 1.5, 2, 3]
 

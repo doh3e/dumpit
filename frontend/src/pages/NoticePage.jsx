@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import MarkdownRenderer from '../components/MarkdownRenderer'
+import { iconProps } from '../assets/icons'
 
 function parseDate(value) {
   if (!value) return null
@@ -44,8 +45,8 @@ function NoticeRow({ notice, isPinned, expanded, onToggle }) {
       >
         <span className="flex min-w-0 items-center gap-1.5">
           {isPinned && (
-            <span aria-label="고정 공지" className="flex-shrink-0 text-xs">
-              📌
+            <span aria-label="고정 공지" className="flex-shrink-0">
+              <img {...iconProps('pin', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
             </span>
           )}
           <span className={`truncate text-sm text-dark ${expanded ? 'font-black' : 'font-bold'}`}>{notice.title}</span>

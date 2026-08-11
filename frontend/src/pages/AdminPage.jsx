@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import MarkdownRenderer from '../components/MarkdownRenderer'
+import { iconProps } from '../assets/icons'
 
 const STATUS_LABEL = {
   PENDING: { label: '대기 중', color: 'tone-urgent-soon text-warn' },
@@ -719,7 +720,10 @@ export default function AdminPage() {
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, pinned: e.target.checked }))}
                     className="h-4 w-4 accent-primary"
                   />
-                  <span className="text-xs font-bold text-dark">📌 상단 고정</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-dark">
+                    <img {...iconProps('pin', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+                    상단 고정
+                  </span>
                 </label>
                 <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-card px-3 py-2">
                   <input
@@ -767,8 +771,9 @@ export default function AdminPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           {notice.pinned && (
-                            <span className="flex-shrink-0 rounded border border-line bg-accent px-1 py-0.5 text-[0.5625rem] font-black text-dark">
-                              📌 고정
+                            <span className="inline-flex flex-shrink-0 items-center gap-0.5 rounded border border-line bg-accent px-1 py-0.5 text-[0.5625rem] font-black text-dark">
+                              <img {...iconProps('pin', 12)} alt="" className="w-3 h-3 object-contain" />
+                              고정
                             </span>
                           )}
                           {notice.popup && (

@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom'
+import { iconProps } from '../assets/icons'
 
 const AI_COSTS = [
   { label: '일일 총 한도', cost: '100점', highlight: true },
@@ -11,12 +12,13 @@ const AI_COSTS = [
   { label: '그 외 모든 활동', cost: '무료' },
 ]
 
+// icon: 도트 아이콘 이름 — 모바일 help.tsx와 동일 배열 유지 (도트 통일 Phase C)
 const FEATURES = [
-  { icon: '📋', title: '대시보드', desc: '태스크를 등록하면 AI가 우선순위를 분석해줘요. 등록한 태스크는 마감 시간과 우선순위에 따라 하루일과표에 등록돼요.' },
-  { icon: '🧠', title: '브레인 덤프', desc: '머릿속의 생각을 그대로 쏟아내면 AI가 각각의 독립된 태스크로 변환해줘요.' },
-  { icon: '💡', title: '아이디어 덤프', desc: '자유롭게 쏟아낸 생각을 AI가 계층 구조의 아이디어로 정리해줘요. 아이디어는 태스크로 전환할 수 있어요.' },
-  { icon: '🔁', title: '루틴', desc: '반복 일정을 설정하면 매일 자동으로 태스크가 생성돼요.' },
-  { icon: '🍅', title: '포모도로 타이머', desc: '정해둔 시간만큼 집중 후 휴식! 완료 시 코인을 획득해요.' },
+  { icon: 'clipboard', title: '대시보드', desc: '태스크를 등록하면 AI가 우선순위를 분석해줘요. 등록한 태스크는 마감 시간과 우선순위에 따라 하루일과표에 등록돼요.' },
+  { icon: 'bubble', title: '브레인 덤프', desc: '머릿속의 생각을 그대로 쏟아내면 AI가 각각의 독립된 태스크로 변환해줘요.' },
+  { icon: 'bulb', title: '아이디어 덤프', desc: '자유롭게 쏟아낸 생각을 AI가 계층 구조의 아이디어로 정리해줘요. 아이디어는 태스크로 전환할 수 있어요.' },
+  { icon: 'routine', title: '루틴', desc: '반복 일정을 설정하면 매일 자동으로 태스크가 생성돼요.' },
+  { icon: 'tomato', title: '포모도로 타이머', desc: '정해둔 시간만큼 집중 후 휴식! 완료 시 코인을 획득해요.' },
 ]
 
 export default function HelpModal({ onClose }) {
@@ -41,7 +43,10 @@ export default function HelpModal({ onClose }) {
         </div>
 
         <div className="mb-5 rounded-lg border-2 tone-urgent-soon px-4 py-3">
-          <p className="text-xs font-black text-secondary mb-1">🎉 베타 서비스 안내</p>
+          <p className="inline-flex items-center gap-1 text-xs font-black text-secondary mb-1">
+            <img {...iconProps('party', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+            베타 서비스 안내
+          </p>
           <p className="text-xs font-semibold text-sub leading-relaxed">
             Dumpit!은 현재 베타 서비스 중이에요. 모든 활동이 무료인 대신,
             AI를 활용하는 기능에는 일일 사용량 제한이 있습니다.
@@ -52,7 +57,7 @@ export default function HelpModal({ onClose }) {
         <div className="space-y-2 mb-5">
           {FEATURES.map(({ icon, title, desc }) => (
             <div key={title} className="flex gap-3 rounded-lg border border-line bg-card px-3 py-2">
-              <span className="text-base flex-shrink-0">{icon}</span>
+              <img {...iconProps(icon, 16)} alt="" className="w-4 h-4 flex-shrink-0 object-contain mt-0.5" />
               <div>
                 <p className="text-xs font-black text-dark">{title}</p>
                 <p className="text-[0.6875rem] font-semibold text-sub leading-snug">{desc}</p>
@@ -61,7 +66,10 @@ export default function HelpModal({ onClose }) {
           ))}
         </div>
 
-        <h3 className="font-galmuri font-bold text-sm text-dark mb-2">⚡ 일일 AI 사용량 안내</h3>
+        <h3 className="inline-flex items-center gap-1.5 font-galmuri font-bold text-sm text-dark mb-2">
+          <img {...iconProps('token', 16)} alt="" className="w-4 h-4 object-contain" />
+          일일 AI 사용량 안내
+        </h3>
         <div className="rounded-lg border-2 border-line overflow-hidden mb-1">
           {AI_COSTS.map(({ label, cost, highlight }) => (
             <div
