@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { PRIVACY_URL, TERMS_URL } from '../src/legal/links';
 import { useAuth } from '../src/auth/AuthContext';
 import { getApiErrorMessage } from '../src/api/client';
 import { fonts } from '../src/theme/typography';
@@ -60,6 +61,19 @@ export default function LoginScreen() {
           <Text style={[styles.error, { color: colors.warn, fontFamily: fonts.body }]}>{error}</Text>
         )}
       </View>
+
+      {/* 동의 고지 — 웹 로그인 화면과 동일한 문구 체계. 만 14세 미만은 이용할 수 없다(약관 제4조) */}
+      <Text style={[styles.consent, { color: colors.sub, fontFamily: fonts.body }]}>
+        로그인하면 만 14세 이상이며{' '}
+        <Text style={styles.consentLink} onPress={() => Linking.openURL(TERMS_URL)}>
+          서비스 이용약관
+        </Text>
+        {' '}및{' '}
+        <Text style={styles.consentLink} onPress={() => Linking.openURL(PRIVACY_URL)}>
+          개인정보처리방침
+        </Text>
+        에 동의하는 것으로 간주됩니다.
+      </Text>
     </View>
   );
 }
@@ -84,4 +98,6 @@ const styles = StyleSheet.create({
   // 에러 출현으로 버튼이 밀리지 않도록 자리를 항상 확보
   errorSlot: { minHeight: 32, marginTop: 8, justifyContent: 'flex-start' },
   error: { fontSize: 13, textAlign: 'center' },
+  consent: { fontSize: 11, lineHeight: 17, textAlign: 'center', maxWidth: 300 },
+  consentLink: { textDecorationLine: 'underline' },
 });

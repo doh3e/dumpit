@@ -16,9 +16,15 @@ export async function fetchMe(config?: AxiosRequestConfig): Promise<MeResponse> 
   return data;
 }
 
-export async function loginWithGoogleIdToken(idToken: string, meConfig?: AxiosRequestConfig): Promise<MeResponse> {
-  await api.post('/auth/mobile/google', { idToken });
-  return fetchMe(meConfig);
+export type LoginResult = MeResponse & {
+  /** 탈퇴 유예 기간 안에 돌아와 계정이 복구됐는지 — 서버 로그인 응답이 알려준다 */
+  restored: boolean;
+};
+
+export async function loginWithGoogleIdToken(idToken: string, meConfig?: AxiosRequestConfig): Promise<LoginResult> {
+  const { data } = await api.post('/auth/mobile/google', { idToken });
+  const me = await fetchMe(meConfig);
+  return { ...me, restored: data?.restored === true };
 }
 
 export async function logout(): Promise<void> {

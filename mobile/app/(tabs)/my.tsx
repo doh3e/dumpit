@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../../src/api/client';
 import { fetchOverdueTasks, fetchProfile, fetchStats, patchProfile } from '../../src/api/profile';
@@ -15,16 +15,22 @@ import { PixelSprite } from '../../src/components/shop/PixelSprite';
 import { categoryBars, formatFocusTotal, heatLevel, heatmapWeeks } from '../../src/my/stats';
 import { keys } from '../../src/query/keys';
 import { STATION_SPRITES, spriteFor } from '../../src/shop/spriteRegistry';
+import { PRIVACY_URL, TERMS_URL } from '../../src/legal/links';
 import { getCategory } from '../../src/tasks/constants';
 import { formatDeadline, toLocalDateString } from '../../src/tasks/dates';
 import { fonts } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
 
-const MENU: { emoji: string; label: string; href: Href }[] = [
+// url을 가진 항목은 웹 문서를 브라우저로 연다 — 약관·방침은 웹에 하나만 두고
+// 앱은 그것을 참조해야 개정이 스토어 재심사 없이 반영된다(src/legal/links.ts).
+const MENU: { emoji: string; label: string; href?: Href; url?: string }[] = [
   { emoji: '🛒', label: '상점', href: '/shop' as Href },
   { emoji: '⚙️', label: '설정', href: '/settings' as Href },
   { emoji: '📢', label: '공지사항', href: '/notices' as Href },
   { emoji: '❓', label: '도움말', href: '/help' as Href },
+  { emoji: '✉️', label: '문의하기', href: '/inquiry' as Href },
+  { emoji: '📄', label: '이용약관', url: TERMS_URL },
+  { emoji: '🔒', label: '개인정보처리방침', url: PRIVACY_URL },
 ];
 
 // 히트맵 4단계 — starlight 계열 (웹 star-log-0~3 대응)
@@ -262,7 +268,7 @@ export default function MyScreen() {
           {MENU.map((m, i) => (
             <Pressable
               key={m.label}
-              onPress={() => router.push(m.href)}
+              onPress={() => (m.url ? Linking.openURL(m.url) : router.push(m.href!))}
               accessibilityRole="button"
               accessibilityLabel={m.label}
               style={({ pressed }) => [

@@ -41,16 +41,20 @@ export default function SettingsScreen() {
   };
 
   const startWithdraw = () => {
-    Alert.alert('회원 탈퇴', '모든 데이터가 삭제되며 되돌릴 수 없어요.\n계속할까요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '계속', style: 'destructive', onPress: () => setWithdrawStage(true) },
-    ]);
+    Alert.alert(
+      '회원 탈퇴',
+      '탈퇴하면 바로 이용할 수 없고 기록도 볼 수 없어요.\n\n30일 안에 같은 구글 계정으로 다시 로그인하면 되돌릴 수 있어요. 30일이 지나면 완전히 삭제됩니다.\n\n계속할까요?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '계속', style: 'destructive', onPress: () => setWithdrawStage(true) },
+      ],
+    );
   };
 
   const doWithdraw = async () => {
     setWithdrawing(true);
     try {
-      await deleteAccount();          // 서버가 비식별화·데이터 삭제·세션 무효화
+      await deleteAccount();          // 서버가 계정을 잠그고 30일 뒤 완전 삭제를 예약
       await signOut();                // 구글 세션 해제 + 로컬 정리 → 로그인 화면
     } catch (e) {
       toast.show(getApiErrorMessage(e, '탈퇴 처리에 실패했어요.'));

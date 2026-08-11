@@ -1,6 +1,7 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import axios from 'axios';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { Alert } from 'react-native';
 import { fetchMe, loginWithGoogleIdToken, logout, type MeResponse } from '../api/auth';
 import { api } from '../api/client';
 import { bypassReauth, installSilentReauth } from '../api/reauth';
@@ -69,8 +70,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (result.type === 'cancelled') return;
     const idToken = result.data?.idToken;
     if (!idToken) throw new Error('구글에서 ID 토큰을 받지 못했어요.');
-    setMe(await loginWithGoogleIdToken(idToken));
+    const { restored, ...me } = await loginWithGoogleIdToken(idToken);
+    setMe(me);
     void registerPushDevice();
+    // 탈퇴 유예 중 다시 들어온 경우 — 서버가 계정과 기록을 이미 되살렸다
+    if (restored) {
+      Alert.alert('다시 오셨네요!', '탈퇴 신청이 취소되었어요.\n할 일과 아이디어, 루틴까지 예전 기록이 모두 그대로 돌아왔습니다.');
+    }
   }, []);
 
   const signOut = useCallback(async () => {
