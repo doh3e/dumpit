@@ -483,6 +483,46 @@ def draw_lock():
     return img
 
 
+def draw_moon():
+    """🌙 언젠가/다크 — 골드 초승달 (우상단이 파인 크레센트)."""
+    img = new_canvas()
+    disc(img, 9.5, 10.0, 6.6, hx(GOLD))
+    # 파냄 — 우상단으로 치우친 원
+    for y in range(GRID):
+        for x in range(GRID):
+            dx, dy = x + 0.5 - 12.6, y + 0.5 - 7.2
+            if dx * dx + dy * dy <= 5.6 * 5.6:
+                put(img, x, y, (0, 0, 0, 0))
+    # 왼쪽 바깥 림 하이라이트
+    for y in range(GRID):
+        for x in range(GRID):
+            dx, dy = x + 0.5 - 9.5, y + 0.5 - 10.0
+            d2 = dx * dx + dy * dy
+            if 5.4 * 5.4 <= d2 <= 6.6 * 6.6 and dx < -2.5 and img.load()[x, y][3] > 0:
+                put(img, x, y, hx(GOLD_HI))
+    put(img, 6, 14, hx(GOLD_PALE))
+    outline(img, EDGE)
+    return img
+
+
+def draw_calendar():
+    """📅 직접 마감/날짜 — 레드 헤더 달력 + 바인더 링 + 날짜 점."""
+    img = new_canvas()
+    rect(img, 3, 5, 16, 17, hx(CREAM_HI))
+    rect(img, 3, 5, 16, 8, hx(RED))
+    row(img, 3, 16, 5, hx(RED_HI))
+    # 바인더 링
+    for x in (6, 13):
+        rect(img, x, 3, x + 1, 5, hx(STEEL))
+        put(img, x, 3, hx(STEEL_DK))
+    # 날짜 점 3×3
+    for i, y in enumerate((10, 13, 16)):
+        for j, x in enumerate((5, 9, 13)):
+            rect(img, x, y, x + 1, y, hx(CREAM_DK) if (i + j) % 2 else hx(STEEL))
+    outline(img, EDGE)
+    return img
+
+
 ICONS = {
     'ui_sparkle': draw_sparkle,
     'ui_pencil': draw_pencil,
@@ -500,6 +540,8 @@ ICONS = {
     'ui_envelope': draw_envelope,
     'ui_document': draw_document,
     'ui_lock': draw_lock,
+    'ui_moon': draw_moon,
+    'ui_calendar': draw_calendar,
 }
 
 
