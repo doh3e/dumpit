@@ -32,6 +32,7 @@ ICONS = {
     'setting': ('setting_image.png', [20]),
     'download': ('download.png', [16]),
     'arrowhead': ('arrowheads.png', [14]),
+    'puzzle': ('ui_puzzle.png', [14]),
 }
 DPRS = [1, 1.25, 1.5, 2, 3]
 

@@ -9,6 +9,7 @@ import DeadlineModeField, { getTodayDeadline } from './DeadlineModeField'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 import { effectivePriority } from '../utils/priority'
 import { buildPriorityPatch } from '../utils/priorityPatch'
+import { iconProps } from '../assets/icons'
 
 const TASK_CATEGORIES = CATEGORIES.filter((category) => category.value !== 'ROUTINE')
 
@@ -295,7 +296,11 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             disabled={!aiUsage.hasEnough(3)}
             className="w-full text-xs font-bold text-secondary border-2 border-secondary rounded-lg py-2 hover:bg-chip transition-colors disabled:opacity-50"
           >
-            ✂️ AI로 쪼개기 (3~5개 서브태스크)
+            {/* 가위는 "아이디어→태스크 전환" 기호로 통일 — 쪼개기는 퍼즐 도트 (2026-08-11 결정) */}
+            <span className="inline-flex items-center justify-center gap-1.5">
+              <img {...iconProps('puzzle', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+              AI로 쪼개기 (3~5개 서브태스크)
+            </span>
           </button>
         )}
 

@@ -249,6 +249,240 @@ def draw_loop():
     return img
 
 
+def draw_scissors():
+    """✂️ 태스크 전환 — 스틸 날 X자 + 레드 링 손잡이."""
+    img = new_canvas()
+    # 날 두 개 — (4,3)→(13,12), (15,3)→(6,12) 굵기 2
+    for t in range(10):
+        x, y = 4 + t, 3 + t
+        put(img, x, y, hx(STEEL_HI))
+        put(img, x + 1, y, hx(STEEL))
+    for t in range(10):
+        x, y = 15 - t, 3 + t
+        put(img, x, y, hx(STEEL_HI))
+        put(img, x - 1, y, hx(STEEL))
+    # 축 나사
+    put(img, 9, 8, hx(GOLD))
+    put(img, 10, 8, hx(GOLD))
+    # 손잡이 링 (좌우)
+    for cx, cy in ((5.5, 15.0), (14.5, 15.0)):
+        for y in range(GRID):
+            for x in range(GRID):
+                dx, dy = x + 0.5 - cx, y + 0.5 - cy
+                d2 = dx * dx + dy * dy
+                if 1.6 * 1.6 <= d2 <= 3.2 * 3.2:
+                    put(img, x, y, hx(RED))
+    outline(img, EDGE)
+    return img
+
+
+def draw_puzzle():
+    """🧩 AI로 쪼개기 — 틸 퍼즐 조각(위 돌기 + 오른쪽 돌기)."""
+    img = new_canvas()
+    rect(img, 3, 6, 13, 17, hx(TEAL))
+    # 위 돌기
+    rect(img, 6, 3, 9, 6, hx(TEAL))
+    row(img, 7, 8, 2, hx(TEAL))
+    # 오른쪽 돌기
+    rect(img, 13, 10, 16, 13, hx(TEAL))
+    col(img, 17, 11, 12, hx(TEAL))
+    # 좌상단 하이라이트
+    row(img, 3, 5, 6, hx(TEAL_HI))
+    col(img, 3, 6, 9, hx(TEAL_HI))
+    put(img, 6, 3, hx(TEAL_HI))
+    put(img, 7, 2, hx(TEAL_HI))
+    # 우하단 그늘
+    row(img, 4, 13, 17, hx(TEAL_DK))
+    col(img, 13, 14, 17, hx(TEAL_DK))
+    put(img, 16, 13, hx(TEAL_DK))
+    outline(img, EDGE)
+    return img
+
+
+def draw_user():
+    """👤 MY — 크림 두상 + 둥근 어깨 실루엣."""
+    img = new_canvas()
+    disc(img, 9.5, 6.0, 3.9, hx(CREAM))
+    disc(img, 8.0, 4.6, 1.4, hx(CREAM_HI))
+    # 어깨 — 둥근 돔 (아래 잘린 원)
+    for y in range(GRID):
+        for x in range(GRID):
+            dx, dy = x + 0.5 - 9.5, y + 0.5 - 17.5
+            if dx * dx + dy * dy <= 6.4 * 6.4 and y >= 12 and y <= 17:
+                put(img, x, y, hx(CREAM))
+    # 어깨선 하이라이트·하단 그늘
+    for x in range(4, 16):
+        for y in range(11, 14):
+            dx, dy = x + 0.5 - 9.5, y + 0.5 - 17.5
+            d2 = dx * dx + dy * dy
+            if 5.4 * 5.4 <= d2 <= 6.4 * 6.4 and y >= 12:
+                put(img, x, y, hx(CREAM_HI))
+    row(img, 4, 15, 17, hx(CREAM_DK))
+    outline(img, EDGE)
+    return img
+
+
+def draw_megaphone():
+    """📢 공지 — 앰버 확성기(오른쪽 나팔) + 소리선."""
+    img = new_canvas()
+    # 몸통 — 오른쪽으로 넓어지는 혼
+    for x in range(3, 12):
+        spread = (x - 3) // 2
+        y0, y1 = 8 - spread, 12 + spread
+        col(img, x, y0, y1, hx(AMBER))
+    # 나팔 입구 (세로 밴드)
+    col(img, 12, 3, 17, hx(GOLD))
+    col(img, 13, 4, 16, hx(AMBER))
+    # 손잡이
+    rect(img, 5, 13, 8, 16, hx(RED))
+    # 상단 하이라이트
+    for x in range(3, 12):
+        spread = (x - 3) // 2
+        put(img, x, 8 - spread, hx(AMBER_HI))
+    # 소리선
+    put(img, 15, 6, hx(GOLD))
+    put(img, 16, 5, hx(GOLD))
+    put(img, 16, 10, hx(GOLD))
+    put(img, 17, 10, hx(GOLD))
+    put(img, 15, 14, hx(GOLD))
+    put(img, 16, 15, hx(GOLD))
+    outline(img, EDGE)
+    return img
+
+
+def draw_bubble():
+    """💭 브레인덤프 — 크림 생각 구름 + 꼬리 점 2개."""
+    img = new_canvas()
+    disc(img, 7.5, 7.0, 3.6, hx(CREAM_HI))
+    disc(img, 12.5, 7.5, 3.2, hx(CREAM_HI))
+    disc(img, 10.0, 9.5, 3.8, hx(CREAM_HI))
+    disc(img, 5.5, 9.0, 2.6, hx(CREAM_HI))
+    disc(img, 14.5, 9.5, 2.4, hx(CREAM_HI))
+    # 아랫면 살짝 톤 다운
+    for y in range(10, 14):
+        for x in range(GRID):
+            if img.load()[x, y][3] > 0:
+                put(img, x, y, hx(CREAM))
+    # 꼬리 점
+    rect(img, 6, 14, 7, 15, hx(CREAM))
+    put(img, 4, 17, hx(CREAM))
+    outline(img, EDGE)
+    return img
+
+
+def draw_cart():
+    """🛒 상점 — 틸 바구니 + 스틸 손잡이 + 바퀴."""
+    img = new_canvas()
+    # 손잡이
+    put(img, 2, 4, hx(STEEL))
+    put(img, 3, 4, hx(STEEL))
+    put(img, 4, 5, hx(STEEL))
+    put(img, 4, 6, hx(STEEL))
+    # 바구니 — 오른쪽 아래로 살짝 좁아지는 사다리꼴
+    for dy in range(6):
+        y = 6 + dy
+        x0 = 4 + (dy // 2)
+        x1 = 16 - (dy // 3)
+        row(img, x0, x1, y, hx(TEAL))
+    row(img, 4, 16, 6, hx(TEAL_HI))
+    # 바구니 살
+    for x in (7, 10, 13):
+        col(img, x, 8, 10, hx(TEAL_DK))
+    # 바퀴
+    disc(img, 7.5, 15.5, 2.1, hx(STEEL))
+    disc(img, 14.5, 15.5, 2.1, hx(STEEL))
+    put(img, 7, 15, hx(STEEL_HI))
+    put(img, 14, 15, hx(STEEL_HI))
+    put(img, 8, 16, hx(STEEL_DK))
+    put(img, 15, 16, hx(STEEL_DK))
+    outline(img, EDGE)
+    return img
+
+
+def draw_question():
+    """❓ 도움말 — 골드 물음표."""
+    img = new_canvas()
+    # 갈고리 — 링 상반부 + 오른쪽 하강
+    cx, cy = 9.5, 7.0
+    for y in range(GRID):
+        for x in range(GRID):
+            dx, dy = x + 0.5 - cx, y + 0.5 - cy
+            d2 = dx * dx + dy * dy
+            if 2.6 * 2.6 <= d2 <= 5.0 * 5.0 and (dy <= 0 or dx >= 1.2):
+                put(img, x, y, hx(GOLD))
+    # 목 — 중앙으로 꺾여 내려옴
+    col(img, 9, 11, 13, hx(GOLD))
+    col(img, 10, 11, 13, hx(GOLD))
+    # 점
+    rect(img, 9, 16, 10, 17, hx(GOLD))
+    # 하이라이트
+    put(img, 7, 3, hx(GOLD_HI))
+    put(img, 8, 3, hx(GOLD_HI))
+    put(img, 6, 4, hx(GOLD_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_envelope():
+    """✉️ 문의 — 크림 봉투 + 플랩 V선."""
+    img = new_canvas()
+    rect(img, 2, 5, 17, 15, hx(CREAM_HI))
+    # 플랩 — 양 끝에서 중앙(9·10, y=11)으로
+    for t in range(8):
+        y = 5 + t
+        if y > 11:
+            break
+        put(img, 2 + t, y, hx(CREAM_DK))
+        put(img, 17 - t, y, hx(CREAM_DK))
+    row(img, 9, 10, 11, hx(CREAM_DK))
+    put(img, 8, 10, hx(CREAM_DK))
+    put(img, 11, 10, hx(CREAM_DK))
+    # 아랫면 톤
+    row(img, 2, 17, 15, hx(CREAM))
+    outline(img, EDGE)
+    return img
+
+
+def draw_document():
+    """📄 약관 — 접힌 귀퉁이 문서 + 본문 줄."""
+    img = new_canvas()
+    rect(img, 4, 2, 15, 17, hx(CREAM_HI))
+    # 접힌 귀퉁이 (우상단) — 삼각형만큼 파내고 접힘 사선 + 접힌 면
+    for t in range(5):
+        row(img, 11 + t, 15, 2 + t, (0, 0, 0, 0))
+    for t in range(5):
+        put(img, 11 + t, 2 + t, hx(CREAM))       # 접힌 면 (사선 아래 한 줄)
+        put(img, 10 + t, 2 + t, hx(CREAM_DK))    # 접힘 사선
+    # 본문 줄
+    for y in (8, 11, 14):
+        row(img, 6, 13, y, hx(STEEL))
+    outline(img, EDGE)
+    return img
+
+
+def draw_lock():
+    """🔒 개인정보 — 골드 자물쇠 + 스틸 고리."""
+    img = new_canvas()
+    # 고리 (상단 아치)
+    cx, cy = 9.5, 7.0
+    for y in range(GRID):
+        for x in range(GRID):
+            dx, dy = x + 0.5 - cx, y + 0.5 - cy
+            d2 = dx * dx + dy * dy
+            if 2.2 * 2.2 <= d2 <= 4.0 * 4.0 and dy <= 0.5:
+                put(img, x, y, hx(STEEL))
+    # 몸통
+    rect(img, 4, 8, 15, 16, hx(GOLD))
+    row(img, 4, 15, 8, hx(GOLD_HI))
+    col(img, 4, 8, 16, hx(GOLD_HI))
+    row(img, 4, 15, 16, hx(AMBER))
+    # 열쇠 구멍
+    disc(img, 9.5, 11.5, 1.4, hx(GRAPHITE))
+    rect(img, 9, 12, 10, 14, hx(GRAPHITE))
+    outline(img, EDGE)
+    return img
+
+
 ICONS = {
     'ui_sparkle': draw_sparkle,
     'ui_pencil': draw_pencil,
@@ -256,6 +490,16 @@ ICONS = {
     'ui_bulb': draw_bulb,
     'ui_home': draw_home,
     'ui_loop': draw_loop,
+    'ui_scissors': draw_scissors,
+    'ui_puzzle': draw_puzzle,
+    'ui_user': draw_user,
+    'ui_megaphone': draw_megaphone,
+    'ui_bubble': draw_bubble,
+    'ui_cart': draw_cart,
+    'ui_question': draw_question,
+    'ui_envelope': draw_envelope,
+    'ui_document': draw_document,
+    'ui_lock': draw_lock,
 }
 
 
