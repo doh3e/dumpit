@@ -177,7 +177,24 @@ export default function DashboardPage() {
     }
   }, [focusTask, planning])
 
-  const heroTaskId = heroSuggestion?.task?.taskId ?? null
+  // 오늘 진행률 (궤도 링) — 마감이 오늘인 태스크 기준
+  const { todayDone, todayTotal } = useMemo(() => {
+    const now = new Date()
+    const todayAll = taskList.filter((t) => {
+      if (t.status === 'CANCELLED') return false
+      const d = parseDate(t.deadline)
+      return d && isSameLocalDate(d, now)
+    })
+    return {
+      todayDone: todayAll.filter((t) => t.status === 'DONE').length,
+      todayTotal: todayAll.length,
+    }
+  }, [taskList])
+  const allDoneToday = todayTotal > 0 && todayDone === todayTotal
+  const heroAllDone = allDoneToday && !focusTask
+
+  // 전부 완료 상태에선 히어로에 태스크가 안 보이므로 최상위 추천을 큐에서 빼지 않는다 (모바일 홈과 동일 규칙)
+  const heroTaskId = heroAllDone ? null : heroSuggestion?.task?.taskId ?? null
   // 미니 큐: 오늘 남은 일(마감순) 우선, 모자라면 추천 상위로 채움
   const heroQueue = useMemo(() => {
     const seen = new Set(heroTaskId != null ? [heroTaskId] : [])
@@ -202,22 +219,7 @@ export default function DashboardPage() {
     return queue
   }, [planning, heroTaskId])
 
-  // 오늘 진행률 (궤도 링) — 마감이 오늘인 태스크 기준
-  const { todayDone, todayTotal } = useMemo(() => {
-    const now = new Date()
-    const todayAll = taskList.filter((t) => {
-      if (t.status === 'CANCELLED') return false
-      const d = parseDate(t.deadline)
-      return d && isSameLocalDate(d, now)
-    })
-    return {
-      todayDone: todayAll.filter((t) => t.status === 'DONE').length,
-      todayTotal: todayAll.length,
-    }
-  }, [taskList])
-
   // 하루 전체 완료 → 로켓 발사 (거짓→참 전환마다 매번, 페이지 로드 시 이미 전체 완료 상태면 재생 안 함)
-  const allDoneToday = todayTotal > 0 && todayDone === todayTotal
   const prevAllDone = useRef(null)
   useEffect(() => {
     if (loading) return
@@ -271,7 +273,7 @@ export default function DashboardPage() {
             queue={heroQueue}
             todayDone={todayDone}
             todayTotal={todayTotal}
-            allDone={allDoneToday && !focusTask}
+            allDone={heroAllDone}
             onComplete={toggleStatus}
             onEdit={setEditingTask}
           />
