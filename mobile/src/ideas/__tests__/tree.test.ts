@@ -1,5 +1,5 @@
 import type { IdeaResponse } from '../../api/types';
-import { buildTreeRows } from '../tree';
+import { buildTreeRows, sortParentCandidates } from '../tree';
 
 const idea = (ideaId: string, over: Partial<IdeaResponse> = {}): IdeaResponse => ({
   ideaId, parentIdeaId: null, convertedTaskId: null, title: `제목${ideaId}`, content: null,
@@ -41,5 +41,30 @@ describe('buildTreeRows (웹 IdeaDumpPage 이식)', () => {
     const rows = buildTreeRows([idea('c', { parentIdeaId: 'ghost' })], '', new Set());
     expect(rows.map((r) => r.idea.ideaId)).toEqual(['c']);
     expect(rows[0].depth).toBe(0);
+  });
+});
+
+describe('sortParentCandidates', () => {
+  const list = [
+    idea('n2', { parentIdeaId: 't1', title: '나하위' }),
+    idea('t2', { title: '바탕' }),
+    idea('n1', { parentIdeaId: 't1', title: '가하위' }),
+    idea('t1', { title: '가지' }),
+  ];
+
+  it('최상위를 먼저, 각 묶음 안에서 제목 오름차순', () => {
+    expect(sortParentCandidates(list, list).map((i) => i.ideaId)).toEqual(['t1', 't2', 'n1', 'n2']);
+  });
+
+  it('부모가 목록에 없는 고아는 최상위로 본다', () => {
+    const withOrphan = [...list, idea('o1', { parentIdeaId: 'ghost', title: '나고아' })];
+    expect(sortParentCandidates(withOrphan, withOrphan).map((i) => i.ideaId))
+      .toEqual(['t1', 'o1', 't2', 'n1', 'n2']);
+  });
+
+  it('원본 배열을 건드리지 않는다', () => {
+    const original = [...list];
+    sortParentCandidates(list, list);
+    expect(list).toEqual(original);
   });
 });

@@ -15,6 +15,7 @@ import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { StickerPicker } from '../src/components/task/StickerPicker';
+import { sortParentCandidates } from '../src/ideas/tree';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, TASK_CATEGORIES } from '../src/tasks/constants';
@@ -108,7 +109,10 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
     set.add(editing.ideaId);
     return set;
   }, [allIdeas, editing]);
-  const parentCandidates = allIdeas.filter((i) => !invalidParents.has(i.ideaId));
+  const parentCandidates = useMemo(
+    () => sortParentCandidates(allIdeas.filter((i) => !invalidParents.has(i.ideaId)), allIdeas),
+    [allIdeas, invalidParents],
+  );
   const parentTitle = parentId ? allIdeas.find((i) => i.ideaId === parentId)?.title ?? '(삭제됨)' : null;
 
   const save = async () => {
