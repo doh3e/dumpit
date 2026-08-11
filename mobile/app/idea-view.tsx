@@ -109,12 +109,13 @@ export default function IdeaViewScreen() {
         <RetroCard style={styles.card}>
           <View style={styles.titleRow}>
             {sticker && <Image source={sticker.img} style={styles.sticker} resizeMode="contain" />}
+            {idea.pinned && <PixelIcon name="pin" size={14} />}
             <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-              {idea.pinned ? '📌 ' : ''}{idea.title}
+              {idea.title}
             </Text>
           </View>
           <View style={styles.metaRow}>
-            {category && <RetroBadge text={`${category.emoji} ${category.label}`} tone="sub" />}
+            {category && <RetroBadge text={category.label} tone="sub" icon={<PixelIcon name={category.icon} size={10} />} />}
             {idea.convertedTaskId && <RetroBadge text="✔︎ 태스크로 전환됨" tone="accent" />}
           </View>
           {parent && (
@@ -124,7 +125,7 @@ export default function IdeaViewScreen() {
               style={({ pressed }) => [styles.parentLink, { opacity: pressed ? 0.7 : 1 }]}
             >
               <Text numberOfLines={1} style={[styles.parentText, { color: colors.sub, fontFamily: fonts.body }]}>
-                🌳 상위: {parent.title}
+                <PixelIcon name="tree" size={11} /> 상위: {parent.title}
               </Text>
             </Pressable>
           )}
@@ -142,7 +143,7 @@ export default function IdeaViewScreen() {
 
         <RetroCard style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-            🌱 하위 아이디어 {children.length > 0 ? children.length : ''}
+            <PixelIcon name="sprout" size={13} /> 하위 아이디어 {children.length > 0 ? children.length : ''}
           </Text>
           {children.length === 0 ? (
             <Text style={[styles.emptyContent, { color: colors.sub, fontFamily: fonts.body }]}>
@@ -158,14 +159,11 @@ export default function IdeaViewScreen() {
                   accessibilityRole="button"
                   style={({ pressed }) => [styles.childRow, { borderTopColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
                 >
+                  {child.pinned && <PixelIcon name="pin" size={11} />}
                   <Text numberOfLines={1} style={[styles.childTitle, { color: colors.fg, fontFamily: fonts.body }]}>
-                    {child.pinned ? '📌 ' : ''}{child.title}
+                    {child.title}
                   </Text>
-                  {childCategory && (
-                    <Text style={[styles.childCategory, { color: colors.sub, fontFamily: fonts.chrome }]}>
-                      {childCategory.emoji}
-                    </Text>
-                  )}
+                  {childCategory && <PixelIcon name={childCategory.icon} size={12} />}
                 </Pressable>
               );
             })

@@ -1,15 +1,17 @@
 import type { Category, RecommendationBucket } from '../api/types';
+import type { PixelIconName } from '../components/common/PixelIcon';
 
-/** 웹 constants/categories.js 이식 (색 클래스 제외 — 모바일은 토큰 직접 사용) */
-export const CATEGORIES: { value: Category; label: string; emoji: string }[] = [
-  { value: 'WORK', label: '업무', emoji: '💼' },
-  { value: 'STUDY', label: '학업', emoji: '📚' },
-  { value: 'APPOINTMENT', label: '약속', emoji: '📅' },
-  { value: 'CHORE', label: '집안일', emoji: '🧹' },
-  { value: 'ROUTINE', label: '루틴', emoji: '🔁' },
-  { value: 'HEALTH', label: '건강', emoji: '💪' },
-  { value: 'HOBBY', label: '취미', emoji: '🎮' },
-  { value: 'OTHER', label: '기타', emoji: '📌' },
+/** 웹 constants/categories.js 이식 (색 클래스 제외 — 모바일은 토큰 직접 사용).
+ *  icon은 도트 아이콘 이름 — OS 이모지 대신 사용 (도트 통일 Phase B, 웹 icon: 키와 동일 의미) */
+export const CATEGORIES: { value: Category; label: string; icon: PixelIconName }[] = [
+  { value: 'WORK', label: '업무', icon: 'briefcase' },
+  { value: 'STUDY', label: '학업', icon: 'books' },
+  { value: 'APPOINTMENT', label: '약속', icon: 'calendar' },
+  { value: 'CHORE', label: '집안일', icon: 'broom' },
+  { value: 'ROUTINE', label: '루틴', icon: 'loop' },
+  { value: 'HEALTH', label: '건강', icon: 'dumbbell' },
+  { value: 'HOBBY', label: '취미', icon: 'gamepad' },
+  { value: 'OTHER', label: '기타', icon: 'pin' },
 ];
 export const TASK_CATEGORIES = CATEGORIES.filter((c) => c.value !== 'ROUTINE');
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.value, c]));

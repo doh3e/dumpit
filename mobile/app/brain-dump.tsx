@@ -171,7 +171,7 @@ function ResultItem({
   const metadata = [
     deadline ? `마감 ${deadline}` : null,
     item.estimatedMinutes != null ? `${item.estimatedMinutes}분` : null,
-    `${category.emoji} ${category.label}`,
+    category.label,
   ].filter((value): value is string => value != null);
 
   return (

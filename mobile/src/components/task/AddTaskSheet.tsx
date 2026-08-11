@@ -191,7 +191,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
                 <Chip
                   key={c.value}
                   label={c.label}
-                  emoji={c.emoji}
+                  icon={<PixelIcon name={c.icon} size={12} />}
                   selected={category === c.value}
                   onPress={() => setCategory(c.value)}
                 />

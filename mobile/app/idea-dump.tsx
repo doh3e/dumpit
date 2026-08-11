@@ -27,7 +27,7 @@ function NodePreview({ node, depth, colors }: { node: IdeaNode; depth: number; c
     <View style={{ paddingLeft: depth * 14 }}>
       <View style={[previewStyles.node, { borderColor: colors.line, backgroundColor: colors.chip }]}>
         <Text numberOfLines={1} style={{ color: colors.fg, fontFamily: fonts.display, fontSize: 13, flexShrink: 1 }}>
-          {category ? `${category.emoji} ` : ''}{node.title}
+          {category && <><PixelIcon name={category.icon} size={11} /> </>}{node.title}
         </Text>
         {!!node.content && (
           <Text numberOfLines={2} style={{ color: colors.sub, fontFamily: fonts.body, fontSize: 11 }}>
@@ -169,7 +169,7 @@ export default function IdeaDumpScreen() {
                   accessibilityState={{ selected: !off }}>
                   <RetroCard style={StyleSheet.flatten([styles.rootCard, off && styles.rootOff])}>
                     <Text style={[styles.rootMark, { color: off ? colors.sub : colors.accent2, fontFamily: fonts.chrome }]}>
-                      {off ? '⬜ 제외됨' : '✅ 저장'}
+                      <PixelIcon name={off ? 'checkboxOff' : 'checkboxOn'} size={12} /> {off ? '제외됨' : '저장'}
                     </Text>
                     <NodePreview node={node} depth={0} colors={colors} />
                   </RetroCard>

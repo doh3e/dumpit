@@ -64,7 +64,7 @@ export default function IdeasScreen() {
         <TextInput
           defaultValue=""
           onChangeText={setQuery}
-          placeholder="🔍 제목·내용 검색"
+          placeholder="제목·내용 검색"
           placeholderTextColor={colors.sub}
           style={[styles.search, { borderColor: colors.line, backgroundColor: colors.card, color: colors.fg, fontFamily: fonts.body }]}
           accessibilityLabel="아이디어 검색"
@@ -107,14 +107,11 @@ export default function IdeasScreen() {
                   accessibilityLabel={`${idea.title} 열기`}
                 >
                   {sticker && <Image source={sticker.img} style={styles.sticker} resizeMode="contain" />}
+                  {idea.pinned && <PixelIcon name="pin" size={12} />}
                   <Text numberOfLines={1} style={[styles.title, { color: colors.fg, fontFamily: fonts.display }]}>
-                    {idea.pinned ? '📌 ' : ''}{idea.title}
+                    {idea.title}
                   </Text>
-                  {category && (
-                    <Text style={[styles.category, { color: colors.sub, fontFamily: fonts.chrome }]}>
-                      {category.emoji}
-                    </Text>
-                  )}
+                  {category && <PixelIcon name={category.icon} size={12} />}
                   {idea.convertedTaskId && <RetroBadge text="✔︎ 태스크" tone="sub" />}
                 </Pressable>
               </View>

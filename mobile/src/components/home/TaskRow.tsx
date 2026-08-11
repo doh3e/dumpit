@@ -7,6 +7,7 @@ import { formatDeadline } from '../../tasks/dates';
 import { calcCompletionCoins } from '../../tasks/rewards';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon } from '../common/PixelIcon';
 import { RetroBadge } from '../retro/RetroBadge';
 
 export type TogglePos = { x: number; y: number };
@@ -100,7 +101,7 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
             <Text style={[styles.metaText, { color: colors.starlight, fontFamily: fonts.chrome }]}>+{coins}</Text>
           )}
           <Text style={[styles.metaText, { color: colors.sub, fontFamily: fonts.body }]}>
-            {category.emoji} {category.label}
+            <PixelIcon name={category.icon} size={10} /> {category.label}
           </Text>
         </View>
       </Pressable>

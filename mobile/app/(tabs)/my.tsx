@@ -234,7 +234,7 @@ export default function MyScreen() {
                     const cat = getCategory(b.category);
                     return (
                       <Text key={b.category} style={[styles.legendText, { color: colors.sub, fontFamily: fonts.chrome }]}>
-                        <Text style={{ color: b.color }}>■</Text> {cat.emoji}{cat.label} {b.count}
+                        <Text style={{ color: b.color }}>■</Text> {cat.label} {b.count}
                       </Text>
                     );
                   })}
@@ -253,7 +253,7 @@ export default function MyScreen() {
               <View key={t.taskId} style={[styles.overdueRow, { borderTopColor: colors.line }]}>
                 <View style={styles.overdueText}>
                   <Text numberOfLines={1} style={[styles.overdueTitle, { color: colors.fg, fontFamily: fonts.body }]}>
-                    {getCategory(t.category).emoji} {t.title}
+                    <PixelIcon name={getCategory(t.category).icon} size={11} /> {t.title}
                   </Text>
                   <Text style={[styles.overdueDeadline, { color: colors.warn, fontFamily: fonts.chrome }]}>
                     {formatDeadline(t.deadline)} 마감

@@ -29,6 +29,20 @@ const ICONS = {
   tomato: require('../../../assets/icons/ui_tomato.png'),
   moon: require('../../../assets/icons/ui_moon.png'),
   calendar: require('../../../assets/icons/ui_calendar.png'),
+  // Phase B — 카테고리 8종(달력·순환·압정 재사용) + 버튼 잔여분
+  briefcase: require('../../../assets/icons/ui_briefcase.png'),
+  books: require('../../../assets/icons/ui_books.png'),
+  broom: require('../../../assets/icons/ui_broom.png'),
+  dumbbell: require('../../../assets/icons/ui_dumbbell.png'),
+  gamepad: require('../../../assets/icons/ui_gamepad.png'),
+  tree: require('../../../assets/icons/ui_tree.png'),
+  sprout: require('../../../assets/icons/ui_sprout.png'),
+  eye: require('../../../assets/icons/ui_eye.png'),
+  sun: require('../../../assets/icons/ui_sun.png'),
+  phone: require('../../../assets/icons/ui_phone.png'),
+  ban: require('../../../assets/icons/ui_ban.png'),
+  checkboxOff: require('../../../assets/icons/ui_checkbox_off.png'),
+  checkboxOn: require('../../../assets/icons/ui_checkbox_on.png'),
 } as const;
 
 export type PixelIconName = keyof typeof ICONS;

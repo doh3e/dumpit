@@ -11,16 +11,16 @@ import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { ActiveHoursCard } from '../src/components/routine/ActiveHoursCard';
 import { NotificationSettingsCard } from '../src/components/settings/NotificationSettingsCard';
-import { PixelIcon } from '../src/components/common/PixelIcon';
+import { PixelIcon, type PixelIconName } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { useThemeMode, type ThemeMode } from '../src/theme/ThemeProvider';
 import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
-const THEME_MODES: { id: ThemeMode; label: string; emoji: string }[] = [
-  { id: 'light', label: '라이트', emoji: '☀️' },
-  { id: 'dark', label: '다크', emoji: '🌙' },
-  { id: 'system', label: '시스템', emoji: '📱' },
+const THEME_MODES: { id: ThemeMode; label: string; icon: PixelIconName }[] = [
+  { id: 'light', label: '라이트', icon: 'sun' },
+  { id: 'dark', label: '다크', icon: 'moon' },
+  { id: 'system', label: '시스템', icon: 'phone' },
 ];
 
 export default function SettingsScreen() {
@@ -72,7 +72,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>🎨 테마</Text>
           <View style={styles.chipRow}>
             {THEME_MODES.map((m) => (
-              <Chip key={m.id} label={m.label} emoji={m.emoji} selected={mode === m.id} onPress={() => setMode(m.id)} />
+              <Chip key={m.id} label={m.label} icon={<PixelIcon name={m.icon} size={12} />} selected={mode === m.id} onPress={() => setMode(m.id)} />
             ))}
           </View>
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>

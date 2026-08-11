@@ -8,6 +8,7 @@ import type { CatalogItem } from '../src/api/types';
 import { useAuth } from '../src/auth/AuthContext';
 import { celebrationFor } from '../src/celebration/registry';
 import { CoinIcon } from '../src/components/common/CoinIcon';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 import { CelebrationOverlay } from '../src/components/fx/CelebrationOverlay';
 import { Chip } from '../src/components/retro/Chip';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
@@ -254,7 +255,7 @@ export default function ShopScreen() {
       {previewing && (
         <View style={[styles.previewBar, { backgroundColor: colors.card, borderColor: colors.edge, paddingBottom: insets.bottom + 10 }]}>
           <Text style={[styles.previewBarText, { color: colors.fg, fontFamily: fonts.body }]}>
-            👀 미리보기 중 — 아직 장착되지 않았어요
+            <PixelIcon name="eye" size={12} /> 미리보기 중 — 아직 장착되지 않았어요
           </Text>
           <RetroButton label="원래대로" size="sm" variant="ghost" onPress={() => setPreview(null)} />
         </View>

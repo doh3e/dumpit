@@ -59,7 +59,7 @@ export default function NoticesScreen() {
                   accessibilityState={{ expanded: open }}
                   style={({ pressed }) => [styles.rowHead, { opacity: pressed ? 0.7 : 1 }]}
                 >
-                  {n.pinned && <RetroBadge text="📌 고정" tone="sub" />}
+                  {n.pinned && <RetroBadge text="고정" tone="sub" icon={<PixelIcon name="pin" size={10} />} />}
                   <Text numberOfLines={open ? undefined : 1} style={[styles.rowTitle, { color: colors.fg, fontFamily: fonts.display }]}>
                     {n.title}
                   </Text>

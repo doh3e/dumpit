@@ -303,7 +303,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
 
           <View style={styles.chipRow}>
             {TASK_CATEGORIES.map((c) => (
-              <Chip key={c.value} label={c.label} emoji={c.emoji} selected={category === c.value} onPress={() => setCategory(c.value)} />
+              <Chip key={c.value} label={c.label} icon={<PixelIcon name={c.icon} size={12} />} selected={category === c.value} onPress={() => setCategory(c.value)} />
             ))}
           </View>
 
@@ -326,9 +326,11 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
             accessibilityLabel="중요도 슬라이더"
           />
           <Text style={[styles.hint, { color: priorityPinned ? colors.warn : colors.accent2, fontFamily: fonts.body }]}>
-            {priorityPinned
-              ? '📌 직접 지정 — 지정값을 바닥으로 지키고, 마감이 다가오면 실효값이 위로 올라가요'
-              : `🔄 자동 조정 — AI 중요도 ${Math.round((task?.aiPriorityScore ?? 0.5) * 100)}점 + 마감 여유 반영 (움직이면 고정)`}
+            {priorityPinned ? (
+              <><PixelIcon name="pin" size={11} /> 직접 지정 — 지정값을 바닥으로 지키고, 마감이 다가오면 실효값이 위로 올라가요</>
+            ) : (
+              <><PixelIcon name="loop" size={11} /> 자동 조정 — AI 중요도 {Math.round((task?.aiPriorityScore ?? 0.5) * 100)}점 + 마감 여유 반영 (움직이면 고정)</>
+            )}
           </Text>
           <View style={styles.chipRow}>
             {isUserOverridden && !clearOverride && (

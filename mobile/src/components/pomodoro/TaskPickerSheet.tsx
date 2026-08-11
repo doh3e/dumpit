@@ -6,6 +6,7 @@ import type { TaskResponse, TaskStatus } from '../../api/types';
 import { usePlanning } from '../../query/hooks';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon } from '../common/PixelIcon';
 
 export type PickedTask = { taskId: string; title: string; status: TaskStatus };
 
@@ -46,7 +47,9 @@ export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
             accessibilityRole="button"
             style={({ pressed }) => [styles.row, { borderColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
           >
-            <Text style={[styles.rowText, { color: colors.sub, fontFamily: fonts.body }]}>🙅 태스크 없이 집중</Text>
+            <Text style={[styles.rowText, { color: colors.sub, fontFamily: fonts.body }]}>
+              <PixelIcon name="ban" size={12} /> 태스크 없이 집중
+            </Text>
           </Pressable>
           {candidates.map((t) => (
             <Pressable

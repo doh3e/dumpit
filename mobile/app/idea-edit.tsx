@@ -240,11 +240,13 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
           <View style={styles.chipRow}>
             <Chip label="미지정" selected={category == null} onPress={() => setCategory(null)} />
             {TASK_CATEGORIES.map((c) => (
-              <Chip key={c.value} label={c.label} emoji={c.emoji} selected={category === c.value} onPress={() => setCategory(c.value)} />
+              <Chip key={c.value} label={c.label} icon={<PixelIcon name={c.icon} size={12} />} selected={category === c.value} onPress={() => setCategory(c.value)} />
             ))}
           </View>
           <View style={styles.switchRow}>
-            <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.body }]}>📌 상단 고정</Text>
+            <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.body }]}>
+              <PixelIcon name="pin" size={12} /> 상단 고정
+            </Text>
             <Switch value={pinned} onValueChange={setPinned}
               trackColor={{ false: colors.line, true: colors.accent2 }} thumbColor={colors.card} />
           </View>
@@ -254,7 +256,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             style={({ pressed }) => [styles.parentBtn, { borderColor: colors.line, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 }]}
           >
             <Text numberOfLines={1} style={[styles.parentText, { color: parentTitle ? colors.fg : colors.sub, fontFamily: fonts.body }]}>
-              🌳 상위: {parentTitle ?? '없음 (최상위)'}
+              <PixelIcon name="tree" size={12} /> 상위: {parentTitle ?? '없음 (최상위)'}
             </Text>
           </Pressable>
         </RetroCard>
