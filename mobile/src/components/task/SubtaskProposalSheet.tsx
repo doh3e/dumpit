@@ -2,6 +2,7 @@ import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput } from '@
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../../api/client';
 import { confirmSplit, proposeSplit } from '../../api/tasks';
 import type { TaskResponse } from '../../api/types';
@@ -24,6 +25,7 @@ type Props = { onCreated: () => void };
 export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props>(
   function SubtaskProposalSheet({ onCreated }, ref) {
     const { colors } = useTheme();
+    const insets = useSafeAreaInsets();
     const toast = useToast();
     const qc = useQueryClient();
     const sheetRef = useRef<BottomSheetModal>(null);
@@ -99,7 +101,8 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
-        <BottomSheetScrollView contentContainerStyle={styles.body}>
+        {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 확정 버튼이 OS 내비 바에 가려진다 */}
+        <BottomSheetScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
           <View style={styles.headingRow}>
             <PixelIcon name="puzzle" size={16} />
             <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>

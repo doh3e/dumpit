@@ -2,6 +2,7 @@ import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../../api/client';
 import { createTask } from '../../api/tasks';
 import { invalidateAfterAi, useAiUsage } from '../../query/hooks';
@@ -36,6 +37,7 @@ function next30(): string {
 /** ＋ → 태스크 추가 바텀시트 (웹 AddTaskModal 패리티). ref.present()로 연다 */
 export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_props, ref) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
@@ -108,7 +110,9 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
       backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
       handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
     >
-      <BottomSheetView style={styles.body}>
+      {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마감·시작시간 필드를 펼쳤을 때
+          시트가 길어지며 추가 버튼이 OS 내비 바에 가려진다 */}
+      <BottomSheetView style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
         <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 추가</Text>
 
         <BottomSheetTextInput

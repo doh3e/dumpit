@@ -3,6 +3,7 @@ import Slider from '@react-native-community/slider';
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../../api/client';
 import { deleteTask, patchTask, reanalyzeTask, setSticker } from '../../api/tasks';
 import type { Category, TaskResponse } from '../../api/types';
@@ -37,6 +38,7 @@ const DEADLINE_MODES: { id: DeadlineMode; label: string; icon?: PixelIconName }[
 /** 태스크 상세 — 수정·중요도·스티커·AI 재분석·쪼개기·삭제 (웹 EditTaskModal 이식) */
 export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDetailSheet(_props, ref) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
@@ -227,7 +229,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
-        <BottomSheetScrollView contentContainerStyle={styles.body}>
+        {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마지막 버튼이 OS 내비 바에 가려진다 */}
+        <BottomSheetScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
           <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 상세</Text>
 
           {/* 한글 IME 조합 보호 — uncontrolled, 태스크 바뀌면 key로 리마운트 */}
