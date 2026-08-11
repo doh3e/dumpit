@@ -17,6 +17,9 @@ GRID = 20
 SCALE = 5
 
 EDGE = '#3A2C21'      # 웜 다크 외곽선 (라이트 --edge)
+GREEN = '#5C8A3C'     # forest 테마 accent — 나무·새싹 계열
+GREEN_HI = '#8FBF6F'
+GREEN_DK = '#3E6128'
 GOLD = '#E9B44C'      # --starlight
 GOLD_HI = '#FAED55'
 GOLD_PALE = '#FDF6A0'
@@ -523,6 +526,237 @@ def draw_calendar():
     return img
 
 
+def draw_briefcase():
+    """💼 업무 — 앰버 서류가방: 손잡이 + 몸통 + 골드 잠금쇠."""
+    img = new_canvas()
+    # 손잡이
+    rect(img, 8, 3, 11, 5, hx(AMBER))
+    rect(img, 9, 4, 10, 5, (0, 0, 0, 0))
+    # 몸통
+    rect(img, 3, 6, 16, 16, hx(AMBER))
+    row(img, 3, 16, 6, hx(AMBER_HI))
+    col(img, 3, 6, 16, hx(AMBER_HI))
+    # 가운데 이음선 + 잠금쇠
+    row(img, 3, 16, 10, hx(GRAPHITE))
+    rect(img, 8, 9, 11, 11, hx(GOLD))
+    put(img, 8, 9, hx(GOLD_HI))
+    # 하단 그늘
+    row(img, 3, 16, 16, hx(GRAPHITE))
+    outline(img, EDGE)
+    return img
+
+
+def draw_books():
+    """📚 학업 — 3권 눕혀 쌓은 책: 레드·틸·골드."""
+    img = new_canvas()
+    # 아래(골드, 제일 넓음)
+    rect(img, 3, 13, 16, 16, hx(GOLD))
+    col(img, 14, 13, 16, hx(GOLD_HI))     # 페이지 단면
+    col(img, 15, 13, 16, hx(CREAM_HI))
+    # 중간(틸, 살짝 왼쪽)
+    rect(img, 2, 9, 15, 12, hx(TEAL))
+    col(img, 13, 9, 12, hx(TEAL_HI))
+    col(img, 14, 9, 12, hx(CREAM_HI))
+    # 위(레드, 좁게)
+    rect(img, 4, 5, 14, 8, hx(RED))
+    col(img, 12, 5, 8, hx(RED_HI))
+    col(img, 13, 5, 8, hx(CREAM_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_broom():
+    """🧹 집안일 — 대각 빗자루: 앰버 자루 + 레드 밴드 + 골드 빗살."""
+    img = new_canvas()
+    # 자루 (우상단 → 좌하단)
+    for t in range(9):
+        put(img, 14 - t, 2 + t, hx(AMBER))
+        put(img, 15 - t, 2 + t, hx(AMBER_HI))
+    # 밴드
+    for t in range(2):
+        put(img, 6 - t + 1, 10 + t, hx(RED))
+        put(img, 7 - t + 1, 10 + t, hx(RED))
+        put(img, 8 - t + 1, 10 + t, hx(RED_DK))
+    # 빗살 — 좌하단으로 퍼지는 부채
+    for i, (x0, x1) in enumerate([(4, 8), (3, 8), (2, 8), (2, 7), (1, 6)]):
+        row(img, x0, x1, 12 + i, hx(GOLD))
+    put(img, 4, 12, hx(GOLD_HI))
+    put(img, 3, 13, hx(GOLD_HI))
+    for x in (2, 4, 6):
+        put(img, x, 16, hx(AMBER))
+    outline(img, EDGE)
+    return img
+
+
+def draw_dumbbell():
+    """💪 건강 — 아령: 스틸 바 + 다크 플레이트 (사용자 승인 대체 도상)."""
+    img = new_canvas()
+    # 바
+    rect(img, 4, 9, 15, 10, hx(STEEL))
+    row(img, 4, 15, 9, hx(STEEL_HI))
+    # 안쪽 플레이트 (크게)
+    rect(img, 4, 5, 6, 14, hx(STEEL_DK))
+    rect(img, 13, 5, 15, 14, hx(STEEL_DK))
+    col(img, 4, 5, 14, hx(STEEL))
+    col(img, 13, 5, 14, hx(STEEL))
+    # 바깥 플레이트 (작게)
+    rect(img, 2, 7, 3, 12, hx(GRAPHITE))
+    rect(img, 16, 7, 17, 12, hx(GRAPHITE))
+    outline(img, EDGE)
+    return img
+
+
+def draw_gamepad():
+    """🎮 취미 — 틸 게임패드: 십자키 + 버튼 2개."""
+    img = new_canvas()
+    # 몸통 — 가로로 넓은 라운드
+    rect(img, 3, 6, 16, 13, hx(TEAL))
+    rect(img, 2, 8, 17, 12, hx(TEAL))
+    rect(img, 2, 13, 4, 14, hx(TEAL_DK))    # 왼쪽 그립
+    rect(img, 15, 13, 17, 14, hx(TEAL_DK))  # 오른쪽 그립
+    row(img, 3, 16, 6, hx(TEAL_HI))
+    # 십자키 — 가로·세로 2px 팔 십자
+    rect(img, 3, 9, 9, 10, hx(GRAPHITE))
+    rect(img, 5, 7, 7, 12, hx(GRAPHITE))
+    # 버튼 2×2
+    rect(img, 12, 7, 13, 8, hx(RED))
+    rect(img, 14, 10, 15, 11, hx(GOLD))
+    outline(img, EDGE)
+    return img
+
+
+def draw_tree():
+    """🌳 상위 아이디어 — 그린 수관 + 앰버 줄기."""
+    img = new_canvas()
+    disc(img, 9.5, 7.0, 5.2, hx(GREEN))
+    disc(img, 6.5, 9.0, 3.4, hx(GREEN))
+    disc(img, 13.0, 9.0, 3.2, hx(GREEN))
+    disc(img, 7.6, 5.4, 1.8, hx(GREEN_HI))
+    # 수관 아랫면 그늘
+    for y in range(10, 13):
+        for x in range(GRID):
+            if img.load()[x, y][3] > 0:
+                put(img, x, y, hx(GREEN_DK))
+    # 줄기
+    rect(img, 8, 12, 10, 17, hx(AMBER))
+    col(img, 8, 12, 17, hx(AMBER_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_sprout():
+    """🌱 하위 아이디어 — 새싹: V자로 벌어진 잎 두 장 + 줄기."""
+    img = new_canvas()
+    # 줄기
+    col(img, 9, 9, 17, hx(GREEN_DK))
+    col(img, 10, 9, 17, hx(GREEN))
+    # 왼 잎 — 좌상단 끝(3,4)에서 줄기(8,10)로 붙는 눈물꼴
+    for i, (x0, x1) in enumerate([(3, 4), (3, 6), (4, 7), (5, 8), (7, 8)]):
+        row(img, x0, x1, 4 + i, hx(GREEN))
+    put(img, 3, 4, hx(GREEN_HI))
+    put(img, 3, 5, hx(GREEN_HI))
+    put(img, 4, 5, hx(GREEN_HI))
+    # 오른 잎 — 우상단 끝(16,3)에서 줄기(11,9)로, 조금 더 길게
+    for i, (x0, x1) in enumerate([(15, 16), (13, 16), (12, 15), (11, 14), (11, 12)]):
+        row(img, x0, x1, 3 + i, hx(GREEN_HI))
+    put(img, 16, 3, hx(GREEN_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_eye():
+    """👁 미리보기 — 크림 흰자 + 틸 홍채."""
+    img = new_canvas()
+    # 아몬드형 흰자 — 두 원의 교집합
+    for y in range(GRID):
+        for x in range(GRID):
+            dx, dy = x + 0.5 - 9.5, y + 0.5 - 10.0
+            if (dx * dx) / (7.2 * 7.2) + (dy * dy) / (4.4 * 4.4) <= 1:
+                put(img, x, y, hx(CREAM_HI))
+    disc(img, 9.5, 10.0, 3.0, hx(TEAL))
+    disc(img, 9.5, 10.0, 1.4, hx(GRAPHITE))
+    put(img, 8, 8, hx(CREAM_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_sun():
+    """☀️ 라이트 테마 — 골드 해 + 광선."""
+    img = new_canvas()
+    disc(img, 9.5, 9.5, 4.4, hx(GOLD))
+    disc(img, 8.2, 8.2, 1.6, hx(GOLD_HI))
+    # 광선 8방향
+    for x0, y0, x1, y1 in [(9, 1, 10, 2), (9, 17, 10, 18), (1, 9, 2, 10), (17, 9, 18, 10)]:
+        rect(img, x0, y0, x1, y1, hx(GOLD))
+    for x, y in [(3, 3), (15, 3), (3, 16), (15, 16)]:
+        put(img, x, y, hx(GOLD))
+        put(img, x + 1, y - 1 if y == 16 else y + 1, hx(GOLD))
+    outline(img, EDGE)
+    return img
+
+
+def draw_phone():
+    """📱 시스템 테마 — 다크 베젤 + 틸 화면."""
+    img = new_canvas()
+    rect(img, 6, 2, 13, 17, hx(GRAPHITE))
+    rect(img, 7, 4, 12, 14, hx(TEAL))
+    rect(img, 7, 4, 12, 5, hx(TEAL_HI))
+    # 홈 버튼·스피커
+    row(img, 9, 10, 16, hx(STEEL))
+    row(img, 9, 10, 3, hx(STEEL_DK))
+    outline(img, EDGE)
+    return img
+
+
+def draw_ban():
+    """🙅 없이/금지 — 레드 링 + 대각 슬래시."""
+    img = new_canvas()
+    for y in range(GRID):
+        for x in range(GRID):
+            dx, dy = x + 0.5 - 9.5, y + 0.5 - 9.5
+            d2 = dx * dx + dy * dy
+            if 4.6 * 4.6 <= d2 <= 6.8 * 6.8:
+                put(img, x, y, hx(RED))
+    # 슬래시 (좌하 → 우상)
+    for t in range(10):
+        put(img, 5 + t, 14 - t, hx(RED))
+        put(img, 6 + t, 14 - t, hx(RED))
+    # 좌상단 하이라이트
+    for y in range(GRID):
+        for x in range(GRID):
+            dx, dy = x + 0.5 - 9.5, y + 0.5 - 9.5
+            d2 = dx * dx + dy * dy
+            if 5.5 * 5.5 <= d2 <= 6.8 * 6.8 and dx < 0 and dy < 0 and img.load()[x, y][3] > 0:
+                put(img, x, y, hx(RED_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_checkbox_off():
+    """⬜ 추출 제외 — 빈 크림 박스."""
+    img = new_canvas()
+    rect(img, 3, 3, 16, 16, hx(CREAM))
+    rect(img, 5, 5, 14, 14, hx(CREAM_HI))
+    outline(img, EDGE)
+    return img
+
+
+def draw_checkbox_on():
+    """✅ 추출 저장 — 틸 박스 + 크림 체크."""
+    img = new_canvas()
+    rect(img, 3, 3, 16, 16, hx(TEAL))
+    row(img, 3, 16, 3, hx(TEAL_HI))
+    col(img, 3, 3, 16, hx(TEAL_HI))
+    # 체크 — 내려긋기(5,9)→(8,12), 올려긋기(8,12)→(14,6), 2px 굵기
+    down = [(5, 9), (6, 10), (7, 11), (8, 12)]
+    up = [(9, 11), (10, 10), (11, 9), (12, 8), (13, 7), (14, 6)]
+    for (x, y) in down + up:
+        put(img, x, y, hx(CREAM_HI))
+        put(img, x, y - 1, hx(CREAM_HI))
+    outline(img, EDGE)
+    return img
+
+
 ICONS = {
     'ui_sparkle': draw_sparkle,
     'ui_pencil': draw_pencil,
@@ -542,6 +776,19 @@ ICONS = {
     'ui_lock': draw_lock,
     'ui_moon': draw_moon,
     'ui_calendar': draw_calendar,
+    'ui_briefcase': draw_briefcase,
+    'ui_books': draw_books,
+    'ui_broom': draw_broom,
+    'ui_dumbbell': draw_dumbbell,
+    'ui_gamepad': draw_gamepad,
+    'ui_tree': draw_tree,
+    'ui_sprout': draw_sprout,
+    'ui_eye': draw_eye,
+    'ui_sun': draw_sun,
+    'ui_phone': draw_phone,
+    'ui_ban': draw_ban,
+    'ui_checkbox_off': draw_checkbox_off,
+    'ui_checkbox_on': draw_checkbox_on,
 }
 
 

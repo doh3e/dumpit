@@ -94,8 +94,9 @@ function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
               진행 중
             </span>
           )}
-          <span className={`text-[0.625rem] font-bold px-2 py-0.5 rounded-full border ${cat.color}`}>
-            {cat.emoji} {cat.label}
+          <span className={`inline-flex items-center gap-1 text-[0.625rem] font-bold px-2 py-0.5 rounded-full border ${cat.color}`}>
+            <img {...iconProps(cat.icon, 12)} alt="" className="w-3 h-3 object-contain" />
+            {cat.label}
           </span>
           {isChild && (
             <span className="text-[0.625rem] font-bold px-2 py-0.5 bg-chip border border-line rounded-full text-secondary">

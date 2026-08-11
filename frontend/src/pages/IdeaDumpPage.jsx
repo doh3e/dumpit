@@ -8,6 +8,7 @@ import StickerPicker from '../components/StickerPicker'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 import { parseDate } from '../utils/dates'
 import { STICKER_SPRITES } from '../shop/registry'
+import { iconProps } from '../assets/icons'
 
 const EMPTY_DETAIL = { title: '', content: '', category: 'OTHER', pinned: false, parentIdeaId: '' }
 const SCRATCH_KEY = 'dumpit:idea-scratch'
@@ -109,7 +110,14 @@ function CategoryPills({ value, onChange, compact = false, iconOnly = false }) {
                   : 'border-line bg-accent text-dark hover:border-line'
               }`}
             >
-              {iconOnly ? category.emoji : <><span aria-hidden="true">{category.emoji}</span> {category.label}</>}
+              {iconOnly ? (
+                <img {...iconProps(category.icon, 14)} alt={category.label} className="w-3.5 h-3.5 object-contain" />
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <img {...iconProps(category.icon, 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+                  {category.label}
+                </span>
+              )}
             </button>
             {iconOnly && (
               <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-chip px-1.5 py-0.5 text-[0.625rem] font-bold text-dark border border-line opacity-0 transition-opacity group-hover:opacity-100">

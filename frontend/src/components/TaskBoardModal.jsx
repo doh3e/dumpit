@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { getCategory } from '../constants/categories'
 import { parseDate, formatDeadline } from '../utils/dates'
+import { iconProps } from '../assets/icons'
 
 function formatPriority(task) {
   if (task.effectivePriority == null) return 'P -'
@@ -57,8 +58,9 @@ function TaskRow({ task, onEdit, onToggle }) {
 
         <button type="button" onClick={() => onEdit(task)} className="min-w-0 flex-1 text-left">
           <div className="mb-1 flex flex-wrap items-center gap-1.5">
-            <span className={`rounded-full border px-2 py-0.5 text-[0.625rem] font-bold ${category.color}`}>
-              {category.emoji} {category.label}
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.625rem] font-bold ${category.color}`}>
+              <img {...iconProps(category.icon, 12)} alt="" className="w-3 h-3 object-contain" />
+              {category.label}
             </span>
             <span className="rounded-full border border-line bg-accent px-2 py-0.5 text-[0.625rem] font-black text-sub">
               {formatPriority(task)}

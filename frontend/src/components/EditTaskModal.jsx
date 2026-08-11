@@ -220,7 +220,10 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
                     : 'bg-accent text-dark border-line hover:border-edge'
                 }`}
               >
-                {c.emoji} {c.label}
+                <span className="inline-flex items-center gap-1">
+                  <img {...iconProps(c.icon, 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+                  {c.label}
+                </span>
               </button>
             ))}
           </div>

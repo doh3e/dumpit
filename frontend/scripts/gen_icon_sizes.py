@@ -33,6 +33,16 @@ ICONS = {
     'download': ('download.png', [16]),
     'arrowhead': ('arrowheads.png', [14]),
     'puzzle': ('ui_puzzle.png', [14]),
+    # 카테고리 8종 — 칩 14px·목록 뱃지 12px (Phase B)
+    'work': ('ui_briefcase.png', [12, 14]),
+    'study': ('ui_books.png', [12, 14]),
+    'appointment': ('ui_calendar.png', [12, 14]),
+    'chore': ('ui_broom.png', [12, 14]),
+    'routine': ('ui_loop.png', [12, 14]),
+    'health': ('ui_dumbbell.png', [12, 14]),
+    'hobby': ('ui_gamepad.png', [12, 14]),
+    'other': ('ui_pin.png', [12, 14]),
+    'eye': ('ui_eye.png', [16]),
 }
 DPRS = [1, 1.25, 1.5, 2, 3]
 
