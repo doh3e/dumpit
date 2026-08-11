@@ -18,11 +18,22 @@ describe('auth api', () => {
       data: { email: 'a@b.c', name: '유저', picture: null, coins: 0, isAdmin: false },
     });
 
-    const me = await loginWithGoogleIdToken('tok');
+    const me = await loginWithGoogleIdToken('tok', { allowRestore: true });
 
-    expect(mockedApi.post).toHaveBeenCalledWith('/auth/mobile/google', { idToken: 'tok' });
+    expect(mockedApi.post).toHaveBeenCalledWith('/auth/mobile/google', { idToken: 'tok', allowRestore: true });
     expect(mockedApi.get).toHaveBeenCalledWith('/auth/me', undefined);
     expect(me.email).toBe('a@b.c');
+  });
+
+  it('자동 재로그인은 탈퇴 철회를 요청하지 않는다', async () => {
+    mockedApi.post.mockResolvedValue({ data: { restored: false } });
+    mockedApi.get.mockResolvedValue({
+      data: { email: 'a@b.c', name: '유저', picture: null, coins: 0, isAdmin: false },
+    });
+
+    await loginWithGoogleIdToken('tok', { allowRestore: false });
+
+    expect(mockedApi.post).toHaveBeenCalledWith('/auth/mobile/google', { idToken: 'tok', allowRestore: false });
   });
 
   it('fetchMe는 /auth/me를 조회한다', async () => {

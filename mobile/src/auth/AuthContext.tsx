@@ -22,8 +22,9 @@ async function silentReauth(): Promise<boolean> {
     const result = await GoogleSignin.signInSilently();
     const idToken = result.type === 'success' ? result.data?.idToken : null;
     if (!idToken) return false;
-    // 내부 /auth/me가 다시 401이어도 인터셉터의 pending(자기 자신)을 기다리지 않도록 우회
-    await loginWithGoogleIdToken(idToken, bypassReauth());
+    // 이용자가 누른 로그인이 아니므로 탈퇴 철회는 금지(allowRestore=false).
+    // 내부 /auth/me가 다시 401이어도 인터셉터의 pending(자기 자신)을 기다리지 않도록 우회.
+    await loginWithGoogleIdToken(idToken, { allowRestore: false, meConfig: bypassReauth() });
     return true;
   } catch {
     return false;
@@ -70,7 +71,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (result.type === 'cancelled') return;
     const idToken = result.data?.idToken;
     if (!idToken) throw new Error('구글에서 ID 토큰을 받지 못했어요.');
-    const { restored, ...me } = await loginWithGoogleIdToken(idToken);
+    // 이용자가 직접 누른 로그인 — 탈퇴 유예 중이면 여기서만 되살아난다
+    const { restored, ...me } = await loginWithGoogleIdToken(idToken, { allowRestore: true });
     setMe(me);
     void registerPushDevice();
     // 탈퇴 유예 중 다시 들어온 경우 — 서버가 계정과 기록을 이미 되살렸다

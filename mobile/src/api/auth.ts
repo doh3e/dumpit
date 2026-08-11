@@ -21,8 +21,22 @@ export type LoginResult = MeResponse & {
   restored: boolean;
 };
 
-export async function loginWithGoogleIdToken(idToken: string, meConfig?: AxiosRequestConfig): Promise<LoginResult> {
-  const { data } = await api.post('/auth/mobile/google', { idToken });
+type LoginOptions = {
+  /**
+   * 이용자가 직접 로그인 버튼을 눌렀는지. 탈퇴 유예 중인 계정은 이 값이 true일 때만 서버가
+   * 되살린다 — 자동 재로그인은 false로 보내야 탈퇴가 조용히 철회되지 않는다. 필수 인자로 둬서
+   * 새 호출부가 의사를 반드시 밝히게 한다.
+   */
+  allowRestore: boolean;
+  /** 뒤따르는 /auth/me 요청에만 붙는 config */
+  meConfig?: AxiosRequestConfig;
+};
+
+export async function loginWithGoogleIdToken(
+  idToken: string,
+  { allowRestore, meConfig }: LoginOptions,
+): Promise<LoginResult> {
+  const { data } = await api.post('/auth/mobile/google', { idToken, allowRestore });
   const me = await fetchMe(meConfig);
   return { ...me, restored: data?.restored === true };
 }
