@@ -1,17 +1,20 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { useMemo } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fetchIdeas } from '../src/api/ideas';
+import { getApiErrorMessage } from '../src/api/client';
+import { convertIdeaToTask, fetchIdeas } from '../src/api/ideas';
 import type { IdeaResponse } from '../src/api/types';
 import { MarkdownView } from '../src/components/common/MarkdownView';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
+import { useToast } from '../src/components/retro/ToastProvider';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
-import { getCategory } from '../src/tasks/constants';
+import { AI_COSTS, getCategory } from '../src/tasks/constants';
 import { STICKER_SPRITES } from '../src/tasks/stickers';
 import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
@@ -25,6 +28,11 @@ export default function IdeaViewScreen() {
   const insets = useSafeAreaInsets();
   const { ideaId } = useLocalSearchParams<{ ideaId?: string }>();
   const ideas = useQuery({ queryKey: keys.ideas, queryFn: fetchIdeas });
+  const toast = useToast();
+  const qc = useQueryClient();
+  const aiUsage = useAiUsage();
+  const remaining = aiUsage.data?.remaining ?? Infinity;
+  const [busy, setBusy] = useState(false);
 
   const idea = useMemo(
     () => ideas.data?.find((i) => i.ideaId === ideaId) ?? null,
@@ -56,6 +64,30 @@ export default function IdeaViewScreen() {
 
   const sticker = idea.stickerCode ? STICKER_SPRITES[idea.stickerCode] : null;
   const category = idea.category ? getCategory(idea.category) : null;
+
+  // 편집창까지 안 들어가도 전환할 수 있게 읽기 화면에도 노출 (idea-edit과 동일 플로우)
+  const confirmConvert = () => {
+    Alert.alert('태스크로 전환', `AI ${AI_COSTS.IDEA_CONVERT}점을 사용해 태스크로 전환해요.\n아이디어는 남아 있어요.`, [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '전환',
+        onPress: async () => {
+          setBusy(true);
+          try {
+            await convertIdeaToTask(idea.ideaId);
+            invalidateAfterAi(qc);
+            qc.invalidateQueries({ queryKey: keys.ideas });
+            qc.invalidateQueries({ queryKey: keys.planning });
+            toast.show('태스크로 전환했어요!');
+          } catch (e) {
+            toast.show(getApiErrorMessage(e, '전환에 실패했어요.'));
+          } finally {
+            setBusy(false);
+          }
+        },
+      },
+    ]);
+  };
 
   return (
     <View style={styles.screen}>
@@ -150,6 +182,12 @@ export default function IdeaViewScreen() {
         <RetroButton
           label="✏️ 편집"
           onPress={() => router.push({ pathname: '/idea-edit', params: { ideaId: idea.ideaId } } as never)}
+        />
+        <RetroButton
+          label={idea.convertedTaskId ? '✔︎ 이미 태스크로 전환됨' : `✂️ 태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
+          variant="ghost"
+          onPress={confirmConvert}
+          disabled={!!idea.convertedTaskId || busy || remaining < AI_COSTS.IDEA_CONVERT}
         />
         <RetroButton label="💡 아이디어 목록" variant="ghost" size="sm" onPress={() => router.replace('/ideas' as Href)} />
       </ScrollView>

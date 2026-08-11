@@ -1,8 +1,8 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
 import { convertIdeaToTask, createIdea, deleteIdea, fetchIdeas, patchIdea, setIdeaSticker } from '../src/api/ideas';
@@ -82,6 +82,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
@@ -222,7 +223,8 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             </View>
           ) : (
             <TextInput
-              defaultValue={editing?.content ?? ''}
+              // 미리보기 토글로 리마운트될 때 서버값이 아닌 최신 입력을 복원해야 함 (uncontrolled라 마운트 시에만 읽힘)
+              defaultValue={content}
               onChangeText={setContent}
               maxLength={5000}
               multiline
@@ -286,29 +288,29 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
       <BottomSheetModal
         ref={parentSheet}
         enableDynamicSizing
+        maxDynamicContentSize={Math.round(windowHeight * 0.62)}
         backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
-        <BottomSheetView style={styles.sheetBody}>
+        {/* 일반 ScrollView는 시트 팬 제스처에 먹혀 스크롤 불가 — 시트 전용 스크롤러 + OS 내비 바 인셋 필수 */}
+        <BottomSheetScrollView contentContainerStyle={[styles.sheetBody, { paddingBottom: insets.bottom + 24 }]}>
           <Text style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>상위 아이디어 선택</Text>
-          <ScrollView style={styles.sheetList}>
+          <Pressable
+            onPress={() => { setParentId(null); parentSheet.current?.dismiss(); }}
+            style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
+          >
+            <Text style={[styles.sheetRowText, { color: colors.sub, fontFamily: fonts.body }]}>없음 (최상위)</Text>
+          </Pressable>
+          {parentCandidates.map((i) => (
             <Pressable
-              onPress={() => { setParentId(null); parentSheet.current?.dismiss(); }}
+              key={i.ideaId}
+              onPress={() => { setParentId(i.ideaId); parentSheet.current?.dismiss(); }}
               style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
             >
-              <Text style={[styles.sheetRowText, { color: colors.sub, fontFamily: fonts.body }]}>없음 (최상위)</Text>
+              <Text numberOfLines={1} style={[styles.sheetRowText, { color: colors.fg, fontFamily: fonts.body }]}>{i.title}</Text>
             </Pressable>
-            {parentCandidates.map((i) => (
-              <Pressable
-                key={i.ideaId}
-                onPress={() => { setParentId(i.ideaId); parentSheet.current?.dismiss(); }}
-                style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
-              >
-                <Text numberOfLines={1} style={[styles.sheetRowText, { color: colors.fg, fontFamily: fonts.body }]}>{i.title}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </BottomSheetView>
+          ))}
+        </BottomSheetScrollView>
       </BottomSheetModal>
     </View>
   );
@@ -330,9 +332,8 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 11 },
   parentBtn: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 11, minHeight: 44, justifyContent: 'center' },
   parentText: { fontSize: 13 },
-  sheetBody: { padding: 20, paddingBottom: 32 },
+  sheetBody: { padding: 20 },
   sheetTitle: { fontSize: 16, marginBottom: 10 },
-  sheetList: { maxHeight: 380 },
   sheetRow: { borderBottomWidth: 1, paddingVertical: 13, minHeight: 44, justifyContent: 'center' },
   sheetRowText: { fontSize: 14 },
 });
