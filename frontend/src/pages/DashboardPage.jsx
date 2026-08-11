@@ -9,6 +9,7 @@ import EditTaskModal from '../components/EditTaskModal'
 import TaskBoardModal from '../components/TaskBoardModal'
 import NowHeroCard from '../components/dashboard/NowHeroCard'
 import TaskListCard from '../components/dashboard/TaskListCard'
+import AccountRestoredModal from '../components/AccountRestoredModal'
 import PixelBurst from '../components/PixelBurst'
 import RocketLaunch from '../components/RocketLaunch'
 import { parseDate, isSameLocalDate } from '../utils/dates'
@@ -332,6 +333,8 @@ export default function DashboardPage() {
       ))}
 
       {showRocket && <RocketLaunch onDone={() => setShowRocket(false)} />}
+
+      <AccountRestoredModal />
 
       {coinToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] max-w-[calc(100%-2rem)] animate-bounce">

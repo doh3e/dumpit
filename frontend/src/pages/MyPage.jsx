@@ -475,7 +475,10 @@ export default function MyPage() {
             <div className="mt-4 rounded-lg border-2 tone-danger px-4 py-3">
               <p className="text-sm font-black" style={{ color: 'var(--danger)' }}>탈퇴 전 확인해주세요.</p>
               <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
-                탈퇴하면 계정 개인정보는 비식별 처리되고, 작성한 할 일, 루틴, 아이디어, 브레인덤프 원문은 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                탈퇴하면 바로 서비스를 이용할 수 없고, 작성한 할 일·루틴·아이디어·브레인덤프도 볼 수 없게 됩니다.
+              </p>
+              <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
+                30일 안에 같은 구글 계정으로 다시 로그인하면 되돌릴 수 있어요. 30일이 지나면 계정과 기록이 완전히 삭제되고, 그때부터는 복구할 수 없습니다.
               </p>
             </div>
             <div className="mt-5 flex gap-3">
