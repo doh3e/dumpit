@@ -25,6 +25,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="덤핏 - AI가 도와주는 지능형 일정 관리" />
     <title>덤핏(Dumpit!)</title>
+    <!--
+      Google Analytics (GA4). 운영 도메인에서만 로드해 로컬 개발·프리뷰 트래픽이 통계에 섞이지 않게 한다.
+      LCP 프리로드보다 뒤에 두고 async로 받으므로 첫 렌더를 막지 않는다.
+      개인정보처리방침 제7·8·10조에 위탁·국외이전·분석 쿠키로 고지돼 있다.
+    -->
+    <script>
+      (function () {
+        if (!/(^|\.)dumpit\.kr$/.test(location.hostname)) return;
+        var ID = 'G-7CZMLEM04D';
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', ID);
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+        document.head.appendChild(s);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
