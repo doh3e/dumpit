@@ -111,6 +111,31 @@ public class AccountServiceImpl implements AccountService {
         return saved;
     }
 
+    @Override
+    @Transactional
+    public User grantEventCoins(UUID userId, int amount, String reason) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("지급 코인은 1 이상이어야 합니다.");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+        Map<String, Object> before = coinSnapshot(user);
+        user.addCoins(amount);
+        User saved = userRepository.save(user);
+        Map<String, Object> after = coinSnapshot(saved);
+        after.put("amount", amount);
+        SnapshotText.putMasked(after, "reason", reason);
+        activityLogService.record(saved, "EVENT_COINS_GRANTED", "USER", saved.getUserId(), before, after);
+        return saved;
+    }
+
+    private Map<String, Object> coinSnapshot(User user) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("userId", user.getUserId());
+        values.put("coinBalance", user.getCoinBalance());
+        return values;
+    }
+
     // 활동 로그에는 콘텐츠·개인정보 원문을 넣지 않는다는 규약을 여기서도 지킨다 —
     // 예전에는 밴/해제 로그에만 이메일·닉네임이 평문으로 남았다(SnapshotText 참고).
     private Map<String, Object> snapshot(User user) {

@@ -14,4 +14,6 @@ public interface AccountService {
     User banUser(UUID userId, String reason);
 
     User unbanUser(UUID userId);
+
+    User grantEventCoins(UUID userId, int amount, String reason);
 }
