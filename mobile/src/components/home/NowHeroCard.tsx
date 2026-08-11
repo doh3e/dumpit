@@ -25,6 +25,9 @@ type Props = {
 export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDone, focus, onComplete, onEdit }: Props) {
   const { colors } = useTheme();
   const task = allDone ? null : nowSuggestion?.task ?? null;
+  // 오늘 몫을 일과시간 안에 다 비웠으면 "내일 만나요" 대신 다음 일을 미리 권한다.
+  // 활동시간 판정은 서버가 단일 소스 — nowSuggestion.type이 SLEEP이 아니면 아직 일과시간.
+  const bonusTime = allDone && nowSuggestion?.type !== 'SLEEP' && queue.length > 0;
 
   if (focus) {
     return (
@@ -59,7 +62,9 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
                 오늘 다 비웠어요 🚀
               </Text>
               <Text style={[styles.message, { color: colors.sub, fontFamily: fonts.body }]}>
-                머릿속이 가벼워졌네요. 내일 또 만나요.
+                {bonusTime
+                  ? '아직 일과시간이네요. 여유가 되면 다음 일을 미리 당겨볼까요?'
+                  : '머릿속이 가벼워졌네요. 내일 또 만나요.'}
               </Text>
             </>
           ) : task ? (
@@ -97,9 +102,11 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
         </View>
       )}
 
-      {!allDone && queue.length > 0 && (
+      {(!allDone || bonusTime) && queue.length > 0 && (
         <View style={[styles.queue, { borderTopColor: colors.line }]}>
-          <Text style={[styles.queueTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>다음에 할 일</Text>
+          <Text style={[styles.queueTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>
+            {allDone ? '미리 해볼 일' : '다음에 할 일'}
+          </Text>
           {queue.slice(0, 3).map((r) => (
             <Pressable
               key={r.task.taskId}
