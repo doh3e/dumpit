@@ -7,6 +7,7 @@ import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { MarkdownView } from '../common/MarkdownView';
 import { RetroButton } from '../retro/RetroButton';
+import { PixelIcon } from '../common/PixelIcon';
 
 /** 미읽음 popup 공지 순차 모달 (웹 NoticeModal 패리티) — 닫으면 read 처리 */
 export function NoticePopup() {
@@ -35,7 +36,9 @@ export function NoticePopup() {
             retroShadow(5, colors.shadowHero),
           ]}
         >
-          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>📢 {current.title}</Text>
+          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+            <PixelIcon name="megaphone" size={14} /> {current.title}
+          </Text>
           <ScrollView style={styles.content}>
             <MarkdownView>{current.content}</MarkdownView>
           </ScrollView>

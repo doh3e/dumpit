@@ -80,7 +80,7 @@ function ItemPreview({ item, scheme }: { item: CatalogItem; scheme: 'light' | 'd
       </View>
     );
   }
-  return <Text style={{ fontSize: 26 }}>🎨</Text>;
+  return <PixelIcon name="palette" size={26} />;
 }
 
 /** 테마 미리보기를 지원하는 슬롯 — 화면 전체가 즉시 바뀐다 */
@@ -173,7 +173,8 @@ export default function ShopScreen() {
   return (
     <View style={styles.screen}>
       <ScreenHeader
-        title="🛒 상점"
+        title="상점"
+        icon={<PixelIcon name="cart" size={16} />}
         right={
           <View style={styles.coinRow}>
             <CoinIcon size={13} />

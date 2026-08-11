@@ -5,6 +5,7 @@ import { deriveState } from '../../pomodoro/engine';
 import { getSession, subscribe } from '../../pomodoro/store';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon } from '../common/PixelIcon';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
 
@@ -37,7 +38,9 @@ export function PomodoroCard() {
     return (
       <RetroCard style={styles.idleCard}>
         <View style={styles.idleText}>
-          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>🍅 뽀모도로</Text>
+          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+            <PixelIcon name="tomato" size={14} /> 뽀모도로
+          </Text>
           <Text style={[styles.sub, { color: colors.sub, fontFamily: fonts.body }]}>몰입의 시간을 시작해봐요</Text>
         </View>
         <RetroButton label="집중 시작하기" size="sm" onPress={goTimer} />
@@ -48,26 +51,38 @@ export function PomodoroCard() {
   // 실행 중엔 버튼이 상태를 입는다 — 라벨·색(틸)로 "지금 돌아가는 중"을 표시 (사용자 피드백 2026-07-24)
   const paused = session.pausedAt != null;
   const buttonLabel =
-    derived.phase === 'DONE' ? '🎉 완료 · 정리하기'
+    derived.phase === 'DONE' ? '완료 · 정리하기'
     : paused ? '⏸ 일시정지 · 확인하기'
-    : derived.phase === 'FOCUS' ? '🍅 집중 중 · 확인하기'
-    : derived.long ? '☕ 긴 휴식 중 · 확인하기' : '☕ 휴식 중 · 확인하기';
+    : derived.phase === 'FOCUS' ? '집중 중 · 확인하기'
+    : derived.long ? '긴 휴식 중 · 확인하기' : '휴식 중 · 확인하기';
+  const buttonIcon =
+    derived.phase === 'DONE' ? 'party' as const
+    : paused ? undefined
+    : derived.phase === 'FOCUS' ? 'tomato' as const : 'coffee' as const;
   const statusLine =
     derived.phase === 'DONE'
       ? '모든 세트 완료!'
-      : `${fmt(derived.remainingSec)} 남음${session.taskTitle ? ` · 🎯 ${session.taskTitle}` : ''}`;
+      : `${fmt(derived.remainingSec)} 남음${session.taskTitle ? ` · ${session.taskTitle}` : ''}`;
 
   return (
     <Pressable onPress={goTimer} accessibilityRole="button" accessibilityLabel="뽀모도로 타이머 열기">
       {({ pressed }) => (
         <RetroCard style={[styles.idleCard, pressed && { opacity: 0.85 }]}>
           <View style={styles.idleText}>
-            <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>🍅 뽀모도로</Text>
+            <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+              <PixelIcon name="tomato" size={14} /> 뽀모도로
+            </Text>
             <Text numberOfLines={1} style={[styles.sub, { color: paused ? colors.sub : colors.fg, fontFamily: fonts.chrome }]}>
               {statusLine}
             </Text>
           </View>
-          <RetroButton label={buttonLabel} size="sm" variant={derived.phase === 'DONE' ? 'primary' : 'focus'} onPress={goTimer} />
+          <RetroButton
+            label={buttonLabel}
+            icon={buttonIcon ? <PixelIcon name={buttonIcon} size={13} /> : undefined}
+            size="sm"
+            variant={derived.phase === 'DONE' ? 'primary' : 'focus'}
+            onPress={goTimer}
+          />
         </RetroCard>
       )}
     </Pressable>

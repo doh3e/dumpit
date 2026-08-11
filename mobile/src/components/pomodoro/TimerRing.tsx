@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon } from '../common/PixelIcon';
 
 const DOTS = 24;
 const RADIUS = 96;
@@ -49,9 +50,11 @@ export function TimerRing({ remainingSec, totalSec, phase, long = false }: Props
           />
         );
       })}
-      <Text style={[styles.time, { color: colors.fg, fontFamily: fonts.display }]}>
-        {phase === 'DONE' ? '🎉' : fmt(remainingSec)}
-      </Text>
+      {phase === 'DONE' ? (
+        <PixelIcon name="party" size={40} />
+      ) : (
+        <Text style={[styles.time, { color: colors.fg, fontFamily: fonts.display }]}>{fmt(remainingSec)}</Text>
+      )}
       <Text style={[styles.label, { color: colors.sub, fontFamily: fonts.chrome }]}>{label}</Text>
     </View>
   );

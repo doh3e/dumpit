@@ -11,6 +11,7 @@ import { useTheme } from '../../theme/useTheme';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
 import { useToast } from '../retro/ToastProvider';
+import { PixelIcon } from '../common/PixelIcon';
 
 function nextRunLabel(nextRunAt: string | null): string | null {
   const d = parseDate(nextRunAt);
@@ -41,7 +42,7 @@ export function RoutineListCard() {
     <RetroCard style={styles.card}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-          🔁 루틴 {sorted.length > 0 ? `(${sorted.filter((r) => r.enabled).length}/${sorted.length} 활성)` : ''}
+          <PixelIcon name="loop" size={13} /> 루틴 {sorted.length > 0 ? `(${sorted.filter((r) => r.enabled).length}/${sorted.length} 활성)` : ''}
         </Text>
         <RetroButton label="＋ 새 루틴" size="sm" onPress={() => router.push('/routine-edit' as Href)} />
       </View>

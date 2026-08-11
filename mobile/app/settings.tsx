@@ -69,7 +69,9 @@ export default function SettingsScreen() {
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>🎨 테마</Text>
+          <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+            <PixelIcon name="palette" size={13} /> 테마
+          </Text>
           <View style={styles.chipRow}>
             {THEME_MODES.map((m) => (
               <Chip key={m.id} label={m.label} icon={<PixelIcon name={m.icon} size={12} />} selected={mode === m.id} onPress={() => setMode(m.id)} />
@@ -85,7 +87,9 @@ export default function SettingsScreen() {
         <NotificationSettingsCard />
 
         <RetroCard style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>👤 계정</Text>
+          <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+            <PixelIcon name="user" size={13} /> 계정
+          </Text>
           <RetroButton label="로그아웃" variant="ghost" onPress={confirmSignOut} />
           {withdrawStage ? (
             <>

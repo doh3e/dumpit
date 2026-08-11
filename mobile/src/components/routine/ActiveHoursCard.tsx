@@ -9,6 +9,7 @@ import { Chip } from '../retro/Chip';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
 import { useToast } from '../retro/ToastProvider';
+import { PixelIcon } from '../common/PixelIcon';
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
@@ -50,7 +51,9 @@ export function ActiveHoursCard() {
     <RetroCard style={styles.card}>
       <View style={styles.row}>
         <View style={styles.textCol}>
-          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>🕘 활동 시간</Text>
+          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+            <PixelIcon name="clock" size={13} /> 활동 시간
+          </Text>
           <Text style={[styles.value, { color: colors.sub, fontFamily: fonts.chrome }]}>
             {hh(start)} ~ {start > end ? `다음날 ${hh(end)}` : hh(end)}
           </Text>
@@ -82,7 +85,7 @@ export function ActiveHoursCard() {
           </View>
           {wraps && (
             <Text style={[styles.wrapNote, { color: colors.warn, fontFamily: fonts.body }]}>
-              🌙 자정을 넘겨 다음날 새벽 {hh(draftEnd)}까지 이어지는 야행성 일과예요.
+              <PixelIcon name="moon" size={12} /> 자정을 넘겨 다음날 새벽 {hh(draftEnd)}까지 이어지는 야행성 일과예요.
             </Text>
           )}
           {draftStart === draftEnd && (

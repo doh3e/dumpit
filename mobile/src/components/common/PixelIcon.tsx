@@ -43,6 +43,17 @@ const ICONS = {
   ban: require('../../../assets/icons/ui_ban.png'),
   checkboxOff: require('../../../assets/icons/ui_checkbox_off.png'),
   checkboxOn: require('../../../assets/icons/ui_checkbox_on.png'),
+  // Phase C — 문구·섹션 타이틀 장식
+  clipboard: require('../../../assets/icons/ui_clipboard.png'),
+  rocket: require('../../../assets/icons/ui_rocket.png'),
+  target: require('../../../assets/icons/ui_target.png'),
+  coffee: require('../../../assets/icons/ui_coffee.png'),
+  party: require('../../../assets/icons/ui_party.png'),
+  star: require('../../../assets/icons/ui_star.png'),
+  chart: require('../../../assets/icons/ui_chart.png'),
+  palette: require('../../../assets/icons/ui_palette.png'),
+  bell: require('../../../assets/icons/ui_bell.png'),
+  clock: require('../../../assets/icons/ui_clock.png'),
 } as const;
 
 export type PixelIconName = keyof typeof ICONS;

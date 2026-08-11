@@ -112,7 +112,7 @@ export default function IdeasScreen() {
                     {idea.title}
                   </Text>
                   {category && <PixelIcon name={category.icon} size={12} />}
-                  {idea.convertedTaskId && <RetroBadge text="✔︎ 태스크" tone="sub" />}
+                  {idea.convertedTaskId && <RetroBadge text="✓ 태스크" tone="sub" />}
                 </Pressable>
               </View>
             );

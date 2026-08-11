@@ -20,6 +20,7 @@ import { MONTHLY_ORDINALS, WEEK_DAYS } from '../src/routines/repeatSummary';
 import { parseDate, toLocalDateString } from '../src/tasks/dates';
 import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 
 const REPEAT_TYPES: { id: RepeatType; label: string }[] = [
   { id: 'DAILY', label: '매일' },
@@ -267,7 +268,9 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
               accessibilityLabel={`시작일 ${form.startDate}`}
               style={[styles.dateBtn, { borderColor: colors.line, backgroundColor: colors.chip }]}
             >
-              <Text style={[styles.dateText, { color: colors.fg, fontFamily: fonts.chrome }]}>📅 {form.startDate}</Text>
+              <Text style={[styles.dateText, { color: colors.fg, fontFamily: fonts.chrome }]}>
+                <PixelIcon name="calendar" size={12} /> {form.startDate}
+              </Text>
             </Pressable>
             <Text style={[styles.tilde, { color: colors.sub, fontFamily: fonts.chrome }]}>~</Text>
             <Pressable

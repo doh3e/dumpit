@@ -131,7 +131,7 @@ export default function MyScreen() {
               <Image source={{ uri: p.picture }} style={styles.avatar} />
             ) : (
               <View style={[styles.avatar, styles.avatarFallback, { backgroundColor: colors.chip, borderColor: colors.line }]}>
-                <Text style={{ fontSize: 22 }}>🧑‍🚀</Text>
+                <PixelIcon name="user" size={22} />
               </View>
             )}
             <View style={styles.profileText}>
@@ -184,7 +184,9 @@ export default function MyScreen() {
             </View>
 
             <RetroCard style={styles.card}>
-              <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>🌟 완료 히트맵</Text>
+              <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+                <PixelIcon name="star" size={13} /> 완료 히트맵
+              </Text>
               {/* 최신(오늘)이 오른쪽 끝 — 처음부터 오늘이 보이도록 끝으로 붙여둔다 */}
               <ScrollView
                 ref={heatScroll}
@@ -223,7 +225,9 @@ export default function MyScreen() {
 
             {bars.length > 0 && (
               <RetroCard style={styles.card}>
-                <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>📊 완료 카테고리</Text>
+                <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+                  <PixelIcon name="chart" size={13} /> 완료 카테고리
+                </Text>
                 <View style={[styles.barTrack, { borderColor: colors.line }]}>
                   {bars.map((b) => (
                     <View key={b.category} style={{ flex: b.ratio, backgroundColor: b.color }} />

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { parseDate, toLocalDateTimeString } from '../../tasks/dates';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon } from '../common/PixelIcon';
 
 type Props = {
   value: string | null;              // "YYYY-MM-DDTHH:mm"
@@ -55,7 +56,7 @@ export function DateTimeField({ value, onChange, minimumDate, placeholder = '선
         ]}
       >
         <Text style={[styles.text, { color: current ? colors.fg : colors.sub, fontFamily: fonts.chrome }]}>
-          📅 {label}
+          <PixelIcon name="calendar" size={12} /> {label}
         </Text>
         {current && (
           <Pressable onPress={() => onChange(null)} hitSlop={8} accessibilityLabel="지우기">

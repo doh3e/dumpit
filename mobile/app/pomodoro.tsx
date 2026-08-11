@@ -130,7 +130,7 @@ export default function PomodoroScreen() {
             <TimerRing remainingSec={derived.remainingSec} totalSec={totalSec} phase={derived.phase} long={derived.long} />
             {session.taskTitle && (
               <Text numberOfLines={1} style={[styles.taskLine, { color: colors.sub, fontFamily: fonts.body }]}>
-                🎯 {session.taskTitle}
+                <PixelIcon name="target" size={12} /> {session.taskTitle}
               </Text>
             )}
             <Text style={[styles.setLine, { color: colors.sub, fontFamily: fonts.chrome }]}>
@@ -142,7 +142,7 @@ export default function PomodoroScreen() {
             {derived.phase === 'DONE' ? (
               <RetroCard style={styles.doneCard}>
                 <Text style={[styles.doneText, { color: colors.fg, fontFamily: fonts.display }]}>
-                  🎉 모든 세트 완료! 정산이 안 됐다면 네트워크 연결 후 다시 열어주세요.
+                  <PixelIcon name="party" size={13} /> 모든 세트 완료! 정산이 안 됐다면 네트워크 연결 후 다시 열어주세요.
                 </Text>
                 <RetroButton label="타이머 정리" onPress={() => { doReset(); }} />
               </RetroCard>
@@ -166,7 +166,7 @@ export default function PomodoroScreen() {
               style={({ pressed }) => [styles.taskPickBtn, { borderColor: colors.line, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 }]}
             >
               <Text numberOfLines={1} style={[styles.taskPickText, { color: picked ? colors.fg : colors.sub, fontFamily: fonts.body }]}>
-                {picked ? `🎯 ${picked.title}` : '🎯 집중할 태스크 고르기 (선택)'}
+                <PixelIcon name="target" size={12} /> {picked ? picked.title : '집중할 태스크 고르기 (선택)'}
               </Text>
             </Pressable>
             <Text style={[styles.summary, { color: colors.sub, fontFamily: fonts.chrome }]}>

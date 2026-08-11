@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon } from '../common/PixelIcon';
 
 type Props = {
   value: string;                     // "HH:mm"
@@ -39,7 +40,9 @@ export function TimeField({ value, onChange, accessibilityLabel }: Props) {
           { borderColor: colors.line, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 },
         ]}
       >
-        <Text style={[styles.text, { color: colors.fg, fontFamily: fonts.chrome }]}>🕐 {value}</Text>
+        <Text style={[styles.text, { color: colors.fg, fontFamily: fonts.chrome }]}>
+          <PixelIcon name="clock" size={12} /> {value}
+        </Text>
       </Pressable>
       {open && <DateTimePicker value={toDate(value)} mode="time" is24Hour onChange={onPick} />}
     </>

@@ -8,6 +8,7 @@ import { Chip } from '../retro/Chip';
 import { RetroCard } from '../retro/RetroCard';
 import { useToast } from '../retro/ToastProvider';
 import { NOTIFICATION_THRESHOLDS, toggleThreshold } from './notificationOptions';
+import { PixelIcon } from '../common/PixelIcon';
 
 /** 알림 설정 카드 — 서버 /me/settings 소비, 마감 임계값·아침 브리핑 즉시 저장 */
 export function NotificationSettingsCard() {
@@ -29,7 +30,9 @@ export function NotificationSettingsCard() {
 
   return (
     <RetroCard style={styles.card}>
-      <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>🔔 알림</Text>
+      <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+        <PixelIcon name="bell" size={13} /> 알림
+      </Text>
       <View style={styles.row}>
         <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.body }]}>알림 받기</Text>
         <Switch

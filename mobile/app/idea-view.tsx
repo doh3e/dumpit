@@ -116,7 +116,7 @@ export default function IdeaViewScreen() {
           </View>
           <View style={styles.metaRow}>
             {category && <RetroBadge text={category.label} tone="sub" icon={<PixelIcon name={category.icon} size={10} />} />}
-            {idea.convertedTaskId && <RetroBadge text="✔︎ 태스크로 전환됨" tone="accent" />}
+            {idea.convertedTaskId && <RetroBadge text="✓ 태스크로 전환됨" tone="accent" />}
           </View>
           {parent && (
             <Pressable
@@ -184,7 +184,7 @@ export default function IdeaViewScreen() {
           onPress={() => router.push({ pathname: '/idea-edit', params: { ideaId: idea.ideaId } } as never)}
         />
         <RetroButton
-          label={idea.convertedTaskId ? '✔︎ 이미 태스크로 전환됨' : `태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
+          label={idea.convertedTaskId ? '✓ 이미 태스크로 전환됨' : `태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
           icon={idea.convertedTaskId ? undefined : <PixelIcon name="scissors" size={14} />}
           variant="ghost"
           onPress={confirmConvert}

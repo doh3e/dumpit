@@ -272,7 +272,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
         {editing && (
           <>
             <RetroButton
-              label={editing.convertedTaskId ? '✔︎ 이미 태스크로 전환됨' : `태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
+              label={editing.convertedTaskId ? '✓ 이미 태스크로 전환됨' : `태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
               icon={editing.convertedTaskId ? undefined : <PixelIcon name="scissors" size={14} />}
               variant="ghost"
               onPress={confirmConvert}

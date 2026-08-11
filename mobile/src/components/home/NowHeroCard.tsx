@@ -4,6 +4,7 @@ import { formatDeadline, formatTime, isToday } from '../../tasks/dates';
 import { QUEUE_BUCKET_LABEL } from '../../tasks/constants';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon } from '../common/PixelIcon';
 import { RetroBadge } from '../retro/RetroBadge';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
@@ -36,7 +37,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
           <View style={styles.main}>
             <Text style={[styles.eyebrow, { color: colors.accent2, fontFamily: fonts.chrome }]}>집중 타임</Text>
             <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={2}>
-              지금은 「{focus.title}」 중이에요 🍅
+              지금은 「{focus.title}」 중이에요 <PixelIcon name="tomato" size={18} />
             </Text>
             <Text style={[styles.message, { color: colors.sub, fontFamily: fonts.body }]}>
               타이머가 끝날 때까지 이 일에만 몰입해요.
@@ -59,7 +60,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
           {allDone ? (
             <>
               <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-                오늘 다 비웠어요 🚀
+                오늘 다 비웠어요 <PixelIcon name="rocket" size={18} />
               </Text>
               <Text style={[styles.message, { color: colors.sub, fontFamily: fonts.body }]}>
                 {bonusTime

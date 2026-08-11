@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
-import { PixelIcon } from '../src/components/common/PixelIcon';
+import { PixelIcon, type PixelIconName } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
@@ -20,12 +20,13 @@ const AI_COST_ROWS = [
   { label: '그 외 모든 활동', cost: '무료' },
 ];
 
-const FEATURES = [
-  { icon: '📋', title: '대시보드', desc: '태스크를 등록하면 AI가 우선순위를 분석해줘요. 등록한 태스크는 마감 시간과 우선순위에 따라 하루일과표에 등록돼요.' },
-  { icon: '🧠', title: '브레인 덤프', desc: '머릿속의 생각을 그대로 쏟아내면 AI가 각각의 독립된 태스크로 변환해줘요.' },
-  { icon: '💡', title: '아이디어 덤프', desc: '자유롭게 쏟아낸 생각을 AI가 계층 구조의 아이디어로 정리해줘요. 아이디어는 태스크로 전환할 수 있어요.' },
-  { icon: '🔁', title: '루틴', desc: '반복 일정을 설정하면 매일 자동으로 태스크가 생성돼요.' },
-  { icon: '🍅', title: '포모도로 타이머', desc: '정해둔 시간만큼 집중 후 휴식! 완료 시 코인을 획득해요.' },
+// 웹 HelpModal FEATURES와 동일 배열 — 아이콘도 도트로 동기화 (도트 통일 Phase C)
+const FEATURES: { icon: PixelIconName; title: string; desc: string }[] = [
+  { icon: 'clipboard', title: '대시보드', desc: '태스크를 등록하면 AI가 우선순위를 분석해줘요. 등록한 태스크는 마감 시간과 우선순위에 따라 하루일과표에 등록돼요.' },
+  { icon: 'bubble', title: '브레인 덤프', desc: '머릿속의 생각을 그대로 쏟아내면 AI가 각각의 독립된 태스크로 변환해줘요.' },
+  { icon: 'bulb', title: '아이디어 덤프', desc: '자유롭게 쏟아낸 생각을 AI가 계층 구조의 아이디어로 정리해줘요. 아이디어는 태스크로 전환할 수 있어요.' },
+  { icon: 'loop', title: '루틴', desc: '반복 일정을 설정하면 매일 자동으로 태스크가 생성돼요.' },
+  { icon: 'tomato', title: '포모도로 타이머', desc: '정해둔 시간만큼 집중 후 휴식! 완료 시 코인을 획득해요.' },
 ];
 
 export default function HelpScreen() {
@@ -37,7 +38,9 @@ export default function HelpScreen() {
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard style={[styles.card, { backgroundColor: colors.chip }] as never}>
-          <Text style={[styles.betaTitle, { color: colors.accent, fontFamily: fonts.displayBold }]}>🎉 베타 서비스 안내</Text>
+          <Text style={[styles.betaTitle, { color: colors.accent, fontFamily: fonts.displayBold }]}>
+            <PixelIcon name="party" size={13} /> 베타 서비스 안내
+          </Text>
           <Text style={[styles.betaText, { color: colors.sub, fontFamily: fonts.body }]}>
             Dumpit!은 현재 베타 서비스 중이에요. 모든 활동이 무료인 대신, AI를 활용하는 기능에는 일일 사용량 제한이 있습니다.
           </Text>
@@ -46,7 +49,7 @@ export default function HelpScreen() {
         <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>주요 기능</Text>
         {FEATURES.map((f) => (
           <RetroCard key={f.title} style={styles.featureCard}>
-            <Text style={styles.featureIcon}>{f.icon}</Text>
+            <PixelIcon name={f.icon} size={18} />
             <View style={styles.featureText}>
               <Text style={[styles.featureTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>{f.title}</Text>
               <Text style={[styles.featureDesc, { color: colors.sub, fontFamily: fonts.body }]}>{f.desc}</Text>
@@ -54,7 +57,9 @@ export default function HelpScreen() {
           </RetroCard>
         ))}
 
-        <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>⚡ 일일 AI 사용량 안내</Text>
+        <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+          <PixelIcon name="token" size={14} /> 일일 AI 사용량 안내
+        </Text>
         <RetroCard style={styles.tableCard}>
           {AI_COST_ROWS.map((row, i) => (
             <View
@@ -88,7 +93,6 @@ const styles = StyleSheet.create({
   betaText: { fontSize: 12, lineHeight: 18 },
   sectionTitle: { fontSize: 15, marginTop: 8 },
   featureCard: { flexDirection: 'row', gap: 10, paddingVertical: 12 },
-  featureIcon: { fontSize: 18 },
   featureText: { flex: 1, gap: 3 },
   featureTitle: { fontSize: 13 },
   featureDesc: { fontSize: 12, lineHeight: 17 },
