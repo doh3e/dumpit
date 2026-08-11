@@ -1,4 +1,5 @@
 import { TaskDateTimeField } from './TaskTimeInputs'
+import { iconProps } from '../assets/icons'
 
 function formatDateTimeInput(d) {
   const pad = (value) => String(value).padStart(2, '0')
@@ -11,11 +12,12 @@ export function getTodayDeadline() {
   return formatDateTimeInput(d)
 }
 
+// icon: 도트 아이콘(iconProps 이름) — 모바일 DEADLINE_MODES와 도상 통일 (도트 통일 Phase C)
 export const DEADLINE_MODES = [
-  { value: 'AI', label: '✨ AI가 알아서', help: "제목·메모에 시점 단서가 있으면 마감을 잡고, 없으면 '언젠가'로 분류해요." },
+  { value: 'AI', label: 'AI가 알아서', icon: 'sparkle', help: "제목·메모에 시점 단서가 있으면 마감을 잡고, 없으면 '언젠가'로 분류해요." },
   { value: 'TODAY', label: '오늘까지', help: '오늘 밤 11시 59분 마감으로 만들어요.' },
-  { value: 'NONE', label: '🌙 언젠가', help: '기한 없는 일로 만들어요. AI가 마감을 지어내지 않아요.' },
-  { value: 'CUSTOM', label: '📅 직접 입력', help: '마감 날짜와 시간을 직접 정해요.' },
+  { value: 'NONE', label: '언젠가', icon: 'moon', help: '기한 없는 일로 만들어요. AI가 마감을 지어내지 않아요.' },
+  { value: 'CUSTOM', label: '직접 입력', icon: 'appointment', help: '마감 날짜와 시간을 직접 정해요.' },
 ]
 
 export default function DeadlineModeField({ mode, onModeChange, deadline, onDeadlineChange, minDeadline }) {
@@ -35,7 +37,14 @@ export default function DeadlineModeField({ mode, onModeChange, deadline, onDead
                 : 'bg-accent text-sub border-line hover:border-edge'
             }`}
           >
-            {m.label}
+            {m.icon ? (
+              <span className="inline-flex items-center gap-1">
+                <img {...iconProps(m.icon, 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+                {m.label}
+              </span>
+            ) : (
+              m.label
+            )}
           </button>
         ))}
       </div>

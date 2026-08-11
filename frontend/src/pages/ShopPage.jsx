@@ -566,7 +566,7 @@ export default function ShopPage() {
       {Object.keys(previews).length > 0 && (
         <div className="fixed bottom-6 left-4 right-24 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:max-w-lg z-40">
           <div className="card-retro flex items-center gap-3 px-4 py-2.5">
-            <span aria-hidden>👁</span>
+            <img {...iconProps('eye', 16)} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
             <p className="text-xs font-bold text-dark truncate flex-1">
               미리보기 중: {Object.values(previews)
                 .map((code) => items.find((i) => i.code === code)?.name)
