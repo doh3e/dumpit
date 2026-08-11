@@ -6,6 +6,7 @@ import AiUsageBadge from './AiUsageBadge'
 import { EstimatedMinutesField, TaskDateTimeField } from './TaskTimeInputs'
 import DeadlineModeField, { getTodayDeadline } from './DeadlineModeField'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
+import { iconProps } from '../assets/icons'
 
 const TASK_CATEGORIES = CATEGORIES.filter((category) => category.value !== 'ROUTINE')
 
@@ -210,7 +211,10 @@ export default function AddTaskModal({ onClose, onCreated }) {
                     : 'bg-accent text-sub border-line hover:border-edge'
                 }`}
               >
-                {c.emoji} {c.label}
+                <span className="inline-flex items-center gap-1">
+                  <img {...iconProps(c.icon, 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+                  {c.label}
+                </span>
               </button>
             ))}
           </div>

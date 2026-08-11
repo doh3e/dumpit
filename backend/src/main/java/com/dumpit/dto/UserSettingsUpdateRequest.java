@@ -7,5 +7,6 @@ public record UserSettingsUpdateRequest(
         Integer routineStartHour,
         Integer routineEndHour,
         Boolean notificationsEnabled,
-        List<Integer> notificationThresholds
+        List<Integer> notificationThresholds,
+        Boolean briefingEnabled
 ) {}

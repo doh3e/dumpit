@@ -44,6 +44,21 @@ public interface IdeaRepository extends JpaRepository<Idea, UUID> {
     """)
     int softDeleteByUser(@Param("user") User user, @Param("deletedAt") LocalDateTime deletedAt);
 
+    // 탈퇴가 찍은 시각과 정확히 일치하는 행만 되살린다 — 사용자가 직접 지운 아이디어는 부활하지 않는다.
+    @Modifying
+    @Query("""
+        UPDATE Idea i
+        SET i.deletedAt = NULL
+        WHERE i.user = :user
+          AND i.deletedAt = :deletedAt
+    """)
+    int restoreByUser(@Param("user") User user, @Param("deletedAt") LocalDateTime deletedAt);
+
+    // tasks보다 반드시 먼저 지워야 한다 — ideas.converted_task_id가 tasks를 NO ACTION으로 참조한다.
+    @Modifying
+    @Query("DELETE FROM Idea i WHERE i.user = :user")
+    int hardDeleteByUser(@Param("user") User user);
+
     // 스티커만 바꾸는 벌크 업데이트 — @UpdateTimestamp(updatedAt)를 우회해 목록 정렬 점프를 막는다.
     @Modifying(clearAutomatically = true)
     @Query("update Idea i set i.stickerCode = :code where i.ideaId = :ideaId")

@@ -3,10 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import DeadlineNudgeMenu from '../DeadlineNudgeMenu'
 import useAiUsage from '../../hooks/useAiUsage'
-import remainAiToken from '../../assets/remain_ai_token.png'
-import coinImage from '../../assets/coin_image.png'
-import menuImage from '../../assets/menu.png'
-import settingImage from '../../assets/setting_image.png'
+import { iconProps } from '../../assets/icons'
 
 const AI_COST_ROWS = [
   ['일일 총 한도', '100점', true],
@@ -81,7 +78,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             className="lg:hidden w-9 h-9 shrink-0 rounded-lg border border-chrome-line flex items-center justify-center hover:bg-chrome-line transition-colors"
             aria-label="메뉴 열기"
           >
-            <img src={menuImage} alt="" className="h-5 w-5 object-contain" />
+            <img {...iconProps('menu', 20)} alt="" className="h-5 w-5 object-contain" />
           </button>
           <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
             {/* 투명 여백 트리밍된 로고 — 바(h-20)를 넘지 않게. h-24 시절엔 오버플로+비대칭 여백으로 바가 어긋나 보였음 */}
@@ -111,7 +108,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
               tabIndex={0}
               aria-label="AI 사용량 안내"
             >
-              <img src={remainAiToken} alt="AI" className="w-4 h-4 object-contain" />
+              <img {...iconProps('token', 16)} alt="AI" className="w-4 h-4 object-contain" />
               <span className={`font-dungeon text-sm leading-none ${aiColor}`}>
                 {usage.remaining}
               </span>
@@ -159,7 +156,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             tabIndex={0}
             aria-label="보유 코인 안내"
           >
-            <img src={coinImage} alt="coin" className="w-4 h-4 object-contain" />
+            <img {...iconProps('coin', 16)} alt="coin" className="w-4 h-4 object-contain" />
             <span className="font-dungeon text-sm text-dark leading-none">{displayCoins}</span>
             <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg card-retro px-3 py-2 text-left text-xs font-bold text-sub opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100">
               코인샵에서 각종 테마와 꾸미기 용품, 스티커로 교환할 수 있어요.
@@ -181,7 +178,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             aria-label="설정"
             title="설정"
           >
-            <img src={settingImage} alt="" className="h-5 w-5 object-contain" />
+            <img {...iconProps('setting', 20)} alt="" className="h-5 w-5 object-contain" />
           </button>
 
           {/* User menu */}
@@ -210,14 +207,14 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
                     <div className="grid grid-cols-3 gap-2">
                       <DeadlineNudgeMenu variant="mobile-card" />
                       <div className="rounded-lg border border-line bg-chip px-2 py-2 text-center">
-                        <img src={remainAiToken} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
+                        <img {...iconProps('token', 20)} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
                         <p className="text-[0.625rem] font-black text-sub">AI</p>
                         <p className={`font-dungeon text-sm ${usage?.remaining === 0 ? 'text-primary' : 'text-dark'}`}>
                           {usage ? usage.remaining : '-'}
                         </p>
                       </div>
                       <div className="rounded-lg border border-line bg-accent px-2 py-2 text-center">
-                        <img src={coinImage} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
+                        <img {...iconProps('coin', 20)} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
                         <p className="text-[0.625rem] font-black text-sub">코인</p>
                         <p className="font-dungeon text-sm text-dark">{user?.coins ?? 0}</p>
                       </div>

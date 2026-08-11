@@ -5,6 +5,7 @@ import com.dumpit.entity.Idea;
 import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.repository.BrainDumpRepository;
+import com.dumpit.repository.DeviceTokenRepository;
 import com.dumpit.repository.IdeaRepository;
 import com.dumpit.repository.TaskRepository;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,6 +32,7 @@ class AuthProfileApiTest extends ApiIntegrationTestBase {
     @Autowired private TaskRepository taskRepository;
     @Autowired private BrainDumpRepository brainDumpRepository;
     @Autowired private IdeaRepository ideaRepository;
+    @Autowired private DeviceTokenRepository deviceTokenRepository;
 
     // ---------- GET /auth/me ----------
 
@@ -196,14 +199,42 @@ class AuthProfileApiTest extends ApiIntegrationTestBase {
     // ---------- DELETE /me/account ----------
 
     @Test
-    void 탈퇴하면_상태WITHDRAWN_이메일익명화_구글연동해제() throws Exception {
+    void 탈퇴하면_상태WITHDRAWN_유예기간설정_구글연동해제() throws Exception {
         mockMvc.perform(delete("/me/account").with(asUser(USER_A)))
                 .andExpect(status().isNoContent());
 
         User withdrawn = userRepository.findById(userA.getUserId()).orElseThrow();
         assertThat(withdrawn.getStatus()).isEqualTo(User.Status.WITHDRAWN);
-        assertThat(withdrawn.getEmail()).startsWith("withdrawn+");
+        assertThat(withdrawn.getPurgeAfter()).isAfter(LocalDateTime.now());
+        assertThat(withdrawn.getWithdrawalMarkedAt()).isNotNull();
         verify(oauthRevocationService).revokeGoogle(any());
+    }
+
+    @Test
+    void 탈퇴해도_유예중에는_식별정보가_보존된다() throws Exception {
+        // 유예 기간에 같은 구글 계정으로 돌아오면 원래 계정에 다시 붙여야 한다 —
+        // 여기서 이메일·구글 sub를 덮으면 복구할 원본이 사라진다.
+        String providerIdBefore = userA.getProviderId();
+
+        mockMvc.perform(delete("/me/account").with(asUser(USER_A)))
+                .andExpect(status().isNoContent());
+
+        User withdrawn = userRepository.findById(userA.getUserId()).orElseThrow();
+        assertThat(withdrawn.getEmail()).isEqualTo(USER_A);
+        assertThat(withdrawn.getProviderId()).isEqualTo(providerIdBefore);
+    }
+
+    @Test
+    void 탈퇴하면_기기_토큰도_지워진다() throws Exception {
+        mockMvc.perform(post("/me/devices").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"tok-withdraw\", \"platform\": \"android\"}"))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(delete("/me/account").with(asUser(USER_A)))
+                .andExpect(status().isNoContent());
+
+        assertThat(deviceTokenRepository.findAll()).isEmpty();
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.dumpit.dto.NoticeResponse;
 import com.dumpit.entity.Notice;
 import com.dumpit.entity.User;
 import com.dumpit.exception.NotFoundException;
+import com.dumpit.push.NoticePushService;
 import com.dumpit.repository.NoticeRepository;
 import com.dumpit.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -28,6 +29,7 @@ public class AdminNoticeController {
 
     private final NoticeRepository noticeRepository;
     private final UserRepository userRepository;
+    private final NoticePushService noticePushService;
 
     @GetMapping
     public ResponseEntity<List<NoticeResponse>> list(@AuthenticationPrincipal OAuth2User principal) {
@@ -52,7 +54,12 @@ public class AdminNoticeController {
                 Boolean.TRUE.equals(request.pinned()),
                 Boolean.TRUE.equals(request.popup())
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(NoticeResponse.from(noticeRepository.save(notice)));
+        noticeRepository.save(notice);
+        // DRAFT나 미래 publishAt은 공개 목록에 아직 노출되지 않으므로 즉시 브로드캐스트하면 안 된다(PATCH 발행 전환 훅은 후속)
+        if (notice.getStatus() == Notice.Status.PUBLISHED && !notice.getPublishAt().isAfter(LocalDateTime.now())) {
+            noticePushService.broadcastNewNotice(notice.getTitle());
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(NoticeResponse.from(notice));
     }
 
     @PatchMapping("/{noticeId}")

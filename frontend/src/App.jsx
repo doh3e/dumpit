@@ -15,6 +15,7 @@ const MyPage = lazy(() => import('./pages/MyPage'))
 const NoticePage = lazy(() => import('./pages/NoticePage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
+const AccountDeletionPage = lazy(() => import('./pages/AccountDeletionPage'))
 
 /** Sentry 지연 로드와 호환되는 자체 에러 바운더리 — 캐치 시점에 SDK를 불러 전송 */
 class AppErrorBoundary extends Component {
@@ -94,6 +95,8 @@ const router = createBrowserRouter([
       },
       { path: '/privacy', element: <PrivacyPage /> },
       { path: '/terms', element: <TermsPage /> },
+      // 로그인 없이 접근 가능해야 한다 — Play Console 데이터 안전 섹션에 제출하는 주소
+      { path: '/account-deletion', element: <AccountDeletionPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

@@ -21,9 +21,24 @@ class PriorityCalculatorTest {
     }
 
     @Test
-    void 사용자_지정_점수가_있으면_그_값을_그대로_쓴다() {
+    void 지정_점수는_바닥으로_보장된다() {
+        // 마감 30일(긴급도 0.25): 합성 0.6*0.25+0.4*0.9 = 0.51 < 0.9 → 지정값 유지
         Task t = task(0.9, 0.1, NOW.plusDays(30));
         assertThat(PriorityCalculator.effectivePriority(t, NOW)).isEqualTo(0.9);
+    }
+
+    @Test
+    void 지정_점수도_마감이_임박하면_올라간다() {
+        // 30분 전(긴급도 0.95): max(0.4, 0.6*0.95 + 0.4*0.4) = 0.73
+        Task t = task(0.4, null, NOW.plusMinutes(30));
+        assertThat(PriorityCalculator.effectivePriority(t, NOW)).isEqualTo(0.73, within(1e-9));
+    }
+
+    @Test
+    void 마감_없는_지정_점수는_그대로다() {
+        // 긴급도 0.15: 합성 0.09 + 0.16 = 0.25 < 0.4 → 바닥 유지
+        Task t = task(0.4, 0.8, null);
+        assertThat(PriorityCalculator.effectivePriority(t, NOW)).isEqualTo(0.4);
     }
 
     @Test

@@ -2,6 +2,8 @@ package com.dumpit.config;
 
 import com.dumpit.exception.ApiException;
 import com.dumpit.service.AiUsageLimitExceededException;
+import com.dumpit.service.GoogleUserUpserter;
+import com.dumpit.service.MobileGoogleTokenVerifier;
 import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -69,6 +71,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AiUsageLimitExceededException.class)
     public ResponseEntity<Map<String, Object>> handleAiUsageLimit(AiUsageLimitExceededException ex) {
         return error(HttpStatus.TOO_MANY_REQUESTS, "AI_USAGE_LIMIT_EXCEEDED", ex.getMessage());
+    }
+
+    @ExceptionHandler(MobileGoogleTokenVerifier.InvalidMobileTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidMobileToken(
+            MobileGoogleTokenVerifier.InvalidMobileTokenException ex) {
+        return error(HttpStatus.UNAUTHORIZED, "INVALID_GOOGLE_TOKEN",
+                "구글 로그인 검증에 실패했습니다. 다시 시도해주세요.");
+    }
+
+    @ExceptionHandler(GoogleUserUpserter.AccountInactiveException.class)
+    public ResponseEntity<Map<String, Object>> handleAccountInactive(
+            GoogleUserUpserter.AccountInactiveException ex) {
+        return error(HttpStatus.FORBIDDEN, "ACCOUNT_INACTIVE", "사용할 수 없는 계정입니다.");
     }
 
     // 매핑 없는 경로는 인증 유저 기준 여기까지 내려온다(미인증은 시큐리티가 401로 먼저 끊음) —

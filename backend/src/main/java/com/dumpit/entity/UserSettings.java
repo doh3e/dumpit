@@ -35,6 +35,9 @@ public class UserSettings {
     @Column(nullable = false)
     private Boolean notificationsEnabled = true;
 
+    @Column(nullable = false)
+    private Boolean briefingEnabled = true;
+
     @Convert(converter = IntListJsonConverter.class)
     @Column(nullable = false, length = 64)
     private List<Integer> notificationThresholds = List.of(60);
@@ -58,6 +61,10 @@ public class UserSettings {
 
     public void updateNotificationsEnabled(boolean enabled) {
         this.notificationsEnabled = enabled;
+    }
+
+    public void updateBriefingEnabled(boolean enabled) {
+        this.briefingEnabled = enabled;
     }
 
     public void updateNotificationThresholds(List<Integer> thresholds) {

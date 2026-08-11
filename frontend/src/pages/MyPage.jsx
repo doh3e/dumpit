@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
-import coinImage from '../assets/coin_image.png'
+import { iconProps } from '../assets/icons'
 import PixelStation from '../components/PixelStation'
 import { useAuth } from '../context/AuthContext'
 
@@ -62,7 +62,7 @@ const STAT_CARDS = (stats) => [
   { theme: '수거한 생각', label: '완료한 태스크', value: stats.totalDone, bg: 'bg-primary', text: 'text-on-accent' },
   { theme: '집중 관제', label: '뽀모도로 집중', value: `${stats.pomodoroTotalSessions ?? 0}회`, sub: `누적 ${formatFocusTotal(stats.pomodoroTotalMinutes)}`, bg: 'bg-secondary', text: 'text-on-accent' },
   { theme: '궤도 유지', label: '연속 완료', value: `${stats.streak}일`, bg: 'bg-chip', text: 'text-dark', sub: '오늘 기준' },
-  { theme: '자원', label: '보유 코인', value: stats.coinBalance, bg: 'bg-card', text: 'text-dark', icon: coinImage },
+  { theme: '자원', label: '보유 코인', value: stats.coinBalance, bg: 'bg-card', text: 'text-dark', icon: iconProps('coin', 24) },
   { label: '브레인 덤프', value: stats.brainDumpCount, bg: 'bg-card', text: 'text-dark' },
   { label: '저장한 아이디어', value: stats.ideaCount, bg: 'bg-card', text: 'text-dark' },
 ]
@@ -365,7 +365,7 @@ export default function MyPage() {
                 className={`snap-start flex-shrink-0 w-32 h-32 rounded-2xl shadow-retro ${bg} flex flex-col items-center justify-center gap-1 p-3 transition-transform duration-150 active:scale-95`}
                 style={{ border: '1.5px solid var(--edge)' }}
               >
-                {icon && <img src={icon} alt="" className="w-6 h-6 object-contain mb-0.5" />}
+                {icon && <img {...icon} alt="" className="w-6 h-6 object-contain mb-0.5" />}
                 <p className={`font-dungeon text-3xl leading-none ${text}`}>{value}</p>
                 {theme && (
                   <p className={`font-dungeon text-[0.625rem] text-center leading-tight ${text}`}>{theme}</p>
@@ -475,7 +475,10 @@ export default function MyPage() {
             <div className="mt-4 rounded-lg border-2 tone-danger px-4 py-3">
               <p className="text-sm font-black" style={{ color: 'var(--danger)' }}>탈퇴 전 확인해주세요.</p>
               <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
-                탈퇴하면 계정 개인정보는 비식별 처리되고, 작성한 할 일, 루틴, 아이디어, 브레인덤프 원문은 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                탈퇴하면 바로 서비스를 이용할 수 없고, 작성한 할 일·루틴·아이디어·브레인덤프도 볼 수 없게 됩니다.
+              </p>
+              <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
+                30일 안에 같은 구글 계정으로 다시 로그인하면 되돌릴 수 있어요. 30일이 지나면 계정과 기록이 완전히 삭제되고, 그때부터는 복구할 수 없습니다.
               </p>
             </div>
             <div className="mt-5 flex gap-3">

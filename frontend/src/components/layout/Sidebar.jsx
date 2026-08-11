@@ -3,8 +3,7 @@ import { createPortal } from 'react-dom'
 import { NavLink, Link } from 'react-router-dom'
 import PomodoroTimer from '../PomodoroTimer'
 import { useAuth } from '../../context/AuthContext'
-import settingImage from '../../assets/setting_image.png'
-import downloadImage from '../../assets/download.png'
+import { iconProps } from '../../assets/icons'
 
 const MENU = [
   { label: '대시보드', path: '/dashboard' },
@@ -106,7 +105,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
             }`
           }
         >
-          <img src={settingImage} alt="" className="mr-2 h-5 w-5 flex-shrink-0 object-contain" />
+          <img {...iconProps('setting', 20)} alt="" className="mr-2 h-5 w-5 flex-shrink-0 object-contain" />
           관리자 페이지
         </NavLink>
       )}
@@ -159,7 +158,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
               onClick={handleNavClick}
               className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-xs text-sub hover:text-dark hover:bg-chip transition-all"
             >
-              <img src={downloadImage} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
+              <img {...iconProps('download', 16)} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
               데스크탑 앱 다운로드
             </a>
           </>

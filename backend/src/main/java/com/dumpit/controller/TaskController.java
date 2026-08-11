@@ -5,6 +5,7 @@ import com.dumpit.dto.TaskResponse;
 import com.dumpit.entity.Task;
 import com.dumpit.exception.BadRequestException;
 import com.dumpit.service.OpenAiService;
+import com.dumpit.service.TaskPlanningService;
 import com.dumpit.service.TaskService;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ import java.util.UUID;
 public class TaskController {
 
     private final TaskService taskService;
+    private final TaskPlanningService taskPlanningService;
     private final ObjectMapper objectMapper;
 
     @GetMapping
@@ -38,6 +40,11 @@ public class TaskController {
     ) {
         List<Task> tasks = taskService.getTasksForUser(principal.getAttribute("email"), doneSinceDays);
         return ResponseEntity.ok(tasks.stream().map(TaskResponse::from).toList());
+    }
+
+    @GetMapping("/today")
+    public ResponseEntity<List<TaskResponse>> todayTasks(@AuthenticationPrincipal OAuth2User principal) {
+        return ResponseEntity.ok(taskPlanningService.todayTasks(principal.getAttribute("email")));
     }
 
     @PostMapping

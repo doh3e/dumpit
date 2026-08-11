@@ -23,6 +23,10 @@ export default defineConfig(({ mode }) => {
     ],
     build: {
       sourcemap: true,
+      // 아이콘 srcset 사다리(assets/icons/*)는 개당 1KB 안팎이라 기본 4KB 인라인
+      // 대상이지만, 50여 개가 전부 메인 청크에 base64로 박히면 +60KB라 파일로 유지
+      assetsInlineLimit: (filePath) =>
+        filePath.includes('src/assets/icons/') ? false : undefined,
     },
     server: {
       port: 5173,

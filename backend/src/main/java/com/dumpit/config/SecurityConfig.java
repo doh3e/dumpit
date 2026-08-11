@@ -2,6 +2,7 @@ package com.dumpit.config;
 
 import com.dumpit.repository.UserRepository;
 import com.dumpit.service.CustomOAuth2UserService;
+import com.dumpit.service.impl.CustomOAuth2UserServiceImpl;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -123,6 +124,7 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/health", "/error").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/auth/mobile/google").permitAll()
                 .anyRequest().authenticated()
             )
 
@@ -152,7 +154,10 @@ public class SecurityConfig {
                 .authorizedClientRepository(authorizedClientRepository)
                 .successHandler((request, response, authentication) -> {
                     logGoogleAuthorizedClientState(authorizedClientRepository, request, authentication);
-                    response.sendRedirect(frontendUrl + "/dashboard");
+                    // 탈퇴 유예 중 복구된 계정이면 프런트가 안내를 띄울 수 있게 표시한다
+                    boolean restored = Boolean.TRUE.equals(
+                            request.getAttribute(CustomOAuth2UserServiceImpl.ACCOUNT_RESTORED_ATTRIBUTE));
+                    response.sendRedirect(frontendUrl + "/dashboard" + (restored ? "?restored=1" : ""));
                 })
                 .failureUrl(frontendUrl + "/?error=login_failed")
             )

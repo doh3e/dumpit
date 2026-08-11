@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
-import coinImage from '../assets/coin_image.png'
+import { iconProps } from '../assets/icons'
 import { useAuth } from '../context/AuthContext'
 import RocketLaunch from '../components/RocketLaunch'
 import PixelSprite from '../components/PixelSprite'
@@ -132,7 +132,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
       <div className="flex items-center justify-between gap-2 mt-auto pt-1">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
-            <img src={coinImage} alt="" className="w-4 h-4 object-contain" />
+            <img {...iconProps('coin', 16)} alt="" className="w-4 h-4 object-contain" />
             {/* 아직 안 산 아이템의 가격은 테마와 무관하게 붉은색 고정 — 지불할 금액이 한눈에 띄게 */}
             <span
               className="font-dungeon text-sm text-dark"
@@ -489,7 +489,7 @@ export default function ShopPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="font-dungeon text-dark text-2xl">코인샵</h2>
         <div className="flex items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1.5">
-          <img src={coinImage} alt="" className="w-5 h-5 object-contain" />
+          <img {...iconProps('coin', 20)} alt="" className="w-5 h-5 object-contain" />
           <span className="font-dungeon text-lg text-dark">{coinBalance}</span>
         </div>
       </div>
@@ -566,7 +566,7 @@ export default function ShopPage() {
       {Object.keys(previews).length > 0 && (
         <div className="fixed bottom-6 left-4 right-24 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:max-w-lg z-40">
           <div className="card-retro flex items-center gap-3 px-4 py-2.5">
-            <span aria-hidden>👁</span>
+            <img {...iconProps('eye', 16)} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
             <p className="text-xs font-bold text-dark truncate flex-1">
               미리보기 중: {Object.values(previews)
                 .map((code) => items.find((i) => i.code === code)?.name)

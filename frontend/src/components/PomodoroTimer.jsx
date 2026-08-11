@@ -3,8 +3,7 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { setPomodoroFocus, clearPomodoroFocus } from '../services/pomodoroFocus'
 import { nextAfterFocus, autoStartNextFocus } from '../utils/pomodoroCycle'
-import settingImage from '../assets/setting_image.png'
-import arrowheadImage from '../assets/arrowheads.png'
+import { iconProps } from '../assets/icons'
 
 const DEFAULT_FOCUS_MIN = 25
 const DEFAULT_BREAK_MIN = 5
@@ -60,6 +59,11 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
   const [mode, setMode] = useState(MODE.FOCUS)
   const [remaining, setRemaining] = useState(focusMin * 60)
   const [running, setRunning] = useState(false)
+  // 카운트다운 구간 식별자. 페이즈 전환은 setRunning(false) 직후 setRunning(true)를 같은 배치에서
+  // 실행해 running의 최종값이 변하지 않고, 그러면 아래 카운트다운 effect가 재실행되지 않는다.
+  // 인터벌은 남은 시간이 0이 될 때 이미 정리된 뒤라 타이머가 그대로 멈춘다(집중↔휴식 전환 시 멈춤 버그).
+  // 새 구간이 시작될 때마다 이 값을 올려 effect 재실행을 보장한다.
+  const [runId, setRunId] = useState(0)
   const [selectedTaskId, setSelectedTaskId] = useState('')
   const [completedCount, setCompletedCount] = useState(0)
   const [blinking, setBlinking] = useState(false)
@@ -148,6 +152,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     setBlinking(true)
     setTimeout(() => setBlinking(false), 1600)
     sessionOpenRef.current = false // 세션은 완료로 소비 — 다음 집중은 새로 시작 신호를 보낸다
+    setRunId((n) => n + 1)
     const finishedSets = currentSet + 1
     const decision = nextAfterFocus({ completedSets: finishedSets, setsTarget, longBreakEvery })
     if (decision.type === 'DONE') {
@@ -177,6 +182,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
 
   const handleBreakComplete = useCallback(() => {
     const autoContinue = autoStartNextFocus(setsTarget)
+    setRunId((n) => n + 1)
     playAlarm()
     notifyDesktopPomodoroComplete(MODE.BREAK, { autoContinue })
     setMode(MODE.FOCUS)
@@ -210,8 +216,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     }
     // remaining is intentionally read only when a run starts/resumes.
     // During a run, targetEndAtRef keeps the countdown tied to wall-clock time.
+    // runId는 페이즈 전환처럼 running 값이 그대로인 채 새 구간이 시작될 때 재실행시키는 역할.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running])
+  }, [running, runId])
 
   useEffect(() => {
     if (remaining === 0 && running) {
@@ -386,7 +393,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
             aria-label="뽀모도로 위젯 열기"
             title="뽀모도로 위젯 열기"
           >
-            <img src={arrowheadImage} alt="" className="w-3.5 h-3.5 object-contain" />
+            <img {...iconProps('arrowhead', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
           </button>
         )}
         <button
@@ -395,7 +402,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           aria-label="타이머 설정"
           title="타이머 설정"
         >
-          <img src={settingImage} alt="설정" className="w-5 h-5 object-contain" />
+          <img {...iconProps('setting', 20)} alt="설정" className="w-5 h-5 object-contain" />
         </button>
       </div>
 
@@ -495,7 +502,10 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`font-dungeon text-xl text-dark tracking-wider ${blinking ? 'px-blink' : ''}`}>
+          <span
+            data-testid="pomodoro-clock"
+            className={`font-dungeon text-xl text-dark tracking-wider ${blinking ? 'px-blink' : ''}`}
+          >
             {min}:{sec}
           </span>
         </div>

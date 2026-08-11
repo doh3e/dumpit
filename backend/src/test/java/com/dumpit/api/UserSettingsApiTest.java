@@ -89,7 +89,9 @@ class UserSettingsApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void 탈퇴하면_설정_행도_삭제된다() throws Exception {
+    void 탈퇴해도_유예중에는_설정_행이_남는다() throws Exception {
+        // 유예 기간 안에 복구하면 설정도 그대로 돌려줘야 한다.
+        // 실제 삭제는 유예 종료 시 users 삭제의 CASCADE로 이뤄진다(AccountPurgeService).
         mockMvc.perform(patch("/me/settings").with(asUser(USER_A))
                         .contentType("application/json")
                         .content("{\"routineStartHour\":10}"))
@@ -101,6 +103,6 @@ class UserSettingsApiTest extends ApiIntegrationTestBase {
 
         Integer rows = jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM user_settings", Integer.class);
-        org.assertj.core.api.Assertions.assertThat(rows).isEqualTo(0);
+        org.assertj.core.api.Assertions.assertThat(rows).isEqualTo(1);
     }
 }
