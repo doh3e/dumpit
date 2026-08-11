@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchIdeas } from '../../src/api/ideas';
+import { PixelIcon } from '../../src/components/common/PixelIcon';
 import { RetroBadge } from '../../src/components/retro/RetroBadge';
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
@@ -53,7 +54,8 @@ export default function IdeasScreen() {
         <View style={styles.headerRow}>
           <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>아이디어</Text>
           <View style={styles.headerActions}>
-            <RetroButton label="💭 덤프하기" size="sm" variant="ghost" onPress={() => router.push('/idea-dump' as Href)} />
+            {/* 아이디어 계열 기호는 전구로 통일 — 말풍선은 브레인덤프 전용 (2026-08-11 결정) */}
+            <RetroButton label="덤프하기" icon={<PixelIcon name="bulb" size={13} />} size="sm" variant="ghost" onPress={() => router.push('/idea-dump' as Href)} />
             <RetroButton label="＋ 새 아이디어" size="sm" onPress={() => router.push('/idea-edit' as Href)} />
           </View>
         </View>

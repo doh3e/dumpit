@@ -32,6 +32,7 @@ import {
 import { getApiErrorMessage } from '../src/api/client';
 import type { DumpResponse, DumpTaskItem } from '../src/api/types';
 import { Chip } from '../src/components/retro/Chip';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
@@ -343,7 +344,7 @@ export default function BrainDumpScreen() {
         <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
           브레인 덤프
         </Text>
-        <RetroBadge text={`✨ ${AI_COSTS.BRAIN_DUMP}점`} tone="starlight" />
+        <RetroBadge text={`${AI_COSTS.BRAIN_DUMP}점`} tone="starlight" icon={<PixelIcon name="token" size={10} />} />
       </View>
 
       {stage === 'input' ? (
@@ -380,7 +381,8 @@ export default function BrainDumpScreen() {
               </View>
             </RetroCard>
             <RetroButton
-              label="AI 분석 ✨"
+              label="AI 분석"
+              icon={<PixelIcon name="sparkle" size={14} />}
               onPress={handleAnalyze}
               disabled={analysisDisabled}
               style={styles.analyzeButton}

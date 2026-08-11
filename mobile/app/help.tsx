@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
@@ -32,7 +33,7 @@ export default function HelpScreen() {
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="❓ 도움말" />
+      <ScreenHeader title="도움말" icon={<PixelIcon name="question" size={16} />} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard style={[styles.card, { backgroundColor: colors.chip }] as never}>

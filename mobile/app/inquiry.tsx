@@ -6,6 +6,7 @@ import { getApiErrorMessage } from '../src/api/client';
 import { INQUIRY_LIMITS, submitInquiry } from '../src/api/inquiry';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { PRIVACY_URL } from '../src/legal/links';
@@ -41,7 +42,7 @@ export default function InquiryScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="✉️ 문의하기" />
+      <ScreenHeader title="문의하기" icon={<PixelIcon name="envelope" size={16} />} />
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView

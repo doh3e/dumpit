@@ -11,6 +11,7 @@ import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { ActiveHoursCard } from '../src/components/routine/ActiveHoursCard';
 import { NotificationSettingsCard } from '../src/components/settings/NotificationSettingsCard';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { useThemeMode, type ThemeMode } from '../src/theme/ThemeProvider';
 import { fonts } from '../src/theme/typography';
@@ -64,7 +65,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="⚙️ 설정" />
+      <ScreenHeader title="설정" icon={<PixelIcon name="gear" size={16} />} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard style={styles.card}>

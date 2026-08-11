@@ -10,6 +10,7 @@ import type { IdeaNode } from '../src/api/types';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
@@ -121,7 +122,7 @@ export default function IdeaDumpScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="💭 아이디어 덤프" />
+      <ScreenHeader title="아이디어 덤프" icon={<PixelIcon name="bulb" size={16} />} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         {stage === 'input' ? (
@@ -140,10 +141,12 @@ export default function IdeaDumpScreen() {
               style={[styles.input, { borderColor: colors.line, backgroundColor: colors.card, color: colors.fg, fontFamily: fonts.body }]}
             />
             <Text style={[styles.counter, { color: colors.sub, fontFamily: fonts.chrome }]}>
-              {text.length}/{MAX_SCRATCH} · ✨ 남은 AI {Number.isFinite(remaining) ? remaining : '-'}점
+              {/* AI 포인트 화폐 기호 — 웹 token 도트와 통일 (Text 내 인라인 이미지) */}
+              {text.length}/{MAX_SCRATCH} · <PixelIcon name="token" size={11} /> 남은 AI {Number.isFinite(remaining) ? remaining : '-'}점
             </Text>
             <RetroButton
-              label={`✨ AI로 정리 (${AI_COSTS.IDEA_EXTRACT}점)`}
+              label={`AI로 정리 (${AI_COSTS.IDEA_EXTRACT}점)`}
+              icon={<PixelIcon name="sparkle" size={14} />}
               onPress={runExtract}
               busy={busy}
               disabled={!text.trim() || remaining < AI_COSTS.IDEA_EXTRACT}

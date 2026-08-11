@@ -72,12 +72,12 @@ export default function TabsLayout() {
         onClose={() => setDialOpen(false)}
         actions={[
           {
-            emoji: '📝',
+            icon: 'pencil',
             label: '태스크 추가',
             onPress: () => { setDialOpen(false); addSheetRef.current?.present(); },
           },
           {
-            emoji: '💭',
+            icon: 'bubble',
             label: '브레인 덤프',
             onPress: () => { setDialOpen(false); router.push('/brain-dump' as Href); },
           },

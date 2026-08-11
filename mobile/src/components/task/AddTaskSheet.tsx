@@ -12,16 +12,17 @@ import { buildDeadlinePayload, type DeadlineMode } from '../../tasks/deadlineMod
 import type { Category } from '../../api/types';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { Chip } from '../retro/Chip';
 import { RetroButton } from '../retro/RetroButton';
 import { useToast } from '../retro/ToastProvider';
 import { DateTimeField } from './DateTimeField';
 
-const DEADLINE_MODES: { id: DeadlineMode; label: string; emoji?: string }[] = [
-  { id: 'AI', label: 'AI가 알아서', emoji: '✨' },
+const DEADLINE_MODES: { id: DeadlineMode; label: string; icon?: PixelIconName }[] = [
+  { id: 'AI', label: 'AI가 알아서', icon: 'sparkle' },
   { id: 'TODAY', label: '오늘까지' },
-  { id: 'NONE', label: '언젠가', emoji: '🌙' },
-  { id: 'CUSTOM', label: '직접', emoji: '📅' },
+  { id: 'NONE', label: '언젠가', icon: 'moon' },
+  { id: 'CUSTOM', label: '직접', icon: 'calendar' },
 ];
 
 /** 다음 30분 정각 */
@@ -139,7 +140,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
             <Chip
               key={m.id}
               label={m.label}
-              emoji={m.emoji}
+              icon={m.icon ? <PixelIcon name={m.icon} size={12} /> : undefined}
               selected={deadlineMode === m.id}
               onPress={() => setDeadlineMode(m.id)}
             />
@@ -185,7 +186,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
               )}
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-              <Chip label="AI 자동" emoji="✨" selected={category === null} onPress={() => setCategory(null)} />
+              <Chip label="AI 자동" icon={<PixelIcon name="sparkle" size={12} />} selected={category === null} onPress={() => setCategory(null)} />
               {TASK_CATEGORIES.map((c) => (
                 <Chip
                   key={c.value}
@@ -207,7 +208,14 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
 
         <View style={styles.footer}>
           <Text style={[styles.cost, { color: remaining < AI_COSTS.TASK_CREATE ? colors.accent : colors.sub, fontFamily: fonts.chrome }]}>
-            {remaining < AI_COSTS.TASK_CREATE ? '오늘 AI를 다 썼어요' : `✨ ${AI_COSTS.TASK_CREATE}점 사용`}
+            {remaining < AI_COSTS.TASK_CREATE ? (
+              '오늘 AI를 다 썼어요'
+            ) : (
+              <>
+                {/* AI 포인트 화폐 기호 — 웹 token 도트와 통일 (Text 내 인라인 이미지) */}
+                <PixelIcon name="token" size={11} /> {AI_COSTS.TASK_CREATE}점 사용
+              </>
+            )}
           </Text>
           <RetroButton label="추가" onPress={submit} busy={saving} disabled={blocked} />
         </View>

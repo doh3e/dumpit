@@ -17,6 +17,7 @@ import { updateTaskInPlanning } from '../../tasks/planningCache';
 import type { PlanningResponse } from '../../api/types';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { Chip } from '../retro/Chip';
 import { RetroButton } from '../retro/RetroButton';
 import { useToast } from '../retro/ToastProvider';
@@ -27,10 +28,10 @@ import { SubtaskProposalSheet, type SubtaskProposalSheetHandle } from './Subtask
 export type TaskDetailSheetHandle = { present(task: TaskResponse): void };
 
 // 웹 EditTaskModal 패리티 — 수정에서는 AI 재추론 모드 없음 (PATCH가 마감 재추론을 보장하지 않음)
-const DEADLINE_MODES: { id: DeadlineMode; label: string; emoji?: string }[] = [
+const DEADLINE_MODES: { id: DeadlineMode; label: string; icon?: PixelIconName }[] = [
   { id: 'TODAY', label: '오늘까지' },
-  { id: 'NONE', label: '언젠가', emoji: '🌙' },
-  { id: 'CUSTOM', label: '직접', emoji: '📅' },
+  { id: 'NONE', label: '언젠가', icon: 'moon' },
+  { id: 'CUSTOM', label: '직접', icon: 'calendar' },
 ];
 
 /** 태스크 상세 — 수정·중요도·스티커·AI 재분석·쪼개기·삭제 (웹 EditTaskModal 이식) */
@@ -141,7 +142,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       : '';
     Alert.alert(
       'AI 재분석',
-      `저장 버튼과 무관하게 지금 바로 적용돼요 (✨1점).${warning}`,
+      `저장 버튼과 무관하게 지금 바로 적용돼요 (AI 1점).${warning}`,
       [
         { text: '취소', style: 'cancel' },
         { text: '재분석', onPress: () => { reanalyze(); } },
@@ -253,7 +254,13 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
           <Text style={[styles.label, { color: colors.sub, fontFamily: fonts.chrome }]}>마감</Text>
           <View style={styles.chipRow}>
             {DEADLINE_MODES.map((m) => (
-              <Chip key={m.id} label={m.label} emoji={m.emoji} selected={deadlineMode === m.id} onPress={() => setDeadlineMode(m.id)} />
+              <Chip
+                key={m.id}
+                label={m.label}
+                icon={m.icon ? <PixelIcon name={m.icon} size={12} /> : undefined}
+                selected={deadlineMode === m.id}
+                onPress={() => setDeadlineMode(m.id)}
+              />
             ))}
           </View>
           {deadlineMode === 'CUSTOM' && (
@@ -337,7 +344,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
               />
             )}
             <Chip
-              label={reanalyzing ? '재분석 중…' : `✨ AI 재분석 (${AI_COSTS.TASK_REANALYZE}점)`}
+              label={reanalyzing ? '재분석 중…' : `AI 재분석 (${AI_COSTS.TASK_REANALYZE}점)`}
+              icon={reanalyzing ? undefined : <PixelIcon name="sparkle" size={12} />}
               onPress={confirmReanalyze}
               disabled={reanalyzing || remaining < AI_COSTS.TASK_REANALYZE}
             />
@@ -348,7 +356,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
 
           {task && !task.parentTaskId && (
             <RetroButton
-              label={`🧩 AI로 쪼개기 (${AI_COSTS.SUBTASK_PROPOSAL}점)`}
+              label={`AI로 쪼개기 (${AI_COSTS.SUBTASK_PROPOSAL}점)`}
+              icon={<PixelIcon name="puzzle" size={14} />}
               variant="ghost"
               onPress={() => {
                 if (remaining < AI_COSTS.SUBTASK_PROPOSAL) {

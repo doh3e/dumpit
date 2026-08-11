@@ -5,8 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { retroShadow } from '../../theme/tokens';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 
-type Action = { emoji: string; label: string; onPress: () => void };
+type Action = { icon: PixelIconName; label: string; onPress: () => void };
 
 type Props = {
   open: boolean;
@@ -58,7 +59,7 @@ export function SpeedDial({ open, onClose, actions }: Props) {
                   : retroShadow(3, colors.shadowSm),
               ]}
             >
-              <Text style={styles.emoji}>{a.emoji}</Text>
+              <PixelIcon name={a.icon} size={18} />
               <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.displayBold }]}>{a.label}</Text>
             </Pressable>
           </Animated.View>
@@ -75,6 +76,5 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderRadius: 10,
     paddingHorizontal: 18, paddingVertical: 12, minWidth: 176, minHeight: 48,
   },
-  emoji: { fontSize: 18 },
   label: { fontSize: 15 },
 });

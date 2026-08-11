@@ -8,6 +8,7 @@ import { getApiErrorMessage } from '../src/api/client';
 import { convertIdeaToTask, createIdea, deleteIdea, fetchIdeas, patchIdea, setIdeaSticker } from '../src/api/ideas';
 import type { IdeaResponse } from '../src/api/types';
 import { MarkdownView } from '../src/components/common/MarkdownView';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 import { Chip } from '../src/components/retro/Chip';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
@@ -269,7 +270,8 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
         {editing && (
           <>
             <RetroButton
-              label={editing.convertedTaskId ? '✔︎ 이미 태스크로 전환됨' : `✂️ 태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
+              label={editing.convertedTaskId ? '✔︎ 이미 태스크로 전환됨' : `태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
+              icon={editing.convertedTaskId ? undefined : <PixelIcon name="scissors" size={14} />}
               variant="ghost"
               onPress={confirmConvert}
               disabled={!!editing.convertedTaskId || busy || remaining < AI_COSTS.IDEA_CONVERT}

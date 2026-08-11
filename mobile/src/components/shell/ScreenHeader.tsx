@@ -15,10 +15,13 @@ import { TiledImage } from '../common/TiledImage';
  */
 export function ScreenHeader({
   title,
+  icon,
   right,
   onBack,
 }: {
   title: string;
+  /** 제목 앞 도트 아이콘 — 제목 문자열에 이모지를 박는 대신 사용 (도트 통일 Phase A) */
+  icon?: ReactNode;
   right?: ReactNode;
   /** 기본은 router.back() */
   onBack?: () => void;
@@ -41,9 +44,12 @@ export function ScreenHeader({
       <Pressable onPress={onBack ?? (() => router.back())} hitSlop={12} accessibilityLabel="뒤로">
         <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
       </Pressable>
-      <Text numberOfLines={1} style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-        {title}
-      </Text>
+      <View style={styles.titleRow}>
+        {icon}
+        <Text numberOfLines={1} style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+          {title}
+        </Text>
+      </View>
       {/* 좌우 대칭을 위해 우측 슬롯은 비어 있어도 자리를 잡는다 */}
       <View style={styles.right}>{right}</View>
     </View>
@@ -57,6 +63,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5, gap: 8,
   },
   back: { fontSize: 22 },
-  title: { fontSize: 18, flex: 1, textAlign: 'center' },
+  titleRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  title: { fontSize: 18, textAlign: 'center', flexShrink: 1 },
   right: { minWidth: 22, alignItems: 'flex-end' },
 });

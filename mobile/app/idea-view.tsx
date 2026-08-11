@@ -7,6 +7,7 @@ import { getApiErrorMessage } from '../src/api/client';
 import { convertIdeaToTask, fetchIdeas } from '../src/api/ideas';
 import type { IdeaResponse } from '../src/api/types';
 import { MarkdownView } from '../src/components/common/MarkdownView';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
@@ -99,7 +100,7 @@ export default function IdeaViewScreen() {
             hitSlop={12}
             accessibilityLabel="편집"
           >
-            <Text style={[styles.edit, { color: colors.accent, fontFamily: fonts.chrome }]}>✏️</Text>
+            <PixelIcon name="pencil" size={18} />
           </Pressable>
         }
       />
@@ -134,7 +135,7 @@ export default function IdeaViewScreen() {
             <MarkdownView>{idea.content}</MarkdownView>
           ) : (
             <Text style={[styles.emptyContent, { color: colors.sub, fontFamily: fonts.body }]}>
-              아직 내용이 없어요. ✏️로 채워보세요.
+              아직 내용이 없어요. 편집으로 채워보세요.
             </Text>
           )}
         </RetroCard>
@@ -180,16 +181,18 @@ export default function IdeaViewScreen() {
         </RetroCard>
 
         <RetroButton
-          label="✏️ 편집"
+          label="편집"
+          icon={<PixelIcon name="pencil" size={14} />}
           onPress={() => router.push({ pathname: '/idea-edit', params: { ideaId: idea.ideaId } } as never)}
         />
         <RetroButton
-          label={idea.convertedTaskId ? '✔︎ 이미 태스크로 전환됨' : `✂️ 태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
+          label={idea.convertedTaskId ? '✔︎ 이미 태스크로 전환됨' : `태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
+          icon={idea.convertedTaskId ? undefined : <PixelIcon name="scissors" size={14} />}
           variant="ghost"
           onPress={confirmConvert}
           disabled={!!idea.convertedTaskId || busy || remaining < AI_COSTS.IDEA_CONVERT}
         />
-        <RetroButton label="💡 아이디어 목록" variant="ghost" size="sm" onPress={() => router.replace('/ideas' as Href)} />
+        <RetroButton label="아이디어 목록" icon={<PixelIcon name="bulb" size={13} />} variant="ghost" size="sm" onPress={() => router.replace('/ideas' as Href)} />
       </ScrollView>
     </View>
   );

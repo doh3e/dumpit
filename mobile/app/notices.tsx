@@ -8,6 +8,7 @@ import { MarkdownView } from '../src/components/common/MarkdownView';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { parseDate } from '../src/tasks/dates';
 import { keys } from '../src/query/keys';
@@ -41,7 +42,7 @@ export default function NoticesScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="📢 공지사항" />
+      <ScreenHeader title="공지사항" icon={<PixelIcon name="megaphone" size={16} />} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard style={styles.listCard}>

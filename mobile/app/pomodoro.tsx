@@ -11,6 +11,7 @@ import { TimerRing } from '../src/components/pomodoro/TimerRing';
 import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
+import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { DEFAULT_SETTINGS, deriveState, type PomodoroSettings } from '../src/pomodoro/engine';
 import {
@@ -121,7 +122,7 @@ export default function PomodoroScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="🍅 뽀모도로" />
+      <ScreenHeader title="뽀모도로" icon={<PixelIcon name="tomato" size={16} />} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         {session && derived ? (

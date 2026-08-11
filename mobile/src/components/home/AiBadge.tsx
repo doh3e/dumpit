@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import type { AiUsage } from '../../api/types';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon } from '../common/PixelIcon';
 import { useToast } from '../retro/ToastProvider';
 
 /** AI 잔여 점수 배지 — 잔여량에 따라 톤 변화, 탭하면 사용량 안내 */
@@ -23,13 +24,16 @@ export function AiBadge({ usage }: { usage: AiUsage | undefined }) {
         { borderColor: tone, opacity: pressed ? 0.7 : 1 },
       ]}
     >
-      <Text style={[styles.text, { color: tone, fontFamily: fonts.chrome }]}>✨ {usage.remaining}</Text>
+      {/* 웹 Header의 token 도트와 동일 기호 — AI 포인트 화폐 표기 통일 (도트 통일 Phase A) */}
+      <PixelIcon name="token" size={12} />
+      <Text style={[styles.text, { color: tone, fontFamily: fonts.chrome }]}>{usage.remaining}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   badge: {
+    flexDirection: 'row', gap: 4,
     borderWidth: 1.5, borderRadius: 8,
     paddingHorizontal: 9, paddingVertical: 5, minHeight: 26,
     alignItems: 'center', justifyContent: 'center',

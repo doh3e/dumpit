@@ -10,6 +10,7 @@ import { keys } from '../../query/keys';
 import { AI_COSTS } from '../../tasks/constants';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon } from '../common/PixelIcon';
 import { RetroButton } from '../retro/RetroButton';
 import { useToast } from '../retro/ToastProvider';
 
@@ -99,9 +100,12 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         <BottomSheetScrollView contentContainerStyle={styles.body}>
-          <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-            🧩 AI로 쪼개기 <Text style={{ color: colors.sub, fontSize: 11, fontFamily: fonts.chrome }}>✨ {AI_COSTS.SUBTASK_PROPOSAL}점</Text>
-          </Text>
+          <View style={styles.headingRow}>
+            <PixelIcon name="puzzle" size={16} />
+            <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+              AI로 쪼개기 <Text style={{ color: colors.sub, fontSize: 11, fontFamily: fonts.chrome }}><PixelIcon name="token" size={11} /> {AI_COSTS.SUBTASK_PROPOSAL}점</Text>
+            </Text>
+          </View>
           {task && (
             <Text style={[styles.parent, { color: colors.sub, fontFamily: fonts.body }]} numberOfLines={1}>
               {task.title}
@@ -177,6 +181,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
 const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 32, gap: 10 },
   heading: { fontSize: 16 },
+  headingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   parent: { fontSize: 12 },
   loading: { alignItems: 'center', gap: 8, paddingVertical: 28 },
   loadingText: { fontSize: 13 },

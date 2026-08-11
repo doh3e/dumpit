@@ -4,13 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { retroShadow } from '../../theme/tokens';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { TiledImage } from '../common/TiledImage';
 
-const TAB_META: Record<string, { emoji: string; label: string }> = {
-  index: { emoji: '🏠', label: '홈' },
-  routine: { emoji: '🔁', label: '루틴' },
-  ideas: { emoji: '💡', label: '아이디어' },
-  my: { emoji: '👤', label: 'MY' },
+const TAB_META: Record<string, { icon: PixelIconName; label: string }> = {
+  index: { icon: 'home', label: '홈' },
+  routine: { icon: 'loop', label: '루틴' },
+  ideas: { icon: 'bulb', label: '아이디어' },
+  my: { icon: 'user', label: 'MY' },
 };
 
 /** @react-navigation/bottom-tabs BottomTabBarProps 중 사용하는 최소 형태 (타입 미호이스팅 대응) */
@@ -54,7 +55,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
         accessibilityState={{ selected: focused }}
         style={({ pressed }) => [styles.tab, { transform: [{ translateY: pressed ? 1 : 0 }] }]}
       >
-        <Text style={[styles.emoji, { opacity: focused ? 1 : 0.55 }]}>{meta.emoji}</Text>
+        <PixelIcon name={meta.icon} size={20} style={{ opacity: focused ? 1 : 0.55 }} />
         <Text style={[styles.label, { fontFamily: fonts.chrome, color: focused ? colors.accent : colors.sub }]}>
           {meta.label}
         </Text>
@@ -101,7 +102,6 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row', borderTopWidth: 2, paddingTop: 8, paddingHorizontal: 4 },
   tab: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 4, minHeight: 48 },
-  emoji: { fontSize: 20 },
   label: { fontSize: 10 },
   fabSlot: { flex: 1, alignItems: 'center' },
   fab: {

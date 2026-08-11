@@ -8,6 +8,7 @@ import { fetchOverdueTasks, fetchProfile, fetchStats, patchProfile } from '../..
 import { patchTask } from '../../src/api/tasks';
 import { useAuth } from '../../src/auth/AuthContext';
 import { CoinIcon } from '../../src/components/common/CoinIcon';
+import { PixelIcon, type PixelIconName } from '../../src/components/common/PixelIcon';
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
 import { useToast } from '../../src/components/retro/ToastProvider';
@@ -23,14 +24,14 @@ import { useTheme } from '../../src/theme/useTheme';
 
 // url을 가진 항목은 웹 문서를 브라우저로 연다 — 약관·방침은 웹에 하나만 두고
 // 앱은 그것을 참조해야 개정이 스토어 재심사 없이 반영된다(src/legal/links.ts).
-const MENU: { emoji: string; label: string; href?: Href; url?: string }[] = [
-  { emoji: '🛒', label: '상점', href: '/shop' as Href },
-  { emoji: '⚙️', label: '설정', href: '/settings' as Href },
-  { emoji: '📢', label: '공지사항', href: '/notices' as Href },
-  { emoji: '❓', label: '도움말', href: '/help' as Href },
-  { emoji: '✉️', label: '문의하기', href: '/inquiry' as Href },
-  { emoji: '📄', label: '이용약관', url: TERMS_URL },
-  { emoji: '🔒', label: '개인정보처리방침', url: PRIVACY_URL },
+const MENU: { icon: PixelIconName; label: string; href?: Href; url?: string }[] = [
+  { icon: 'cart', label: '상점', href: '/shop' as Href },
+  { icon: 'gear', label: '설정', href: '/settings' as Href },
+  { icon: 'megaphone', label: '공지사항', href: '/notices' as Href },
+  { icon: 'question', label: '도움말', href: '/help' as Href },
+  { icon: 'envelope', label: '문의하기', href: '/inquiry' as Href },
+  { icon: 'document', label: '이용약관', url: TERMS_URL },
+  { icon: 'lock', label: '개인정보처리방침', url: PRIVACY_URL },
 ];
 
 // 히트맵 4단계 — starlight 계열 (웹 star-log-0~3 대응)
@@ -161,7 +162,7 @@ export default function MyScreen() {
           ) : (
             <Pressable onPress={() => { setBioDraft(p?.bio ?? ''); setEditingBio(true); }} accessibilityRole="button" accessibilityLabel="소개 편집">
               <Text style={[styles.bio, { color: p?.bio ? colors.fg : colors.sub, fontFamily: fonts.body }]}>
-                {p?.bio ?? '✏️ 한 줄 소개를 남겨보세요'}
+                {p?.bio ?? '한 줄 소개를 남겨보세요'}
               </Text>
             </Pressable>
           )}
@@ -277,9 +278,10 @@ export default function MyScreen() {
                 { opacity: pressed ? 0.7 : 1 },
               ]}
             >
-              <Text style={[styles.menuLabel, { color: colors.fg, fontFamily: fonts.display }]}>
-                {m.emoji} {m.label}
-              </Text>
+              <View style={styles.menuLeft}>
+                <PixelIcon name={m.icon} size={16} />
+                <Text style={[styles.menuLabel, { color: colors.fg, fontFamily: fonts.display }]}>{m.label}</Text>
+              </View>
               <Text style={[styles.chevron, { color: colors.sub, fontFamily: fonts.chrome }]}>›</Text>
             </Pressable>
           ))}
@@ -323,6 +325,7 @@ const styles = StyleSheet.create({
   overdueDeadline: { fontSize: 11 },
   menuCard: { gap: 0, paddingVertical: 4 },
   menuRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, minHeight: 48 },
+  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   menuLabel: { fontSize: 15 },
   chevron: { fontSize: 18 },
 });
