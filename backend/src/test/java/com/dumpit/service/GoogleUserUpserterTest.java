@@ -29,7 +29,7 @@ class GoogleUserUpserterTest {
         given(userRepository.findByProviderAndProviderId("GOOGLE", "sub-1")).willReturn(Optional.empty());
         given(userRepository.save(any(User.class))).willAnswer(inv -> inv.getArgument(0));
 
-        GoogleUserUpserter.UpsertResult result = upserter.upsert("sub-1", "new@a.b", "새유저", "https://pic");
+        GoogleUserUpserter.UpsertResult result = upserter.upsert("sub-1", "new@a.b", "새유저", "https://pic", true);
 
         assertThat(result.user().getEmail()).isEqualTo("new@a.b");
         assertThat(result.user().getProvider()).isEqualTo("GOOGLE");
@@ -42,10 +42,23 @@ class GoogleUserUpserterTest {
         given(userRepository.findByProviderAndProviderId("GOOGLE", "sub-1")).willReturn(Optional.of(existing));
         given(userRepository.save(any(User.class))).willAnswer(inv -> inv.getArgument(0));
 
-        GoogleUserUpserter.UpsertResult result = upserter.upsert("sub-1", "new@a.b", "새이름", "https://pic2");
+        GoogleUserUpserter.UpsertResult result = upserter.upsert("sub-1", "new@a.b", "새이름", "https://pic2", true);
 
         assertThat(result.user().getEmail()).isEqualTo("old@a.b"); // 이메일·닉네임은 유지
         assertThat(result.user().getPicture()).isEqualTo("https://pic2");
+        assertThat(result.restored()).isFalse();
+    }
+
+    @Test
+    void 활성_유저는_복구불가_로그인이어도_그대로_로그인된다() {
+        User existing = User.of("old@a.b", "기존", "GOOGLE", "sub-1");
+        given(userRepository.findByProviderAndProviderId("GOOGLE", "sub-1")).willReturn(Optional.of(existing));
+        given(userRepository.save(any(User.class))).willAnswer(inv -> inv.getArgument(0));
+
+        // allowRestore=false는 탈퇴 철회만 막는다 — 세션 만료 후 자동 재로그인이 깨지면 안 된다
+        GoogleUserUpserter.UpsertResult result = upserter.upsert("sub-1", "old@a.b", "기존", null, false);
+
+        assertThat(result.user().getStatus()).isEqualTo(User.Status.ACTIVE);
         assertThat(result.restored()).isFalse();
     }
 
@@ -55,7 +68,7 @@ class GoogleUserUpserterTest {
         banned.ban("test"); // User.ban(String reason) — isActive()가 false가 된다
         given(userRepository.findByProviderAndProviderId("GOOGLE", "sub-1")).willReturn(Optional.of(banned));
 
-        assertThatThrownBy(() -> upserter.upsert("sub-1", "ban@a.b", "밴", null))
+        assertThatThrownBy(() -> upserter.upsert("sub-1", "ban@a.b", "밴", null, true))
                 .isInstanceOf(AccountInactiveException.class);
     }
 
@@ -71,11 +84,25 @@ class GoogleUserUpserterTest {
             return withdrawn;
         });
 
-        GoogleUserUpserter.UpsertResult result = upserter.upsert("sub-1", "back@a.b", "복귀", "https://pic");
+        GoogleUserUpserter.UpsertResult result = upserter.upsert("sub-1", "back@a.b", "복귀", "https://pic", true);
 
         assertThat(result.restored()).isTrue();
         assertThat(result.user().getStatus()).isEqualTo(User.Status.ACTIVE);
         verify(accountRestoreService).restore(withdrawn);
+    }
+
+    @Test
+    void 이용자가_누르지_않은_로그인은_탈퇴계정을_되살리지_않는다() {
+        // 앱이 세션 만료로 오해해 자동 재로그인하면 탈퇴가 조용히 철회되던 사고의 서버측 방어
+        User withdrawn = User.of("back@a.b", "복귀", "GOOGLE", "sub-1");
+        LocalDateTime markedAt = LocalDateTime.now();
+        withdrawn.blockForGrace(markedAt.plusDays(30), markedAt);
+        given(userRepository.findByProviderAndProviderId("GOOGLE", "sub-1")).willReturn(Optional.of(withdrawn));
+
+        assertThatThrownBy(() -> upserter.upsert("sub-1", "back@a.b", "복귀", null, false))
+                .isInstanceOf(AccountInactiveException.class);
+        verify(accountRestoreService, never()).restore(any());
+        assertThat(withdrawn.getStatus()).isEqualTo(User.Status.WITHDRAWN);
     }
 
     @Test
@@ -85,7 +112,7 @@ class GoogleUserUpserterTest {
         withdrawn.blockForGrace(markedAt.plusDays(30), markedAt); // purgeAfter가 이미 지났다
         given(userRepository.findByProviderAndProviderId("GOOGLE", "sub-1")).willReturn(Optional.of(withdrawn));
 
-        assertThatThrownBy(() -> upserter.upsert("sub-1", "gone@a.b", "만료", null))
+        assertThatThrownBy(() -> upserter.upsert("sub-1", "gone@a.b", "만료", null, true))
                 .isInstanceOf(AccountInactiveException.class);
         verify(accountRestoreService, never()).restore(any());
     }

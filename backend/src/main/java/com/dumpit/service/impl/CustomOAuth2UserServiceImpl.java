@@ -39,8 +39,9 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
         }
 
         try {
+            // 웹 OAuth 콜백은 이용자가 구글 로그인 버튼을 눌러야만 도달한다 — 복구 의사가 확실하다.
             GoogleUserUpserter.UpsertResult result =
-                    googleUserUpserter.upsert(providerId, email, name, picture);
+                    googleUserUpserter.upsert(providerId, email, name, picture, true);
             if (result.restored()) {
                 // 이 메서드와 successHandler는 같은 콜백 요청 안에서 돌아간다 —
                 // 요청 속성으로 넘겨 리다이렉트 URL에 복구 안내 플래그를 붙인다.

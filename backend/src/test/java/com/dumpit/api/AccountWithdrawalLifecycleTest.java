@@ -162,7 +162,7 @@ class AccountWithdrawalLifecycleTest extends ApiIntegrationTestBase {
      */
     private GoogleUserUpserter.UpsertResult login() {
         jdbcTemplate.update("UPDATE users SET provider = 'GOOGLE' WHERE user_id = ?", userA.getUserId());
-        return googleUserUpserter.upsert("test-a", USER_A, "테스트A", null);
+        return googleUserUpserter.upsert("test-a", USER_A, "테스트A", null, true);
     }
 
     private void assertThatThrownByLogin() {

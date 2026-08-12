@@ -42,7 +42,12 @@ public class MobileAuthController {
     private final SecurityContextRepository securityContextRepository =
             new HttpSessionSecurityContextRepository();
 
-    public record MobileGoogleLoginRequest(@NotBlank String idToken) {}
+    /**
+     * @param allowRestore 이용자가 직접 로그인 버튼을 눌렀는지. 탈퇴 유예 중인 계정은 이 값이 true일
+     *   때만 되살아난다 — 앱의 자동 재로그인은 false로 보낸다. 값이 없으면 복구하지 않는 쪽으로 판정해,
+     *   플래그를 빠뜨린 클라이언트가 탈퇴를 되돌리는 일이 없게 한다.
+     */
+    public record MobileGoogleLoginRequest(@NotBlank String idToken, Boolean allowRestore) {}
     /** @param restored 탈퇴 유예 기간 안에 돌아와 계정이 복구됐는지 — 앱에서 안내 다이얼로그를 띄운다 */
     public record MobileLoginResponse(String email, String nickname, String picture, boolean restored) {}
 
@@ -51,8 +56,9 @@ public class MobileAuthController {
                                                       HttpServletRequest request,
                                                       HttpServletResponse response) {
         GoogleIdClaims claims = tokenVerifier.verify(body.idToken());
-        GoogleUserUpserter.UpsertResult upserted =
-                googleUserUpserter.upsert(claims.sub(), claims.email(), claims.name(), claims.picture());
+        GoogleUserUpserter.UpsertResult upserted = googleUserUpserter.upsert(
+                claims.sub(), claims.email(), claims.name(), claims.picture(),
+                Boolean.TRUE.equals(body.allowRestore()));
         User user = upserted.user();
 
         Map<String, Object> attributes = new LinkedHashMap<>();
