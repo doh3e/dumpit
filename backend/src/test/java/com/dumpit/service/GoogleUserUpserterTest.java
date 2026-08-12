@@ -92,15 +92,16 @@ class GoogleUserUpserterTest {
     }
 
     @Test
-    void 이용자가_누르지_않은_로그인은_탈퇴계정을_되살리지_않는다() {
-        // 앱이 세션 만료로 오해해 자동 재로그인하면 탈퇴가 조용히 철회되던 사고의 서버측 방어
+    void 복구의사가_없는_로그인은_탈퇴계정을_되살리지_않고_복구가능_신호를_준다() {
+        // 자동 재로그인이 탈퇴를 조용히 철회하던 사고의 서버측 방어 + 이용자가 직접 누른 첫 시도도
+        // 이 신호(WithdrawalPending)를 받아 "복구하시겠습니까?"를 물은 뒤 true로 재시도한다
         User withdrawn = User.of("back@a.b", "복귀", "GOOGLE", "sub-1");
         LocalDateTime markedAt = LocalDateTime.now();
         withdrawn.blockForGrace(markedAt.plusDays(30), markedAt);
         given(userRepository.findByProviderAndProviderId("GOOGLE", "sub-1")).willReturn(Optional.of(withdrawn));
 
         assertThatThrownBy(() -> upserter.upsert("sub-1", "back@a.b", "복귀", null, false))
-                .isInstanceOf(AccountInactiveException.class);
+                .isInstanceOf(GoogleUserUpserter.WithdrawalPendingException.class);
         verify(accountRestoreService, never()).restore(any());
         assertThat(withdrawn.getStatus()).isEqualTo(User.Status.WITHDRAWN);
     }
@@ -112,8 +113,10 @@ class GoogleUserUpserterTest {
         withdrawn.blockForGrace(markedAt.plusDays(30), markedAt); // purgeAfter가 이미 지났다
         given(userRepository.findByProviderAndProviderId("GOOGLE", "sub-1")).willReturn(Optional.of(withdrawn));
 
+        // 복구 확인을 띄우라는 신호(WithdrawalPending)가 아니어야 한다 — 되살릴 수 없는 계정이다
         assertThatThrownBy(() -> upserter.upsert("sub-1", "gone@a.b", "만료", null, true))
-                .isInstanceOf(AccountInactiveException.class);
+                .isInstanceOf(AccountInactiveException.class)
+                .isNotInstanceOf(GoogleUserUpserter.WithdrawalPendingException.class);
         verify(accountRestoreService, never()).restore(any());
     }
 }
