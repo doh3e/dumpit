@@ -2,7 +2,13 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import axios from 'axios';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
-import { fetchMe, loginWithGoogleIdToken, logout, type MeResponse } from '../api/auth';
+import {
+  fetchMe,
+  loginWithGoogleIdToken,
+  loginWithRestoreConfirm,
+  logout,
+  type MeResponse,
+} from '../api/auth';
 import { api } from '../api/client';
 import { bypassReauth, installSilentReauth } from '../api/reauth';
 import { registerPushDevice, unregisterPushDevice } from '../push/fcm';
@@ -33,6 +39,21 @@ async function silentReauth(): Promise<boolean> {
 
 // 모듈 로드 시 1회 설치 (Provider 리렌더와 무관)
 installSilentReauth(api, silentReauth);
+
+/** 유예 중 탈퇴 계정 — 복구 의사를 묻는다. 다이얼로그 밖 터치·아니요 모두 거절로 본다. */
+function confirmRestore(): Promise<boolean> {
+  return new Promise((resolve) => {
+    Alert.alert(
+      '탈퇴처리가 진행중인 계정입니다',
+      '복구하시겠습니까?\n복구하면 탈퇴 신청이 취소되고 예전 기록이 모두 그대로 돌아옵니다.',
+      [
+        { text: '아니요', style: 'cancel', onPress: () => resolve(false) },
+        { text: '복구하기', onPress: () => resolve(true) },
+      ],
+      { cancelable: true, onDismiss: () => resolve(false) },
+    );
+  });
+}
 
 type AuthState = {
   me: MeResponse | null;
@@ -71,11 +92,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (result.type === 'cancelled') return;
     const idToken = result.data?.idToken;
     if (!idToken) throw new Error('구글에서 ID 토큰을 받지 못했어요.');
-    // 이용자가 직접 누른 로그인 — 탈퇴 유예 중이면 여기서만 되살아난다
-    const { restored, ...me } = await loginWithGoogleIdToken(idToken, { allowRestore: true });
+    // 로그인 버튼만으로는 복구 의사로 보지 않는다 — 유예 중 계정이면 서버 신호를 받아
+    // "복구하시겠습니까?"를 묻고, 동의한 재시도에서만 탈퇴가 철회된다
+    const login = await loginWithRestoreConfirm(idToken, confirmRestore);
+    if (!login) return; // 복구 거절 — 로그아웃 상태 그대로
+    const { restored, ...me } = login;
     setMe(me);
     void registerPushDevice();
-    // 탈퇴 유예 중 다시 들어온 경우 — 서버가 계정과 기록을 이미 되살렸다
+    // 탈퇴 유예 중 복구에 동의하고 들어온 경우 — 서버가 계정과 기록을 되살렸다
     if (restored) {
       Alert.alert('다시 오셨네요!', '탈퇴 신청이 취소되었어요.\n할 일과 아이디어, 루틴까지 예전 기록이 모두 그대로 돌아왔습니다.');
     }

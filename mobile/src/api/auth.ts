@@ -1,4 +1,4 @@
-import type { AxiosRequestConfig } from 'axios';
+import axios, { type AxiosRequestConfig } from 'axios';
 import { api } from './client';
 
 export type MeResponse = {
@@ -39,6 +39,33 @@ export async function loginWithGoogleIdToken(
   const { data } = await api.post('/auth/mobile/google', { idToken, allowRestore });
   const me = await fetchMe(meConfig);
   return { ...me, restored: data?.restored === true };
+}
+
+/** 서버가 "유예 중 탈퇴 계정 — 복구 의사 확인 필요"라고 알린 로그인 실패(409)인지 */
+export function isWithdrawalPendingError(error: unknown): boolean {
+  return (
+    axios.isAxiosError(error) &&
+    error.response?.status === 409 &&
+    (error.response.data as { code?: string } | undefined)?.code === 'WITHDRAWAL_PENDING'
+  );
+}
+
+/**
+ * 이용자가 직접 누른 로그인의 2단계 흐름. 일단 복구 의사 없이 시도하고, 서버가
+ * "유예 중 탈퇴 계정" 신호를 주면 confirmRestore로 의사를 물어 동의할 때만 복구 재시도.
+ * 거절하면 null — 로그아웃 상태 그대로 남는다.
+ */
+export async function loginWithRestoreConfirm(
+  idToken: string,
+  confirmRestore: () => Promise<boolean>,
+): Promise<LoginResult | null> {
+  try {
+    return await loginWithGoogleIdToken(idToken, { allowRestore: false });
+  } catch (error) {
+    if (!isWithdrawalPendingError(error)) throw error;
+    if (!(await confirmRestore())) return null;
+    return loginWithGoogleIdToken(idToken, { allowRestore: true });
+  }
 }
 
 export async function logout(): Promise<void> {
