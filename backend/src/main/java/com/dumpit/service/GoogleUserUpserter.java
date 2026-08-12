@@ -10,8 +10,14 @@ public interface GoogleUserUpserter {
      */
     record UpsertResult(User user, boolean restored) {}
 
-    /** @throws AccountInactiveException 밴 계정, 또는 유예가 끝나 복구할 수 없는 탈퇴 계정 */
-    UpsertResult upsert(String providerId, String email, String name, String picture);
+    /**
+     * @param allowRestore 이용자가 직접 누른 로그인인지. 탈퇴 유예 중인 계정은 이 값이 true일 때만
+     *   되살아난다. 앱의 자동 재로그인처럼 이용자 의사가 실리지 않은 로그인은 반드시 false로 보낸다 —
+     *   탈퇴 철회는 되돌리기 어려운 결정이라 "로그인이 들어왔다"는 사실만으로 추론하면 안 된다.
+     * @throws AccountInactiveException 밴 계정, 유예가 끝나 복구할 수 없는 탈퇴 계정,
+     *   또는 복구가 허용되지 않은 로그인으로 들어온 탈퇴 계정
+     */
+    UpsertResult upsert(String providerId, String email, String name, String picture, boolean allowRestore);
 
     class AccountInactiveException extends RuntimeException {
         public AccountInactiveException(String message) { super(message); }

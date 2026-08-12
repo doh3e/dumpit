@@ -59,6 +59,21 @@ function buildTreeRows(ideas, query, expandedIds) {
   return rows
 }
 
+/**
+ * 상위 아이디어 선택 목록 정렬 — 최상위 아이디어를 먼저 묶고, 각 묶음 안에서 제목 오름차순.
+ * 트리의 어디에 붙일지 고르는 화면이라 뼈대가 되는 최상위가 먼저 보여야 한다.
+ * 부모가 목록에 없는 고아는 buildTreeRows가 루트로 승격시키는 것과 같은 기준으로 최상위로 본다.
+ */
+function sortParentCandidates(candidates, all) {
+  const ids = new Set(all.map((idea) => idea.ideaId))
+  const isTopLevel = (idea) => !idea.parentIdeaId || !ids.has(idea.parentIdeaId)
+  return [...candidates].sort(
+    (a, b) =>
+      Number(isTopLevel(b)) - Number(isTopLevel(a)) ||
+      (a.title || '').localeCompare(b.title || '', 'ko')
+  )
+}
+
 function ExtractPreviewNode({ node, depth }) {
   const category = getCategory(node.category)
   return (
@@ -171,7 +186,7 @@ export default function IdeaDumpPage() {
   )
 
   const selectableParents = useMemo(
-    () => ideas.filter((idea) => idea.ideaId !== selectedId),
+    () => sortParentCandidates(ideas.filter((idea) => idea.ideaId !== selectedId), ideas),
     [ideas, selectedId]
   )
 

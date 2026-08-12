@@ -11,6 +11,8 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -95,6 +97,33 @@ class MobileAuthApiTest extends ApiIntegrationTestBase {
                         .content("{\"idToken\":\"banned-token\"}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("ACCOUNT_INACTIVE"));
+    }
+
+    @Test
+    void 탈퇴_계정은_이용자가_누른_로그인일_때만_되살아난다() throws Exception {
+        given(mobileGoogleTokenVerifier.verify("back-token"))
+                .willReturn(new GoogleIdClaims("back-sub", "back@test.dumpit.local", "복귀유저", null));
+        mockMvc.perform(post("/auth/mobile/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"back-token\"}"))
+                .andExpect(status().isOk());
+        jdbcTemplate.update(
+                "UPDATE users SET status = 'WITHDRAWN', purge_after = ?, withdrawal_marked_at = ? WHERE email = ?",
+                LocalDateTime.now().plusDays(30), LocalDateTime.now(), "back@test.dumpit.local");
+
+        // 앱의 자동 재로그인처럼 플래그가 없는 로그인은 탈퇴를 되돌리지 못한다
+        mockMvc.perform(post("/auth/mobile/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"back-token\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCOUNT_INACTIVE"));
+
+        // 이용자가 직접 누른 로그인만 복구한다
+        mockMvc.perform(post("/auth/mobile/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"back-token\",\"allowRestore\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.restored").value(true));
     }
 
     @Test
