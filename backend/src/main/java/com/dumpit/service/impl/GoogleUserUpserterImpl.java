@@ -27,10 +27,11 @@ public class GoogleUserUpserterImpl implements GoogleUserUpserter {
                     // 유예 기간 안에 같은 구글 계정으로 돌아왔다면 탈퇴를 철회한 것으로 본다.
                     // 유예가 끝난 계정은 purge 스케줄러가 이미 지웠거나 곧 지우므로 되살리지 않는다.
                     if (isRestorable(existing)) {
-                        // 이용자가 직접 누른 로그인이 아니면 되살리지 않는다. 앱이 세션 만료인 줄 알고
-                        // 자동 재로그인해서 탈퇴가 조용히 없던 일이 된 사고가 있었다.
+                        // 복구 의사가 확인되지 않으면 되살리지 않는다. 앱이 세션 만료인 줄 알고
+                        // 자동 재로그인해서 탈퇴가 조용히 없던 일이 된 사고가 있었다. 이용자가 직접
+                        // 누른 로그인도 먼저 이 신호를 받아 "복구하시겠습니까?"를 물은 뒤 재시도한다.
                         if (!allowRestore) {
-                            throw new AccountInactiveException("탈퇴 처리된 계정입니다.");
+                            throw new WithdrawalPendingException("탈퇴 처리가 진행 중인 계정입니다.");
                         }
                         User restored = accountRestoreService.restore(existing);
                         restored.updatePicture(picture);

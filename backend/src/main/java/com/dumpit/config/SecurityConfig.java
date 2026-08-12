@@ -6,6 +6,7 @@ import com.dumpit.service.impl.CustomOAuth2UserServiceImpl;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,7 @@ import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedCli
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
@@ -159,7 +161,14 @@ public class SecurityConfig {
                             request.getAttribute(CustomOAuth2UserServiceImpl.ACCOUNT_RESTORED_ATTRIBUTE));
                     response.sendRedirect(frontendUrl + "/dashboard" + (restored ? "?restored=1" : ""));
                 })
-                .failureUrl(frontendUrl + "/?error=login_failed")
+                .failureHandler((request, response, exception) -> {
+                    // 유예 중 탈퇴 계정의 복구 의사 없는 로그인만 구분한다 — 프런트가 이 값으로
+                    // "복구하시겠습니까?" 모달을 띄우고, 동의 시 ?restore=1로 재진입한다.
+                    String code = exception instanceof OAuth2AuthenticationException oauthEx
+                            ? oauthEx.getError().getErrorCode() : null;
+                    String errorParam = "withdrawal_pending".equals(code) ? code : "login_failed";
+                    response.sendRedirect(frontendUrl + "/?error=" + errorParam);
+                })
             )
 
             // logoutUrl() 대신 커스텀 매처를 쓴다. CSRF 비활성 상태의 기본 매처는 GET까지 허용해,
@@ -232,6 +241,7 @@ public class SecurityConfig {
             private OAuth2AuthorizationRequest addGoogleParams(OAuth2AuthorizationRequest authRequest,
                                                                HttpServletRequest request) {
                 if (authRequest == null) return null;
+                rememberRestoreIntent(request);
                 Map<String, Object> params = new HashMap<>(authRequest.getAdditionalParameters());
                 params.put("access_type", "offline");
                 params.put("include_granted_scopes", "false");
@@ -243,6 +253,23 @@ public class SecurityConfig {
                         .scopes(GOOGLE_SCOPES)
                         .additionalParameters(params)
                         .build();
+            }
+
+            /**
+             * "복구하시겠습니까?"에 동의한 재진입(?restore=1)의 복구 의사를 세션에 실어 콜백
+             * (CustomOAuth2UserService)까지 전달한다. restore=1이 아니면 지운다 — 복구 흐름을
+             * 시작만 하고 중단한 세션이 이후의 평범한 로그인에서 탈퇴를 되돌리지 않도록.
+             */
+            private void rememberRestoreIntent(HttpServletRequest request) {
+                if ("1".equals(request.getParameter("restore"))) {
+                    request.getSession().setAttribute(
+                            CustomOAuth2UserServiceImpl.RESTORE_INTENT_SESSION_ATTRIBUTE, Boolean.TRUE);
+                    return;
+                }
+                HttpSession session = request.getSession(false);
+                if (session != null) {
+                    session.removeAttribute(CustomOAuth2UserServiceImpl.RESTORE_INTENT_SESSION_ATTRIBUTE);
+                }
             }
         };
     }

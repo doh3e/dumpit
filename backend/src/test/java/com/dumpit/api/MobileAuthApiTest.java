@@ -100,7 +100,7 @@ class MobileAuthApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void 탈퇴_계정은_이용자가_누른_로그인일_때만_되살아난다() throws Exception {
+    void 탈퇴_계정은_복구의사를_밝힌_로그인일_때만_되살아난다() throws Exception {
         given(mobileGoogleTokenVerifier.verify("back-token"))
                 .willReturn(new GoogleIdClaims("back-sub", "back@test.dumpit.local", "복귀유저", null));
         mockMvc.perform(post("/auth/mobile/google")
@@ -111,14 +111,21 @@ class MobileAuthApiTest extends ApiIntegrationTestBase {
                 "UPDATE users SET status = 'WITHDRAWN', purge_after = ?, withdrawal_marked_at = ? WHERE email = ?",
                 LocalDateTime.now().plusDays(30), LocalDateTime.now(), "back@test.dumpit.local");
 
-        // 앱의 자동 재로그인처럼 플래그가 없는 로그인은 탈퇴를 되돌리지 못한다
+        // 플래그가 없는 로그인(자동 재로그인 포함)은 탈퇴를 되돌리지 못한다
         mockMvc.perform(post("/auth/mobile/google")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"idToken\":\"back-token\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("ACCOUNT_INACTIVE"));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("WITHDRAWAL_PENDING"));
 
-        // 이용자가 직접 누른 로그인만 복구한다
+        // 이용자가 직접 눌렀어도 첫 시도는 false — 앱이 이 409를 받아 "복구하시겠습니까?"를 띄운다
+        mockMvc.perform(post("/auth/mobile/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"back-token\",\"allowRestore\":false}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("WITHDRAWAL_PENDING"));
+
+        // 복구에 동의한 재시도만 복구한다
         mockMvc.perform(post("/auth/mobile/google")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"idToken\":\"back-token\",\"allowRestore\":true}"))

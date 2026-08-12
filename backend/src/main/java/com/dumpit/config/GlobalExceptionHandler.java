@@ -80,6 +80,14 @@ public class GlobalExceptionHandler {
                 "구글 로그인 검증에 실패했습니다. 다시 시도해주세요.");
     }
 
+    // 유예 중 탈퇴 계정 + 복구 의사 없음 — 클라이언트가 "복구하시겠습니까?"를 띄우고
+    // allowRestore=true로 재시도하라는 신호. 하위 타입이라 이 핸들러가 우선 매칭된다.
+    @ExceptionHandler(GoogleUserUpserter.WithdrawalPendingException.class)
+    public ResponseEntity<Map<String, Object>> handleWithdrawalPending(
+            GoogleUserUpserter.WithdrawalPendingException ex) {
+        return error(HttpStatus.CONFLICT, "WITHDRAWAL_PENDING", "탈퇴 처리가 진행 중인 계정입니다.");
+    }
+
     @ExceptionHandler(GoogleUserUpserter.AccountInactiveException.class)
     public ResponseEntity<Map<String, Object>> handleAccountInactive(
             GoogleUserUpserter.AccountInactiveException ex) {
