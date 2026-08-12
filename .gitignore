@@ -38,8 +38,9 @@ npm-debug.log*
 backup_*.sql
 .playwright-mcp/
 
-# Python (½ºÇÁ¶óÀÌÆ® »ý¼º ½ºÅ©¸³Æ®)
+# Python (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®)
 __pycache__/
 
 # superpowers ê³¼ì • ë¬¸ì„œ (plan/spec/audit) - ë¡œì»¬ ì „ìš©
 docs/superpowers/
+.superpowers/
