@@ -1,10 +1,13 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { API_BASE_URL } from '../services/api'
 import StarField from '../components/StarField'
+import WithdrawalPendingModal from '../components/WithdrawalPendingModal'
 
 export default function HomePage() {
   const [searchParams] = useSearchParams()
   const loginError = searchParams.get('error')
+  // 탈퇴 유예 중 계정은 실패가 아니라 "복구하시겠습니까?" 확인 대상 — 모달이 따로 처리한다
+  const showLoginError = loginError && loginError !== 'withdrawal_pending'
 
   const handleGoogleLogin = () => {
     window.location.href = `${API_BASE_URL}/oauth2/authorization/google`
@@ -13,8 +16,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-accent flex flex-col">
       <StarField />
+      <WithdrawalPendingModal />
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-20 text-center">
-        {loginError && (
+        {showLoginError && (
           <div className="card-retro tone-overdue mb-6 max-w-md">
             <p className="font-bold text-primary text-sm">
               로그인에 실패했어요. 다시 시도해주세요.
