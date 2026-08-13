@@ -5,11 +5,13 @@ on:
     branches: [main, dev]
     paths-ignore:
       - 'desktop/**'
+      - 'mobile/**'
       - '.github/workflows/desktop.yml'
   pull_request:
     branches: [main, dev]
     paths-ignore:
       - 'desktop/**'
+      - 'mobile/**'
       - '.github/workflows/desktop.yml'
 
 jobs:

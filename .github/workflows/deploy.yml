@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths-ignore:
       - 'desktop/**'
+      - 'mobile/**'
       - '.github/workflows/desktop.yml'
 
 jobs:
