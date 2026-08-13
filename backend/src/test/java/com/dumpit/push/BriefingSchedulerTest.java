@@ -37,7 +37,7 @@ class BriefingSchedulerTest {
         when(redis.opsForValue()).thenReturn(valueOps);
         when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(true);
         scheduler = new BriefingScheduler(tokens, settings, planning, nudges, dispatch, redis);
-        User u = TestUsers.withEmail("a@test");   // Task 7 테스트의 리플렉션 헬퍼를 공용 클래스로 추출해 재사용
+        User u = TestUsers.withEmail("a@test");
         when(tokens.findDistinctUsers()).thenReturn(List.of(u));
     }
 

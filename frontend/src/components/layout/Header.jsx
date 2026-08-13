@@ -72,7 +72,6 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
       {/* 페이지 내비는 사이드바 전담 — 상단바는 로고·배지·도움말·설정·프사만 양끝 정렬 */}
       <div className="w-full px-6 h-20 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 shrink-0">
-          {/* Hamburger button - only below lg */}
           <button
             onClick={onOpenDrawer}
             className="lg:hidden w-9 h-9 shrink-0 rounded-lg border border-chrome-line flex items-center justify-center hover:bg-chrome-line transition-colors"
@@ -81,7 +80,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             <img {...iconProps('menu', 20)} alt="" className="h-5 w-5 object-contain" />
           </button>
           <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-            {/* 투명 여백 트리밍된 로고 — 바(h-20)를 넘지 않게. h-24 시절엔 오버플로+비대칭 여백으로 바가 어긋나 보였음 */}
+            {/* 투명 여백 트리밍된 로고 — 바(h-20)를 넘지 않게 */}
             {/* 서비스명은 모든 폭에서 보여야 하므로 유체 축소 대신 md 기준 두 단계 고정 크기 */}
             {/* srcset: 표시 크기별 사전 리사이즈본 — 브라우저 대비율 축소로 생기던 계단 현상 방지 (scripts/gen_logo_sizes.py) */}
             <img
@@ -101,7 +100,6 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             <DeadlineNudgeMenu />
           </div>
 
-          {/* AI usage badge */}
           {usage && (
             <div
               className="group relative hidden sm:flex shrink-0 items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none"
@@ -150,7 +148,6 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             </div>
           )}
 
-          {/* Coin badge */}
           <div
             className={`group relative hidden sm:flex shrink-0 items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none ${coinPop ? 'coin-bounce' : ''}`}
             tabIndex={0}
@@ -181,7 +178,6 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             <img {...iconProps('setting', 20)} alt="" className="h-5 w-5 object-contain" />
           </button>
 
-          {/* User menu */}
           <div className="relative shrink-0" ref={menuRef}>
             {user?.picture ? (
               <img

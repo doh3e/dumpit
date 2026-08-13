@@ -61,8 +61,7 @@ public class GlobalExceptionHandler {
     }
 
     // 경로/쿼리 파라미터가 enum·UUID 등으로 바인딩되지 못하는 경우(예: DELETE /shop/equip/NOPE) —
-    // 과거엔 핸들러가 없어 catch-all(500)로 새던 것을 400으로 고정. 앱 전역(@RestControllerAdvice)에
-    // 적용되므로 다른 도메인의 잘못된 UUID 경로 파라미터도 함께 400으로 바뀐다.
+    // 앱 전역(@RestControllerAdvice)에 적용되므로 다른 도메인의 잘못된 UUID 경로 파라미터도 함께 400으로 바뀐다.
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "요청값이 올바르지 않습니다.");

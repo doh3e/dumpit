@@ -375,7 +375,6 @@ class IdeaApiTest extends ApiIntegrationTestBase {
     @Test
     void 스티커_미보유코드면_400_한글() throws Exception {
         Idea idea = seedIdea(userA, "제목", null);
-        // sticker.heart 구매 없음
 
         MvcResult result = mockMvc.perform(put("/ideas/" + idea.getIdeaId() + "/sticker").with(asUser(USER_A))
                         .contentType(MediaType.APPLICATION_JSON)

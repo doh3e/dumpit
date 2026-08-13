@@ -44,7 +44,7 @@ class GoogleUserUpserterTest {
 
         GoogleUserUpserter.UpsertResult result = upserter.upsert("sub-1", "new@a.b", "새이름", "https://pic2", true);
 
-        assertThat(result.user().getEmail()).isEqualTo("old@a.b"); // 이메일·닉네임은 유지
+        assertThat(result.user().getEmail()).isEqualTo("old@a.b");
         assertThat(result.user().getPicture()).isEqualTo("https://pic2");
         assertThat(result.restored()).isFalse();
     }

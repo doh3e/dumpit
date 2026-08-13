@@ -47,7 +47,6 @@ export default function SettingsModal({ onClose }) {
     ? '아이폰/아이패드에서는 홈 화면에 추가한 앱에서만 백그라운드 웹 푸시가 가능해요. 현재 알림은 Dumpit!을 열어둔 상태에서 동작해요.'
     : '현재 알림은 Dumpit! 탭이나 앱이 열려 있을 때 마감 정보를 확인해 띄워요.'
 
-  // 알림 설정은 즉시 서버 저장 — 실패 시 이전 값으로 되돌린다
   const persistNotifications = (patch, rollback) => {
     saveUserSettings(patch).catch((error) => {
       rollback()
@@ -201,7 +200,6 @@ export default function SettingsModal({ onClose }) {
 
         <section className="mb-6">
           <h3 className="font-galmuri font-bold text-dark text-sm mb-3">글자 크기</h3>
-          {/* 클릭 즉시 적용·영속 — 테마 버튼과 동일하게 저장 버튼과 무관 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {Object.entries(FONT_SCALES).map(([value, { label }]) => (
               <button

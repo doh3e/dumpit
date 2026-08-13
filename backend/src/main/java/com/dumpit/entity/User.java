@@ -216,7 +216,7 @@ public class User {
         this.banReason = null;
     }
 
-    /** 유예 기간 안에 돌아온 계정을 원상 복구한다. 콘텐츠 복구는 서비스가 따로 처리한다. */
+    /** 콘텐츠 복구는 서비스가 따로 처리한다. */
     public void restoreFromWithdrawal() {
         this.status = Status.ACTIVE;
         this.withdrawnAt = null;
@@ -224,7 +224,7 @@ public class User {
         this.withdrawalMarkedAt = null;
     }
 
-    /** 유예가 끝나 완전 삭제 대상인지 — 경계값은 포함하지 않는다(지정 시각이 지나야 삭제). */
+    /** 경계값은 포함하지 않는다(지정 시각이 지나야 삭제). */
     public boolean isPurgeDue(LocalDateTime now) {
         return this.status == Status.WITHDRAWN
                 && this.purgeAfter != null
