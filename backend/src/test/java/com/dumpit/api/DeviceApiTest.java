@@ -45,7 +45,7 @@ class DeviceApiTest extends ApiIntegrationTestBase {
         register(USER_A, TOKEN);
         mockMvc.perform(delete("/me/devices/{token}", TOKEN).with(asUser(USER_B)))
                 .andExpect(status().isNoContent());
-        assertThat(deviceTokenRepository.findAll()).hasSize(1);   // B가 지워도 A 것은 남는다
+        assertThat(deviceTokenRepository.findAll()).hasSize(1);
 
         mockMvc.perform(delete("/me/devices/{token}", TOKEN).with(asUser(USER_A)))
                 .andExpect(status().isNoContent());

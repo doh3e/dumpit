@@ -215,7 +215,7 @@ export default function AdminPage() {
         amount,
         reason: coinReasonInput.trim() || null,
       })
-      setManagingUser(res.data) // 갱신된 잔액을 모달에 즉시 반영
+      setManagingUser(res.data)
       setCoinAmountInput('')
       setCoinReasonInput('')
       fetchUsers()

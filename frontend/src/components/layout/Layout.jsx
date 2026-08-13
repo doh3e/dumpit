@@ -120,7 +120,6 @@ export default function Layout() {
 
       <Footer />
 
-      {/* Mobile floating timer button - only visible below lg */}
       <button
         onClick={() => setShowMobileTimer(true)}
         className="lg:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary text-on-accent font-dungeon text-lg flex items-center justify-center"
@@ -129,7 +128,6 @@ export default function Layout() {
         25
       </button>
 
-      {/* Mobile timer popup */}
       {showMobileTimer && createPortal(
         <div className="fixed inset-0 z-[60] flex items-end justify-center lg:hidden" onClick={() => setShowMobileTimer(false)}>
           <div className="absolute inset-0 overlay-retro" />

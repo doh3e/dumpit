@@ -176,7 +176,6 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       setCoinToast(res.data.coins)
       setTimeout(() => setCoinToast(null), 2500)
     } catch {
-      /* ignore */
     }
   }, [playAlarm, refreshCoins, breakMin, focusMin, currentSet, setsTarget, longBreakEvery, longBreakMin])
 
@@ -378,7 +377,6 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
 
   return (
     <div className={`flex flex-col items-center gap-2 ${compact ? 'p-2' : 'p-3'}`}>
-      {/* Mode label + settings button */}
       <div className="flex items-center gap-2">
         <div
           className="text-[0.625rem] font-black px-3 py-1 rounded-full border border-edge text-on-accent"
@@ -406,7 +404,6 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         </button>
       </div>
 
-      {/* Settings panel */}
       {showSettings && (
         <div className="w-full border border-line rounded-lg p-2 space-y-2" style={{ background: 'var(--pomo-soft)' }}>
           <div className="flex items-center justify-between gap-2">
@@ -481,7 +478,6 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         </div>
       )}
 
-      {/* Circular progress */}
       <div className="relative w-28 h-28">
         <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
           <circle
@@ -511,7 +507,6 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         </div>
       </div>
 
-      {/* Task selector */}
       {activeTasks.length > 0 && (
         <select
           value={selectedTaskId}
@@ -527,7 +522,6 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         </select>
       )}
 
-      {/* Controls */}
       <div className="flex items-center gap-2 w-full">
         <button
           onClick={toggle}
@@ -556,14 +550,12 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         <p className="text-[0.625rem] font-black text-secondary">{setsDone}세트 완료! 수고했어요</p>
       )}
 
-      {/* Completed count */}
       {completedCount > 0 && (
         <p className="text-[0.625rem] font-bold text-sub">
           오늘 {completedCount}회 집중 완료
         </p>
       )}
 
-      {/* Coin toast */}
       {coinToast && (
         <div className="animate-bounce text-xs font-black text-secondary">
           +{coinToast} C 획득!

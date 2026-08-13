@@ -169,8 +169,7 @@ class NoticeInquiryApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.notices.length()").value(3))
                 .andExpect(jsonPath("$.totalElements").value(5)));
 
-        // 기존 실측값 2 (2026-07-13 측정: 유저 조회 1 + 공지 목록 1)에서
-        // 새 구조는 고정 공지 1 + 일반 공지 내용 1 + count 1이므로 총 4개로 예상한다.
+        // 새 구조는 유저 조회 1 + 고정 공지 1 + 일반 공지 목록 1 + count 1 = 4개로 예상한다.
         // 실행 환경 편차 여유 2를 더해 상한을 6으로 고정.
         // NoticeResponse.from은 Notice의 스칼라 필드만 옮기고 author 등 연관 엔티티를 건드리지 않아 N+1 없음.
         assertThat(count).isLessThanOrEqualTo(6);

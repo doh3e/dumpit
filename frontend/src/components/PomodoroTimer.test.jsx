@@ -60,9 +60,9 @@ describe('PomodoroTimer 카운트다운', () => {
     render(<PomodoroTimer />)
 
     await click('집중시작')
-    await advance(60_000) // 집중 1분 소진 → 휴식 자동 시작
+    await advance(60_000)
 
-    expect(clock()).toBe('01:00') // 휴식 1분으로 리셋
+    expect(clock()).toBe('01:00')
 
     await advance(5000)
 
@@ -73,8 +73,8 @@ describe('PomodoroTimer 카운트다운', () => {
     render(<PomodoroTimer />)
 
     await click('집중시작')
-    await advance(60_000) // 집중 끝 → 휴식
-    await advance(60_000) // 휴식 끝 → 다음 집중 자동 시작
+    await advance(60_000)
+    await advance(60_000)
 
     expect(clock()).toBe('01:00')
 
@@ -105,7 +105,7 @@ describe('PomodoroTimer 카운트다운', () => {
 
     await click('집중시작')
     await advance(60_000) // 집중 끝 → 휴식(세트 1도 휴식은 있다)
-    await advance(60_000) // 휴식 끝 → 런 종료
+    await advance(60_000)
 
     expect(clock()).toBe('01:00')
     expect(screen.getByRole('button', { name: '집중시작' })).toBeTruthy()

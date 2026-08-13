@@ -111,7 +111,7 @@ class ShopApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(62)));
 
-        // 실측값 3 (2026-07-13 측정, 강제 실패로 확인: Expecting actual: 3L / 유저 조회 1 + 구매목록 1 + 장착목록 1,
+        // 실측값 3 (2026-07-13 측정: 유저 조회 1 + 구매목록 1 + 장착목록 1,
         // 카탈로그 자체는 인메모리 리스트라 아이템 62종·구매 4건에도 N+1 없음) + 여유 2 = 5로 고정
         assertThat(count).isLessThanOrEqualTo(5);
     }

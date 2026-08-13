@@ -53,8 +53,7 @@ public class AccountServiceImpl implements AccountService {
         if (!user.isActive()) {
             return user;
         }
-        // 관리자 거부는 어떤 데이터도 건드리기 전에 판정한다 — 예전에는 소프트 삭제를 다 돌린 뒤
-        // 마지막에 던져서 롤백에만 의존했다.
+        // 관리자 거부는 어떤 데이터도 건드리기 전에 판정한다.
         if (Boolean.TRUE.equals(user.getIsAdmin())) {
             throw new IllegalStateException("Admin users cannot withdraw through this flow.");
         }
@@ -136,8 +135,7 @@ public class AccountServiceImpl implements AccountService {
         return values;
     }
 
-    // 활동 로그에는 콘텐츠·개인정보 원문을 넣지 않는다는 규약을 여기서도 지킨다 —
-    // 예전에는 밴/해제 로그에만 이메일·닉네임이 평문으로 남았다(SnapshotText 참고).
+    // 활동 로그에는 콘텐츠·개인정보 원문을 넣지 않는다는 규약을 여기서도 지킨다(SnapshotText 참고).
     private Map<String, Object> snapshot(User user) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("userId", user.getUserId());

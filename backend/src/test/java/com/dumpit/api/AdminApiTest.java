@@ -109,14 +109,9 @@ class AdminApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3)));
 
-        // 픽스 전(N+1) 실측값 14 (강제 실패로 확인: expected: -1L but was: 14L
-        // = requireAdmin 유저조회 1 + findAllForAdmin 1 + 유저 3명 × 4개 리포지토리 개별 count 12).
-        // 유저 수(N)에 비례해 늘어나는 전형적인 N+1 — GROUP BY 집계 쿼리 4개로 병합해
-        // 유저 수와 무관한 상수 쿼리 수로 즉시 픽스(AdminUserController.list() + 각 리포지토리의
-        // countActiveGroupedByUser()).
-        // 픽스 후 실측값 6 (강제 실패로 재확인: expected: -1L but was: 6L
-        // = requireAdmin 1 + findAllForAdmin 1 + task/routine/idea/brainDump 그룹집계 4).
-        // 여유 2를 더해 8로 고정.
+        // N+1 회귀 가드: 유저 수(N)에 비례해 늘던 쿼리를 GROUP BY 집계 4개로 병합해
+        // 유저 수와 무관한 상수 쿼리 수로 고정했다. 실측값 6(requireAdmin 1 + findAllForAdmin 1
+        // + task/routine/idea/brainDump 그룹집계 4) + 여유 2 = 8로 상한을 잡는다.
         assertThat(count).isLessThanOrEqualTo(8);
     }
 
