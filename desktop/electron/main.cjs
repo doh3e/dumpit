@@ -41,7 +41,7 @@ const API_URL_FILTER = [`${API_ORIGIN}/api/*`]
 const WEB_ORIGIN_FOR_API = LOCAL_API ? 'http://localhost:5173' : 'https://dumpit.kr'
 const isDev = !app.isPackaged
 const isDebug = process.env.DUMPIT_DESKTOP_DEBUG === '1'
-// 시작프로그램 등록 시 args — 부팅 자동 시작은 창 없이 트레이로만 (사용자 결정 2026-07-22)
+// 시작프로그램 등록 시 args — 부팅 자동 시작은 창 없이 트레이로만
 // Windows에서 getLoginItemSettings는 등록 때와 같은 args로 조회해야 정확하다
 const LOGIN_ITEM_ARGS = ['--hidden']
 const startHidden = process.argv.includes('--hidden')
