@@ -63,7 +63,6 @@ class DeadlinePushSchedulerTest {
         when(settings.getSettings("b@test"))
                 .thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
         when(settings.activeHours("b@test")).thenReturn(new ActiveHours(9, 22));
-        // 현재 시간 + 10시간 후 마감
         when(nudges.getNudges("b@test")).thenReturn(List.of(
                 nudge("550e8400-e29b-41d4-a716-446655440000", NOW.plusHours(10))
         ));
@@ -79,7 +78,6 @@ class DeadlinePushSchedulerTest {
         when(settings.getSettings("a@test"))
                 .thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
         when(settings.activeHours("a@test")).thenReturn(new ActiveHours(9, 22));
-        // 현재 시간 + 10시간 후 마감
         when(nudges.getNudges("a@test")).thenReturn(List.of(
                 nudge("550e8400-e29b-41d4-a716-446655440001", earlyMorning.plusHours(10))
         ));

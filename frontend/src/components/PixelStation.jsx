@@ -1,4 +1,3 @@
-// 마이페이지 "나의 우주정거장" 스프라이트
 import { useAuth } from '../context/AuthContext'
 import PixelSprite from './PixelSprite'
 import { spriteFor, STATION_SPRITES } from '../shop/registry'

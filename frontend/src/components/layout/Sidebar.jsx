@@ -169,7 +169,6 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
 
   return (
     <>
-      {/* Desktop sidebar (lg+) */}
       {/* sticky: 본문이 길어져도 사이드바(설정·공지 포함)가 화면에 고정, 넘치면 내부 스크롤 */}
       <div className="hidden lg:block relative w-56 shrink-0 sticky top-20 self-start h-[calc(100vh-5rem)]">
         <aside
@@ -197,7 +196,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
         </div>
       </div>
 
-      {/* Mobile drawer (below lg) — body 포털: 본문 컨테이너(z-10) 스태킹 컨텍스트에 갇히면
+      {/* body 포털: 본문 컨테이너(z-10) 스태킹 컨텍스트에 갇히면
           상단바(z-50)를 못 덮는다 */}
       {isDrawerOpen && createPortal(
         <div className="lg:hidden fixed inset-0 z-[60]" onClick={onCloseDrawer}>

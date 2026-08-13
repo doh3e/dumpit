@@ -1,11 +1,10 @@
-// 픽셀 행성 궤도 진행률 링 — 오늘 완료 비율만큼 궤도가 액센트 호로 채워진다
 // 크기는 --orbit-size(clamp)로 뷰포트 비례: 모바일 64px ~ 데스크톱 120px.
 // 엔드포인트가 rem이라 글자 크기 설정(루트 font-size)과도 연동된다.
 import { useAuth } from '../context/AuthContext'
 import { PLANET_SPRITES, spriteFor } from '../shop/registry'
 import PixelSprite from './PixelSprite'
 
-const VB = 64                 // viewBox 좌표계 — 기존 고정 64px 시절 수치를 그대로 유지
+const VB = 64
 const R = VB / 2 - 3
 const C = 2 * Math.PI * R
 

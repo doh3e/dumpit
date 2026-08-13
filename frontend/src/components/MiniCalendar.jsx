@@ -245,7 +245,6 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                 </div>
               </div>
 
-              {/* hover 미리보기 - 읽기 전용 */}
               {hoveredDay === day && !selectedDay && hasAny && (
                 <div className={`absolute z-50 ${popAlign} top-full mt-1 w-52 card-retro !p-3 space-y-2 pointer-events-none`}>
                   <p className="text-[0.625rem] font-bold text-sub">{month + 1}월 {day}일 · 클릭해서 고정</p>
@@ -274,7 +273,6 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                 </div>
               )}
 
-              {/* 클릭 고정 모달 - 추가 버튼 있음 */}
               {selectedDay === day && hasAny && (
                 <div className={`absolute z-50 ${popAlign} top-full mt-1 w-52 card-retro !p-3 space-y-2`}>
                   <div className="flex items-center justify-between">

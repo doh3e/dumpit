@@ -389,14 +389,12 @@ class TaskApiTest extends ApiIntegrationTestBase {
 
     @Test
     void 남의_태스크_수정은_거부되고_데이터가_노출되지_않는다() throws Exception {
-        // userA의 태스크 생성
         String body = mockMvc.perform(post("/tasks").with(asUser(USER_A))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"A의 할일\"}"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         String taskId = objectMapper.readTree(body).get("taskId").asString();
 
-        // userB가 접근 → 4xx + A 데이터 미노출
         MvcResult result = mockMvc.perform(patch("/tasks/" + taskId).with(asUser(USER_B))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"탈취\"}"))
@@ -510,7 +508,6 @@ class TaskApiTest extends ApiIntegrationTestBase {
     @Test
     void 스티커_미보유코드면_400_한글() throws Exception {
         Task task = seedTask(userA, "제목");
-        // sticker.heart 구매 없음
 
         MvcResult result = mockMvc.perform(put("/tasks/" + task.getTaskId() + "/sticker").with(asUser(USER_A))
                         .contentType(MediaType.APPLICATION_JSON)

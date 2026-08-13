@@ -150,7 +150,6 @@ class AccountWithdrawalLifecycleTest extends ApiIntegrationTestBase {
                 .andExpect(status().isNoContent());
     }
 
-    /** 유예가 이미 끝난 것으로 만든다 */
     private void expireGrace() {
         jdbcTemplate.update("UPDATE users SET purge_after = ? WHERE user_id = ?",
                 LocalDateTime.now().minusDays(1), userA.getUserId());

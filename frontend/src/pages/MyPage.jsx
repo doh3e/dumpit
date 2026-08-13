@@ -292,7 +292,6 @@ export default function MyPage() {
       {/* 나의 우주정거장 — 프로필이 도킹된 느낌 */}
       <PixelStation />
 
-      {/* Profile card */}
       <div className="card-retro !p-5 flex items-start gap-4">
         {profile?.picture ? (
           <img
@@ -402,7 +401,6 @@ export default function MyPage() {
         </div>
       )}
 
-      {/* Pie chart */}
       <div className="card-retro !p-4 space-y-3">
         <p className="font-galmuri font-bold text-sm text-dark">완료 태스크 카테고리 별 분포</p>
         {pieData.length === 0 ? (
@@ -414,7 +412,6 @@ export default function MyPage() {
         )}
       </div>
 
-      {/* Overdue tasks */}
       {overdue.length > 0 && (
         <div className="card-retro !p-4 space-y-3">
           <div className="flex items-center justify-between">

@@ -85,7 +85,6 @@ class MobileAuthApiTest extends ApiIntegrationTestBase {
     void 밴_계정이면_403() throws Exception {
         given(mobileGoogleTokenVerifier.verify("banned-token"))
                 .willReturn(new GoogleIdClaims("banned-sub", "banned@test.dumpit.local", "밴유저", null));
-        // 먼저 한 번 로그인시켜 유저 생성 후 밴 처리 (@Table(name = "users") 확인됨)
         mockMvc.perform(post("/auth/mobile/google")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"idToken\":\"banned-token\"}"))
@@ -125,7 +124,6 @@ class MobileAuthApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("WITHDRAWAL_PENDING"));
 
-        // 복구에 동의한 재시도만 복구한다
         mockMvc.perform(post("/auth/mobile/google")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"idToken\":\"back-token\",\"allowRestore\":true}"))

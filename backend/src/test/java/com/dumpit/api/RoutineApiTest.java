@@ -78,7 +78,7 @@ class RoutineApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(10)));
 
-        // 실측값 2 (2026-07-13 측정: 유저 조회 1 + 루틴 목록 1, 강제 실패로 확인: expected: -1L but was: 2L) + 여유 2 = 4로 고정.
+        // 실측값 2 (2026-07-13 측정: 유저 조회 1 + 루틴 목록 1) + 여유 2 = 4로 고정.
         // RoutineResponse.from은 user 등 연관 엔티티를 건드리지 않고 스칼라 필드만 옮기므로 N+1 없음.
         assertThat(count).isLessThanOrEqualTo(4);
     }

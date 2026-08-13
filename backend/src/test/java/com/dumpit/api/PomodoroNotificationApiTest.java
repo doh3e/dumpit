@@ -133,7 +133,6 @@ class PomodoroNotificationApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(post("/pomodoro/start").with(asUser(USER_A)))
                 .andExpect(status().isOk());
 
-        // 시작 직후 완료 요청 — 25분 세션인데 경과 0분
         mockMvc.perform(post("/pomodoro/complete").with(asUser(USER_A))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(Map.of("focusMinutes", 25))))
