@@ -34,7 +34,6 @@ export const STATION_SPRITES: Record<string, SpriteEntry> = {
   'station.hamster': { name: '햄스터', img: require('../../assets/shop/station_hamster.png'), frames: 8, fps: 5 },
 };
 
-/** 장착 코드 → 엔트리 (미장착·모르는 코드는 default) */
 export function spriteFor(registry: Record<string, SpriteEntry>, code: string | undefined | null): SpriteEntry {
   return (code && registry[code]) || registry.default;
 }

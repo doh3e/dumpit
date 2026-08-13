@@ -71,8 +71,6 @@ describe('phasesFrom', () => {
 });
 
 describe('phaseProgress', () => {
-  // 위젯 세션 링·세트 도트가 재미러(일시정지·재개·reconcile)마다 완료 수를 잃던 버그의 데이터
-  // 원천 수정 — phasesFrom()과 달리 "이미 끝난 페이즈 수"·"세션 전체 수"를 그대로 실어보낸다.
   it('세션 시작 시점엔 완료 0, 전체는 고정(2세트=페이즈 3개·FOCUS 2개)', () => {
     expect(phaseProgress(base, at(0))).toEqual({ done: 0, total: 3, focusDone: 0, focusTotal: 2 });
   });

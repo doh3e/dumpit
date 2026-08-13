@@ -14,6 +14,6 @@ it('tasks와 모든 섹션에서 해당 태스크만 패치, 불변', () => {
   expect(next.tasks[0].status).toBe('DONE');
   expect(next.sections.today[0].status).toBe('DONE');
   expect(next.sections.today[0].completedAt).toBe('2026-07-23T15:00:00');
-  expect(next.sections.tomorrow[0].status).toBe('TODO');   // 다른 태스크 불변
-  expect(planning.tasks[0].status).toBe('TODO');           // 원본 불변
+  expect(next.sections.tomorrow[0].status).toBe('TODO');
+  expect(planning.tasks[0].status).toBe('TODO');
 });

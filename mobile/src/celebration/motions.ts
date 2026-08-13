@@ -1,14 +1,11 @@
 /**
  * 완료축하 파티클 빌더 — 웹 `frontend/src/shop/celebrationMotions.js` 이식.
- *
- * 웹은 %·vw·vh와 CSS 변수로 파티클을 기술하고 키프레임이 재생하지만, RN에는 CSS가 없어
- * 빌더가 뷰포트 기준 dp 좌표까지 계산해 내려주고 CelebrationOverlay가 reanimated로 재생한다.
- * 키프레임 자체는 웹 index.css '보상 모션' 섹션(249~362행)의 근사 이식 — 1:1 재현이 아니다.
+ * 키프레임은 웹 index.css '보상 모션' 섹션(249~362행)의 근사 이식 — 1:1 재현이 아니다.
  *
  * 계약:
  *   - rand를 주입받는다(테스트에서 고정 시드). 웹은 Math.random()을 직접 부른다.
  *   - delay + duration ≤ TOTAL_MS(2300).
- *   - 노드 수는 웹보다 줄였다 — Animated.Image가 DOM보다 비싸다 (계획 B §3-5 표).
+ *   - 노드 수는 웹보다 줄였다 — Animated.Image가 DOM보다 비싸다.
  */
 import type { CelebrationSprite, MotionKind } from './registry';
 

@@ -10,7 +10,7 @@ import type { PlannedNotification } from './notificationPlan';
 /** notify-kit 래퍼 — 알림 "무엇을/언제"는 notificationPlan 순수 함수가 결정하고 여기는 적용만 한다 */
 
 // 채널은 최초 생성 시 설정이 동결된다 — 소리·진동을 명시하지 않고 만든 v1 alert 채널이
-// 기기에서 무음이 될 수 있어 v2로 재생성 (기존 설치자도 새 채널로 갈아탄다. 2026-07-24 스모크 픽스)
+// 기기에서 무음이 될 수 있어 v2로 재생성했다 (기존 설치자도 새 채널로 갈아탄다)
 const ONGOING_CHANNEL = 'pomodoro-ongoing';
 const ALERT_CHANNEL = 'pomodoro-alert-v2';
 
@@ -63,7 +63,7 @@ export async function applyPlan(plan: PlannedNotification[]): Promise<void> {
 }
 
 /**
- * 뽀모도로 알림만 걷는다 — FCM 푸시 표시분(Phase 4)은 남긴다.
+ * 뽀모도로 알림만 걷는다 — FCM 푸시로 표시된 알림은 남긴다.
  * 트리거·표시 양쪽에서 pomodoro- 접두사 id만 선별 취소.
  */
 export async function cancelAll(): Promise<void> {

@@ -5,7 +5,6 @@ import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 import { useToast } from '../retro/ToastProvider';
 
-/** AI 잔여 점수 배지 — 잔여량에 따라 톤 변화, 탭하면 사용량 안내 */
 export function AiBadge({ usage }: { usage: AiUsage | undefined }) {
   const { colors } = useTheme();
   const toast = useToast();

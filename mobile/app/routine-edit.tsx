@@ -47,7 +47,7 @@ export default function RoutineEditScreen() {
   );
 
   // 편집 진입인데 대상이 아직 없으면 폼을 만들지 않는다 —
-  // 빈 폼으로 저장하면 PATCH 전체 payload가 기존 루틴을 덮어버린다 (리뷰 M5)
+  // 빈 폼으로 저장하면 PATCH 전체 payload가 기존 루틴을 덮어버린다
   if (routineId && !editing) {
     return (
       <View style={[styles.screen, styles.centered]}>

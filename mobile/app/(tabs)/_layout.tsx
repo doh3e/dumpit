@@ -23,7 +23,7 @@ export default function TabsLayout() {
     initPomodoro();
   }, []);
 
-  // 백그라운드 → 포그라운드 복귀는 내비게이션 focus가 아니라서 별도 정산 필요 (리뷰 M2)
+  // 백그라운드 → 포그라운드 복귀는 내비게이션 focus가 아니라서 별도 정산 필요
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') reconcile();

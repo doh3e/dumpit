@@ -131,7 +131,7 @@ test('buildHeroMirror가 히어로·큐·진행률을 담는다', () => {
   expect(s.updatedAt).toBe(1234);
   expect(s.hero).toMatchObject({ taskId: 'a', title: '히어로' });
   expect(s.hero.deadlineLabel).toContain('마감');
-  expect(s.todayDone).toBe(1);       // DONE 1
+  expect(s.todayDone).toBe(1);
   expect(s.todayTotal).toBe(2);      // CANCELLED 제외
   expect(s.allDone).toBe(false);
   expect(s.queue).toHaveLength(2);

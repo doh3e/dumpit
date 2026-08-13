@@ -36,7 +36,6 @@ export default function HomeScreen() {
   const aiUsage = useAiUsage();
   const toggle = useToggleTask();
 
-  // 완료 연출 상태
   const [bursts, setBursts] = useState<{ id: number; x: number; y: number }[]>([]);
   const [coinToast, setCoinToast] = useState<{ id: number; coins: number; taskTitle: string } | null>(null);
   const [showRocket, setShowRocket] = useState(false);

@@ -70,7 +70,6 @@ describe('reconcile', () => {
     const result = await initPomodoro();
     expect(mockSettle).toHaveBeenCalledWith(2, true);
     expect(result).toEqual({ coins: 5, settledSessions: 1 });
-    // DONE + 정산 성공 → 세션 제거·알림 취소
     expect(notifications.cancelAll).toHaveBeenCalled();
     expect(mockClear).toHaveBeenCalled();
     expect(getSession()).toBeNull();

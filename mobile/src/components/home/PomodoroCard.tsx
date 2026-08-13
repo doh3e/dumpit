@@ -48,7 +48,7 @@ export function PomodoroCard() {
     );
   }
 
-  // 실행 중엔 버튼이 상태를 입는다 — 라벨·색(틸)로 "지금 돌아가는 중"을 표시 (사용자 피드백 2026-07-24)
+  // 실행 중엔 버튼이 상태를 입는다 — 라벨·색(틸)로 "지금 돌아가는 중"을 표시
   const paused = session.pausedAt != null;
   const buttonLabel =
     derived.phase === 'DONE' ? '완료 · 정리하기'

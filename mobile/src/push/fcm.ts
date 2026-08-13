@@ -15,7 +15,6 @@ function getMessaging(): FirebaseMessagingTypes.Module {
 /** 같은 세션에서 registerPushDevice()가 이미 성공했으면 refresh() 재호출에도 재등록·권한 재요청을 건너뛴다 */
 let registeredThisSession = false;
 
-/** 테스트 전용: 세션 등록 플래그 초기화 */
 export function resetPushStateForTest(): void {
   registeredThisSession = false;
 }

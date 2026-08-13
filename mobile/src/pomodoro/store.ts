@@ -20,7 +20,7 @@ let session: Session | null = null;
 const listeners = new Set<() => void>();
 
 // 콜드스타트·백그라운드 복귀 정산 결과는 호출자가 UI 밖일 수 있어 보류해 두고
-// 첫 소비자(홈 구독)가 가져간다 — 토스트·코인 뱃지 갱신 누락 방지 (리뷰 M1)
+// 첫 소비자(홈 구독)가 가져간다 — 토스트·코인 뱃지 갱신 누락 방지
 let pendingSettle: SettleResult | null = null;
 
 export function takePendingSettleResult(): SettleResult | null {
@@ -102,7 +102,7 @@ export async function resumeSession(): Promise<void> {
 
 /**
  * 리셋 — 지금까지 완료분을 정산(finished)하고 세션·알림을 걷는다.
- * 미정산 세트가 있는데 정산이 실패(오프라인)하면 세션을 보존하고 false 반환 — 코인 소실 방지 (리뷰 M3).
+ * 미정산 세트가 있는데 정산이 실패(오프라인)하면 세션을 보존하고 false 반환 — 코인 소실 방지.
  */
 export async function resetSession(): Promise<boolean> {
   if (!session) return true;
@@ -123,7 +123,7 @@ export async function resetSession(): Promise<boolean> {
  * 복귀 정산 — 백그라운드에서 지나간 세트를 서버에 델타 청구하고 알림 창을 재계획한다.
  * settle 실패는 조용히 보류(델타 방식이라 다음 호출이 안전하게 재시도).
  * 동시 호출은 같은 promise를 공유하고(중복 HTTP 방지), await 사이 세션 교체(리셋·재시작)는
- * 상태 갱신을 중단한다 (리뷰 M4).
+ * 상태 갱신을 중단한다.
  */
 let reconcileInFlight: Promise<SettleResult | null> | null = null;
 
@@ -170,7 +170,6 @@ async function doReconcile(): Promise<SettleResult | null> {
   return result;
 }
 
-/** 테스트 전용 — 모듈 상태 초기화 */
 export function resetStoreForTest(): void {
   session = null;
   pendingSettle = null;

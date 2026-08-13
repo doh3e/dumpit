@@ -45,8 +45,8 @@ it('A 롤백이 B의 낙관 상태를 되돌리지 않는다 (태스크 단위 �
 
   h.onError(new Error('fail'), { taskId: 'a' }, ctxA);
   const after = qc.getQueryData(keys.planning) as any;
-  expect(after.sections.today[0].status).toBe('TODO');   // a 롤백
-  expect(after.sections.today[1].status).toBe('DONE');   // b 낙관 상태 유지
+  expect(after.sections.today[0].status).toBe('TODO');
+  expect(after.sections.today[1].status).toBe('DONE');
 });
 
 it('캐시가 비어 있으면 onMutate가 안전하게 no-op', async () => {

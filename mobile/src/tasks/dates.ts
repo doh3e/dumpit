@@ -43,7 +43,6 @@ export function toLocalDateTimeString(d: Date): string {
   return `${toLocalDateString(d)}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
-/** "YYYY-MM-DD" */
 export function toLocalDateString(d: Date): string {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }

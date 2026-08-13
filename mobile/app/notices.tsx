@@ -26,7 +26,6 @@ export default function NoticesScreen() {
   const [page, setPage] = useState(0);
   const current = useQuery({ queryKey: keys.notices(page), queryFn: () => fetchNotices(page) });
 
-  // [더 보기]로 페이지 누적 (아코디언 목록 append)
   const [loaded, setLoaded] = useState<NoticeResponse[]>([]);
   const [loadedPage, setLoadedPage] = useState(-1);
   if (current.data && loadedPage !== current.data.page) {

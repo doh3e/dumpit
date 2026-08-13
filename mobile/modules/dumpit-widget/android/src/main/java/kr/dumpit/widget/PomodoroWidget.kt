@@ -91,7 +91,6 @@ private fun PomodoroContent(snapshot: PomodoroSnapshot?, theme: WTheme, now: Lon
                 .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))),
             contentAlignment = Alignment.Center,
         ) {
-            // 3버킷 분기 — 높이 230↑(2x3+)는 세로 링, 폭 230↑(3x2+)는 가로 링, 나머지(2x2)는 도트.
             val size = LocalSize.current
             when {
                 size.height >= 230.dp -> PomodoroExpanded(snapshot, theme, now)
@@ -104,8 +103,8 @@ private fun PomodoroContent(snapshot: PomodoroSnapshot?, theme: WTheme, now: Lon
 
 /**
  * 뽀모도로 컴팩트 레이아웃 — idle·running·paused·done 4상태 분기를 담은 자체완결 컴포저블.
- * Task 10부터는 작은 크기(COMPACT) 전용이고, 큰 크기(EXPANDED)는 형제 컴포저블 PomodoroExpanded가
- * 맡는다(분기는 PomodoroContent). 그래서 여기선 크기(LocalSize)를 참조하지 않는다.
+ * 큰 크기(EXPANDED)는 형제 컴포저블 PomodoroExpanded가 맡는다(분기는 PomodoroContent). 그래서
+ * 여기선 크기(LocalSize)를 참조하지 않는다.
  */
 @Composable
 fun PomodoroCompact(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
@@ -189,18 +188,16 @@ private fun RunningContent(snapshot: PomodoroSnapshot, theme: WTheme, now: Long)
 
 /**
  * 세트 진행 도트 — FOCUS 세트 수만큼 점을 찍고, 완료된 순서대로 채운다.
- * 주의(리뷰 Critical 수정, 링과 같은 결함): snapshot.phases는 phasesFrom()이 돌려주는 "남은"
- * FOCUS만 담고 있어(이미 끝난 FOCUS는 재미러 시점에 걸러짐) 예전엔 "찍는 점 개수"까지
- * phases 안 FOCUS 수를 썼다 — 재미러마다 점 개수 자체가 줄어들었다(총 세트 수가 아니게 됨).
- * focusDone(+focusTotal)을 얹어 "완료 수"와 "찍을 점 개수" 둘 다 세션 전체 기준으로 고정한다.
+ * focusDone/focusTotal 사용: snapshot.phases는 phasesFrom()이 돌려주는 "남은" FOCUS만 담고
+ * 있어(이미 끝난 FOCUS는 재미러 시점에 걸러짐) "완료 수"·"찍을 점 개수" 둘 다 phases가 아닌
+ * focusDone(+focusTotal)에서 세션 전체 기준으로 고정한다.
  *
- * 주의(리뷰 Critical 수정 2 — Glance 10자식 상한): total(focusTotal)을 그대로 점 개수로 쓰면
- * 안 된다 — 링(비율 분모)과 달리 도트는 total개만큼 Row 직속 자식(점 Box + 간격 Spacer)을
- * 낳아 2*total-1개가 된다. 세트 수 스테퍼는 setsTarget 최대 12를 허용하고(clampSettings,
- * engine.ts) focusTotal=12면 23개 — TodayTasksWidget.kt의 QueueSection과 같은 자식-10개
- * 런타임 예외 사고가 난다. 무한 세션(focusTotal null)도 focusDone이 시간이 갈수록 커져 같은
- * 위험이다. 그려지는 점 개수를 4개로 캡하고, 실제 완료 비율만 그 안에서 반올림해 채운다
- * (세트 4개 이하 세션은 세트당 점 1개로 자연히 정확히 맞아떨어진다).
+ * 표시 도트는 4개로 캡한다 — Glance 컨테이너는 자식 10개가 상한인데, 도트는 total개만큼
+ * Row 직속 자식(점 Box + 간격 Spacer)을 낳아 2*total-1개가 된다. 세트 수 스테퍼는 setsTarget
+ * 최대 12를 허용해(clampSettings, engine.ts) focusTotal=12면 23개가 되어 런타임 예외가 난다.
+ * 무한 세션(focusTotal null)도 focusDone이 시간이 갈수록 커져 같은 위험이다. 그려지는 점
+ * 개수를 4개로 캡하고, 실제 완료 비율만 그 안에서 반올림해 채운다(세트 4개 이하 세션은
+ * 세트당 점 1개로 자연히 정확히 맞아떨어진다).
  */
 @Composable
 private fun SetDots(snapshot: PomodoroSnapshot, now: Long, theme: WTheme) {
@@ -240,8 +237,8 @@ private fun TomatoFlipper(size: Dp) {
 /**
  * 페이즈 라벨(FOCUS면 "N번째 집중", REST/REST_LONG이면 해당 문구) — RunningContent(컴팩트)와
  * SessionRing(확장형) 공용. 크기만 파라미터로 갈라 두 문맥에 맞춘다.
- * 주의(TodayTasksWidget 이전과 동일 결론): engine.ts 계약상 FOCUS phase.index는 이미 1부터
- * 시작한다("FOCUS면 몇 번째 집중(1부터)"). +1을 더하면 오프바이원이 나므로 그대로 쓴다.
+ * engine.ts 계약상 FOCUS phase.index는 이미 1부터 시작한다("FOCUS면 몇 번째 집중(1부터)").
+ * +1을 더하면 오프바이원이 나므로 그대로 쓴다.
  */
 @Composable
 private fun PhaseLabel(phase: PomodoroPhase, theme: WTheme, indexSp: TextUnit = 14.sp, textDp: Dp = 13.dp) {
@@ -260,7 +257,7 @@ private fun PhaseLabel(phase: PomodoroPhase, theme: WTheme, indexSp: TextUnit = 
 /**
  * 크로노미터 RemoteViews 공용 생성 — 컴팩트(RunningContent)·확장형(SessionRing) 둘 다 여기를
  * 거친다. widget_chronometer.xml은 textColor가 라이트 fg로 고정돼 있어(다크·스킨 배경에서
- * 안 읽히는 Task 9 이후 발견 버그) setTextColor로 런타임에 덮어쓴다. XML 자체는 건드리지 않는다.
+ * 안 읽힘) setTextColor로 런타임에 덮어쓴다. XML 자체는 건드리지 않는다.
  */
 private fun chronometerRemoteViews(context: Context, theme: WTheme, phase: PomodoroPhase, now: Long): RemoteViews =
     RemoteViews(context.packageName, R.layout.widget_chronometer).apply {
@@ -296,14 +293,13 @@ private fun deriveExpandedState(snapshot: PomodoroSnapshot?, now: Long): Expande
     val done = snapshot?.effectivelyDone(now) == true
     // PomodoroCompact의 IdleContent 분기(스냅샷 없음 OR 페이즈 사이 빈틈)와 동일 조건.
     val isIdle = snapshot == null || (!done && snapshot.pausedAt == null && activePhase == null)
-    // 전체 페이즈 기준 진행률(브리프 명시: FOCUS만이 아니라 phases 전체).
-    // 주의(리뷰 Critical 수정): snapshot.phases는 phasesFrom()이 돌려주는 "남은" 타임라인뿐이라
-    // (이미 끝난 페이즈는 JS 미러 작성 시점에 걸러짐, 재미러마다 재생성) phases만으로 완료 수를
-    // 세면 일시정지·재개·reconcile 직후 항상 0으로 보이고 분모(phases.size)도 세션이 진행될수록
-    // 줄어든다. snapshot.phaseDone(+phaseTotal)이 "이미 끝난 만큼"을 별도로 실어보내므로 그 위에
-    // phases 안에서 실시간으로 지난(now 전진에 따른, 틱 재구성 전제) 몫만 더한다.
-    // phaseTotal이 null(무한 세션, 또는 신필드 없는 구 미러 — 이때 phaseDone도 0으로 폴백)이면
-    // phaseDone+phases.size로 굴러가는(rolling) 분모를 근사한다.
+    // 전체 페이즈 기준 진행률(브리프 명시: FOCUS만이 아니라 phases 전체). snapshot.phases는
+    // phasesFrom()이 돌려주는 "남은" 타임라인뿐이라(이미 끝난 페이즈는 미러 작성 시점에 걸러짐,
+    // 재미러마다 재생성) phases만으로 완료 수를 세면 항상 0으로 보이고 분모(phases.size)도
+    // 세션이 진행될수록 줄어든다. snapshot.phaseDone(+phaseTotal)이 "이미 끝난 만큼"을 별도로
+    // 실어보내므로 그 위에 phases 안에서 실시간으로 지난 몫만 더한다. phaseTotal이 null(무한
+    // 세션, 또는 신필드 없는 구 미러)이면 phaseDone+phases.size로 굴러가는(rolling) 분모를
+    // 근사한다.
     val fraction = when {
         snapshot == null -> 0f
         done -> 1f
@@ -354,11 +350,9 @@ fun PomodoroExpanded(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
 
 /**
  * 뽀모도로 확장형·가로(폭 230dp 버킷, 3x2+) — 세로 버킷(230dp)에 못 닿는 낮고 넓은 배치에서도
- * 링 아이덴티티를 유지한다. 좌우 분할(링 왼쪽 + 텍스트 오른쪽)은 비대칭이라 어색하다는 실기기
- * 지적으로 링을 정중앙 주인공으로 두는 대칭 구성으로 재설계: 중앙 링(90dp) + 아래 버튼 행.
- * 상단 오버레이 행에 집중 중 태스크 칩(좌)·모드 필(우)을 얹는다 — 세로로 쌓을 예산이 없어
- * (아래 링 90dp 산정 참조) 코너 유휴 공간을 쓴다. 긴 제목은 칩이 링 상단 얇은 호를 일부
- * 가로지르는데, 카드 배경이 있어 플로팅 라벨로 읽힌다.
+ * 링 아이덴티티를 유지한다. 중앙 링(90dp) + 아래 버튼 행, 상단 오버레이 행에 집중 중 태스크
+ * 칩(좌)·모드 필(우)을 얹는다 — 세로로 쌓을 예산이 없어(아래 링 90dp 산정 참조) 코너 유휴
+ * 공간을 쓴다.
  * 링 90dp — 상한은 폭이 아니라 높이다: 2칸 실높이 예산 127dp(154-프레임 27)에서 버튼 행(30)+
  * 간격(6)을 빼면 91dp. 폭을 4칸으로 늘려도(버킷 동일) 높이가 그대로라 이 이상은 버튼이 잘린다.
  */

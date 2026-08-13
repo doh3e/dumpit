@@ -4,7 +4,6 @@ import { useAuth } from '../src/auth/AuthContext';
 import { useTheme } from '../src/theme/useTheme';
 import LoginScreen from './login';
 
-/** 인증 게이트 — 로딩/로그인/탭 셸 분기 */
 export default function Index() {
   const { colors } = useTheme();
   const { me, loading } = useAuth();

@@ -31,13 +31,13 @@ describe('buildNotificationPlan', () => {
     const focusEndAlert = plan.find((n) => n.channel === 'pomodoro-alert' && n.at === at(25));
     expect(focusEndAlert?.body).toContain('5분 휴식');
 
-    // live는 페이즈별 유니크 id — 같은 id 트리거가 AlarmManager에서 덮어써지는 문제(C1) 방지
+    // live는 페이즈별 유니크 id — 같은 id 트리거가 AlarmManager에서 덮어써지는 문제 방지
     const breakLive = plan.find((n) => n.id === 'pomodoro-live-BREAK-1');
     expect(breakLive).toMatchObject({ at: at(25), ongoing: true, countdownTo: at(30), timeoutAfterMs: 5 * MIN });
     expect(breakLive?.title).toContain('휴식');
 
     const liveIds = lives(plan).map((n) => n.id);
-    expect(new Set(liveIds).size).toBe(liveIds.length); // 전부 유니크
+    expect(new Set(liveIds).size).toBe(liveIds.length);
 
     const doneAlert = plan.find((n) => n.channel === 'pomodoro-alert' && n.at === at(55));
     expect(doneAlert?.body).toContain('모든 세트 완료');

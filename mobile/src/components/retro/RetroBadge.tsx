@@ -5,7 +5,7 @@ import { useTheme } from '../../theme/useTheme';
 
 type Tone = 'accent' | 'accent2' | 'warn' | 'starlight' | 'sub';
 
-type Props = { text: string; tone?: Tone; /** 도트 아이콘 (도트 통일 Phase A) */ icon?: ReactNode };
+type Props = { text: string; tone?: Tone; icon?: ReactNode };
 
 /** 소형 상태 라벨 — "마감 지남"·"진행 중"·"↳ 서브" 등. 둥근모 크롬층 */
 export function RetroBadge({ text, tone = 'sub', icon }: Props) {

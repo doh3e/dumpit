@@ -20,7 +20,6 @@ type Props = {
   onPress: (task: TaskResponse) => void;
 };
 
-/** 리스트 공용 태스크 행 — 체크박스(완료 토글) + 본문(상세 진입) + 메타 */
 export const TaskRow = memo(function TaskRow({ task, overdue = false, child = false, onToggle, onPress }: Props) {
   const { colors } = useTheme();
   const done = task.status === 'DONE';

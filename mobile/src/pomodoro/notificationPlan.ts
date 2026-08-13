@@ -2,8 +2,8 @@ import { deriveState, phasesFrom, type Phase, type Session } from './engine';
 
 /**
  * 상시(live) 알림 id 접두사. 페이즈마다 **유니크 id**를 쓴다 — 같은 id로 여러 트리거를 예약하면
- * AlarmManager PendingIntent(requestCode = id.hashCode())가 서로 덮어써 마지막 1개만 남기 때문
- * (2026-07-24 리뷰 C1). 이전 페이즈의 live는 timeoutAfterMs로 자기 페이즈 끝에 자동 소멸한다.
+ * AlarmManager PendingIntent(requestCode = id.hashCode())가 서로 덮어써 마지막 1개만 남기 때문이다.
+ * 이전 페이즈의 live는 timeoutAfterMs로 자기 페이즈 끝에 자동 소멸한다.
  */
 export const LIVE_PREFIX = 'pomodoro-live';
 
@@ -85,7 +85,6 @@ export function buildNotificationPlan(session: Session, now: number): PlannedNot
         ongoing: true, countdownTo: phase.endsAt, timeoutAfterMs: Math.max(1000, phase.endsAt - now),
       });
     }
-    // 페이즈 종료 경계: 소리 나는 alert.
     // 무한 롤링 창의 마지막 경계는 잘린 창이라 완료도 전환도 아님 — alert 생략(복귀 재예약이 창을 민다)
     const alert = boundaryAlert(phase, next, session);
     const isFinalBoundary = finite && !next;

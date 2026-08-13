@@ -8,7 +8,7 @@ type Props = {
   selected?: boolean;
   onPress?: () => void;
   emoji?: string;
-  /** 도트 아이콘 등 — emoji보다 우선 (도트 통일 Phase A) */
+  /** 도트 아이콘 등 — emoji보다 우선 */
   icon?: ReactNode;
   disabled?: boolean;
 };

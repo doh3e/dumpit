@@ -64,8 +64,8 @@ function* timeline(session: Session): Generator<Phase> {
     const focusEnd = cursor + focusMin * 60_000;
     yield { kind: 'FOCUS', index: i, long: false, startsAt: cursor, endsAt: focusEnd };
     cursor = focusEnd;
-    if (setsTarget === 1) return;                     // 단일 세트: 휴식 없이 종료
-    if (setsTarget >= 2 && i >= setsTarget) return;   // 유한 세트 완주
+    if (setsTarget === 1) return;
+    if (setsTarget >= 2 && i >= setsTarget) return;
     const long = i % longBreakEvery === 0;
     const breakEnd = cursor + (long ? longBreakMin : breakMin) * 60_000;
     yield { kind: 'BREAK', index: i, long, startsAt: cursor, endsAt: breakEnd };

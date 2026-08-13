@@ -26,7 +26,6 @@ const DEADLINE_MODES: { id: DeadlineMode; label: string; icon?: PixelIconName }[
   { id: 'CUSTOM', label: '직접', icon: 'calendar' },
 ];
 
-/** 다음 30분 정각 */
 function next30(): string {
   const d = new Date();
   d.setSeconds(0, 0);

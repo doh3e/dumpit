@@ -8,10 +8,8 @@ import { TiledImage } from '../common/TiledImage';
 
 /**
  * 스택 화면 공용 상단 헤더 — 뒤로가기 + 가운데 제목 + 선택 우측 슬롯.
- *
- * CHROME 스킨이 칠해지는 면 중 하나다(탭바·홈 앱바와 한 묶음). 앱에서 항상 보이는 크롬이
- * 탭바뿐이면 상점에서 크롬을 미리 볼 데가 없어, 스택 화면 헤더까지 크롬으로 둔다
- * (2026-07-27 사용자 결정).
+ * CHROME 스킨이 칠해지는 면 중 하나다(탭바·홈 앱바와 한 묶음) — 탭바만으로는 상점에서
+ * 크롬을 미리 볼 데가 없어 헤더도 크롬으로 둔다.
  */
 export function ScreenHeader({
   title,
@@ -20,7 +18,7 @@ export function ScreenHeader({
   onBack,
 }: {
   title: string;
-  /** 제목 앞 도트 아이콘 — 제목 문자열에 이모지를 박는 대신 사용 (도트 통일 Phase A) */
+  /** 제목 앞 도트 아이콘 — 제목 문자열에 이모지를 박는 대신 사용 */
   icon?: ReactNode;
   right?: ReactNode;
   /** 기본은 router.back() */

@@ -1,6 +1,6 @@
 /** 웹 MyPage.jsx 통계 파생 이식 — 서버 StatsResponse를 표시용으로 가공하는 순수 함수들 */
 
-// 누적 집중 분 → "N분" / "H시간" / "H시간 M분" (웹 formatFocusTotal 이식)
+// 웹 formatFocusTotal 이식
 export function formatFocusTotal(minutes: number): string {
   const m = Number(minutes) || 0;
   if (m < 60) return `${m}분`;

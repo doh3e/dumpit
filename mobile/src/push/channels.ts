@@ -7,7 +7,7 @@ export const PUSH_CHANNELS = {
   notice: 'push-notice',
 } as const;
 
-/** 채널 설정은 최초 생성 시 동결 — 소리·진동은 처음부터 명시(Phase 2 교훈) */
+/** 채널 설정은 최초 생성 시 동결 — 소리·진동은 처음부터 명시해야 한다 */
 export async function ensurePushChannels(): Promise<void> {
   await notifee.createChannel({
     id: PUSH_CHANNELS.deadline, name: '마감 임박 알림',

@@ -58,7 +58,7 @@ icon("w_i_tomato_f1", ["...XX...", "..XXXX..", ".XXXXXX.", "XXXXXXXX", "XXXXXXXX
 icon("w_i_tomato_f2", ["..XX.X..", ".XXXX...", ".XXXXXX.", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", ".XXXXXX.", "..XXXX.."])
 
 # 컬러 토마토 2프레임 — idle·done 전용. 흰 글리프+단색 tint(구 w_i_tomato_*)는 실기기에서
-# "덩어리"로 보인다는 지적 — 원색(빨강 몸통·초록 꼭지·하이라이트)으로 굽고 tint 없이 쓴다.
+# 뭉개져 보인다 — 원색(빨강 몸통·초록 꼭지·하이라이트)으로 굽고 tint 없이 쓴다.
 # f2 = 1px 위 시프트(바운스).
 TOMATO_PALETTE = {
     "R": (222, 74, 56, 255),    # 몸통
