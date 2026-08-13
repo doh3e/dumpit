@@ -1,0 +1,221 @@
+import { router, useFocusEffect, type Href } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getApiErrorMessage } from '../../src/api/client';
+import type { TaskResponse, TaskStatus } from '../../src/api/types';
+import { useAuth } from '../../src/auth/AuthContext';
+import { HomeAppBar } from '../../src/components/home/HomeAppBar';
+import { MiniCalendar } from '../../src/components/home/MiniCalendar';
+import { NowHeroCard } from '../../src/components/home/NowHeroCard';
+import { PomodoroCard } from '../../src/components/home/PomodoroCard';
+import { TaskListCard } from '../../src/components/home/TaskListCard';
+import type { TogglePos } from '../../src/components/home/TaskRow';
+import { TaskDetailSheet, type TaskDetailSheetHandle } from '../../src/components/task/TaskDetailSheet';
+import { CoinToast } from '../../src/components/fx/CoinToast';
+import { PixelBurst } from '../../src/components/fx/PixelBurst';
+import { CelebrationOverlay } from '../../src/components/fx/CelebrationOverlay';
+import { calcCompletionCoins } from '../../src/tasks/rewards';
+import { RetroButton } from '../../src/components/retro/RetroButton';
+import { RetroCard } from '../../src/components/retro/RetroCard';
+import { useToast } from '../../src/components/retro/ToastProvider';
+import { deriveState } from '../../src/pomodoro/engine';
+import { getSession, reconcile, subscribe, takePendingSettleResult } from '../../src/pomodoro/store';
+import { useAiUsage, usePlanning, useToggleTask } from '../../src/query/hooks';
+import { isToday } from '../../src/tasks/dates';
+import { buildHeroQueue } from '../../src/tasks/heroQueue';
+import { fonts } from '../../src/theme/typography';
+import { useTheme } from '../../src/theme/useTheme';
+
+export default function HomeScreen() {
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { me, refresh } = useAuth();
+  const toast = useToast();
+  const planning = usePlanning();
+  const aiUsage = useAiUsage();
+  const toggle = useToggleTask();
+
+  const [bursts, setBursts] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [coinToast, setCoinToast] = useState<{ id: number; coins: number; taskTitle: string } | null>(null);
+  const [showRocket, setShowRocket] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {});
+  }, []);
+
+  // 오늘 진행률 (웹 DashboardPage 파생 로직 이식)
+  const { todayDone, todayTotal, allDone } = useMemo(() => {
+    const todayTasks = (planning.data?.tasks ?? []).filter(
+      (t) => isToday(t.deadline) && t.status !== 'CANCELLED',
+    );
+    const done = todayTasks.filter((t) => t.status === 'DONE').length;
+    return { todayDone: done, todayTotal: todayTasks.length, allDone: todayTasks.length > 0 && done === todayTasks.length };
+  }, [planning.data]);
+
+  const toggleTask = useCallback(
+    (task: TaskResponse, next: TaskStatus, pos?: TogglePos) => {
+      if (next === 'DONE' && pos && !reduceMotion) {
+        setBursts((prev) =>
+          prev.length >= 3 ? prev : [...prev, { id: Date.now() + Math.random(), x: pos.x, y: pos.y }],
+        );
+      }
+      toggle.mutate(
+        { taskId: task.taskId, status: next },
+        {
+          onError: (e) => toast.show(getApiErrorMessage(e, '상태 변경에 실패했어요.')),
+          onSuccess: (data) => {
+            if (next !== 'DONE') return;
+            // 서버 실지급액 신뢰 — 점감으로 0이면 토스트 생략 (|| 폴백 금지)
+            const coins = data.coinsGranted ?? calcCompletionCoins(task);
+            if (coins > 0) setCoinToast({ id: Date.now(), coins, taskTitle: task.title });
+          },
+        },
+      );
+    },
+    [toggle, toast, reduceMotion],
+  );
+
+  // 오늘 전부 완료 → 로켓 (false→true 전환에만, 초기 로드는 기록만)
+  const prevAllDone = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (planning.isLoading || !planning.data) return;
+    if (prevAllDone.current !== null && !prevAllDone.current && allDone && !reduceMotion) {
+      setShowRocket(true);
+    }
+    prevAllDone.current = allDone;
+  }, [allDone, planning.isLoading, planning.data, reduceMotion]);
+
+  const completeTask = useCallback(
+    (task: TaskResponse) => toggleTask(task, 'DONE'),
+    [toggleTask],
+  );
+
+  const detailRef = useRef<TaskDetailSheetHandle>(null);
+  const editTask = useCallback((task: TaskResponse) => {
+    detailRef.current?.present(task);
+  }, []);
+
+  // 뽀모도로 집중 중이면 히어로가 그 태스크를 표시 (웹 pomodoroFocus 패리티).
+  // 콜드스타트·백그라운드 복귀 정산 결과도 여기서 소비 — 홈은 탭 셸 아래 상시 마운트라 놓치지 않는다.
+  // Date.now()는 렌더에서 직접 읽지 않는다 (React Compiler 캐시로 시간이 멈춰 보임) — 상태로 관리
+  const [pomoNow, setPomoNow] = useState(() => Date.now());
+  useEffect(
+    () =>
+      subscribe(() => {
+        setPomoNow(Date.now());
+        const settled = takePendingSettleResult();
+        if (settled) {
+          toast.show(`밀린 ${settled.settledSessions}세트 정산 · +${settled.coins} 코인`);
+          refresh();
+        }
+      }),
+    [toast, refresh],
+  );
+  const pomoSession = getSession();
+  const heroFocus =
+    pomoSession && pomoSession.pausedAt == null && pomoSession.taskTitle
+    && deriveState(pomoSession, pomoNow).phase === 'FOCUS'
+      ? { title: pomoSession.taskTitle }
+      : null;
+  // 페이즈 전환은 store 이벤트가 없으므로(시간 경과) 집중 표시 중에만 가볍게 재파생
+  useEffect(() => {
+    if (!heroFocus) return;
+    const t = setInterval(() => setPomoNow(Date.now()), 15_000);
+    return () => clearInterval(t);
+  }, [heroFocus != null]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 탭 재진입 시 리페치 + 백그라운드 경과 세트 정산 — 정산 결과 표시는 위 구독(보류 소비)이 담당
+  const { refetch: refetchPlanning } = planning;
+  useFocusEffect(
+    useCallback(() => {
+      refetchPlanning();
+      reconcile();
+    }, [refetchPlanning]),
+  );
+
+  // 풀투리프레시 스피너는 수동 제스처 전용 — invalidate로 도는 백그라운드 리페치에 반응하지 않게
+  const [pulling, setPulling] = useState(false);
+  const { refetch: refetchAiUsage } = aiUsage;
+  const onRefresh = useCallback(() => {
+    setPulling(true);
+    Promise.all([refetchPlanning(), refetchAiUsage()]).finally(() => setPulling(false));
+  }, [refetchPlanning, refetchAiUsage]);
+
+  return (
+    <View style={{ flex: 1 }}>
+      <HomeAppBar me={me} aiUsage={aiUsage.data} />
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={pulling}
+            onRefresh={onRefresh}
+            colors={[colors.accent]}
+            tintColor={colors.accent}
+          />
+        }
+        contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 16, paddingBottom: insets.bottom + 40 }}
+      >
+        {planning.isLoading && (
+          <View style={{ paddingVertical: 48 }}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        )}
+        {planning.isError && (
+          <RetroCard style={{ alignItems: 'center', gap: 10 }}>
+            <Text style={{ color: colors.fg, fontFamily: fonts.body, fontSize: 13, textAlign: 'center' }}>
+              {getApiErrorMessage(planning.error, '할 일을 불러오지 못했어요.')}
+            </Text>
+            <RetroButton label="다시 시도" size="sm" onPress={() => planning.refetch()} />
+          </RetroCard>
+        )}
+        {planning.data && (
+          <>
+            <NowHeroCard
+              nowSuggestion={planning.data.nowSuggestion}
+              queue={buildHeroQueue(
+                planning.data,
+                allDone ? null : planning.data.nowSuggestion?.task?.taskId ?? null,
+              )}
+              todayDone={todayDone}
+              todayTotal={todayTotal}
+              allDone={allDone}
+              focus={heroFocus}
+              onComplete={completeTask}
+              onEdit={editTask}
+            />
+            <PomodoroCard />
+            <TaskListCard
+              sections={planning.data.sections}
+              onToggle={toggleTask}
+              onPressTask={editTask}
+              onPressBoard={() => router.push('/task-board' as Href)}
+            />
+            <MiniCalendar tasks={planning.data.tasks} onTaskAdded={() => planning.refetch()} />
+          </>
+        )}
+      </ScrollView>
+
+      {bursts.map((b) => (
+        <PixelBurst
+          key={b.id}
+          x={b.x}
+          y={b.y}
+          onDone={() => setBursts((prev) => prev.filter((p) => p.id !== b.id))}
+        />
+      ))}
+      {coinToast && (
+        <CoinToast
+          key={coinToast.id}
+          coins={coinToast.coins}
+          taskTitle={coinToast.taskTitle}
+          onDone={() => setCoinToast(null)}
+        />
+      )}
+      {showRocket && <CelebrationOverlay onDone={() => setShowRocket(false)} />}
+
+      <TaskDetailSheet ref={detailRef} />
+    </View>
+  );
+}

@@ -1,0 +1,54 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+example
+
+# generated native folders
+/ios
+/android
+
+# 로컬 expo module(모듈 자체는 커밋, gradle 빌드 산출물은 제외)
+modules/*/android/build/
+modules/*/android/.cxx/
+modules/*/android/.gradle/
+
+# 로컬 환경 변수 (LAN IP·클라이언트 ID)
+.env
+
+# Firebase 클라이언트 설정 (public 리포 노출 방지)
+google-services.json

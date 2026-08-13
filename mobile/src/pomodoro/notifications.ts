@@ -1,0 +1,96 @@
+import notifee, {
+  AlarmType,
+  AndroidImportance,
+  AndroidNotificationSetting,
+  AuthorizationStatus,
+  TriggerType,
+} from 'react-native-notify-kit';
+import type { PlannedNotification } from './notificationPlan';
+
+/** notify-kit 래퍼 — 알림 "무엇을/언제"는 notificationPlan 순수 함수가 결정하고 여기는 적용만 한다 */
+
+// 채널은 최초 생성 시 설정이 동결된다 — 소리·진동을 명시하지 않고 만든 v1 alert 채널이
+// 기기에서 무음이 될 수 있어 v2로 재생성했다 (기존 설치자도 새 채널로 갈아탄다)
+const ONGOING_CHANNEL = 'pomodoro-ongoing';
+const ALERT_CHANNEL = 'pomodoro-alert-v2';
+
+export async function ensureChannels(): Promise<void> {
+  await notifee.createChannel({
+    id: ONGOING_CHANNEL, name: '뽀모도로 진행 상황', importance: AndroidImportance.LOW,
+  });
+  await notifee.createChannel({
+    id: ALERT_CHANNEL, name: '뽀모도로 전환 알림', importance: AndroidImportance.HIGH,
+    sound: 'default', vibration: true,
+  });
+}
+
+function toContent(n: PlannedNotification) {
+  const isAlert = n.channel === 'pomodoro-alert';
+  return {
+    id: n.id,
+    title: n.title,
+    body: n.body,
+    android: {
+      channelId: isAlert ? ALERT_CHANNEL : ONGOING_CHANNEL,
+      ongoing: n.ongoing,
+      // 전환 알림은 매번 울려야 한다 — onlyAlertOnce는 무음 ongoing 채널에만
+      onlyAlertOnce: !isAlert,
+      pressAction: { id: 'default' as const, launchActivity: 'default' as const },
+      showChronometer: n.countdownTo != null,
+      chronometerDirection: 'down' as const,
+      showTimestamp: n.countdownTo != null,
+      ...(n.countdownTo != null ? { timestamp: n.countdownTo } : {}),
+      // live 릴레이: 이전 페이즈 live는 자기 페이즈 끝에 자동 소멸 (유니크 id라 취소 트리거가 없다)
+      ...(n.timeoutAfterMs != null ? { timeoutAfter: n.timeoutAfterMs } : {}),
+    },
+  };
+}
+
+/** 기존 뽀모도로 알림을 전부 걷어내고 새 계획을 적용한다 */
+export async function applyPlan(plan: PlannedNotification[]): Promise<void> {
+  await cancelAll();
+  for (const n of plan) {
+    if (n.at == null) {
+      await notifee.displayNotification(toContent(n));
+    } else {
+      await notifee.createTriggerNotification(toContent(n), {
+        type: TriggerType.TIMESTAMP,
+        timestamp: n.at,
+        alarmManager: { type: AlarmType.SET_EXACT_AND_ALLOW_WHILE_IDLE },
+      });
+    }
+  }
+}
+
+/**
+ * 뽀모도로 알림만 걷는다 — FCM 푸시로 표시된 알림은 남긴다.
+ * 트리거·표시 양쪽에서 pomodoro- 접두사 id만 선별 취소.
+ */
+export async function cancelAll(): Promise<void> {
+  const triggerIds = await notifee.getTriggerNotificationIds();
+  await Promise.all(
+    triggerIds.filter((id) => id.startsWith('pomodoro-')).map((id) => notifee.cancelNotification(id)),
+  );
+  const displayed = await notifee.getDisplayedNotifications();
+  await Promise.all(
+    displayed
+      .filter((d) => d.notification.id?.startsWith('pomodoro-'))
+      .map((d) => notifee.cancelNotification(d.notification.id!)),
+  );
+}
+
+/** Android 13+ 알림 권한 — 거부여도 타이머는 동작(알림만 침묵) */
+export async function requestNotificationPermission(): Promise<boolean> {
+  const settings = await notifee.requestPermission();
+  return settings.authorizationStatus >= AuthorizationStatus.AUTHORIZED;
+}
+
+/** Android 12+ 정확 알람 허용 여부 — 미허용이면 트리거가 inexact로 지연될 수 있다 */
+export async function checkExactAlarm(): Promise<boolean> {
+  const settings = await notifee.getNotificationSettings();
+  return settings.android.alarm !== AndroidNotificationSetting.DISABLED;
+}
+
+export async function openAlarmSettings(): Promise<void> {
+  await notifee.openAlarmPermissionSettings();
+}
