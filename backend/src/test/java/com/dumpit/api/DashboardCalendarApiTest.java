@@ -134,14 +134,16 @@ class DashboardCalendarApiTest extends ApiIntegrationTestBase {
                 .willReturn(connectedClient("https://www.googleapis.com/auth/calendar.readonly"));
         given(googleCalendarService.getEvents(anyString(), any(), any())).willReturn(List.of(
                 new GoogleCalendarService.CalendarEvent(
-                        "evt-1", "회의", LocalDateTime.now(), LocalDateTime.now().plusHours(1))
+                        "evt-1", "회의", LocalDateTime.now(), LocalDateTime.now().plusHours(1),
+                        "장소: 회의실A\n\n(구글 캘린더에서 가져옴)")
         ));
 
         mockMvc.perform(get("/calendar/events").with(asUser(USER_A)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value("evt-1"))
-                .andExpect(jsonPath("$[0].summary").value("회의"));
+                .andExpect(jsonPath("$[0].summary").value("회의"))
+                .andExpect(jsonPath("$[0].memo").value("장소: 회의실A\n\n(구글 캘린더에서 가져옴)"));
     }
 
     @Test

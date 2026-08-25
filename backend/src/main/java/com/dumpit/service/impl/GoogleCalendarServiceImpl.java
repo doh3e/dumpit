@@ -55,7 +55,8 @@ public class GoogleCalendarServiceImpl implements GoogleCalendarService {
                             item.id(),
                             item.summary() != null ? item.summary() : "(제목 없음)",
                             parseDateTime(item.start()),
-                            parseDateTime(item.end())
+                            parseDateTime(item.end()),
+                            buildImportMemo(item.location(), item.description())
                     ))
                     .toList();
 
@@ -86,6 +87,48 @@ public class GoogleCalendarServiceImpl implements GoogleCalendarService {
         }
     }
 
+    static final String IMPORT_MARKER = "(구글 캘린더에서 가져옴)";
+    // 태스크 설명 서버 한도(TaskRequest 1000자)와 동기화 — 넘기면 클라이언트 POST /tasks가 400
+    private static final int MEMO_LIMIT = 1000;
+
+    /** 가져오기 메모 조립 — 장소·설명(있을 때만) + 출처 마커. 클라이언트(웹·앱)는 이 값을 그대로 쓴다. */
+    static String buildImportMemo(String location, String description) {
+        StringBuilder content = new StringBuilder();
+        if (location != null && !location.isBlank()) {
+            content.append("장소: ").append(location.strip());
+        }
+        String plain = stripHtml(description);
+        if (plain != null && !plain.isBlank()) {
+            if (content.length() > 0) content.append('\n');
+            content.append(plain.strip());
+        }
+        if (content.length() == 0) return IMPORT_MARKER;
+
+        String suffix = "\n\n" + IMPORT_MARKER;
+        int budget = MEMO_LIMIT - suffix.length();
+        String body = content.toString();
+        if (body.length() > budget) {
+            body = body.substring(0, budget - 1) + "…";
+        }
+        return body + suffix;
+    }
+
+    /** 구글 캘린더 설명의 HTML 간이 제거(정식 파서 아님) — &amp;는 이중 디코드 방지를 위해 마지막에 푼다. */
+    static String stripHtml(String html) {
+        if (html == null) return null;
+        return html
+                .replaceAll("(?i)<br\\s*/?>", "\n")
+                .replaceAll("(?i)</(p|div|li)>", "\n")
+                .replaceAll("<[^>]+>", "")
+                .replace("&nbsp;", " ")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'")
+                .replace("&amp;", "&")
+                .replaceAll("\\n{3,}", "\n\n");
+    }
+
     private LocalDateTime parseDateTime(GoogleDateTime dt) {
         if (dt == null) return null;
         try {
@@ -105,7 +148,8 @@ public class GoogleCalendarServiceImpl implements GoogleCalendarService {
     record GoogleEventsResponse(List<GoogleEvent> items) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record GoogleEvent(String id, String summary, GoogleDateTime start, GoogleDateTime end) {}
+    record GoogleEvent(String id, String summary, GoogleDateTime start, GoogleDateTime end,
+                       String description, String location) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record GoogleDateTime(String dateTime, String date) {}
