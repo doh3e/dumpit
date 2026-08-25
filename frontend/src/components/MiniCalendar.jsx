@@ -156,7 +156,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
 
       await api.post('/tasks', {
         title: event.summary,
-        description: `구글 캘린더에서 가져옴`,
+        description: event.memo || '(구글 캘린더에서 가져옴)',
         deadline,
         estimatedMinutes,
         startTime,

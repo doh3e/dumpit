@@ -12,6 +12,7 @@ public interface GoogleCalendarService {
             String id,
             String summary,
             LocalDateTime start,
-            LocalDateTime end
+            LocalDateTime end,
+            String memo
     ) {}
 }
