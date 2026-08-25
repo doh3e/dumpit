@@ -6,6 +6,8 @@ export type CalendarEvent = {
   summary: string | null;
   start: string | null;
   end: string | null;
+  /** 서버 조립 가져오기 메모(장소·설명·출처 마커) — 구 서버 응답엔 없을 수 있음 */
+  memo?: string | null;
 };
 
 /**
