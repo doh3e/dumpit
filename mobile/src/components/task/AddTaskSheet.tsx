@@ -1,7 +1,7 @@
 import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../../api/client';
 import { createTask } from '../../api/tasks';
@@ -188,7 +188,8 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
                 />
               )}
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+            {/* 시트 안 가로 ScrollView는 팬 제스처에 먹혀 스와이프 불가 — 칩 행은 wrap으로 */}
+            <View style={styles.chipRow}>
               <Chip label="AI 자동" icon={<PixelIcon name="sparkle" size={12} />} selected={category === null} onPress={() => setCategory(null)} />
               {TASK_CATEGORIES.map((c) => (
                 <Chip
@@ -199,7 +200,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
                   onPress={() => setCategory(c.value)}
                 />
               ))}
-            </ScrollView>
+            </View>
           </View>
         )}
 
