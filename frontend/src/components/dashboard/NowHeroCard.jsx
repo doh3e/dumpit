@@ -35,7 +35,8 @@ export default function NowHeroCard({
           <p className="label-retro mb-2">지금 할 일</p>
           {allDone ? (
             <>
-              <p className="inline-flex items-center gap-2 font-galmuri font-bold text-[1.5rem] max-sm:text-[1.1875rem] leading-tight text-dark">
+              {/* inline-flex면 inline-block인 label-retro와 한 줄로 붙는다 — 블록 flex로 제 줄 확보 */}
+              <p className="flex items-center gap-2 font-galmuri font-bold text-[1.5rem] max-sm:text-[1.1875rem] leading-tight text-dark">
                 오늘 다 비웠어요
                 <img {...iconProps('rocket', 24)} alt="" className="w-6 h-6 object-contain" />
               </p>
