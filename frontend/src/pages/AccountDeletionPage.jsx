@@ -29,7 +29,22 @@ export default function AccountDeletionPage() {
           </section>
 
           <section>
-            <h2 className="font-extrabold text-dark mb-2">2. 앱을 이미 삭제한 경우</h2>
+            <h2 className="font-extrabold text-dark mb-2">2. 계정을 유지하고 일부 데이터만 삭제하기</h2>
+            <div className="text-sub leading-relaxed text-sm space-y-2">
+              <p>
+                계정을 삭제하지 않아도, 등록한 할 일·아이디어·루틴·브레인덤프는 웹사이트와 앱에서
+                언제든 <span className="font-bold text-dark">직접 삭제</span>할 수 있습니다.
+              </p>
+              <p>
+                직접 삭제하기 어려운 데이터(예: 활동 기록, AI 사용 기록)의 삭제를 원하시면 아래 이메일로
+                요청해 주세요. 본인 확인 후 해당 데이터만 삭제해 드립니다. 제목에 “데이터 삭제 요청”을
+                적어주시면 빠르게 확인할 수 있습니다.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="font-extrabold text-dark mb-2">3. 앱을 이미 삭제한 경우</h2>
             <div className="text-sub leading-relaxed text-sm space-y-2">
               <p>
                 앱을 지웠거나 서비스에 접속하기 어려운 경우, 가입에 사용한 Google 계정 이메일 주소로
@@ -48,7 +63,7 @@ export default function AccountDeletionPage() {
           </section>
 
           <section>
-            <h2 className="font-extrabold text-dark mb-2">3. 삭제되는 데이터와 시점</h2>
+            <h2 className="font-extrabold text-dark mb-2">4. 삭제되는 데이터와 시점</h2>
             <div className="text-sub leading-relaxed text-sm space-y-2">
               <p>
                 탈퇴하면 <span className="font-bold text-dark">즉시</span> 서비스 이용이 중단되고, 등록한 할 일·아이디어·루틴·브레인덤프를
@@ -73,7 +88,7 @@ export default function AccountDeletionPage() {
           </section>
 
           <section>
-            <h2 className="font-extrabold text-dark mb-2">4. Google 계정 연결 해제</h2>
+            <h2 className="font-extrabold text-dark mb-2">5. Google 계정 연결 해제</h2>
             <div className="text-sub leading-relaxed text-sm space-y-2">
               <p>
                 탈퇴 시 서비스에 부여된 Google 권한은 자동으로 해제됩니다. 직접 확인하거나 해제하려면
