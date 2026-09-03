@@ -9,10 +9,11 @@ public record UserSettingsResponse(
         int routineEndHour,
         boolean notificationsEnabled,
         List<Integer> notificationThresholds,
-        boolean briefingEnabled
+        boolean briefingEnabled,
+        String aiMemory
 ) {
     public static final UserSettingsResponse DEFAULTS =
-            new UserSettingsResponse(9, 22, true, List.of(60), true);
+            new UserSettingsResponse(9, 22, true, List.of(60), true, null);
 
     public static UserSettingsResponse from(UserSettings settings) {
         return new UserSettingsResponse(
@@ -20,7 +21,8 @@ public record UserSettingsResponse(
                 settings.getRoutineEndHour(),
                 settings.getNotificationsEnabled(),
                 settings.getNotificationThresholds(),
-                settings.getBriefingEnabled()
+                settings.getBriefingEnabled(),
+                settings.getAiMemory()
         );
     }
 }

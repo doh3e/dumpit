@@ -23,6 +23,8 @@ import java.util.Set;
 public class UserSettingsServiceImpl implements UserSettingsService {
 
     static final Set<Integer> ALLOWED_THRESHOLDS = Set.of(720, 360, 180, 60, 30, 10);
+    // 프론트 textarea maxLength·DB varchar(500)와 동기화
+    static final int AI_MEMORY_MAX_LENGTH = 500;
 
     private final UserSettingsRepository userSettingsRepository;
     private final UserRepository userRepository;
@@ -57,6 +59,13 @@ public class UserSettingsServiceImpl implements UserSettingsService {
         if (request.notificationThresholds() != null) {
             settings.updateNotificationThresholds(normalizeThresholds(request.notificationThresholds()));
         }
+        if (request.aiMemory() != null) {
+            String trimmed = request.aiMemory().trim();
+            if (trimmed.length() > AI_MEMORY_MAX_LENGTH) {
+                throw new BadRequestException("AI 메모리는 " + AI_MEMORY_MAX_LENGTH + "자까지 저장할 수 있어요.");
+            }
+            settings.updateAiMemory(trimmed.isEmpty() ? null : trimmed);
+        }
         return UserSettingsResponse.from(userSettingsRepository.save(settings));
     }
 
@@ -66,6 +75,15 @@ public class UserSettingsServiceImpl implements UserSettingsService {
         return userSettingsRepository.findByUserEmail(email)
                 .map((settings) -> new ActiveHours(settings.getRoutineStartHour(), settings.getRoutineEndHour()))
                 .orElse(ActiveHours.DEFAULT);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String aiMemory(String email) {
+        return userSettingsRepository.findByUserEmail(email)
+                .map(UserSettings::getAiMemory)
+                .filter((memory) -> !memory.isBlank())
+                .orElse(null);
     }
 
     private void validateHours(int start, int end) {

@@ -56,7 +56,8 @@ public class BrainDumpServiceImpl implements BrainDumpService {
 
         OpenAiService.BrainDumpResult aiResult;
         try {
-            aiResult = openAiService.analyzeBrainDump(rawText, userSettingsService.activeHours(email));
+            aiResult = openAiService.analyzeBrainDump(rawText, userSettingsService.activeHours(email),
+                    userSettingsService.aiMemory(email));
         } catch (Exception e) {
             dump.markFailed();
             brainDumpRepository.save(dump);

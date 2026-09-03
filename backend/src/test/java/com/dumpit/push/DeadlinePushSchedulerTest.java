@@ -35,7 +35,7 @@ class DeadlinePushSchedulerTest {
     void 알림을_끈_유저는_건너뛴다() throws Exception {
         when(tokens.findDistinctUsers()).thenReturn(List.of(TestUsers.withEmail("a@test")));
         when(settings.getSettings("a@test"))
-                .thenReturn(new UserSettingsResponse(9, 22, false, List.of(60), true));
+                .thenReturn(new UserSettingsResponse(9, 22, false, List.of(60), true, null));
         scheduler.runAt(NOW);
         verify(nudges, never()).getNudges(anyString());
         verify(dispatch, never()).dispatchDeadlines(any(), anyList(), anyBoolean());
@@ -46,7 +46,7 @@ class DeadlinePushSchedulerTest {
         // NOW = 14:00 (활동 시간 9~22 범위 내) → quiet=false
         when(tokens.findDistinctUsers()).thenReturn(List.of(TestUsers.withEmail("a@test")));
         when(settings.getSettings("a@test"))
-                .thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
+                .thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true, null));
         when(settings.activeHours("a@test")).thenReturn(new ActiveHours(9, 22));
         // 현재 시간 + 10시간 후 마감 = 24시간 이내
         when(nudges.getNudges("a@test")).thenReturn(List.of(
@@ -61,7 +61,7 @@ class DeadlinePushSchedulerTest {
         when(tokens.findDistinctUsers()).thenReturn(List.of(TestUsers.withEmail("a@test"), TestUsers.withEmail("b@test")));
         when(settings.getSettings("a@test")).thenThrow(new RuntimeException("boom"));
         when(settings.getSettings("b@test"))
-                .thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
+                .thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true, null));
         when(settings.activeHours("b@test")).thenReturn(new ActiveHours(9, 22));
         when(nudges.getNudges("b@test")).thenReturn(List.of(
                 nudge("550e8400-e29b-41d4-a716-446655440000", NOW.plusHours(10))
@@ -76,7 +76,7 @@ class DeadlinePushSchedulerTest {
         LocalDateTime earlyMorning = NOW.withHour(3);
         when(tokens.findDistinctUsers()).thenReturn(List.of(TestUsers.withEmail("a@test")));
         when(settings.getSettings("a@test"))
-                .thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
+                .thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true, null));
         when(settings.activeHours("a@test")).thenReturn(new ActiveHours(9, 22));
         when(nudges.getNudges("a@test")).thenReturn(List.of(
                 nudge("550e8400-e29b-41d4-a716-446655440001", earlyMorning.plusHours(10))

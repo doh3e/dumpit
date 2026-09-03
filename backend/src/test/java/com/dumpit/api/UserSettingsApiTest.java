@@ -78,6 +78,49 @@ class UserSettingsApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    void AI_메모리를_저장하고_비우고_다른_설정은_건드리지_않는다() throws Exception {
+        // 저장 — 응답과 재조회 모두에 반영
+        mockMvc.perform(patch("/me/settings").with(asUser(USER_A))
+                        .contentType("application/json")
+                        .content("{\"aiMemory\":\"운동이 최우선. '펌'은 회사 프로젝트.\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aiMemory").value("운동이 최우선. '펌'은 회사 프로젝트."))
+                .andExpect(jsonPath("$.routineStartHour").value(9));
+
+        // aiMemory 없는 부분 갱신은 메모리를 유지
+        mockMvc.perform(patch("/me/settings").with(asUser(USER_A))
+                        .contentType("application/json")
+                        .content("{\"routineStartHour\":10}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aiMemory").value("운동이 최우선. '펌'은 회사 프로젝트."));
+
+        // 빈 문자열로 비우기
+        mockMvc.perform(patch("/me/settings").with(asUser(USER_A))
+                        .contentType("application/json")
+                        .content("{\"aiMemory\":\"  \"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aiMemory").doesNotExist());
+    }
+
+    @Test
+    void AI_메모리_500자_초과는_400과_한글_에러를_돌려준다() throws Exception {
+        String tooLong = "가".repeat(501);
+        assertKoreanError(mockMvc.perform(patch("/me/settings").with(asUser(USER_A))
+                        .contentType("application/json")
+                        .content("{\"aiMemory\":\"" + tooLong + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andReturn());
+
+        // 정확히 500자는 저장된다
+        String maxLen = "가".repeat(500);
+        mockMvc.perform(patch("/me/settings").with(asUser(USER_A))
+                        .contentType("application/json")
+                        .content("{\"aiMemory\":\"" + maxLen + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aiMemory").value(maxLen));
+    }
+
+    @Test
     void 다른_유저의_설정과_섞이지_않는다() throws Exception {
         mockMvc.perform(patch("/me/settings").with(asUser(USER_A))
                         .contentType("application/json")
