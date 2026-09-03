@@ -25,17 +25,18 @@ W, H = 1080, 1920
 SHOT_H = 1560
 CAP_Y = 96
 
+# 항목: (파일 | (뒤 파일, 앞 파일) 듀오, 캡션, 다크 배경 여부)
 SHOTS = [
     ('e4a4ba03-image.png', '머릿속을 그냥 쏟아내세요', False),
     ('ec6007ca-image.png', 'AI가 할 일로 정리해드려요', False),
     ('d16545f2-image.png', '지금 할 일부터 한눈에', False),
+    (('d860657a-image.png', 'c12f9579-image.png'), '뽀모도로 타이머로 몰입', False),
     ('43b89214-image.png', '아이디어는 차곡차곡 계층으로', False),
     ('e2249f2f-image.png', '반복하는 일은 루틴으로', False),
     ('b1830ba3-image.png', '코인 모아 나만의 테마 꾸미기', False),
-    ('a236fd84-image.png', '쌓이는 기록, 보이는 성장', False),
     ('dbad897a-image.png', '밤에는 다크 모드로', True),
 ]
-NAMES = ['01_braindump', '02_ai_result', '03_home', '04_ideas', '05_routine', '06_shop', '07_my', '08_dark']
+NAMES = ['01_braindump', '02_ai_result', '03_home', '04_pomodoro', '05_ideas', '06_routine', '07_shop', '08_dark']
 
 
 def pixel_star(d, cx, cy, s, color):
@@ -61,22 +62,41 @@ def rounded(img, radius):
     return out
 
 
-def frame(src_path, caption, dark, out_path, seed):
+def paste_shot(canvas, d, src_path, x, y, shot_h, ink, shadow):
+    shot = Image.open(src_path).convert('RGB')
+    sw = round(shot.width * shot_h / shot.height)
+    shot = shot.resize((sw, shot_h), Image.LANCZOS)
+    r = 28
+    d.rounded_rectangle([x - 4 + 12, y - 4 + 12, x + sw + 3 + 12, y + shot_h + 3 + 12], radius=r + 4, fill=shadow)
+    d.rounded_rectangle([x - 4, y - 4, x + sw + 3, y + shot_h + 3], radius=r + 4, fill=ink)
+    rs = rounded(shot, r)
+    canvas.paste(rs, (x, y), rs)
+    return sw
+
+
+def frame(src, caption, dark, out_path, seed):
     bg, ink, shadow = (DARK, CREAM, SHADOW_D) if dark else (CREAM, INK, SHADOW_L)
     stars = [GOLD, TEAL_D, (200, 195, 220)] if dark else [GOLD, TEAL_L, (205, 188, 158)]
     canvas = Image.new('RGB', (W, H), bg)
     d = ImageDraw.Draw(canvas)
 
-    shot = Image.open(src_path).convert('RGB')
-    sw = round(shot.width * SHOT_H / shot.height)
-    shot = shot.resize((sw, SHOT_H), Image.LANCZOS)
-    x = (W - sw) // 2
-    y = H - SHOT_H - 96
+    def shot_w(path, h):
+        with Image.open(path) as im:
+            return round(im.width * h / im.height)
+
+    if isinstance(src, tuple):
+        # 듀오: 뒤(좌상단) + 앞(우하단) 겹치기 — 타이머 링·히어로가 각각 보이는 배치
+        back, front = src
+        places = [(back, 60, 220, 1300), (front, 430, 500, 1300)]
+    else:
+        sw = shot_w(src, SHOT_H)
+        places = [(src, (W - sw) // 2, H - SHOT_H - 96, SHOT_H)]
+    rects = [(x, y, x + shot_w(p, h), y + h) for p, x, y, h in places]
 
     random.seed(seed)
     for _ in range(26):
         px, py = random.randint(12, W - 20), random.randint(12, H - 20)
-        if x - 30 < px < x + sw + 30 and py > y - 30:
+        if any(x0 - 30 < px < x1 + 30 and py > y0 - 30 for x0, y0, x1, _y1 in rects):
             continue
         c = random.choice(stars)
         if random.random() < 0.4:
@@ -87,10 +107,8 @@ def frame(src_path, caption, dark, out_path, seed):
     cap = caption_img(caption, ink)
     canvas.paste(cap, ((W - cap.width) // 2, CAP_Y), cap)
 
-    r = 28
-    d.rounded_rectangle([x - 4 + 12, y - 4 + 12, x + sw + 3 + 12, y + SHOT_H + 3 + 12], radius=r + 4, fill=shadow)
-    d.rounded_rectangle([x - 4, y - 4, x + sw + 3, y + SHOT_H + 3], radius=r + 4, fill=ink)
-    canvas.paste(rounded(shot, r), (x, y), rounded(shot, r))
+    for p, x, y, h in places:
+        paste_shot(canvas, d, p, x, y, h, ink, shadow)
     canvas.save(out_path, optimize=True)
 
 
@@ -98,7 +116,8 @@ def main():
     src_dir = sys.argv[1]
     os.makedirs(OUT, exist_ok=True)
     for i, ((fname, caption, dark), out_name) in enumerate(zip(SHOTS, NAMES)):
-        frame(os.path.join(src_dir, fname), caption, dark, os.path.join(OUT, out_name + '.png'), seed=i * 7 + 1)
+        src = tuple(os.path.join(src_dir, f) for f in fname) if isinstance(fname, tuple) else os.path.join(src_dir, fname)
+        frame(src, caption, dark, os.path.join(OUT, out_name + '.png'), seed=i * 7 + 1)
         print('ok', out_name)
 
 
