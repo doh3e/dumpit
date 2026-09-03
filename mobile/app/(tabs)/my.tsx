@@ -12,6 +12,7 @@ import { PixelIcon, type PixelIconName } from '../../src/components/common/Pixel
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
 import { useToast } from '../../src/components/retro/ToastProvider';
+import { AiMemoryCard } from '../../src/components/settings/AiMemoryCard';
 import { PixelSprite } from '../../src/components/shop/PixelSprite';
 import { categoryBars, formatFocusTotal, heatLevel, heatmapWeeks } from '../../src/my/stats';
 import { keys } from '../../src/query/keys';
@@ -167,6 +168,8 @@ export default function MyScreen() {
             </Pressable>
           )}
         </RetroCard>
+
+        <AiMemoryCard />
 
         {s && (
           <>
