@@ -58,6 +58,7 @@ const config: ExpoConfig = {
     'react-native-notify-kit',
     '@react-native-firebase/app',
     '@react-native-firebase/messaging',
+    './plugins/withMavenContentFilter',
   ],
   experiments: {
     typedRoutes: true,
