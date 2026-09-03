@@ -50,7 +50,7 @@ class DashboardCalendarApiTest extends ApiIntegrationTestBase {
     @BeforeEach
     void stubOpenAi() {
         // 태스크 시드가 예상치 못하게 AI 추론 분기를 타도 NPE 없이 넘어가도록 하는 안전망 (TaskApiTest와 동일)
-        given(openAiService.scorePriority(any(), any(), any(), any()))
+        given(openAiService.scorePriority(any(), any(), any(), any(), any()))
                 .willReturn(new OpenAiService.PriorityResult(0.5, "WORK", "테스트 사유"));
     }
 

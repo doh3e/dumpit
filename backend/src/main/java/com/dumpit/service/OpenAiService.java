@@ -8,20 +8,24 @@ import java.util.List;
 
 public interface OpenAiService {
 
+    // userMemory: 유저가 저장한 AI 메모리(<user_context> 주입용) — 없으면 null 허용
     PriorityResult scorePriority(String title, String description,
-                                 LocalDateTime deadline, Integer estimatedMinutes);
+                                 LocalDateTime deadline, Integer estimatedMinutes,
+                                 String userMemory);
 
     ScheduleInferenceResult inferSchedule(String title, String description,
                                           LocalDateTime startTime,
                                           LocalDateTime deadline,
                                           Integer estimatedMinutes,
-                                          ActiveHours activeHours);
+                                          ActiveHours activeHours,
+                                          String userMemory);
 
-    SubtaskResult proposeSubtasks(String title, String description, Integer estimatedMinutes);
+    SubtaskResult proposeSubtasks(String title, String description, Integer estimatedMinutes,
+                                  String userMemory);
 
-    BrainDumpResult analyzeBrainDump(String rawText, ActiveHours activeHours);
+    BrainDumpResult analyzeBrainDump(String rawText, ActiveHours activeHours, String userMemory);
 
-    IdeaExtractResult extractIdeas(String rawText);
+    IdeaExtractResult extractIdeas(String rawText, String userMemory);
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record PriorityResult(double score, String category, String reason) {}

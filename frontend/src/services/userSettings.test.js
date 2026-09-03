@@ -62,6 +62,19 @@ describe('userSettings store', () => {
     expect(getUserSettings().routineStartHour).toBe(8)
   })
 
+  it('AI 메모리 저장·비우기도 PATCH로 반영된다', async () => {
+    api.patch.mockResolvedValue({ data: { ...DEFAULT_SETTINGS, aiMemory: '운동이 최우선' } })
+
+    await saveUserSettings({ aiMemory: '운동이 최우선' })
+
+    expect(api.patch).toHaveBeenCalledWith('/me/settings', { aiMemory: '운동이 최우선' })
+    expect(getUserSettings().aiMemory).toBe('운동이 최우선')
+
+    api.patch.mockResolvedValue({ data: { ...DEFAULT_SETTINGS, aiMemory: null } })
+    await saveUserSettings({ aiMemory: '' })
+    expect(getUserSettings().aiMemory).toBeNull()
+  })
+
   it('저장 실패는 그대로 던지고 값은 유지한다', async () => {
     api.patch.mockRejectedValue(new Error('bad request'))
 

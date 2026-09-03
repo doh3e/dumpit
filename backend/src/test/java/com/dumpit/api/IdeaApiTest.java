@@ -389,7 +389,7 @@ class IdeaApiTest extends ApiIntegrationTestBase {
     @Test
     void 태스크전환_태스크생성_및_아이디어_전환상태_반영() throws Exception {
         Idea idea = seedIdea(userA, "전환할 아이디어", null);
-        given(openAiService.scorePriority(any(), any(), any(), any()))
+        given(openAiService.scorePriority(any(), any(), any(), any(), any()))
                 .willReturn(new OpenAiService.PriorityResult(0.5, "WORK", "사유"));
 
         String body = mockMvc.perform(post("/ideas/" + idea.getIdeaId() + "/convert-to-task").with(asUser(USER_A)))
@@ -439,7 +439,7 @@ class IdeaApiTest extends ApiIntegrationTestBase {
 
     @Test
     void AI추출_openAi스텁_결과반환_200() throws Exception {
-        given(openAiService.extractIdeas(any())).willReturn(new OpenAiService.IdeaExtractResult(java.util.List.of(
+        given(openAiService.extractIdeas(any(), any())).willReturn(new OpenAiService.IdeaExtractResult(java.util.List.of(
                 new OpenAiService.IdeaNode("추출된 아이디어1", "내용1", "WORK", java.util.List.of()),
                 new OpenAiService.IdeaNode("추출된 아이디어2", null, null, null)
         )));

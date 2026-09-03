@@ -43,7 +43,7 @@ class BriefingSchedulerTest {
 
     @Test
     void 활동_시작_시각_유저에게_브리핑을_보낸다() {
-        when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
+        when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true, null));
         when(planning.todayTasks("a@test")).thenReturn(List.of(mock(com.dumpit.dto.TaskResponse.class)));
         when(nudges.getNudges("a@test")).thenReturn(List.of());
         when(dispatch.drainHeldCount(any())).thenReturn(2L);
@@ -58,14 +58,14 @@ class BriefingSchedulerTest {
 
     @Test
     void 시작_시각이_아닌_유저는_건너뛴다() {
-        when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(10, 22, true, List.of(60), true));
+        when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(10, 22, true, List.of(60), true, null));
         scheduler.runAt(nineAm);
         verify(dispatch, never()).sendToUserDevices(any(), any());
     }
 
     @Test
     void 브리핑을_끈_유저는_보류만_비우고_보내지_않는다() {
-        when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), false));
+        when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), false, null));
         scheduler.runAt(nineAm);
         verify(dispatch, never()).sendToUserDevices(any(), any());
         verify(dispatch).drainHeldCount(any());   // 보류분 소멸(스펙 결정 3)
@@ -73,7 +73,7 @@ class BriefingSchedulerTest {
 
     @Test
     void 내용이_전부_0이면_스킵한다() {
-        when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
+        when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true, null));
         when(planning.todayTasks("a@test")).thenReturn(List.of());
         when(nudges.getNudges("a@test")).thenReturn(List.of());
         when(dispatch.drainHeldCount(any())).thenReturn(0L);
@@ -83,7 +83,7 @@ class BriefingSchedulerTest {
 
     @Test
     void 같은_날_두번_돌아도_한_번만_보낸다() {
-        when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true));
+        when(settings.getSettings("a@test")).thenReturn(new UserSettingsResponse(9, 22, true, List.of(60), true, null));
         when(planning.todayTasks("a@test")).thenReturn(List.of(mock(com.dumpit.dto.TaskResponse.class)));
         when(nudges.getNudges("a@test")).thenReturn(List.of());
         when(dispatch.drainHeldCount(any())).thenReturn(2L);  // 보류 2건 있을 때 "밤사이 알림 2건" 포함됨

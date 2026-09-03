@@ -27,9 +27,9 @@ class TasksTodayApiTest extends ApiIntegrationTestBase {
     @BeforeEach
     void stubOpenAi() {
         // POST /tasks 생성 경로가 AI 우선순위 채점을 호출한다 — TaskApiTest와 동일한 안전망
-        given(openAiService.scorePriority(any(), any(), any(), any()))
+        given(openAiService.scorePriority(any(), any(), any(), any(), any()))
                 .willReturn(new OpenAiService.PriorityResult(0.6, "WORK", "테스트 사유"));
-        given(openAiService.inferSchedule(any(), any(), any(), any(), any(), any()))
+        given(openAiService.inferSchedule(any(), any(), any(), any(), any(), any(), any()))
                 .willReturn(new OpenAiService.ScheduleInferenceResult(null, null, 30, "테스트 사유"));
     }
 

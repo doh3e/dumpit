@@ -12,4 +12,7 @@ public interface UserSettingsService {
 
     /** 설정 행이 없으면 ActiveHours.DEFAULT */
     ActiveHours activeHours(String email);
+
+    /** AI 프롬프트 <user_context> 주입용 유저 메모리 — 없으면 null */
+    String aiMemory(String email);
 }
