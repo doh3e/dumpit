@@ -86,7 +86,8 @@ public class TaskServiceImpl implements TaskService {
 
         aiUsageService.consume(email, AiUsageService.UsageType.TASK_PRIORITY);
         OpenAiService.PriorityResult priority =
-                openAiService.scorePriority(title, description, schedule.deadline(), schedule.estimatedMinutes());
+                openAiService.scorePriority(title, description, schedule.deadline(), schedule.estimatedMinutes(),
+                        userSettingsService.aiMemory(email));
         task.setAiPriorityScore(priority.score());
 
         if (category != null) {
@@ -206,7 +207,8 @@ public class TaskServiceImpl implements TaskService {
         aiUsageService.consume(email, AiUsageService.UsageType.TASK_REANALYZE);
         OpenAiService.PriorityResult priority =
                 openAiService.scorePriority(task.getTitle(), task.getDescription(),
-                        task.getDeadline(), task.getEstimatedMinutes());
+                        task.getDeadline(), task.getEstimatedMinutes(),
+                        userSettingsService.aiMemory(email));
         task.setAiPriorityScore(priority.score());
         task.setUserPriorityScore(null);
 
@@ -227,7 +229,7 @@ public class TaskServiceImpl implements TaskService {
 
         aiUsageService.consume(email, AiUsageService.UsageType.SUBTASK_PROPOSAL);
         return openAiService.proposeSubtasks(task.getTitle(), task.getDescription(),
-                task.getEstimatedMinutes());
+                task.getEstimatedMinutes(), userSettingsService.aiMemory(email));
     }
 
     @Override
@@ -329,7 +331,8 @@ public class TaskServiceImpl implements TaskService {
             Integer minutes = estimatedMinutes != null
                     ? estimatedMinutes
                     : openAiService.inferSchedule(title, description, startTime, null, null,
-                            userSettingsService.activeHours(email)).estimatedMinutes();
+                            userSettingsService.activeHours(email),
+                            userSettingsService.aiMemory(email)).estimatedMinutes();
             return new ScheduleFields(startTime, null, minutes);
         }
         // 마감이 확정돼 있고 다른 시간 정보도 있으면 AI 호출 없이 그대로 사용.
@@ -339,7 +342,8 @@ public class TaskServiceImpl implements TaskService {
         }
         OpenAiService.ScheduleInferenceResult inferred =
                 openAiService.inferSchedule(title, description, startTime, deadline, estimatedMinutes,
-                        userSettingsService.activeHours(email));
+                        userSettingsService.activeHours(email),
+                        userSettingsService.aiMemory(email));
         LocalDateTime nextStart = startTime != null ? startTime : parseDateTime(inferred.startTime());
         LocalDateTime nextDeadline = deadline != null ? deadline : parseDateTime(inferred.deadline());
         // AI 추론값이 시작≥마감 쌍을 만들면 추론된 쪽을 버린다 — 유저 입력은 보존

@@ -42,6 +42,9 @@ public class UserSettings {
     @Column(nullable = false, length = 64)
     private List<Integer> notificationThresholds = List.of(60);
 
+    @Column(length = 500)
+    private String aiMemory;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -69,5 +72,9 @@ public class UserSettings {
 
     public void updateNotificationThresholds(List<Integer> thresholds) {
         this.notificationThresholds = List.copyOf(thresholds);
+    }
+
+    public void updateAiMemory(String aiMemory) {
+        this.aiMemory = aiMemory;
     }
 }

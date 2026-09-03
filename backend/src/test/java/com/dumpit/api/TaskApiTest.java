@@ -37,9 +37,9 @@ class TaskApiTest extends ApiIntegrationTestBase {
     @BeforeEach
     void stubOpenAi() {
         // create/update가 예상치 못하게 AI 추론 분기를 타도 NPE 없이 넘어가도록 하는 안전망
-        given(openAiService.scorePriority(any(), any(), any(), any()))
+        given(openAiService.scorePriority(any(), any(), any(), any(), any()))
                 .willReturn(new OpenAiService.PriorityResult(0.6, "WORK", "테스트 사유"));
-        given(openAiService.inferSchedule(any(), any(), any(), any(), any(), any()))
+        given(openAiService.inferSchedule(any(), any(), any(), any(), any(), any(), any()))
                 .willReturn(new OpenAiService.ScheduleInferenceResult(null, null, 30, "테스트 사유"));
     }
 
@@ -522,7 +522,7 @@ class TaskApiTest extends ApiIntegrationTestBase {
     @Test
     void 재분석_openAi스텁후_200_점수반영() throws Exception {
         Task task = seedTask(userA, "제목");
-        given(openAiService.scorePriority(any(), any(), any(), any()))
+        given(openAiService.scorePriority(any(), any(), any(), any(), any()))
                 .willReturn(new OpenAiService.PriorityResult(0.85, "STUDY", "재이유"));
 
         mockMvc.perform(post("/tasks/" + task.getTaskId() + "/reanalyze").with(asUser(USER_A)))
@@ -564,7 +564,7 @@ class TaskApiTest extends ApiIntegrationTestBase {
     @Test
     void 분할제안_openAi스텁_SubtaskResult_반환() throws Exception {
         Task task = seedTask(userA, "큰 일");
-        given(openAiService.proposeSubtasks(any(), any(), any()))
+        given(openAiService.proposeSubtasks(any(), any(), any(), any()))
                 .willReturn(new OpenAiService.SubtaskResult(List.of(
                         new OpenAiService.SubtaskProposal("서브1", "설명1", 20),
                         new OpenAiService.SubtaskProposal("서브2", null, 15))));

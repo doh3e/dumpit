@@ -39,7 +39,7 @@ class BrainDumpAiApiTest extends ApiIntegrationTestBase {
 
     @Test
     void 제출_openAi스텁_태스크제안_반환_및_AI사용량로그기록() throws Exception {
-        given(openAiService.analyzeBrainDump(anyString(), any())).willReturn(new OpenAiService.BrainDumpResult(List.of(
+        given(openAiService.analyzeBrainDump(anyString(), any(), any())).willReturn(new OpenAiService.BrainDumpResult(List.of(
                 new OpenAiService.BrainDumpTask("첫번째 할일", "설명1", null, 30, 0.6, "WORK"),
                 new OpenAiService.BrainDumpTask("두번째 할일", null, null, null, null, null)
         )));

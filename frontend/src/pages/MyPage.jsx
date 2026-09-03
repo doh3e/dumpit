@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
+import { saveUserSettings } from '../services/userSettings'
 import { iconProps } from '../assets/icons'
 import PixelStation from '../components/PixelStation'
 import { useAuth } from '../context/AuthContext'
@@ -192,6 +193,10 @@ export default function MyPage() {
   const [editingBio, setEditingBio] = useState(false)
   const [bioInput, setBioInput] = useState('')
   const [savingBio, setSavingBio] = useState(false)
+  const [aiMemory, setAiMemory] = useState('')
+  const [editingAiMemory, setEditingAiMemory] = useState(false)
+  const [aiMemoryInput, setAiMemoryInput] = useState('')
+  const [savingAiMemory, setSavingAiMemory] = useState(false)
   const [completingTask, setCompletingTask] = useState(null)
   const [withdrawing, setWithdrawing] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
@@ -203,11 +208,14 @@ export default function MyPage() {
       api.get('/me/profile'),
       api.get('/me/stats'),
       api.get('/tasks/overdue'),
-    ]).then(([p, s, o]) => {
+      api.get('/me/settings'),
+    ]).then(([p, s, o, st]) => {
       setProfile(p.data)
       setBioInput(p.data.bio || '')
       setStats(s.data)
       setOverdue(o.data)
+      setAiMemory(st.data.aiMemory || '')
+      setAiMemoryInput(st.data.aiMemory || '')
     }).catch(() => {}).finally(() => setLoadingProfile(false))
   }, [])
 
@@ -225,6 +233,20 @@ export default function MyPage() {
       alert(getApiErrorMessage(err, '저장에 실패했어요.'))
     } finally {
       setSavingBio(false)
+    }
+  }
+
+  const handleSaveAiMemory = async () => {
+    setSavingAiMemory(true)
+    try {
+      const next = await saveUserSettings({ aiMemory: aiMemoryInput.trim() })
+      setAiMemory(next.aiMemory || '')
+      setAiMemoryInput(next.aiMemory || '')
+      setEditingAiMemory(false)
+    } catch (err) {
+      alert(getApiErrorMessage(err, '저장에 실패했어요.'))
+    } finally {
+      setSavingAiMemory(false)
     }
   }
 
@@ -343,6 +365,49 @@ export default function MyPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* AI 메모리 — 5종 AI 분석 프롬프트에 <user_context>로 주입되는 유저 상시 컨텍스트 */}
+      <div className="card-retro !p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="font-galmuri font-bold text-sm text-dark">AI 메모리 <span className="text-sub font-sans font-bold">· AI가 기억할 내용</span></p>
+          {!editingAiMemory && (
+            <button onClick={() => setEditingAiMemory(true)}
+              className="text-[0.625rem] font-black text-sub hover:text-primary flex-shrink-0">
+              수정
+            </button>
+          )}
+        </div>
+        <p className="text-[0.6875rem] font-semibold text-sub leading-relaxed">
+          우선순위 기준, 자주 쓰는 용어, 생활 패턴을 적어두면 AI가 할 일과 아이디어를 분석할 때 참고해요.
+        </p>
+        {editingAiMemory ? (
+          <div className="space-y-2">
+            <textarea
+              value={aiMemoryInput}
+              onChange={(e) => setAiMemoryInput(e.target.value)}
+              maxLength={500}
+              rows={4}
+              placeholder={'예) 운동 관련 일이 나에게 제일 중요해요.\n예) "펌"은 회사 프로젝트를 뜻해요.'}
+              className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card outline-none focus:border-primary resize-none"
+            />
+            <div className="flex items-center gap-2">
+              <button onClick={handleSaveAiMemory} disabled={savingAiMemory}
+                className="btn-retro-primary text-xs py-1 px-3 disabled:opacity-50">
+                {savingAiMemory ? '저장 중...' : '저장'}
+              </button>
+              <button onClick={() => { setEditingAiMemory(false); setAiMemoryInput(aiMemory) }}
+                className="btn-retro text-xs py-1 px-3">
+                취소
+              </button>
+              <span className="ml-auto text-[0.625rem] font-bold text-sub">{aiMemoryInput.length}/500</span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm font-semibold text-sub break-words whitespace-pre-wrap">
+            {aiMemory || '저장된 AI 메모리가 없어요'}
+          </p>
+        )}
       </div>
 
       {/* Stats horizontal slider — 정거장 모듈 */}

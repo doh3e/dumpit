@@ -5,6 +5,7 @@ export const DEFAULT_SETTINGS = {
   routineEndHour: 22,
   notificationsEnabled: true,
   notificationThresholds: [60],
+  aiMemory: null,
 }
 
 // 서버 저장 전환 전에 쓰던 로컬 키 — 이관 없이 제거만 한다

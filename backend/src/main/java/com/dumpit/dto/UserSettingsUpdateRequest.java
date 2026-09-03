@@ -8,5 +8,6 @@ public record UserSettingsUpdateRequest(
         Integer routineEndHour,
         Boolean notificationsEnabled,
         List<Integer> notificationThresholds,
-        Boolean briefingEnabled
+        Boolean briefingEnabled,
+        String aiMemory
 ) {}

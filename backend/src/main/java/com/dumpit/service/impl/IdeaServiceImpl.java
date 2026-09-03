@@ -17,6 +17,7 @@ import com.dumpit.service.DeadlineNudgeService;
 import com.dumpit.service.IdeaService;
 import com.dumpit.service.OpenAiService;
 import com.dumpit.service.ShopService;
+import com.dumpit.service.UserSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ public class IdeaServiceImpl implements IdeaService {
     private final AiUsageService aiUsageService;
     private final OpenAiService openAiService;
     private final ShopService shopService;
+    private final UserSettingsService userSettingsService;
 
     @Override
     @Transactional(readOnly = true)
@@ -136,7 +138,8 @@ public class IdeaServiceImpl implements IdeaService {
         Task task = Task.of(idea.getUser(), idea.getTitle(), idea.getContent(), null, null);
         aiUsageService.consume(email, AiUsageService.UsageType.TASK_PRIORITY);
         OpenAiService.PriorityResult priority =
-                openAiService.scorePriority(idea.getTitle(), idea.getContent(), null, null);
+                openAiService.scorePriority(idea.getTitle(), idea.getContent(), null, null,
+                        userSettingsService.aiMemory(email));
         task.setAiPriorityScore(priority.score());
         task.setCategory(idea.getCategory() != Task.Category.OTHER
                 ? idea.getCategory()
@@ -157,7 +160,7 @@ public class IdeaServiceImpl implements IdeaService {
     public OpenAiService.IdeaExtractResult extractIdeas(String email, String rawText) {
         // 고정 5점 (브레인 덤프와 동일)
         aiUsageService.consume(email, AiUsageService.UsageType.IDEA_EXTRACT);
-        return openAiService.extractIdeas(rawText);
+        return openAiService.extractIdeas(rawText, userSettingsService.aiMemory(email));
     }
 
     @Override
