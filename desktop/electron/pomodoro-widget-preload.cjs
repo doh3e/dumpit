@@ -60,6 +60,11 @@ function renderState(payload = {}) {
   if (timeElement) {
     timeElement.textContent = active ? time : '--:--'
   }
+  if (timeElement) {
+    const minutes = active ? Number(String(time).split(':')[0]) : null
+    const phase = mode === 'BREAK' ? '휴식' : '집중'
+    timeElement.setAttribute('aria-label', minutes == null ? '타이머 대기 중' : `${phase} 남은 시간 ${minutes}분`)
+  }
   if (taskElement) {
     const tasksKey = JSON.stringify(tasks.map((task) => [task.id, task.title]))
     if (tasksKey !== lastTasksKey) {
@@ -97,6 +102,9 @@ function renderState(payload = {}) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') ipcRenderer.send('dumpit:pomodoro-widget-close')
+  })
   document.getElementById('close')?.addEventListener('click', () => {
     ipcRenderer.send('dumpit:pomodoro-widget-close')
   })
