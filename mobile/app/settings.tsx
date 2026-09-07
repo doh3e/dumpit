@@ -13,7 +13,7 @@ import { ActiveHoursCard } from '../src/components/routine/ActiveHoursCard';
 import { NotificationSettingsCard } from '../src/components/settings/NotificationSettingsCard';
 import { PixelIcon, type PixelIconName } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
-import { useThemeMode, type ThemeMode } from '../src/theme/ThemeProvider';
+import { useA11yPrefs, useThemeMode, type ContrastMode, type ThemeMode } from '../src/theme/ThemeProvider';
 import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
@@ -23,10 +23,17 @@ const THEME_MODES: { id: ThemeMode; label: string; icon: PixelIconName }[] = [
   { id: 'system', label: '시스템', icon: 'phone' },
 ];
 
+const CONTRAST_MODES: { id: ContrastMode; label: string }[] = [
+  { id: 'system', label: '시스템' },
+  { id: 'high', label: '고대비' },
+  { id: 'normal', label: '기본' },
+];
+
 export default function SettingsScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { mode, setMode } = useThemeMode();
+  const { contrastMode, setContrastMode, boldText, setBoldText } = useA11yPrefs();
   const { me, signOut } = useAuth();
   const toast = useToast();
 
@@ -88,6 +95,19 @@ export default function SettingsScreen() {
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
             글자 크기는 휴대폰 시스템 설정을 따라요.
           </Text>
+          <Text style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>대비</Text>
+          <View style={styles.chipRow}>
+            {CONTRAST_MODES.map((m) => (
+              <Chip key={m.id} label={m.label} selected={contrastMode === m.id} onPress={() => setContrastMode(m.id)} />
+            ))}
+          </View>
+          <Text style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>굵은 글자</Text>
+          <View style={styles.chipRow}>
+            <Chip label={boldText ? '켬' : '끔'} selected={boldText} onPress={() => setBoldText(!boldText)} />
+          </View>
+          <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
+            '시스템'은 휴대폰의 고대비 텍스트 설정을 따라요. 이 설정은 이 기기에만 저장돼요.
+          </Text>
         </RetroCard>
 
         <ActiveHoursCard />
@@ -144,6 +164,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 14 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   hint: { fontSize: 12, lineHeight: 18 },
+  subTitle: { fontSize: 11, marginTop: 6 },
   input: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, minHeight: 44 },
   withdrawActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
   version: { fontSize: 11, textAlign: 'center', marginTop: 6 },
