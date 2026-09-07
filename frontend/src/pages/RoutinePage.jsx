@@ -299,7 +299,7 @@ export default function RoutinePage() {
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
               maxLength={200}
               placeholder="예: 아침 스트레칭"
-              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
             />
           </div>
 
@@ -311,7 +311,7 @@ export default function RoutinePage() {
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               rows={3}
               maxLength={1000}
-              className="w-full resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+              className="w-full resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold focus:border-primary"
             />
           </div>
 
@@ -445,7 +445,7 @@ export default function RoutinePage() {
                     aria-label="시작 시간"
                     value={form.startTime}
                     onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
-                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
+                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
                   />
                   <label className="flex items-center gap-2 text-xs font-bold text-sub">
                     <input
@@ -462,7 +462,7 @@ export default function RoutinePage() {
                       aria-label="종료 시간"
                       value={form.endTime}
                       onChange={(e) => setForm((prev) => ({ ...prev, endTime: e.target.value }))}
-                      className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
+                      className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
                     />
                   ) : (
                     <div className="rounded-lg border-2 border-line bg-accent px-3 py-2 text-xs font-extrabold text-sub">
@@ -483,7 +483,7 @@ export default function RoutinePage() {
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setForm((prev) => ({ ...prev, startDate: e.target.value }))}
-                className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
+                className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
               />
             </div>
           </div>
@@ -495,7 +495,7 @@ export default function RoutinePage() {
               type="date"
               value={form.endDate}
               onChange={(e) => setForm((prev) => ({ ...prev, endDate: e.target.value }))}
-              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
+              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
             />
           </div>
 

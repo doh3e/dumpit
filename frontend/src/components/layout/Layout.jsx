@@ -122,7 +122,7 @@ export default function Layout() {
           isDrawerOpen={drawerOpen}
           onCloseDrawer={() => setDrawerOpen(false)}
         />
-        <main id="main" tabIndex={-1} className="flex-1 p-6 max-w-5xl mx-auto w-full outline-none">
+        <main id="main" tabIndex={-1} className="flex-1 p-6 max-w-5xl mx-auto w-full">
           <Outlet />
         </main>
       </div>

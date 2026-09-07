@@ -78,7 +78,7 @@ export default function ContactModal({ onClose }) {
                 onChange={(e) => setSubject(e.target.value)}
                 maxLength={200}
                 placeholder="간단한 제목을 입력해주세요"
-                className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
+                className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
                 disabled={!user}
                 required
               />
@@ -93,7 +93,7 @@ export default function ContactModal({ onClose }) {
                 rows={6}
                 maxLength={3000}
                 placeholder="문의 내용을 자세히 적어주세요"
-                className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary resize-none"
+                className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary resize-none"
                 disabled={!user}
                 required
               />

@@ -107,7 +107,7 @@ export default function BrainDumpPage() {
           placeholder={PLACEHOLDER}
           rows={7}
           maxLength={3000}
-          className="w-full resize-none bg-transparent font-semibold text-dark placeholder:text-sub outline-none text-sm leading-relaxed"
+          className="w-full resize-none bg-transparent font-semibold text-dark placeholder:text-sub text-sm leading-relaxed"
         />
         <div className="flex items-center justify-between mt-4 pt-4 border-t-2 border-line">
           <span className="text-xs text-sub font-medium">{text.length} / 3000자 입력됨</span>

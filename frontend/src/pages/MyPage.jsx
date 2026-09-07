@@ -341,7 +341,7 @@ export default function MyPage() {
                 maxLength={500}
                 rows={3}
                 placeholder="자기소개를 입력하세요"
-                className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card outline-none focus:border-primary resize-none"
+                className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card focus:border-primary resize-none"
               />
               <div className="flex gap-2">
                 <button onClick={handleSaveBio} disabled={savingBio}
@@ -391,7 +391,7 @@ export default function MyPage() {
               maxLength={500}
               rows={4}
               placeholder={'예) 운동 관련 일이 나에게 제일 중요해요.\n예) "펌"은 회사 프로젝트를 뜻해요.'}
-              className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card outline-none focus:border-primary resize-none"
+              className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card focus:border-primary resize-none"
             />
             <div className="flex items-center gap-2">
               <button onClick={handleSaveAiMemory} disabled={savingAiMemory}

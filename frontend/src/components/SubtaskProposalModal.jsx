@@ -111,7 +111,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         onChange={(e) => updateField(idx, 'title', e.target.value)}
                         placeholder="서브태스크 제목"
                         maxLength={200}
-                        className="w-full px-2 py-1 border border-line rounded text-sm font-bold bg-card outline-none focus:border-primary"
+                        className="w-full px-2 py-1 border border-line rounded text-sm font-bold bg-card focus:border-primary"
                         disabled={!s.include}
                       />
                       <textarea
@@ -121,7 +121,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         rows={1}
                         placeholder="메모 (선택)"
                         maxLength={1000}
-                        className="w-full px-2 py-1 border-2 border-line rounded text-xs font-semibold bg-card outline-none focus:border-primary resize-none"
+                        className="w-full px-2 py-1 border-2 border-line rounded text-xs font-semibold bg-card focus:border-primary resize-none"
                         disabled={!s.include}
                       />
                       <div className="flex items-center gap-2">
@@ -133,7 +133,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                           onChange={(e) => updateField(idx, 'estimatedMinutes', e.target.value)}
                           min="1"
                           placeholder="30"
-                          className="w-20 px-2 py-1 border-2 border-line rounded text-xs font-bold bg-card outline-none focus:border-primary"
+                          className="w-20 px-2 py-1 border-2 border-line rounded text-xs font-bold bg-card focus:border-primary"
                           disabled={!s.include}
                         />
                         <span className="text-[0.625rem] font-bold text-sub">분</span>

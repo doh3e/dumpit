@@ -89,7 +89,7 @@ export default function MarkdownEditor({ value, onChange, maxLength = 5000, rows
           maxLength={maxLength}
           rows={rows}
           placeholder={placeholder}
-          className="w-full resize-none bg-transparent px-3 py-2 text-sm font-semibold leading-relaxed text-dark outline-none placeholder:text-sub"
+          className="w-full resize-none bg-transparent px-3 py-2 text-sm font-semibold leading-relaxed text-dark placeholder:text-sub"
         />
       )}
       <p className="border-t border-line px-3 py-1 text-right text-[0.625rem] font-bold text-sub">

@@ -111,7 +111,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="어떤 일을 해야 하나요?"
             maxLength={200}
-            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
+            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
             autoFocus
           />
         </div>
@@ -125,7 +125,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
             placeholder="추가 정보가 있다면 적어주세요. AI가 더 똑똑하게 분석할 수 있어요."
             rows={2}
             maxLength={1000}
-            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary resize-none"
+            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary resize-none"
           />
         </div>
 

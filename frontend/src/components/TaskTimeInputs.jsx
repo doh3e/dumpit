@@ -43,7 +43,7 @@ export function TaskDateTimeField({ label, value, onChange, onClear, min, defaul
             value: applyDefaultTime(e.target.value, value, defaultTimeWhenEmpty),
           },
         })}
-        className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
+        className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
       />
     </div>
   )
@@ -63,7 +63,7 @@ export function EstimatedMinutesField({ value, onChange, label = '예상 시간'
           onChange={onChange}
           placeholder="60"
           min="1"
-          className="w-16 px-2 py-2 border border-line rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
+          className="w-16 px-2 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
         />
         <span className="text-xs font-bold text-sub">분</span>
       </div>

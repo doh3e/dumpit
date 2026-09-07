@@ -86,6 +86,11 @@
 :root[data-bold-text="1"] .chip-retro,
 :root[data-bold-text="1"] .label-retro { font-family: 'Galmuri11', 'Pretendard Variable', Pretendard, sans-serif; font-weight: 700; }
 
+@layer base {
+  :focus-visible { outline: var(--focus-w) solid var(--accent2); outline-offset: 2px; }
+  #main:focus { outline: none; }
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -134,7 +139,7 @@ body {
   }
   .btn-retro:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--shadow-sm); }
   .btn-retro:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--shadow-sm); }
-  .btn-retro:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+  .btn-retro:focus-visible { outline: var(--focus-w) solid var(--accent2); outline-offset: 2px; }
   .btn-retro:disabled { opacity: .5; transform: none; box-shadow: 3px 3px 0 var(--shadow-sm); }
   .btn-retro-primary { @apply btn-retro bg-primary text-on-accent; }
   .btn-retro-secondary { @apply btn-retro bg-secondary text-on-accent; }

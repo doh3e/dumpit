@@ -464,7 +464,7 @@ export default function AdminPage() {
                       rows={6}
                       maxLength={3000}
                       placeholder="답변 내용을 입력해주세요."
-                      className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                      className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
                     />
                     <p className="mt-1 text-right text-[0.625rem] font-bold text-sub">{reply.length} / 3000</p>
                   </div>
@@ -507,7 +507,7 @@ export default function AdminPage() {
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
                   placeholder="이메일, 닉네임, 밴 사유"
-                  className="w-full rounded-lg border-2 border-line bg-accent px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  className="w-full rounded-lg border-2 border-line bg-accent px-3 py-2 text-sm font-bold focus:border-primary"
                 />
               </div>
               <div>
@@ -516,7 +516,7 @@ export default function AdminPage() {
                   id={userStatusFilterId}
                   value={userStatusFilter}
                   onChange={(e) => setUserStatusFilter(e.target.value)}
-                  className="w-full rounded-lg border-2 border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  className="w-full rounded-lg border-2 border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
                 >
                   {USER_STATUS_FILTERS.map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
@@ -529,7 +529,7 @@ export default function AdminPage() {
                   id={userSortId}
                   value={userSort}
                   onChange={(e) => setUserSort(e.target.value)}
-                  className="w-full rounded-lg border-2 border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  className="w-full rounded-lg border-2 border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
                 >
                   {USER_SORT_OPTIONS.map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
@@ -662,7 +662,7 @@ export default function AdminPage() {
                   value={noticeForm.title}
                   onChange={(e) => setNoticeForm((prev) => ({ ...prev, title: e.target.value }))}
                   maxLength={200}
-                  className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                  className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
                   placeholder="공지 제목"
                 />
               </div>
@@ -688,7 +688,7 @@ export default function AdminPage() {
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, content: e.target.value }))}
                     rows={10}
                     maxLength={5000}
-                    className="w-full resize-none bg-card px-3 py-2 text-sm font-semibold outline-none"
+                    className="w-full resize-none bg-card px-3 py-2 text-sm font-semibold"
                     placeholder="## 업데이트 안내&#10;- 새 기능&#10;- 수정 사항&#10;&#10;**중요한 내용**을 강조할 수 있어요."
                   />
                 </div>
@@ -712,7 +712,7 @@ export default function AdminPage() {
                     type="datetime-local"
                     value={noticeForm.publishAt}
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, publishAt: e.target.value }))}
-                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
                   />
                 </div>
                 <div>
@@ -721,7 +721,7 @@ export default function AdminPage() {
                     id={noticeStatusId}
                     value={noticeForm.status}
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, status: e.target.value }))}
-                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
                   >
                     <option value="PUBLISHED">게시</option>
                     <option value="DRAFT">초안</option>
@@ -896,7 +896,7 @@ export default function AdminPage() {
                       value={coinAmountInput}
                       onChange={(e) => setCoinAmountInput(e.target.value)}
                       placeholder="지급량"
-                      className="w-24 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                      className="w-24 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
                     />
                     <input
                       aria-label="지급 사유 (운영 기록용, 선택)"
@@ -904,7 +904,7 @@ export default function AdminPage() {
                       onChange={(e) => setCoinReasonInput(e.target.value)}
                       maxLength={200}
                       placeholder="지급 사유 (운영 기록용, 선택)"
-                      className="min-w-[160px] flex-1 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                      className="min-w-[160px] flex-1 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
                     />
                     <button
                       type="button"
@@ -928,7 +928,7 @@ export default function AdminPage() {
                     rows={4}
                     maxLength={500}
                     placeholder="운영 메모로 남길 사유를 입력해주세요."
-                    className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                    className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
                   />
                 </div>
               )}
