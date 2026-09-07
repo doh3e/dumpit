@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import useDocumentTitle, { titleFor } from '../hooks/useDocumentTitle'
 
 const SECTIONS = [
   {
@@ -172,6 +173,7 @@ const SECTIONS = [
 ]
 
 export default function TermsPage() {
+  useDocumentTitle(titleFor(useLocation().pathname))
   return (
     <div className="min-h-screen bg-accent">
       <div className="max-w-2xl mx-auto px-4 py-12">

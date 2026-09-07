@@ -195,7 +195,7 @@ export default function RoutinePage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="font-dungeon text-dark text-2xl">루틴</h2>
+          <h1 className="font-dungeon text-dark text-2xl">루틴</h1>
           <p className="mt-2 text-sm font-semibold text-sub">
             정해둔 날짜나 요일에 루틴명과 같은 태스크를 자동으로 만들어요.
           </p>

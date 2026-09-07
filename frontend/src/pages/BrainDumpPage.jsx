@@ -93,7 +93,7 @@ export default function BrainDumpPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div>
-        <h2 className="font-dungeon text-dark text-2xl">브레인 덤프</h2>
+        <h1 className="font-dungeon text-dark text-2xl">브레인 덤프</h1>
         <p className="mt-2 text-sm font-semibold text-sub">
           머릿속에 있는 할 일을 그냥 쏟아내세요. 형식 없이 자유롭게 써도 OK!
         </p>

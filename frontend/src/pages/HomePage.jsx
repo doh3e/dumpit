@@ -1,9 +1,11 @@
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { API_BASE_URL } from '../services/api'
 import StarField from '../components/StarField'
 import WithdrawalPendingModal from '../components/WithdrawalPendingModal'
+import useDocumentTitle, { titleFor } from '../hooks/useDocumentTitle'
 
 export default function HomePage() {
+  useDocumentTitle(titleFor(useLocation().pathname))
   const [searchParams] = useSearchParams()
   const loginError = searchParams.get('error')
   // 탈퇴 유예 중 계정은 실패가 아니라 "복구하시겠습니까?" 확인 대상 — 모달이 따로 처리한다
@@ -36,9 +38,9 @@ export default function HomePage() {
             height={288}
             className="w-72 mx-auto drop-shadow-lg"
           />
-          <p className="mt-4 text-xl font-extrabold text-dark tracking-wide">
+          <h1 className="mt-4 text-xl font-extrabold text-dark tracking-wide">
             생각을 쏟아내면, AI가 정리해드려요
-          </p>
+          </h1>
         </div>
 
         <div className="max-w-xl mb-12 text-base font-semibold text-sub leading-relaxed">

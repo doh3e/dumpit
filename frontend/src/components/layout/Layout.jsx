@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import Header from './Header'
 import Sidebar from './Sidebar'
@@ -13,11 +13,14 @@ import api from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { watchSystemTheme } from '../../utils/theme'
 import { watchSystemContrast } from '../../utils/a11y'
+import useDocumentTitle, { titleFor } from '../../hooks/useDocumentTitle'
 
 const HELP_SEEN_KEY = 'dumpit_help_seen'
 
 export default function Layout() {
   const { user } = useAuth()
+  const { pathname } = useLocation()
+  useDocumentTitle(titleFor(pathname))
   const [showSettings, setShowSettings] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [showMobileTimer, setShowMobileTimer] = useState(false)
@@ -102,6 +105,9 @@ export default function Layout() {
     >
       <div id="a11y-announcer" role="status" aria-live="polite" aria-atomic="true" className="sr-only" />
       <StarField />
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] btn-retro">
+        본문으로 건너뛰기
+      </a>
       <Header
         onOpenDrawer={() => setDrawerOpen(true)}
         onOpenHelp={() => setShowHelp(true)}
@@ -116,7 +122,7 @@ export default function Layout() {
           isDrawerOpen={drawerOpen}
           onCloseDrawer={() => setDrawerOpen(false)}
         />
-        <main className="flex-1 p-6 max-w-5xl mx-auto w-full">
+        <main id="main" tabIndex={-1} className="flex-1 p-6 max-w-5xl mx-auto w-full outline-none">
           <Outlet />
         </main>
       </div>

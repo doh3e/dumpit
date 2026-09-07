@@ -412,7 +412,7 @@ export default function IdeaDumpPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="font-dungeon text-dark text-2xl">아이디어 덤프</h2>
+          <h1 className="font-dungeon text-dark text-2xl">아이디어 덤프</h1>
           <p className="mt-2 text-sm font-semibold text-sub">
             생각을 자유롭게 쏟아내고, AI가 맥락을 잡아 정리해줘요.
           </p>

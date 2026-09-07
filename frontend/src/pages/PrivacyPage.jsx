@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import PrivacyPolicyContent, { PRIVACY_POLICY_EFFECTIVE_DATE } from '../components/PrivacyPolicyContent'
+import useDocumentTitle, { titleFor } from '../hooks/useDocumentTitle'
 
 export default function PrivacyPage() {
+  useDocumentTitle(titleFor(useLocation().pathname))
   return (
     <div className="min-h-screen bg-accent">
       <div className="max-w-2xl mx-auto px-4 py-12">

@@ -487,7 +487,7 @@ export default function ShopPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="font-dungeon text-dark text-2xl">코인샵</h2>
+        <h1 className="font-dungeon text-dark text-2xl">코인샵</h1>
         <div className="flex items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1.5">
           <img {...iconProps('coin', 20)} alt="" className="w-5 h-5 object-contain" />
           <span className="font-dungeon text-lg text-dark">{coinBalance}</span>

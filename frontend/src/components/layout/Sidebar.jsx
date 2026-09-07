@@ -76,39 +76,41 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
         </Link>
       )}
 
-      {MENU.map(({ label, path }) => (
-        <NavLink
-          key={path}
-          to={path}
-          onClick={handleNavClick}
-          className={({ isActive }) =>
-            `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
-              isActive
-                ? 'bg-chip text-dark'
-                : 'text-sub hover:text-dark hover:bg-chip'
-            }`
-          }
-        >
-          {label}
-        </NavLink>
-      ))}
+      <nav aria-label="주 메뉴" className="flex flex-col gap-1">
+        {MENU.map(({ label, path }) => (
+          <NavLink
+            key={path}
+            to={path}
+            onClick={handleNavClick}
+            className={({ isActive }) =>
+              `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
+                isActive
+                  ? 'bg-chip text-dark'
+                  : 'text-sub hover:text-dark hover:bg-chip'
+              }`
+            }
+          >
+            {label}
+          </NavLink>
+        ))}
 
-      {user?.isAdmin && (
-        <NavLink
-          to="/admin"
-          onClick={handleNavClick}
-          className={({ isActive }) =>
-            `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
-              isActive
-                ? 'bg-chip text-dark'
-                : 'text-secondary hover:bg-chip'
-            }`
-          }
-        >
-          <img {...iconProps('setting', 20)} alt="" className="mr-2 h-5 w-5 flex-shrink-0 object-contain" />
-          관리자 페이지
-        </NavLink>
-      )}
+        {user?.isAdmin && (
+          <NavLink
+            to="/admin"
+            onClick={handleNavClick}
+            className={({ isActive }) =>
+              `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
+                isActive
+                  ? 'bg-chip text-dark'
+                  : 'text-secondary hover:bg-chip'
+              }`
+            }
+          >
+            <img {...iconProps('setting', 20)} alt="" className="mr-2 h-5 w-5 flex-shrink-0 object-contain" />
+            관리자 페이지
+          </NavLink>
+        )}
+      </nav>
 
       <div className="mt-4 pt-4 border-t border-line">
         <h4 className="label-retro mx-2 mb-1">
