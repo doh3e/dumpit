@@ -17,6 +17,7 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
   const insets = useSafeAreaInsets();
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}월 ${now.getDate()}일 ${DAY_NAMES[now.getDay()]}`;
+  const greeting = me?.name ? `${me.name}의 덤프` : 'DUMPIT!';
 
   return (
     <View
@@ -32,9 +33,14 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
         <PixelSprite sprite={spriteFor(PLANET_SPRITES, me?.equipments?.PLANET)} size={34} />
         <View style={styles.leftText}>
           <Text style={[styles.date, { color: colors.sub, fontFamily: fonts.chrome }]}>{dateLabel}</Text>
-          <Text style={[styles.greeting, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={1}>
-            {me?.name ? `${me.name}의 덤프` : 'DUMPIT!'}
-            <Text style={{ color: colors.starlight }} accessibilityElementsHidden importantForAccessibility="no"> ★</Text>
+          {/* 안드로이드는 중첩 Text를 평탄화해 자식의 숨김 속성이 먹지 않는다 — 부모 라벨로 ★을 뺀다 */}
+          <Text
+            style={[styles.greeting, { color: colors.fg, fontFamily: fonts.displayBold }]}
+            numberOfLines={1}
+            accessibilityLabel={greeting}
+          >
+            {greeting}
+            <Text style={{ color: colors.starlight }}> ★</Text>
           </Text>
         </View>
       </View>

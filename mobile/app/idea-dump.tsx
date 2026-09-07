@@ -20,8 +20,8 @@ import { useTheme } from '../src/theme/useTheme';
 const SCRATCH_KEY = 'dumpit_idea_scratch';
 const MAX_SCRATCH = 2000;
 
-function NodePreview({ node, depth, colors }: { node: IdeaNode; depth: number; colors: ReturnType<typeof useTheme>['colors'] }) {
-  const { fonts } = useTheme();
+function NodePreview({ node, depth }: { node: IdeaNode; depth: number }) {
+  const { colors, fonts } = useTheme();
   const category = node.category ? getCategory(node.category) : null;
   return (
     <View style={{ paddingLeft: depth * 14 }}>
@@ -30,13 +30,13 @@ function NodePreview({ node, depth, colors }: { node: IdeaNode; depth: number; c
           {category && <><PixelIcon name={category.icon} size={11} /> </>}{node.title}
         </Text>
         {!!node.content && (
-          <Text numberOfLines={2} style={{ color: colors.sub, fontFamily: fonts.body, fontSize: 11 }}>
+          <Text numberOfLines={2} style={{ color: colors.fg, fontFamily: fonts.body, fontSize: 11 }}>
             {node.content}
           </Text>
         )}
       </View>
       {node.children?.map((child, i) => (
-        <NodePreview key={i} node={child} depth={depth + 1} colors={colors} />
+        <NodePreview key={i} node={child} depth={depth + 1} />
       ))}
     </View>
   );
@@ -172,7 +172,7 @@ export default function IdeaDumpScreen() {
                     <Text style={[styles.rootMark, { color: off ? colors.sub : colors.accent2Text, fontFamily: fonts.chrome }]}>
                       <PixelIcon name={off ? 'checkboxOff' : 'checkboxOn'} size={12} /> {off ? '제외됨' : '저장'}
                     </Text>
-                    <NodePreview node={node} depth={0} colors={colors} />
+                    <NodePreview node={node} depth={0} />
                   </RetroCard>
                 </Pressable>
               );

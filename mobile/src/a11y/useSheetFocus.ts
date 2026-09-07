@@ -13,10 +13,12 @@ export function openEdge(wasOpen: boolean, index: number): 'open' | 'close' | nu
 export function useSheetFocus() {
   const headingRef = useRef<Text>(null);
   const openRef = useRef(false);
+  const focusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { setSheetOpen } = useSheetA11y();
 
   // 열린 채로 언마운트되면 카운트가 새어 배경이 영영 숨겨진다
   useEffect(() => () => {
+    if (focusTimer.current) clearTimeout(focusTimer.current);
     if (openRef.current) {
       openRef.current = false;
       setSheetOpen(false);
@@ -26,6 +28,8 @@ export function useSheetFocus() {
   const onChange = useCallback((index: number) => {
     const edge = openEdge(openRef.current, index);
     if (edge === 'close') {
+      // 열자마자 닫으면 예약된 포커스가 이미 사라진 제목을 잡는다
+      if (focusTimer.current) { clearTimeout(focusTimer.current); focusTimer.current = null; }
       openRef.current = false;
       setSheetOpen(false);
       return;
@@ -34,7 +38,12 @@ export function useSheetFocus() {
     openRef.current = true;
     setSheetOpen(true);
     const tag = headingRef.current ? findNodeHandle(headingRef.current) : null;
-    if (tag) setTimeout(() => AccessibilityInfo.setAccessibilityFocus(tag), 50);
+    if (tag) {
+      focusTimer.current = setTimeout(() => {
+        focusTimer.current = null;
+        AccessibilityInfo.setAccessibilityFocus(tag);
+      }, 50);
+    }
   }, [setSheetOpen]);
 
   return { headingRef, onChange };

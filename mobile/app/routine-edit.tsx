@@ -136,7 +136,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
             onChangeText={(v) => patch({ name: v })}
             maxLength={200}
             placeholder="예: 아침 스트레칭"
-            placeholderTextColor={colors.sub}
+            placeholderTextColor={colors.subOnChip}
             style={[styles.input, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
             accessibilityLabel="루틴 이름"
           />
@@ -148,7 +148,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
             multiline
             numberOfLines={2}
             placeholder="루틴 설명"
-            placeholderTextColor={colors.sub}
+            placeholderTextColor={colors.subOnChip}
             style={[styles.input, styles.multiline, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
             accessibilityLabel="루틴 메모"
           />

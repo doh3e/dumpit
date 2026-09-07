@@ -89,7 +89,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({ ...composed, fonts, scheme, mode, setMode, contrastMode, setContrastMode, boldText, setBoldText, previewEquipments, setPreviewEquipments }),
     // 세터들은 매 렌더 새로 만들어지지만 상태만 건드리므로 의존성에서 제외
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [composed, fonts, scheme, mode, contrastMode, boldText, previewEquipments],
   );
 

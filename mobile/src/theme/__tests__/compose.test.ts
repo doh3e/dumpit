@@ -1,8 +1,18 @@
 import { composeTheme } from '../compose';
-import { BG_SKINS, CHROME_SKINS, POMO_SKINS, skinKey } from '../skins';
-import { highContrast, palettes, pomoDefaults } from '../tokens';
+import { contrastRatio } from '../contrast';
+import { BG_SKINS, CHROME_SKINS, POMO_SKINS, skinKey, type SkinKey } from '../skins';
+import { highContrast, palettes, pomoDefaults, type Palette } from '../tokens';
 
 jest.mock('../../auth/AuthContext', () => ({}), { virtual: true });
+
+// tokens.test.ts와 같은 본문 — Jest는 expect(actual, message)를 지원하지 않아 라벨을 직접 던진다
+function expectMin(fg: string, bg: string, min: number, label: string) {
+  const ratio = contrastRatio(fg, bg);
+  if (!(ratio >= min)) {
+    throw new Error(`${label}: ${fg} on ${bg} = ${ratio.toFixed(2)} < ${min}`);
+  }
+  expect(ratio).toBeGreaterThanOrEqual(min);
+}
 
 describe('skinKey', () => {
   it('아이템 코드의 마지막 세그먼트를 스킨 키로 쓴다 (웹 applySkins 규칙)', () => {
@@ -128,5 +138,17 @@ describe('composeTheme 고대비', () => {
     const c = composeTheme('dark', { BACKGROUND: 'bg.ocean' }, { highContrast: true }).colors;
     expect(c.accentText).toBe('#5FB8C9');
     expect(c.fg).toBe('#FFFFFF');
+  });
+  it('스킨 7종 라이트 고대비: 글자 토큰이 합성된 bg·card 위에서 7 이상', () => {
+    const keys = Object.keys(BG_SKINS) as SkinKey[];
+    expect(keys).toHaveLength(7);
+    const textKeys: (keyof Palette)[] = ['fg', 'sub', 'accentText', 'accent2Text', 'warnText', 'dangerText'];
+    for (const name of keys) {
+      const c = composeTheme('light', { BACKGROUND: `bg.${name}` }, { highContrast: true }).colors;
+      for (const k of textKeys) {
+        expectMin(c[k], c.bg, 7, `${name} hc ${k}/bg`);
+        expectMin(c[k], c.card, 7, `${name} hc ${k}/card`);
+      }
+    }
   });
 });

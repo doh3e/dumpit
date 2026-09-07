@@ -36,6 +36,8 @@ export default function SettingsScreen() {
   const { me, signOut } = useAuth();
   const toast = useToast();
 
+  const boldLabel = boldText ? '켬' : '끔';
+
   const [withdrawStage, setWithdrawStage] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
@@ -94,15 +96,16 @@ export default function SettingsScreen() {
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
             글자 크기는 휴대폰 시스템 설정을 따라요.
           </Text>
-          <Text style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>대비</Text>
+          <Text accessibilityRole="header" style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>대비</Text>
           <View style={styles.chipRow}>
             {CONTRAST_MODES.map((m) => (
-              <Chip key={m.id} label={m.label} selected={contrastMode === m.id} onPress={() => setContrastMode(m.id)} />
+              // 테마 그리드에도 '시스템' 칩이 있어 라벨만으로는 어느 그룹인지 갈린다
+              <Chip key={m.id} label={m.label} accessibilityLabel={`대비 ${m.label}`} selected={contrastMode === m.id} onPress={() => setContrastMode(m.id)} />
             ))}
           </View>
-          <Text style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>굵은 글자</Text>
+          <Text accessibilityRole="header" style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>굵은 글자</Text>
           <View style={styles.chipRow}>
-            <Chip label={boldText ? '켬' : '끔'} selected={boldText} onPress={() => setBoldText(!boldText)} />
+            <Chip label={boldLabel} accessibilityLabel={`굵은 글자 ${boldLabel}`} selected={boldText} onPress={() => setBoldText(!boldText)} />
           </View>
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
             &apos;시스템&apos;은 휴대폰의 고대비 텍스트 설정을 따라요. 이 설정은 이 기기에만 저장돼요.
@@ -128,7 +131,7 @@ export default function SettingsScreen() {
                 defaultValue=""
                 onChangeText={setConfirmText}
                 placeholder="탈퇴"
-                placeholderTextColor={colors.sub}
+                placeholderTextColor={colors.subOnChip}
                 style={[styles.input, { borderColor: colors.warn, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
                 accessibilityLabel="탈퇴 확인 입력"
               />

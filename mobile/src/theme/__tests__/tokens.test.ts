@@ -1,8 +1,10 @@
 import { highContrast, palettes, retroShadow, type Palette } from '../tokens';
-import { BG_SKINS } from '../skins';
+import { BG_SKINS, type SkinKey } from '../skins';
+import { composeTheme } from '../compose';
 import { contrastRatio } from '../contrast';
 
-const TEXT_KEYS: (keyof Palette)[] = ['sub', 'accentText', 'accent2Text', 'dangerText'];
+const TEXT_KEYS: (keyof Palette)[] = ['sub', 'accentText', 'accent2Text', 'warnText', 'dangerText'];
+const SKIN_KEYS = Object.keys(BG_SKINS) as SkinKey[];
 
 function expectMin(fg: string, bg: string, min: number, label: string) {
   const ratio = contrastRatio(fg, bg);
@@ -39,6 +41,7 @@ describe('글자 대비', () => {
     expectMin(p.onAccent, p.accent2Fill, 4.5, 'onAccent/accent2Fill');
     expectMin(p.onWarn, p.warn, 4.5, 'onWarn/warn(앰버 뱃지)');
     expectMin(p.onWarn, p.starlight, 4.5, 'onWarn/starlight(골드 뱃지)');
+    expectMin(p.subOnChip, p.chip, 4.5, 'subOnChip/chip');
   });
   it('다크: 같은 기준', () => {
     const p = palettes.dark;
@@ -47,15 +50,28 @@ describe('글자 대비', () => {
     expectMin(p.onAccent, p.accent2Fill, 4.5, 'dark onAccent/accent2Fill');
     expectMin(p.onWarn, p.warn, 4.5, 'dark onWarn/warn');
     expectMin(p.onWarn, p.starlight, 4.5, 'dark onWarn/starlight');
+    expectMin(p.subOnChip, p.chip, 4.5, 'dark subOnChip/chip');
   });
-  it('스킨(라이트): 스킨 글자·채움 토큰과 기본 sub가 스킨 bg 위에서 4.5 이상', () => {
-    for (const [name, skin] of Object.entries(BG_SKINS)) {
-      const s = { ...palettes.light, ...skin.light };
+  it('스킨(라이트): 스킨 글자·채움 토큰과 기본 sub·경고·오류 글자가 스킨 bg 위에서 4.5 이상', () => {
+    expect(SKIN_KEYS).toHaveLength(7);
+    for (const name of SKIN_KEYS) {
+      const s = { ...palettes.light, ...BG_SKINS[name].light };
       expectMin(s.accentText, s.bg, 4.5, `${name} accentText`);
       expectMin(s.accent2Text, s.bg, 4.5, `${name} accent2Text`);
       expectMin(s.onAccent, s.accentFill, 4.5, `${name} onAccent/accentFill`);
       expectMin(s.onAccent, s.accent2Fill, 4.5, `${name} onAccent/accent2Fill`);
-      expectMin(palettes.light.sub, s.bg, 4.5, `${name} sub`);
+      expectMin(s.sub, s.bg, 4.5, `${name} sub`);
+      expectMin(s.warnText, s.bg, 4.5, `${name} warnText`);
+      expectMin(s.dangerText, s.bg, 4.5, `${name} dangerText`);
+    }
+  });
+  it('스킨(라이트): 합성 팔레트의 subOnChip이 그 스킨 chip 위에서 4.5(고대비 7) 이상', () => {
+    expect(SKIN_KEYS).toHaveLength(7);
+    for (const name of SKIN_KEYS) {
+      const c = composeTheme('light', { BACKGROUND: `bg.${name}` }).colors;
+      expectMin(c.subOnChip, c.chip, 4.5, `${name} subOnChip/chip`);
+      const hc = composeTheme('light', { BACKGROUND: `bg.${name}` }, { highContrast: true }).colors;
+      expectMin(hc.subOnChip, hc.chip, 7, `${name} hc subOnChip/chip`);
     }
   });
   it('고대비: 라이트 글자 7, 경계선 3 / 다크 글자 7, 경계선 3', () => {

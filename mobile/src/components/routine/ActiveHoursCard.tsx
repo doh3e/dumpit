@@ -75,14 +75,15 @@ export function ActiveHoursCard() {
         <BottomSheetView accessibilityViewIsModal style={styles.sheetBody}>
           <Text ref={headingRef} accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 시작 시각</Text>
           <View style={styles.grid}>
+            {/* 24칸 격자가 둘이라 "09:00"만으로는 시작·끝을 가릴 수 없다 */}
             {HOURS.map((h) => (
-              <Chip key={`s${h}`} label={hh(h)} selected={h === draftStart} onPress={() => setDraftStart(h)} />
+              <Chip key={`s${h}`} label={hh(h)} accessibilityLabel={`시작 ${h}시`} selected={h === draftStart} onPress={() => setDraftStart(h)} />
             ))}
           </View>
-          <Text style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 끝 시각</Text>
+          <Text accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 끝 시각</Text>
           <View style={styles.grid}>
             {HOURS.map((h) => (
-              <Chip key={`e${h}`} label={hh(h)} selected={h === draftEnd} onPress={() => setDraftEnd(h)} />
+              <Chip key={`e${h}`} label={hh(h)} accessibilityLabel={`끝 ${h}시`} selected={h === draftEnd} onPress={() => setDraftEnd(h)} />
             ))}
           </View>
           {wraps && (

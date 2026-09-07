@@ -214,7 +214,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             onChangeText={setTitle}
             maxLength={200}
             placeholder="아이디어 제목 *"
-            placeholderTextColor={colors.sub}
+            placeholderTextColor={colors.subOnChip}
             style={[styles.input, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
             accessibilityLabel="아이디어 제목"
           />
@@ -236,7 +236,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
               maxLength={5000}
               multiline
               placeholder="내용 (마크다운 지원, 선택)"
-              placeholderTextColor={colors.sub}
+              placeholderTextColor={colors.subOnChip}
               style={[styles.input, styles.contentInput, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
               accessibilityLabel="내용 (마크다운 지원, 선택)"
             />

@@ -48,16 +48,18 @@ export default function PomodoroScreen() {
   const derived = session ? deriveState(session, now) : null;
   const running = !!session && session.pausedAt == null && derived?.phase !== 'DONE';
 
+  const phase = derived?.phase ?? null;
+  const longBreak = derived?.long ?? false;
+
   const prevPhase = useRef<string | null>(null);
   useEffect(() => {
-    const phase = derived?.phase ?? null;
     if (prevPhase.current && phase && phase !== prevPhase.current) {
-      if (phase === 'BREAK') announce(`집중 끝. ${derived!.long ? '긴 ' : ''}휴식을 시작해요`);
+      if (phase === 'BREAK') announce(`집중 끝. ${longBreak ? '긴 ' : ''}휴식을 시작해요`);
       else if (phase === 'FOCUS') announce('휴식 끝. 집중을 시작해요');
       else if (phase === 'DONE') announce('모든 세트를 완료했어요');
     }
     prevPhase.current = phase;
-  }, [derived?.phase, derived?.long]);
+  }, [phase, longBreak]);
 
   // 화면에 보이는 동안만 1초 틱 — 시간 자체는 앵커 재계산이라 틱은 표시용
   useEffect(() => {
@@ -87,7 +89,8 @@ export default function PomodoroScreen() {
 
   const onStart = useCallback(async () => {
     const notifOk = await requestNotificationPermission();
-    if (!notifOk) toast.error('알림 권한이 없어 타이머 알림이 오지 않아요.');
+    // 시작 자체는 성공한 흐름이라 안내 토스트 — error()는 sticky라 성공 경로를 막는다
+    if (!notifOk) toast.show('알림 권한이 없어 타이머 알림이 오지 않아요.');
     const exact = await checkExactAlarm();
     if (!exact) {
       Alert.alert(

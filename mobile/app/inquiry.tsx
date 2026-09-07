@@ -54,7 +54,7 @@ export default function InquiryScreen() {
               defaultValue=""
               onChangeText={setSubject}
               placeholder="무엇을 도와드릴까요?"
-              placeholderTextColor={colors.sub}
+              placeholderTextColor={colors.subOnChip}
               maxLength={INQUIRY_LIMITS.subject}
               style={[styles.input, { borderColor: colors.edge, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
               accessibilityLabel="제목"
@@ -65,7 +65,7 @@ export default function InquiryScreen() {
               defaultValue=""
               onChangeText={setMessage}
               placeholder="겪으신 상황을 자세히 적어주시면 빠르게 확인할 수 있어요."
-              placeholderTextColor={colors.sub}
+              placeholderTextColor={colors.subOnChip}
               maxLength={INQUIRY_LIMITS.message}
               multiline
               textAlignVertical="top"

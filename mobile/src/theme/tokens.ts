@@ -6,7 +6,10 @@ export type Palette = {
   warn: string; starlight: string;
   /** 글자용(-Text)·크림 글자를 얹는 채움용(-Fill) — 원색 accent/accent2는 테두리·장식 전용. 값은 __tests__/tokens.test.ts가 강제한다 */
   accentText: string; accentFill: string; accent2Text: string; accent2Fill: string;
+  // dangerText는 웹 --danger-text 패리티 토큰 — 오류 문구를 warnText에서 옮길 때 사용
   warnText: string; dangerText: string;
+  /** 칩 배경(chip) 위 정적 sub 글자·플레이스홀더 — sub는 chip 위에서 4.5:1에 못 미친다 */
+  subOnChip: string;
   /** 앰버·골드 채움 위 글자 — 다크 fg는 밝아서 골드 위 1.6:1이라 별도 토큰 */
   onWarn: string;
   /** 탭바·앱바 크롬 (웹 --chrome-bg/--chrome-line) — CHROME 스킨 미장착 시 card/line과 같다 */
@@ -21,7 +24,7 @@ export const palettes: { light: Palette; dark: Palette } = {
     shadowHero: '#EBC0AC', shadowSm: '#DCC5A0',
     warn: '#D98E2B', starlight: '#E9B44C',
     accentText: '#C63A2C', accentFill: '#D13F30', accent2Text: '#357871', accent2Fill: '#387F77',
-    warnText: '#97621B', dangerText: '#AF4538', onWarn: '#33271E',
+    warnText: '#8C5A19', dangerText: '#AF4538', subOnChip: '#5F5445', onWarn: '#33271E',
     chromeBg: '#FFFDF6', chromeLine: '#E0D2B6',
   },
   dark: {
@@ -31,7 +34,8 @@ export const palettes: { light: Palette; dark: Palette } = {
     shadowHero: '#141021', shadowSm: '#141021',
     warn: '#E9B44C', starlight: '#E9B44C',
     accentText: '#F09355', accentFill: '#F09355', accent2Text: '#5FC4B4', accent2Fill: '#5FC4B4',
-    warnText: '#E9B44C', dangerText: '#E57B67', onWarn: '#241E14',
+    // subOnChip: 다크 sub(#9D93A8)는 chip 위 4.09:1 — 스킨 chip 8종 전부 4.5:1을 넘도록 한 단계 밝힌 값
+    warnText: '#E9B44C', dangerText: '#E57B67', subOnChip: '#B5ABC0', onWarn: '#241E14',
     chromeBg: '#2B2442', chromeLine: '#413966',
   },
 };
@@ -41,11 +45,11 @@ export const highContrast: { light: Partial<Palette>; dark: Partial<Palette> } =
   light: {
     fg: '#1A120C', sub: '#53493C', line: '#9E8043', edge: '#1A120C',
     accentText: '#932B20', accentFill: '#932B20', accent2Text: '#275853', accent2Fill: '#275853',
-    warnText: '#684313', dangerText: '#803229',
+    warnText: '#684313', dangerText: '#803229', subOnChip: '#1A120C',
   },
   dark: {
     fg: '#FFFFFF', sub: '#C9C2D2', line: '#7A6FB0', edge: '#000000',
-    accentText: '#F2A16B', accentFill: '#F2A16B',
+    accentText: '#F2A16B', accentFill: '#F2A16B', subOnChip: '#FFFFFF',
   },
 };
 

@@ -151,7 +151,7 @@ export default function MyScreen() {
                 maxLength={500}
                 multiline
                 placeholder="한 줄 소개"
-                placeholderTextColor={colors.sub}
+                placeholderTextColor={colors.subOnChip}
                 style={[styles.bioInput, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
                 accessibilityLabel="한 줄 소개"
               />

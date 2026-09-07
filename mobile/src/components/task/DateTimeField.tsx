@@ -54,7 +54,7 @@ export function DateTimeField({ value, onChange, minimumDate, placeholder = '선
           { borderColor: colors.line, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 },
         ]}
       >
-        <Text style={[styles.text, { color: current ? colors.fg : colors.sub, fontFamily: fonts.chrome }]}>
+        <Text style={[styles.text, { color: colors.fg, fontFamily: fonts.chrome }]}>
           <PixelIcon name="calendar" size={12} /> {label}
         </Text>
         {current && (
