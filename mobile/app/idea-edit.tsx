@@ -309,6 +309,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
           <Text ref={headingRef} accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>상위 아이디어 선택</Text>
           <Pressable
             onPress={() => { setParentId(null); parentSheet.current?.dismiss(); }}
+            accessibilityRole="button"
             style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
           >
             <Text style={[styles.sheetRowText, { color: colors.sub, fontFamily: fonts.body }]}>없음 (최상위)</Text>
@@ -317,6 +318,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             <Pressable
               key={i.ideaId}
               onPress={() => { setParentId(i.ideaId); parentSheet.current?.dismiss(); }}
+              accessibilityRole="button"
               style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
             >
               <Text numberOfLines={1} style={[styles.sheetRowText, { color: colors.fg, fontFamily: fonts.body }]}>{i.title}</Text>

@@ -105,7 +105,7 @@ export default function SettingsScreen() {
             <Chip label={boldText ? '켬' : '끔'} selected={boldText} onPress={() => setBoldText(!boldText)} />
           </View>
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
-            '시스템'은 휴대폰의 고대비 텍스트 설정을 따라요. 이 설정은 이 기기에만 저장돼요.
+            &apos;시스템&apos;은 휴대폰의 고대비 텍스트 설정을 따라요. 이 설정은 이 기기에만 저장돼요.
           </Text>
         </RetroCard>
 
@@ -121,7 +121,7 @@ export default function SettingsScreen() {
           {withdrawStage ? (
             <>
               <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>
-                정말 탈퇴하시려면 아래에 "탈퇴"를 입력해주세요.
+                정말 탈퇴하시려면 아래에 &quot;탈퇴&quot;를 입력해주세요.
               </Text>
               {/* 한글 IME 조합 보호 — uncontrolled */}
               <TextInput
