@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { createPortal } from 'react-dom'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import Footer from './Footer'
@@ -9,6 +8,7 @@ import SettingsModal from '../SettingsModal'
 import HelpModal from '../HelpModal'
 import NoticeModal from '../NoticeModal'
 import PomodoroTimer from '../PomodoroTimer'
+import Dialog from '../Dialog'
 import api from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { watchSystemTheme } from '../../utils/theme'
@@ -97,6 +97,7 @@ export default function Layout() {
   return (
     <div
       className="flex flex-col min-h-screen bg-skin"
+      inert={drawerOpen || undefined}
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         paddingLeft: 'env(safe-area-inset-left)',
@@ -137,26 +138,20 @@ export default function Layout() {
         25
       </button>
 
-      {showMobileTimer && createPortal(
-        <div className="fixed inset-0 z-[60] flex items-end justify-center lg:hidden" onClick={() => setShowMobileTimer(false)}>
-          <div className="absolute inset-0 overlay-retro" />
-          <div
-            className="relative w-full max-w-sm mx-4 mb-6 card-retro"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-dungeon text-dark text-sm">Pomodoro Timer</h3>
-              <button
-                onClick={() => setShowMobileTimer(false)}
-                className="w-7 h-7 rounded-lg border border-line font-black text-sub text-xs hover:bg-chip transition-colors"
-              >
-                X
-              </button>
-            </div>
-            <PomodoroTimer tasks={tasks} recommendedTaskId={focusRecommendation?.task?.taskId} />
+      {showMobileTimer && (
+        <Dialog onClose={() => setShowMobileTimer(false)} title="뽀모도로 타이머" placement="bottom" className="w-full max-w-sm lg:hidden">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-dungeon text-dark text-sm">Pomodoro Timer</h3>
+            <button
+              onClick={() => setShowMobileTimer(false)}
+              aria-label="닫기"
+              className="w-7 h-7 rounded-lg border border-line font-black text-sub text-xs hover:bg-chip transition-colors"
+            >
+              X
+            </button>
           </div>
-        </div>,
-        document.body
+          <PomodoroTimer tasks={tasks} recommendedTaskId={focusRecommendation?.task?.taskId} />
+        </Dialog>
       )}
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}

@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import MarkdownRenderer from '../components/MarkdownRenderer'
+import Dialog from '../components/Dialog'
 import { iconProps } from '../assets/icons'
 
 const STATUS_LABEL = {
@@ -833,145 +834,144 @@ export default function AdminPage() {
       )}
 
       {managingUser && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-chip px-4" onClick={() => setManagingUser(null)}>
-          <div className="card-retro w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="font-dungeon text-dark text-xl">회원 관리</h3>
-                <p className="mt-2 truncate text-xs font-semibold text-sub">{managingUser.email}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setManagingUser(null)}
-                className="h-8 w-8 rounded-lg border border-line text-sm font-black text-dark hover:bg-chip hover:text-dark"
-              >
-                X
-              </button>
+        <Dialog onClose={() => setManagingUser(null)} title="회원 관리" className="w-full max-w-xl">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="font-dungeon text-dark text-xl">회원 관리</h3>
+              <p className="mt-2 truncate text-xs font-semibold text-sub">{managingUser.email}</p>
             </div>
+            <button
+              type="button"
+              onClick={() => setManagingUser(null)}
+              aria-label="닫기"
+              className="h-8 w-8 rounded-lg border border-line text-sm font-black text-dark hover:bg-chip hover:text-dark"
+            >
+              X
+            </button>
+          </div>
 
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
-                  <p className="text-xs font-black text-sub">보유 코인</p>
-                  <p className="mt-1 text-sm font-black text-dark">{managingUser.coinBalance ?? 0}</p>
-                </div>
-                <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
-                  <p className="text-xs font-black text-sub">오늘 AI 잔여</p>
-                  <p className="mt-1 text-sm font-black text-dark">
-                    {managingUser.aiUsage ? `${managingUser.aiUsage.remaining} / ${managingUser.aiUsage.limit}` : '-'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {[
-                  ['할 일', managingUser.activity?.taskCount ?? 0],
-                  ['루틴', managingUser.activity?.routineCount ?? 0],
-                  ['아이디어', managingUser.activity?.ideaCount ?? 0],
-                  ['브레인덤프', managingUser.activity?.brainDumpCount ?? 0],
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-lg border-2 border-line bg-accent px-3 py-2">
-                    <p className="text-[0.625rem] font-black text-sub">{label}</p>
-                    <p className="mt-1 text-sm font-black text-dark">{value}</p>
-                  </div>
-                ))}
-              </div>
-
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
-                <p className="text-xs font-black text-sub">현재 상태</p>
+                <p className="text-xs font-black text-sub">보유 코인</p>
+                <p className="mt-1 text-sm font-black text-dark">{managingUser.coinBalance ?? 0}</p>
+              </div>
+              <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+                <p className="text-xs font-black text-sub">오늘 AI 잔여</p>
                 <p className="mt-1 text-sm font-black text-dark">
-                  {managingUser.isAdmin ? '관리자' : USER_STATUS[managingUser.status]?.label || managingUser.status}
+                  {managingUser.aiUsage ? `${managingUser.aiUsage.remaining} / ${managingUser.aiUsage.limit}` : '-'}
                 </p>
               </div>
-
-              {managingUser.status === 'ACTIVE' && (
-                <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
-                  <p className="text-xs font-black text-sub">이벤트 코인 지급</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <input
-                      type="number"
-                      aria-label="지급량"
-                      min={1}
-                      max={10000}
-                      value={coinAmountInput}
-                      onChange={(e) => setCoinAmountInput(e.target.value)}
-                      placeholder="지급량"
-                      className="w-24 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
-                    />
-                    <input
-                      aria-label="지급 사유 (운영 기록용, 선택)"
-                      value={coinReasonInput}
-                      onChange={(e) => setCoinReasonInput(e.target.value)}
-                      maxLength={200}
-                      placeholder="지급 사유 (운영 기록용, 선택)"
-                      className="min-w-[160px] flex-1 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleGrantCoins}
-                      disabled={workingUserId === managingUser.userId || !coinAmountInput}
-                      className="btn-retro-secondary px-4 py-2 text-xs disabled:opacity-50"
-                    >
-                      {workingUserId === managingUser.userId ? '처리 중...' : '지급'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {managingUser.status !== 'BANNED' && (
-                <div>
-                  <label htmlFor={banReasonId} className="mb-1 block text-xs font-bold text-sub">밴 사유</label>
-                  <textarea
-                    id={banReasonId}
-                    value={banReasonInput}
-                    onChange={(e) => setBanReasonInput(e.target.value)}
-                    rows={4}
-                    maxLength={500}
-                    placeholder="운영 메모로 남길 사유를 입력해주세요."
-                    className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
-                  />
-                </div>
-              )}
-
-              {managingUser.status === 'BANNED' && managingUser.banReason && (
-                <div className="rounded-lg border-2 tone-danger px-4 py-3">
-                  <p className="text-xs font-black text-red-600">밴 사유</p>
-                  <p className="mt-1 whitespace-pre-wrap text-xs font-semibold text-red-500/80">{managingUser.banReason}</p>
-                </div>
-              )}
             </div>
 
-            <div className="mt-5 flex gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                ['할 일', managingUser.activity?.taskCount ?? 0],
+                ['루틴', managingUser.activity?.routineCount ?? 0],
+                ['아이디어', managingUser.activity?.ideaCount ?? 0],
+                ['브레인덤프', managingUser.activity?.brainDumpCount ?? 0],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-lg border-2 border-line bg-accent px-3 py-2">
+                  <p className="text-[0.625rem] font-black text-sub">{label}</p>
+                  <p className="mt-1 text-sm font-black text-dark">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+              <p className="text-xs font-black text-sub">현재 상태</p>
+              <p className="mt-1 text-sm font-black text-dark">
+                {managingUser.isAdmin ? '관리자' : USER_STATUS[managingUser.status]?.label || managingUser.status}
+              </p>
+            </div>
+
+            {managingUser.status === 'ACTIVE' && (
+              <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+                <p className="text-xs font-black text-sub">이벤트 코인 지급</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <input
+                    type="number"
+                    aria-label="지급량"
+                    min={1}
+                    max={10000}
+                    value={coinAmountInput}
+                    onChange={(e) => setCoinAmountInput(e.target.value)}
+                    placeholder="지급량"
+                    className="w-24 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
+                  />
+                  <input
+                    aria-label="지급 사유 (운영 기록용, 선택)"
+                    value={coinReasonInput}
+                    onChange={(e) => setCoinReasonInput(e.target.value)}
+                    maxLength={200}
+                    placeholder="지급 사유 (운영 기록용, 선택)"
+                    className="min-w-[160px] flex-1 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleGrantCoins}
+                    disabled={workingUserId === managingUser.userId || !coinAmountInput}
+                    className="btn-retro-secondary px-4 py-2 text-xs disabled:opacity-50"
+                  >
+                    {workingUserId === managingUser.userId ? '처리 중...' : '지급'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {managingUser.status !== 'BANNED' && (
+              <div>
+                <label htmlFor={banReasonId} className="mb-1 block text-xs font-bold text-sub">밴 사유</label>
+                <textarea
+                  id={banReasonId}
+                  value={banReasonInput}
+                  onChange={(e) => setBanReasonInput(e.target.value)}
+                  rows={4}
+                  maxLength={500}
+                  placeholder="운영 메모로 남길 사유를 입력해주세요."
+                  className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
+                />
+              </div>
+            )}
+
+            {managingUser.status === 'BANNED' && managingUser.banReason && (
+              <div className="rounded-lg border-2 tone-danger px-4 py-3">
+                <p className="text-xs font-black text-red-600">밴 사유</p>
+                <p className="mt-1 whitespace-pre-wrap text-xs font-semibold text-red-500/80">{managingUser.banReason}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setManagingUser(null)}
+              disabled={workingUserId === managingUser.userId}
+              className="btn-retro flex-1 bg-accent py-2 text-sm text-dark disabled:opacity-50"
+            >
+              닫기
+            </button>
+            {managingUser.status === 'BANNED' ? (
               <button
                 type="button"
-                onClick={() => setManagingUser(null)}
+                onClick={handleUnban}
                 disabled={workingUserId === managingUser.userId}
-                className="btn-retro flex-1 bg-accent py-2 text-sm text-dark disabled:opacity-50"
+                className="btn-retro-secondary flex-1 py-2 text-sm disabled:opacity-50"
               >
-                닫기
+                {workingUserId === managingUser.userId ? '처리 중...' : '밴 해제'}
               </button>
-              {managingUser.status === 'BANNED' ? (
-                <button
-                  type="button"
-                  onClick={handleUnban}
-                  disabled={workingUserId === managingUser.userId}
-                  className="btn-retro-secondary flex-1 py-2 text-sm disabled:opacity-50"
-                >
-                  {workingUserId === managingUser.userId ? '처리 중...' : '밴 해제'}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleBan}
-                  disabled={workingUserId === managingUser.userId || managingUser.isAdmin || managingUser.status === 'WITHDRAWN'}
-                  className="btn-retro-primary flex-1 py-2 text-sm disabled:opacity-50"
-                >
-                  {workingUserId === managingUser.userId ? '처리 중...' : '밴 적용'}
-                </button>
-              )}
-            </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleBan}
+                disabled={workingUserId === managingUser.userId || managingUser.isAdmin || managingUser.status === 'WITHDRAWN'}
+                className="btn-retro-primary flex-1 py-2 text-sm disabled:opacity-50"
+              >
+                {workingUserId === managingUser.userId ? '처리 중...' : '밴 적용'}
+              </button>
+            )}
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   )

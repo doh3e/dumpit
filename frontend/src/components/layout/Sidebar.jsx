@@ -204,6 +204,9 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
         <div className="lg:hidden fixed inset-0 z-[60]" onClick={onCloseDrawer}>
           <div className="absolute inset-0 overlay-retro" />
           <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="메뉴"
             className="app-sidebar absolute left-0 top-0 bottom-0 w-64 bg-chrome border-r border-chrome-line pt-6 pb-10 px-3 flex flex-col gap-1 overflow-y-auto scrollbar-none"
             onClick={(e) => e.stopPropagation()}
           >

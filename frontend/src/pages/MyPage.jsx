@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { saveUserSettings } from '../services/userSettings'
 import { iconProps } from '../assets/icons'
 import PixelStation from '../components/PixelStation'
+import Dialog from '../components/Dialog'
 import { useAuth } from '../context/AuthContext'
 
 function useDragScroll() {
@@ -528,45 +528,44 @@ export default function MyPage() {
         </button>
       </div>
 
-      {showWithdrawModal && createPortal(
-        <div className="fixed inset-0 z-[70] flex items-center justify-center overlay-retro px-4" onClick={() => !withdrawing && setShowWithdrawModal(false)}>
-          <div
-            className="card-retro w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* 파괴적 액션 — 테마 카피 없이 조용하고 명확하게 (스펙 7.5) */}
-            <h2 className="text-xl font-bold text-dark">회원 탈퇴</h2>
-            <div className="mt-4 rounded-lg border-2 tone-danger px-4 py-3">
-              <p className="text-sm font-black" style={{ color: 'var(--danger-text)' }}>탈퇴 전 확인해주세요.</p>
-              <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
-                탈퇴하면 바로 서비스를 이용할 수 없고, 작성한 할 일·루틴·아이디어·브레인덤프도 볼 수 없게 됩니다.
-              </p>
-              <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
-                30일 안에 같은 구글 계정으로 다시 로그인하면 되돌릴 수 있어요. 30일이 지나면 계정과 기록이 완전히 삭제되고, 그때부터는 복구할 수 없습니다.
-              </p>
-            </div>
-            <div className="mt-5 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowWithdrawModal(false)}
-                disabled={withdrawing}
-                className="btn-retro flex-1 py-2 text-sm"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleWithdraw}
-                disabled={withdrawing}
-                className="btn-retro flex-1 py-2 text-sm text-on-accent"
-                style={{ background: 'var(--danger)' }}
-              >
-                {withdrawing ? '처리 중...' : '탈퇴'}
-              </button>
-            </div>
+      {showWithdrawModal && (
+        <Dialog
+          onClose={() => !withdrawing && setShowWithdrawModal(false)}
+          title="회원 탈퇴"
+          closeOnBackdrop={!withdrawing}
+          className="w-full max-w-md"
+        >
+          {/* 파괴적 액션 — 테마 카피 없이 조용하고 명확하게 (스펙 7.5) */}
+          <h2 className="text-xl font-bold text-dark">회원 탈퇴</h2>
+          <div className="mt-4 rounded-lg border-2 tone-danger px-4 py-3">
+            <p className="text-sm font-black" style={{ color: 'var(--danger-text)' }}>탈퇴 전 확인해주세요.</p>
+            <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
+              탈퇴하면 바로 서비스를 이용할 수 없고, 작성한 할 일·루틴·아이디어·브레인덤프도 볼 수 없게 됩니다.
+            </p>
+            <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
+              30일 안에 같은 구글 계정으로 다시 로그인하면 되돌릴 수 있어요. 30일이 지나면 계정과 기록이 완전히 삭제되고, 그때부터는 복구할 수 없습니다.
+            </p>
           </div>
-        </div>,
-        document.body
+          <div className="mt-5 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowWithdrawModal(false)}
+              disabled={withdrawing}
+              className="btn-retro flex-1 py-2 text-sm"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={handleWithdraw}
+              disabled={withdrawing}
+              className="btn-retro flex-1 py-2 text-sm text-on-accent"
+              style={{ background: 'var(--danger)' }}
+            >
+              {withdrawing ? '처리 중...' : '탈퇴'}
+            </button>
+          </div>
+        </Dialog>
       )}
     </div>
   )
