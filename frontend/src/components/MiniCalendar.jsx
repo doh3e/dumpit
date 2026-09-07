@@ -176,7 +176,8 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={prevMonth}
-          className="w-7 h-7 flex items-center justify-center rounded border border-line text-sub font-bold text-xs hover:bg-chip hover:text-dark transition-colors"
+          aria-label="이전 달"
+          className="w-8 h-8 flex items-center justify-center rounded border border-line text-sub font-bold text-xs hover:bg-chip hover:text-dark transition-colors"
         >
           &lt;
         </button>
@@ -185,7 +186,8 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
         </span>
         <button
           onClick={nextMonth}
-          className="w-7 h-7 flex items-center justify-center rounded border border-line text-sub font-bold text-xs hover:bg-chip hover:text-dark transition-colors"
+          aria-label="다음 달"
+          className="w-8 h-8 flex items-center justify-center rounded border border-line text-sub font-bold text-xs hover:bg-chip hover:text-dark transition-colors"
         >
           &gt;
         </button>
@@ -254,7 +256,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                       <div className="min-w-0">
                         <p className="text-[0.6875rem] font-bold text-dark truncate">{t.title}</p>
                         {t.deadline && (
-                          <p className="text-[0.5625rem] text-sub font-medium">마감 {formatTime(t.deadline)}</p>
+                          <p className="text-[0.625rem] text-sub font-medium">마감 {formatTime(t.deadline)}</p>
                         )}
                       </div>
                     </div>
@@ -264,7 +266,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                       <span className="w-1.5 h-1.5 rounded-full gcal-dot mt-1 flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-[0.6875rem] font-bold text-dark truncate">{e.summary}</p>
-                        <p className="text-[0.5625rem] text-sub font-medium">
+                        <p className="text-[0.625rem] text-sub font-medium">
                           {formatTime(e.start)}{e.end && ` ~ ${formatTime(e.end)}`}
                         </p>
                       </div>
@@ -288,7 +290,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                       <div className="min-w-0">
                         <p className="text-[0.6875rem] font-bold text-dark truncate">{t.title}</p>
                         {t.deadline && (
-                          <p className="text-[0.5625rem] text-sub font-medium">마감 {formatTime(t.deadline)}</p>
+                          <p className="text-[0.625rem] text-sub font-medium">마감 {formatTime(t.deadline)}</p>
                         )}
                       </div>
                     </div>
@@ -298,14 +300,14 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                       <span className="w-1.5 h-1.5 rounded-full gcal-dot mt-1 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[0.6875rem] font-bold text-dark truncate">{e.summary}</p>
-                        <p className="text-[0.5625rem] text-sub font-medium">
+                        <p className="text-[0.625rem] text-sub font-medium">
                           {formatTime(e.start)}{e.end && ` ~ ${formatTime(e.end)}`}
                         </p>
                       </div>
                       <button
                         onClick={(evt) => { evt.stopPropagation(); handleAddFromGoogle(e) }}
                         disabled={addingEventId === e.id}
-                        className="text-[0.5625rem] font-bold text-blue-500 hover:text-primary transition-colors flex-shrink-0 mt-0.5"
+                        className="text-[0.625rem] font-bold text-blue-500 hover:text-primary transition-colors flex-shrink-0 mt-0.5"
                       >
                         {addingEventId === e.id ? '...' : '+ 추가'}
                       </button>

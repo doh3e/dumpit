@@ -788,13 +788,13 @@ export default function AdminPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           {notice.pinned && (
-                            <span className="inline-flex flex-shrink-0 items-center gap-0.5 rounded border border-line bg-accent px-1 py-0.5 text-[0.5625rem] font-black text-dark">
+                            <span className="inline-flex flex-shrink-0 items-center gap-0.5 rounded border border-line bg-accent px-1 py-0.5 text-[0.625rem] font-black text-dark">
                               <img {...iconProps('pin', 12)} alt="" className="w-3 h-3 object-contain" />
                               고정
                             </span>
                           )}
                           {notice.popup && (
-                            <span className="flex-shrink-0 rounded border border-line bg-chip px-1 py-0.5 text-[0.5625rem] font-black text-primary">
+                            <span className="flex-shrink-0 rounded border border-line bg-chip px-1 py-0.5 text-[0.625rem] font-black text-primary">
                               팝업
                             </span>
                           )}

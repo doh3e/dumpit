@@ -64,7 +64,7 @@ export default function MarkdownEditor({ value, onChange, maxLength = 5000, rows
                 aria-label={title}
                 onMouseDown={(e) => e.preventDefault() /* 텍스트에어리어 포커스·선택 유지 */}
                 onClick={() => runAction(action)}
-                className={`min-w-6 rounded px-1 py-0.5 text-[0.6875rem] font-bold text-sub hover:bg-chip hover:text-dark ${className}`}
+                className={`min-w-6 min-h-6 rounded px-1.5 py-1 text-[0.6875rem] font-bold text-sub hover:bg-chip hover:text-dark ${className}`}
               >
                 {label}
               </button>

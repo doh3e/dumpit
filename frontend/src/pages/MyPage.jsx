@@ -124,8 +124,8 @@ function HeatmapGrid({ heatmap }) {
         ))}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[0.5625rem] text-sub">{entries[0]?.[0]?.slice(5)}</span>
-        <span className="text-[0.5625rem] text-sub">오늘</span>
+        <span className="text-[0.625rem] text-sub">{entries[0]?.[0]?.slice(5)}</span>
+        <span className="text-[0.625rem] text-sub">오늘</span>
       </div>
     </div>
   )
@@ -437,7 +437,7 @@ export default function MyPage() {
                   <p className={`font-dungeon text-[0.625rem] text-center leading-tight ${text}`}>{theme}</p>
                 )}
                 <p className={`text-[0.625rem] font-black text-center leading-tight ${text} opacity-70`}>{label}</p>
-                {sub && <p className={`text-[0.5625rem] font-semibold ${text} opacity-50`}>{sub}</p>}
+                {sub && <p className={`text-[0.625rem] font-semibold ${text} opacity-50`}>{sub}</p>}
               </div>
             ))}
           </div>
@@ -461,7 +461,7 @@ export default function MyPage() {
             ].map(([label, count]) => (
               <div key={label} className="flex items-center gap-1.5">
                 <div className={`w-3 h-3 rounded-sm border ${heatmapColorClass(count)}`} />
-                <span className="text-[0.5625rem] text-sub">{label}</span>
+                <span className="text-[0.625rem] text-sub">{label}</span>
               </div>
             ))}
           </div>
