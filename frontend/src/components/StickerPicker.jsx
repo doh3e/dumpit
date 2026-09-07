@@ -114,10 +114,11 @@ export default function StickerPicker({ current, onSelect }) {
   const currentSprite = current ? spriteFor(STICKER_SPRITES, current) : null
 
   return (
-    <div className="inline-block" ref={triggerRef} onClick={(e) => e.stopPropagation()}>
+    <div className="inline-block" role="presentation" ref={triggerRef} onClick={(e) => e.stopPropagation()}>
       <button
         type="button"
         onClick={handleTriggerClick}
+        aria-expanded={open}
         aria-label={currentSprite ? `부착된 스티커: ${currentSprite.name}` : '스티커 붙이기'}
         title={currentSprite ? currentSprite.name : '스티커 붙이기'}
         className={
@@ -141,6 +142,7 @@ export default function StickerPicker({ current, onSelect }) {
       {open && popoverPos && createPortal(
         <div
           ref={popoverRef}
+          role="presentation"
           className="fixed z-50 w-56"
           style={popoverPos}
           onClick={(e) => e.stopPropagation()}

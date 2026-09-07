@@ -9,7 +9,6 @@ import { useAuth } from '../../auth/AuthContext';
 import { celebrationFor, type CelebrationSprite } from '../../celebration/registry';
 import { buildParticles, TOTAL_MS, type Particle } from '../../celebration/motions';
 import { retroShadow } from '../../theme/tokens';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 
 /**
@@ -22,7 +21,7 @@ import { useTheme } from '../../theme/useTheme';
  * codeOverride: 상점 미리보기용 — 있으면 실제 장착 대신 이 코드의 연출을 재생한다.
  */
 export function CelebrationOverlay({ onDone, codeOverride }: { onDone: () => void; codeOverride?: string }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const { me } = useAuth();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();

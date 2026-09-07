@@ -37,11 +37,13 @@ export const BG_SKINS: Record<SkinKey, BgSkin> = {
     light: {
       bg: '#E4EFEC', card: '#FCFEFD', chip: '#D3E6E1', line: '#B7D4CD', edge: '#28423C',
       accent: '#2E7D8A', accent2: '#D97757', onAccent: '#F4FBF9',
+      accentText: '#2B7581', accentFill: '#2E7D8A', accent2Text: '#B34B29', accent2Fill: '#C0502B',
       shadowHero: '#A9CEC5', shadowSm: '#C6DDD7',
     },
     dark: {
       bg: '#152430', card: '#1E3240', chip: '#28414F', line: '#375366', edge: '#0B141C',
       accent: '#5FB8C9', accent2: '#F09355', onAccent: '#0F1D26',
+      accentText: '#5FB8C9', accentFill: '#5FB8C9', accent2Text: '#F09355', accent2Fill: '#F09355',
       shadowHero: '#0B141C', shadowSm: '#0B141C',
     },
   },
@@ -49,11 +51,13 @@ export const BG_SKINS: Record<SkinKey, BgSkin> = {
     light: {
       bg: '#EEEAF4', card: '#FDFCFF', chip: '#E2DAEC', line: '#CBBEDC', edge: '#372C48',
       accent: '#8A63C4', accent2: '#3E8E85', onAccent: '#FBF9FF',
+      accentText: '#7F54BE', accentFill: '#875FC3', accent2Text: '#33756E', accent2Fill: '#377F77',
       shadowHero: '#CDBEE2', shadowSm: '#D8CCE8',
     },
     dark: {
       bg: '#251D3A', card: '#32294E', chip: '#40355F', line: '#4F4373', edge: '#151022',
       accent: '#B79CE8', accent2: '#5FC4B4', onAccent: '#1D1630',
+      accentText: '#B79CE8', accentFill: '#B79CE8', accent2Text: '#5FC4B4', accent2Fill: '#5FC4B4',
       shadowHero: '#151022', shadowSm: '#151022',
     },
   },
@@ -61,11 +65,13 @@ export const BG_SKINS: Record<SkinKey, BgSkin> = {
     light: {
       bg: '#F5E9EA', card: '#FEFCFC', chip: '#EDD8DB', line: '#DDBCC2', edge: '#43282E',
       accent: '#C25B6E', accent2: '#6E9E62', onAccent: '#FFF7F8',
+      accentText: '#B54358', accentFill: '#BD4D62', accent2Text: '#507447', accent2Fill: '#567C4D',
       shadowHero: '#E3C2C8', shadowSm: '#E9CFD4',
     },
     dark: {
       bg: '#2A1B20', card: '#3A282E', chip: '#48333A', line: '#5C424B', edge: '#170D10',
       accent: '#E8899B', accent2: '#8FBF6F', onAccent: '#251318',
+      accentText: '#E8899B', accentFill: '#E8899B', accent2Text: '#8FBF6F', accent2Fill: '#8FBF6F',
       shadowHero: '#170D10', shadowSm: '#170D10',
     },
   },
@@ -73,11 +79,13 @@ export const BG_SKINS: Record<SkinKey, BgSkin> = {
     light: {
       bg: '#EAF2E3', card: '#FBFEF7', chip: '#DCEBCE', line: '#C2DBAA', edge: '#2F4224',
       accent: '#5C8A3C', accent2: '#C4708F', onAccent: '#F7FCF0',
+      accentText: '#4F7734', accentFill: '#547F37', accent2Text: '#B14970', accent2Fill: '#B75177',
       shadowHero: '#BFD8A6', shadowSm: '#CFE2BA',
     },
     dark: {
       bg: '#1B2617', card: '#26351F', chip: '#31452A', line: '#40573A', edge: '#0E150B',
       accent: '#8FBF6F', accent2: '#D98BA6', onAccent: '#131C0E',
+      accentText: '#8FBF6F', accentFill: '#8FBF6F', accent2Text: '#D98BA6', accent2Fill: '#D98BA6',
       shadowHero: '#0E150B', shadowSm: '#0E150B',
     },
     pattern: {
@@ -89,11 +97,13 @@ export const BG_SKINS: Record<SkinKey, BgSkin> = {
     light: {
       bg: '#E9EAF6', card: '#FDFDFF', chip: '#DBDDF0', line: '#C2C5E4', edge: '#2E3050',
       accent: '#6D74C9', accent2: '#C9922E', onAccent: '#F8F9FF',
+      accentText: '#5860C1', accentFill: '#636BC5', accent2Text: '#89631F', accent2Fill: '#946C22',
       shadowHero: '#C6C9E8', shadowSm: '#D2D5EC',
     },
     dark: {
       bg: '#151329', card: '#201D3D', chip: '#2B2750', line: '#3D3866', edge: '#0A0918',
       accent: '#8F97E8', accent2: '#E9B44C', onAccent: '#12102A',
+      accentText: '#8F97E8', accentFill: '#8F97E8', accent2Text: '#E9B44C', accent2Fill: '#E9B44C',
       shadowHero: '#0A0918', shadowSm: '#0A0918',
     },
     pattern: {
@@ -105,11 +115,13 @@ export const BG_SKINS: Record<SkinKey, BgSkin> = {
     light: {
       bg: '#F1E5D2', card: '#FDF8EE', chip: '#E7D5B8', line: '#D6BE97', edge: '#3E2E1C',
       accent: '#A8763E', accent2: '#5C8A6E', onAccent: '#FFF9EC',
+      accentText: '#885F32', accentFill: '#976A38', accent2Text: '#4A6F59', accent2Fill: '#537C63',
       shadowHero: '#D9C29B', shadowSm: '#E3D2B2',
     },
     dark: {
       bg: '#241B10', card: '#2F2517', chip: '#3B2F1E', line: '#4E3F2A', edge: '#120C06',
       accent: '#C99B5C', accent2: '#7FAF8F', onAccent: '#1D150A',
+      accentText: '#C99B5C', accentFill: '#C99B5C', accent2Text: '#7FAF8F', accent2Fill: '#7FAF8F',
       shadowHero: '#120C06', shadowSm: '#120C06',
     },
     pattern: {
@@ -121,11 +133,13 @@ export const BG_SKINS: Record<SkinKey, BgSkin> = {
     light: {
       bg: '#F7E7EE', card: '#FEFAFC', chip: '#F2D7E2', line: '#E5BCCE', edge: '#46243A',
       accent: '#E05C8A', accent2: '#3E93B8', onAccent: '#FFF6FA',
+      accentText: '#C8265F', accentFill: '#D62A66', accent2Text: '#30718E', accent2Fill: '#347A99',
       shadowHero: '#EBC4D4', shadowSm: '#F0D2DE',
     },
     dark: {
       bg: '#2A1722', card: '#3A2230', chip: '#482C3D', line: '#5E3B50', edge: '#160A11',
       accent: '#F08CAE', accent2: '#7FB8E8', onAccent: '#2A1220',
+      accentText: '#F08CAE', accentFill: '#F08CAE', accent2Text: '#7FB8E8', accent2Fill: '#7FB8E8',
       shadowHero: '#160A11', shadowSm: '#160A11',
     },
     pattern: {

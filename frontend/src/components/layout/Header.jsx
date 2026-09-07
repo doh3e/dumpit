@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import DeadlineNudgeMenu from '../DeadlineNudgeMenu'
@@ -20,6 +20,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
+  const accountMenuId = useId()
   const { usage } = useAiUsage()
 
   // 코인 증가 시 배지 바운스 + 숫자 카운트업 (보상 모션 2)
@@ -55,8 +56,10 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
         setMenuOpen(false)
       }
     }
+    const handleKey = (e) => { if (e.key === 'Escape') setMenuOpen(false) }
     document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => { document.removeEventListener('mousedown', handleClick); document.removeEventListener('keydown', handleKey) }
   }, [menuOpen])
 
   const aiColor = !usage
@@ -179,24 +182,21 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
           </button>
 
           <div className="relative shrink-0" ref={menuRef}>
-            {user?.picture ? (
-              <img
-                src={user.picture}
-                alt={user.name}
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="w-9 h-9 rounded-full border border-line object-cover cursor-pointer"
-              />
-            ) : (
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="w-9 h-9 rounded-full bg-chip border border-line font-bold text-dark text-sm"
-              >
-                {user?.name?.[0] ?? '?'}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-controls={menuOpen ? accountMenuId : undefined}
+              aria-expanded={menuOpen}
+              aria-label="계정 메뉴"
+              className="w-9 h-9 rounded-full border border-line overflow-hidden bg-chip font-bold text-dark text-sm"
+            >
+              {user?.picture
+                ? <img src={user.picture} alt="" className="w-full h-full object-cover" />
+                : (user?.name?.[0] ?? '?')}
+            </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1rem))] sm:w-auto">
+              <div id={accountMenuId} className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1rem))] sm:w-auto">
                 <div className="card-retro py-2 sm:min-w-[160px]">
                   <div className="sm:hidden px-3 pb-2 mb-2 border-b border-line">
                     {/* 데스크톱 상단바 배지와 동일한 순서: 마감 → AI → 코인 */}

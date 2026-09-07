@@ -2,13 +2,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NowSuggestion, TaskRecommendation, TaskResponse } from '../../api/types';
 import { formatDeadline, formatTime, isToday } from '../../tasks/dates';
 import { QUEUE_BUCKET_LABEL } from '../../tasks/constants';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 import { RetroBadge } from '../retro/RetroBadge';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
-import { OrbitProgress } from './OrbitProgress';
+import { OrbitProgress, orbitProgressLabel } from './OrbitProgress';
 
 type Props = {
   nowSuggestion: NowSuggestion;
@@ -24,7 +23,7 @@ type Props = {
 
 /** "지금 할 일" 히어로 — 웹 NowHeroCard 3상태(전부 완료/제안/빈 시간) 이식 */
 export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDone, focus, onComplete, onEdit }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const task = allDone ? null : nowSuggestion?.task ?? null;
   // 오늘 몫을 일과시간 안에 다 비웠으면 "내일 만나요" 대신 다음 일을 미리 권한다.
   // 활동시간 판정은 서버가 단일 소스 — nowSuggestion.type이 SLEEP이 아니면 아직 일과시간.
@@ -35,7 +34,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
       <RetroCard hero>
         <View style={styles.top}>
           <View style={styles.main}>
-            <Text style={[styles.eyebrow, { color: colors.accent2, fontFamily: fonts.chrome }]}>집중 타임</Text>
+            <Text style={[styles.eyebrow, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>집중 타임</Text>
             <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={2}>
               지금은 「{focus.title}」 중이에요 <PixelIcon name="tomato" size={18} />
             </Text>
@@ -51,21 +50,31 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
   const heroTime = task?.deadline
     ? (isToday(task.deadline) ? `${formatTime(task.deadline)} 마감` : `${formatDeadline(task.deadline)} 마감`)
     : null;
+  // 그룹 라벨은 상단 View에만 — 카드 전체를 accessible로 묶으면 액션 버튼·큐 행이 TalkBack 스톱에서 사라진다.
+  // 상단에 든 OrbitProgress도 함께 삼켜지므로 그 문장을 라벨 끝에 붙인다.
+  const progressLabel = orbitProgressLabel(todayDone, todayTotal);
+  const allDoneTitle = '오늘 다 비웠어요';
+  const allDoneMessage = bonusTime
+    ? '아직 일과시간이네요. 여유가 되면 다음 일을 미리 당겨볼까요?'
+    : '머릿속이 가벼워졌네요. 내일 또 만나요.';
+  const heroLabel = allDone
+    ? [allDoneTitle, allDoneMessage, progressLabel].join(', ')
+    : task
+      ? [`지금 할 일, ${task.title}`, heroTime, nowSuggestion?.message, progressLabel].filter(Boolean).join(', ')
+      : null;
 
   return (
     <RetroCard hero>
-      <View style={styles.top}>
+      <View style={styles.top} accessible={heroLabel != null} accessibilityLabel={heroLabel ?? undefined}>
         <View style={styles.main}>
-          <Text style={[styles.eyebrow, { color: colors.accent2, fontFamily: fonts.chrome }]}>지금 할 일</Text>
+          <Text style={[styles.eyebrow, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>지금 할 일</Text>
           {allDone ? (
             <>
               <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-                오늘 다 비웠어요 <PixelIcon name="rocket" size={18} />
+                {allDoneTitle} <PixelIcon name="rocket" size={18} />
               </Text>
               <Text style={[styles.message, { color: colors.sub, fontFamily: fonts.body }]}>
-                {bonusTime
-                  ? '아직 일과시간이네요. 여유가 되면 다음 일을 미리 당겨볼까요?'
-                  : '머릿속이 가벼워졌네요. 내일 또 만나요.'}
+                {allDoneMessage}
               </Text>
             </>
           ) : task ? (
@@ -76,7 +85,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
                 </Text>
               </Pressable>
               {heroTime && (
-                <Text style={[styles.time, { color: colors.warn, fontFamily: fonts.chrome }]}>{heroTime}</Text>
+                <Text style={[styles.time, { color: colors.warnText, fontFamily: fonts.chrome }]}>{heroTime}</Text>
               )}
               <Text style={[styles.message, { color: colors.sub, fontFamily: fonts.body }]} numberOfLines={2}>
                 {nowSuggestion.message}
@@ -112,8 +121,10 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
             <Pressable
               key={r.task.taskId}
               onPress={() => onEdit(r.task)}
+              accessible
               accessibilityRole="button"
-              accessibilityLabel={r.task.title}
+              accessibilityLabel={`${QUEUE_BUCKET_LABEL[r.bucket] ?? '추천'}, ${r.task.title}`}
+              hitSlop={{ top: 8, bottom: 8, left: 0, right: 0 }}
               style={({ pressed }) => [styles.queueRow, { opacity: pressed ? 0.7 : 1 }]}
             >
               <RetroBadge text={QUEUE_BUCKET_LABEL[r.bucket] ?? '추천'} tone="sub" />
@@ -138,6 +149,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 8, marginTop: 14 },
   queue: { borderTopWidth: 1.5, marginTop: 14, paddingTop: 10, gap: 7 },
   queueTitle: { fontSize: 11 },
-  queueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 28 },
+  queueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 32 },
   queueText: { fontSize: 13, flexShrink: 1 },
 });

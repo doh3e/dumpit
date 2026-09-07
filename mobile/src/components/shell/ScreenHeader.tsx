@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { TiledImage } from '../common/TiledImage';
 
@@ -24,7 +23,7 @@ export function ScreenHeader({
   /** 기본은 router.back() */
   onBack?: () => void;
 }) {
-  const { colors, chromeDeco } = useTheme();
+  const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
@@ -39,7 +38,12 @@ export function ScreenHeader({
       ]}
     >
       {chromeDeco && <TiledImage source={chromeDeco} />}
-      <Pressable onPress={onBack ?? (() => router.back())} hitSlop={12} accessibilityLabel="뒤로">
+      <Pressable
+        onPress={onBack ?? (() => router.back())}
+        hitSlop={12}
+        accessibilityRole="button"
+        accessibilityLabel="뒤로"
+      >
         <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
       </Pressable>
       <View style={styles.titleRow}>

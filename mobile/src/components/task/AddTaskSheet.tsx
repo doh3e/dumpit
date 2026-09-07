@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
 import { createTask } from '../../api/tasks';
 import { invalidateAfterAi, useAiUsage } from '../../query/hooks';
@@ -11,7 +12,6 @@ import { AI_COSTS, TASK_CATEGORIES } from '../../tasks/constants';
 import { parseDate, toLocalDateTimeString } from '../../tasks/dates';
 import { buildDeadlinePayload, type DeadlineMode } from '../../tasks/deadlineMode';
 import type { Category } from '../../api/types';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { Chip } from '../retro/Chip';
@@ -35,11 +35,12 @@ function next30(): string {
 
 /** ＋ → 태스크 추가 바텀시트 (웹 AddTaskModal 패리티). ref.present()로 연다 */
 export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_props, ref) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
+  const { headingRef, onChange } = useSheetFocus();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -93,7 +94,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
       reset();
       (ref as React.RefObject<BottomSheetModal | null>)?.current?.dismiss();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '추가에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, '추가에 실패했어요.'));
     } finally {
       setSaving(false);
     }
@@ -106,13 +107,14 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
       onDismiss={reset}
+      onChange={onChange}
       backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
       handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
     >
       {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마감·시작시간 필드를 펼쳤을 때
           시트가 길어지며 추가 버튼이 OS 내비 바에 가려진다 */}
-      <BottomSheetView style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-        <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 추가</Text>
+      <BottomSheetView accessibilityViewIsModal style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+        <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 추가</Text>
 
         <BottomSheetTextInput
           key={`title-${formKey}`}
@@ -205,13 +207,13 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
         )}
 
         {startAfterDeadline && (
-          <Text style={[styles.warnText, { color: colors.warn, fontFamily: fonts.body }]}>
+          <Text style={[styles.warnText, { color: colors.warnText, fontFamily: fonts.body }]}>
             시작 시간이 마감보다 늦어요.
           </Text>
         )}
 
         <View style={styles.footer}>
-          <Text style={[styles.cost, { color: remaining < AI_COSTS.TASK_CREATE ? colors.accent : colors.sub, fontFamily: fonts.chrome }]}>
+          <Text style={[styles.cost, { color: remaining < AI_COSTS.TASK_CREATE ? colors.accentText : colors.sub, fontFamily: fonts.chrome }]}>
             {remaining < AI_COSTS.TASK_CREATE ? (
               '오늘 AI를 다 썼어요'
             ) : (

@@ -24,11 +24,10 @@ import { getSession, reconcile, subscribe, takePendingSettleResult } from '../..
 import { useAiUsage, usePlanning, useToggleTask } from '../../src/query/hooks';
 import { isToday } from '../../src/tasks/dates';
 import { buildHeroQueue } from '../../src/tasks/heroQueue';
-import { fonts } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
 
 export default function HomeScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const { me, refresh } = useAuth();
   const toast = useToast();
@@ -43,6 +42,8 @@ export default function HomeScreen() {
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
   }, []);
 
   // 오늘 진행률 (웹 DashboardPage 파생 로직 이식)
@@ -64,7 +65,7 @@ export default function HomeScreen() {
       toggle.mutate(
         { taskId: task.taskId, status: next },
         {
-          onError: (e) => toast.show(getApiErrorMessage(e, '상태 변경에 실패했어요.')),
+          onError: (e) => toast.error(getApiErrorMessage(e, '상태 변경에 실패했어요.')),
           onSuccess: (data) => {
             if (next !== 'DONE') return;
             // 서버 실지급액 신뢰 — 점감으로 0이면 토스트 생략 (|| 폴백 금지)

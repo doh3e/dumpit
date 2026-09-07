@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import useDocumentTitle, { titleFor } from '../hooks/useDocumentTitle'
 
 // Google Play는 앱 내 삭제 경로와 별개로, 앱을 이미 지운 이용자도 볼 수 있는 웹 삭제 요청 경로를 요구한다(Play Console 데이터 안전 섹션에 이 주소를 제출).
 export default function AccountDeletionPage() {
+  useDocumentTitle(titleFor(useLocation().pathname))
   return (
     <div className="min-h-screen bg-accent">
-      <div className="max-w-2xl mx-auto px-4 py-12">
+      <main className="max-w-2xl mx-auto px-4 py-12">
         <div className="mb-8">
           <Link to="/" className="text-sm font-bold text-primary hover:underline">
             ← 홈으로
@@ -97,7 +99,7 @@ export default function AccountDeletionPage() {
             </div>
           </section>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

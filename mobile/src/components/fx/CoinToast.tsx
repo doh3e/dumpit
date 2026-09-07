@@ -3,14 +3,14 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { retroShadow } from '../../theme/tokens';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { CoinIcon } from '../common/CoinIcon';
 
 const SHOW_MS = 2500;
 
 /** 완료 코인 토스트 — 서버 실지급액 +N C (웹 대시보드 코인 토스트 이식) */
 export function CoinToast({ coins, taskTitle, onDone }: { coins: number; taskTitle: string; onDone: () => void }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
@@ -28,7 +28,9 @@ export function CoinToast({ coins, taskTitle, onDone }: { coins: number; taskTit
       style={[styles.wrap, { bottom: insets.bottom + 96 }]}
     >
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.edge }, retroShadow(3, colors.shadowSm)]}>
-        <Text style={[styles.coins, { color: colors.starlight, fontFamily: fonts.chrome }]}>+{coins} C</Text>
+        <Text style={[styles.coins, { color: colors.fg, fontFamily: fonts.chrome }]}>
+          <CoinIcon size={16} /> +{coins} C
+        </Text>
         <View style={styles.textCol}>
           <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.displayBold }]}>완료!</Text>
           <Text style={[styles.title, { color: colors.sub, fontFamily: fonts.body }]} numberOfLines={1}>

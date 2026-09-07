@@ -5,8 +5,8 @@ import { getCategory } from '../../tasks/constants';
 import { STICKER_SPRITES } from '../../tasks/stickers';
 import { formatDeadline } from '../../tasks/dates';
 import { calcCompletionCoins } from '../../tasks/rewards';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { CoinIcon } from '../common/CoinIcon';
 import { PixelIcon } from '../common/PixelIcon';
 import { RetroBadge } from '../retro/RetroBadge';
 
@@ -21,11 +21,23 @@ type Props = {
 };
 
 export const TaskRow = memo(function TaskRow({ task, overdue = false, child = false, onToggle, onPress }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const done = task.status === 'DONE';
   const category = getCategory(task.category);
   const coins = calcCompletionCoins(task);
   const deadlineLabel = formatDeadline(task.deadline);
+  // 행이 accessible이면 자식 텍스트는 따로 읽히지 않는다
+  const a11yParts = [
+    task.title,
+    child ? '서브 태스크' : null,
+    overdue ? '마감 지남' : null,
+    task.status === 'IN_PROGRESS' ? '진행 중' : null,
+    deadlineLabel ? `마감 ${deadlineLabel}` : null,
+    task.estimatedMinutes != null ? `${task.estimatedMinutes}분` : null,
+    `우선순위 ${Math.round((task.effectivePriority ?? 0) * 100)}`,
+    coins > 0 && !done ? `코인 ${coins}` : null,
+    category.label,
+  ].filter(Boolean).join(', ');
 
   const handleToggle = (e: GestureResponderEvent) => {
     onToggle(task, done ? 'TODO' : 'DONE', { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY });
@@ -43,10 +55,10 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
         accessibilityRole="checkbox"
         accessibilityLabel={`${task.title} ${done ? '완료 해제' : '완료'}`}
         accessibilityState={{ checked: done }}
-        hitSlop={10}
+        hitSlop={13}
         style={({ pressed }) => [
           styles.checkbox,
-          { borderColor: colors.edge, backgroundColor: done ? colors.accent : colors.card },
+          { borderColor: colors.edge, backgroundColor: done ? colors.accentFill : colors.card },
           pressed && { transform: [{ scale: 0.9 }] },
         ]}
       >
@@ -55,8 +67,10 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
 
       <Pressable
         onPress={() => onPress(task)}
+        accessible
         accessibilityRole="button"
-        accessibilityLabel={`${task.title} 상세`}
+        accessibilityLabel={a11yParts}
+        accessibilityHint="상세 보기"
         style={({ pressed }) => [styles.body, { opacity: pressed ? 0.7 : 1 }]}
       >
         <View style={styles.titleRow}>
@@ -84,7 +98,7 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
         </Text>
         <View style={styles.meta}>
           {deadlineLabel && (
-            <Text style={[styles.metaText, { color: overdue ? colors.warn : colors.sub, fontFamily: fonts.chrome }]}>
+            <Text style={[styles.metaText, { color: colors.sub, fontFamily: fonts.chrome }]}>
               {deadlineLabel}
             </Text>
           )}
@@ -97,7 +111,9 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
             P {Math.round((task.effectivePriority ?? 0) * 100)}
           </Text>
           {coins > 0 && !done && (
-            <Text style={[styles.metaText, { color: colors.starlight, fontFamily: fonts.chrome }]}>+{coins}</Text>
+            <Text style={[styles.metaText, { color: colors.fg, fontFamily: fonts.chrome }]}>
+              <CoinIcon size={10} /> +{coins}
+            </Text>
           )}
           <Text style={[styles.metaText, { color: colors.sub, fontFamily: fonts.body }]}>
             <PixelIcon name={category.icon} size={10} /> {category.label}

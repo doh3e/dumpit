@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import { createPortal } from 'react-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import Footer from './Footer'
@@ -9,14 +8,19 @@ import SettingsModal from '../SettingsModal'
 import HelpModal from '../HelpModal'
 import NoticeModal from '../NoticeModal'
 import PomodoroTimer from '../PomodoroTimer'
+import Dialog from '../Dialog'
 import api from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { watchSystemTheme } from '../../utils/theme'
+import { watchSystemContrast } from '../../utils/a11y'
+import useDocumentTitle, { titleFor } from '../../hooks/useDocumentTitle'
 
 const HELP_SEEN_KEY = 'dumpit_help_seen'
 
 export default function Layout() {
   const { user } = useAuth()
+  const { pathname } = useLocation()
+  useDocumentTitle(titleFor(pathname))
   const [showSettings, setShowSettings] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [showMobileTimer, setShowMobileTimer] = useState(false)
@@ -24,6 +28,7 @@ export default function Layout() {
   const [tasks, setTasks] = useState([])
   const [focusRecommendation, setFocusRecommendation] = useState(null)
   const [unreadNotices, setUnreadNotices] = useState([])
+  const drawerOpenerRef = useRef(null)
 
   const fetchTasks = useCallback(() => {
     if (!user) {
@@ -74,6 +79,18 @@ export default function Layout() {
   }, [])
 
   useEffect(() => watchSystemTheme(), [])
+  useEffect(() => watchSystemContrast(), [])
+
+  const openDrawer = () => {
+    drawerOpenerRef.current = document.activeElement
+    setDrawerOpen(true)
+  }
+
+  const closeDrawer = () => {
+    setDrawerOpen(false)
+    // inert가 풀린 다음 프레임에 복귀해야 포커스가 body로 튕기지 않는다
+    setTimeout(() => drawerOpenerRef.current?.focus?.(), 0)
+  }
 
   const handleCloseHelp = () => {
     localStorage.setItem(HELP_SEEN_KEY, '1')
@@ -92,15 +109,20 @@ export default function Layout() {
   return (
     <div
       className="flex flex-col min-h-screen bg-skin"
+      inert={drawerOpen || undefined}
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)',
       }}
     >
+      <div id="a11y-announcer" role="status" aria-live="polite" aria-atomic="true" className="sr-only" />
       <StarField />
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] btn-retro">
+        본문으로 건너뛰기
+      </a>
       <Header
-        onOpenDrawer={() => setDrawerOpen(true)}
+        onOpenDrawer={openDrawer}
         onOpenHelp={() => setShowHelp(true)}
         onOpenSettings={() => setShowSettings(true)}
       />
@@ -111,9 +133,9 @@ export default function Layout() {
           tasks={tasks}
           focusRecommendation={focusRecommendation}
           isDrawerOpen={drawerOpen}
-          onCloseDrawer={() => setDrawerOpen(false)}
+          onCloseDrawer={closeDrawer}
         />
-        <main className="flex-1 p-6 max-w-5xl mx-auto w-full">
+        <main id="main" tabIndex={-1} className="flex-1 p-6 max-w-5xl mx-auto w-full">
           <Outlet />
         </main>
       </div>
@@ -128,26 +150,20 @@ export default function Layout() {
         25
       </button>
 
-      {showMobileTimer && createPortal(
-        <div className="fixed inset-0 z-[60] flex items-end justify-center lg:hidden" onClick={() => setShowMobileTimer(false)}>
-          <div className="absolute inset-0 overlay-retro" />
-          <div
-            className="relative w-full max-w-sm mx-4 mb-6 card-retro"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-dungeon text-dark text-sm">Pomodoro Timer</h3>
-              <button
-                onClick={() => setShowMobileTimer(false)}
-                className="w-7 h-7 rounded-lg border border-line font-black text-sub text-xs hover:bg-chip transition-colors"
-              >
-                X
-              </button>
-            </div>
-            <PomodoroTimer tasks={tasks} recommendedTaskId={focusRecommendation?.task?.taskId} />
+      {showMobileTimer && (
+        <Dialog onClose={() => setShowMobileTimer(false)} title="뽀모도로 타이머" placement="bottom" className="w-full max-w-sm lg:hidden">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-dungeon text-dark text-sm">Pomodoro Timer</h3>
+            <button
+              onClick={() => setShowMobileTimer(false)}
+              aria-label="닫기"
+              className="w-7 h-7 rounded-lg border border-line font-black text-sub text-xs hover:bg-chip transition-colors"
+            >
+              X
+            </button>
           </div>
-        </div>,
-        document.body
+          <PomodoroTimer tasks={tasks} recommendedTaskId={focusRecommendation?.task?.taskId} />
+        </Dialog>
       )}
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}

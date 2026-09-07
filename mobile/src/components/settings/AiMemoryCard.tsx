@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getApiErrorMessage } from '../../api/client';
 import { useSaveSettings, useUserSettings } from '../../query/routineHooks';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 import { RetroButton } from '../retro/RetroButton';
@@ -13,7 +12,7 @@ const MAX_LENGTH = 500;
 
 /** AI 메모리 카드 — /me/settings.aiMemory 소비. 저장한 컨텍스트는 서버가 AI 분석 프롬프트에 주입한다 */
 export function AiMemoryCard() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const { data: settings } = useUserSettings();
   const save = useSaveSettings();
   const toast = useToast();
@@ -34,7 +33,7 @@ export function AiMemoryCard() {
     setSaving(true);
     save.mutate({ aiMemory: draft.trim() }, {
       onSuccess: () => setEditing(false),
-      onError: (e) => toast.show(getApiErrorMessage(e, 'AI 메모리를 저장하지 못했어요.')),
+      onError: (e) => toast.error(getApiErrorMessage(e, 'AI 메모리를 저장하지 못했어요.')),
       onSettled: () => setSaving(false),
     });
   };
@@ -63,8 +62,9 @@ export function AiMemoryCard() {
             maxLength={MAX_LENGTH}
             multiline
             placeholder={'예) 운동 관련 일이 나에게 제일 중요해요.\n예) "펌"은 회사 프로젝트를 뜻해요.'}
-            placeholderTextColor={colors.sub}
+            placeholderTextColor={colors.subOnChip}
             style={[styles.input, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+            accessibilityLabel="AI 메모리 내용"
           />
           <View style={styles.actions}>
             <Text style={[styles.counter, { color: colors.sub, fontFamily: fonts.chrome }]}>

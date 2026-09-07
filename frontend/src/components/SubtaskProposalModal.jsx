@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useId, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
+import Dialog from './Dialog'
 import AiUsageBadge from './AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 export default function SubtaskProposalModal({ task, onClose, onCreated }) {
   const aiUsage = useAiUsage()
+  const estimatedMinutesId = useId()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -58,11 +59,9 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
     }
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-[70] flex items-center justify-center">
-      <div className="absolute inset-0 overlay-retro" onClick={onClose} />
-
-      <div className="relative card-retro w-full max-w-lg mx-4 space-y-4 max-h-[90vh] overflow-y-auto">
+  return (
+    <Dialog onClose={onClose} title="태스크 쪼개기" className="w-full max-w-lg">
+      <div className="space-y-4">
         <div>
           <h3 className="font-dungeon text-dark text-xl">태스크 쪼개기</h3>
           <p className="mt-1 text-xs font-semibold text-sub truncate">
@@ -78,7 +77,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
           </div>
         ) : error ? (
           <div className="text-center py-10">
-            <p className="font-bold text-primary text-sm">{error}</p>
+            <p role="alert" className="font-bold text-primary text-sm">{error}</p>
           </div>
         ) : (
           <>
@@ -97,6 +96,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                   <div className="flex items-start gap-2">
                     <input
                       type="checkbox"
+                      aria-label="하위 태스크 포함"
                       checked={s.include}
                       onChange={(e) => updateField(idx, 'include', e.target.checked)}
                       className="mt-1.5 w-4 h-4 accent-primary flex-shrink-0"
@@ -104,31 +104,34 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                     <div className="flex-1 min-w-0 space-y-2">
                       <input
                         type="text"
+                        aria-label="서브태스크 제목"
                         value={s.title}
                         onChange={(e) => updateField(idx, 'title', e.target.value)}
                         placeholder="서브태스크 제목"
                         maxLength={200}
-                        className="w-full px-2 py-1 border border-line rounded text-sm font-bold bg-card outline-none focus:border-primary"
+                        className="w-full px-2 py-1 border border-line rounded text-sm font-bold bg-card focus:border-primary"
                         disabled={!s.include}
                       />
                       <textarea
+                        aria-label="메모 (선택)"
                         value={s.description}
                         onChange={(e) => updateField(idx, 'description', e.target.value)}
                         rows={1}
                         placeholder="메모 (선택)"
                         maxLength={1000}
-                        className="w-full px-2 py-1 border-2 border-line rounded text-xs font-semibold bg-card outline-none focus:border-primary resize-none"
+                        className="w-full px-2 py-1 border-2 border-line rounded text-xs font-semibold bg-card focus:border-primary resize-none"
                         disabled={!s.include}
                       />
                       <div className="flex items-center gap-2">
-                        <label className="text-[0.625rem] font-bold text-sub">예상 시간</label>
+                        <label htmlFor={`${estimatedMinutesId}-${idx}`} className="text-[0.625rem] font-bold text-sub">예상 시간</label>
                         <input
+                          id={`${estimatedMinutesId}-${idx}`}
                           type="number"
                           value={s.estimatedMinutes}
                           onChange={(e) => updateField(idx, 'estimatedMinutes', e.target.value)}
                           min="1"
                           placeholder="30"
-                          className="w-20 px-2 py-1 border-2 border-line rounded text-xs font-bold bg-card outline-none focus:border-primary"
+                          className="w-20 px-2 py-1 border-2 border-line rounded text-xs font-bold bg-card focus:border-primary"
                           disabled={!s.include}
                         />
                         <span className="text-[0.625rem] font-bold text-sub">분</span>
@@ -159,7 +162,6 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
           </button>
         </div>
       </div>
-    </div>,
-    document.body
+    </Dialog>
   )
 }

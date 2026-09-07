@@ -8,15 +8,19 @@ export function notifyToast(message, type = 'error') {
   window.dispatchEvent(new CustomEvent(TOAST_EVENT, { detail: { message, type } }))
 }
 
+const SUCCESS_MS = 3200
+
 export function ToastProvider({ children }) {
   const [toast, setToast] = useState(null)
   const timerRef = useRef(null)
+  const layerRef = useRef(null)
 
   const showToast = (message, type = 'error') => {
     if (!message) return
     if (timerRef.current) window.clearTimeout(timerRef.current)
-    setToast({ message, type })
-    timerRef.current = window.setTimeout(() => setToast(null), 3200)
+    setToast({ id: Date.now(), message, type })
+    // 오류는 사용자가 닫을 때까지 유지 — 덤벙대는 사용자가 실패를 놓치지 않게(스펙 5.1)
+    if (type === 'success') timerRef.current = window.setTimeout(() => setToast(null), SUCCESS_MS)
   }
 
   useEffect(() => {
@@ -28,18 +32,42 @@ export function ToastProvider({ children }) {
     }
   }, [])
 
+  // 모달 <dialog>는 top layer에 그려져 z-index를 무시한다 — 토스트도 popover로 top layer에 올려야 보인다
+  useEffect(() => {
+    const el = layerRef.current
+    if (!el || typeof el.showPopover !== 'function') return
+    try { el.showPopover() } catch {}
+    return () => { try { el.hidePopover() } catch {} }
+  }, [toast?.id])
+
+  const isError = toast?.type !== 'success'
+
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {toast && (
-        <div className="fixed left-1/2 top-4 z-[100] w-[calc(100%-2rem)] max-w-md -translate-x-1/2">
+        <div
+          ref={layerRef}
+          popover="manual"
+          className="fixed left-1/2 top-4 z-[100] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 m-0 border-0 p-0 bg-transparent text-inherit overflow-visible right-auto bottom-auto"
+        >
           <div
-            className={`rounded-xl px-4 py-3 bg-card shadow-retro ${
-              toast.type === 'success' ? 'text-dark' : 'text-primary'
-            }`}
-            style={{ border: `1.5px solid ${toast.type === 'success' ? 'var(--accent2)' : 'var(--accent)'}` }}
+            key={toast.id}
+            role={isError ? 'alert' : 'status'}
+            className={`rounded-xl px-4 py-3 bg-card shadow-retro flex items-center gap-3 ${isError ? 'text-primary' : 'text-dark'}`}
+            style={{ border: `1.5px solid ${isError ? 'var(--accent)' : 'var(--accent2)'}` }}
           >
-            <p className="text-sm font-bold">{toast.message}</p>
+            <p className="text-sm font-bold flex-1">{toast.message}</p>
+            {isError && (
+              <button
+                type="button"
+                onClick={() => setToast(null)}
+                aria-label="닫기"
+                className="w-7 h-7 shrink-0 rounded-lg border border-line font-dungeon text-dark text-sm hover:bg-chip"
+              >
+                ×
+              </button>
+            )}
           </div>
         </div>
       )}

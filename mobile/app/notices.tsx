@@ -12,7 +12,6 @@ import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { parseDate } from '../src/tasks/dates';
 import { keys } from '../src/query/keys';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 function dateLabel(notice: NoticeResponse): string {
@@ -21,7 +20,7 @@ function dateLabel(notice: NoticeResponse): string {
 }
 
 export default function NoticesScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const [page, setPage] = useState(0);
   const current = useQuery({ queryKey: keys.notices(page), queryFn: () => fetchNotices(page) });

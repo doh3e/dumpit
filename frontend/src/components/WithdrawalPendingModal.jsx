@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { API_BASE_URL } from '../services/api'
+import Dialog from './Dialog'
 
 /**
  * 탈퇴 유예 중인 계정으로 로그인하면 백엔드가 복구 대신 /?error=withdrawal_pending 으로
@@ -25,31 +25,25 @@ export default function WithdrawalPendingModal() {
 
   if (!open) return null
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[80] flex items-center justify-center overlay-retro px-4"
-      onClick={dismiss}
-    >
-      <div className="card-retro w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-xl font-bold text-dark">탈퇴처리가 진행중인 계정입니다</h2>
-        <p className="mt-3 text-sm font-semibold leading-relaxed text-sub">
-          복구하시겠습니까?
-          <br />
-          복구하면 탈퇴 신청이 취소되고 예전 기록이 모두 그대로 돌아옵니다.
-        </p>
-        <div className="mt-5 flex gap-3">
-          <button type="button" onClick={dismiss} className="btn-retro-outline flex-1 py-2 text-sm">
-            아니요
-          </button>
-          <a
-            href={`${API_BASE_URL}/oauth2/authorization/google?restore=1`}
-            className="btn-retro-primary flex-1 py-2 text-sm"
-          >
-            복구하기
-          </a>
-        </div>
+  return (
+    <Dialog onClose={dismiss} title="탈퇴처리가 진행중인 계정입니다" className="w-full max-w-md">
+      <h2 className="text-xl font-bold text-dark">탈퇴처리가 진행중인 계정입니다</h2>
+      <p className="mt-3 text-sm font-semibold leading-relaxed text-sub">
+        복구하시겠습니까?
+        <br />
+        복구하면 탈퇴 신청이 취소되고 예전 기록이 모두 그대로 돌아옵니다.
+      </p>
+      <div className="mt-5 flex gap-3">
+        <button type="button" onClick={dismiss} className="btn-retro-outline flex-1 py-2 text-sm">
+          아니요
+        </button>
+        <a
+          href={`${API_BASE_URL}/oauth2/authorization/google?restore=1`}
+          className="btn-retro-primary flex-1 py-2 text-sm"
+        >
+          복구하기
+        </a>
       </div>
-    </div>,
-    document.body
+    </Dialog>
   )
 }

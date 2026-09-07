@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
 import { deleteTask, patchTask, reanalyzeTask, setSticker } from '../../api/tasks';
 import type { Category, TaskResponse } from '../../api/types';
@@ -16,7 +17,6 @@ import { parseDate } from '../../tasks/dates';
 import { buildDeadlinePayload, type DeadlineMode } from '../../tasks/deadlineMode';
 import { updateTaskInPlanning } from '../../tasks/planningCache';
 import type { PlanningResponse } from '../../api/types';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { Chip } from '../retro/Chip';
@@ -37,13 +37,14 @@ const DEADLINE_MODES: { id: DeadlineMode; label: string; icon?: PixelIconName }[
 
 /** 태스크 상세 — 수정·중요도·스티커·AI 재분석·쪼개기·삭제 (웹 EditTaskModal 이식) */
 export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDetailSheet(_props, ref) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
   const sheetRef = useRef<BottomSheetModal>(null);
   const splitRef = useRef<SubtaskProposalSheetHandle>(null);
+  const { headingRef, onChange } = useSheetFocus();
   // 지금 열려 있는 태스크 id — 늦게 도착한 응답이 다른 태스크 상태를 오염시키지 않게 가드
   const presentedIdRef = useRef<string | null>(null);
 
@@ -108,7 +109,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
     } catch (e) {
       qc.setQueryData<PlanningResponse>(keys.planning, (cur) =>
         cur && prevTask ? updateTaskInPlanning(cur, id, { stickerCode: prevTask.stickerCode }) : cur);
-      toast.show(getApiErrorMessage(e, '스티커를 바꾸지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '스티커를 바꾸지 못했어요.'));
     } finally {
       if (presentedIdRef.current === id) setStickerBusy(false);
     }
@@ -130,7 +131,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       setClearOverride(false);
       toast.show(`AI 중요도 ${Math.round((updated.aiPriorityScore ?? 0.5) * 100)}점 — 자동 조정으로 반영돼요.`);
     } catch (e) {
-      toast.show(getApiErrorMessage(e, 'AI 재분석에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, 'AI 재분석에 실패했어요.'));
     } finally {
       if (presentedIdRef.current === id) setReanalyzing(false);
     }
@@ -173,7 +174,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       toast.show('저장했어요.');
       sheetRef.current?.dismiss();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '저장에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, '저장에 실패했어요.'));
     } finally {
       setSaving(false);
     }
@@ -192,7 +193,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
             toast.show('삭제했어요.');
             sheetRef.current?.dismiss();
           } catch (e) {
-            toast.show(getApiErrorMessage(e, '삭제에 실패했어요.'));
+            toast.error(getApiErrorMessage(e, '삭제에 실패했어요.'));
           }
         },
       },
@@ -226,12 +227,13 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
         snapPoints={['72%', '95%']}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
+        onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마지막 버튼이 OS 내비 바에 가려진다 */}
-        <BottomSheetScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 상세</Text>
+        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+          <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 상세</Text>
 
           {/* 한글 IME 조합 보호 — uncontrolled, 태스크 바뀌면 key로 리마운트 */}
           <BottomSheetTextInput
@@ -287,7 +289,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
             )}
           </View>
           {startAfterDeadline && (
-            <Text style={[styles.hint, { color: colors.warn, fontFamily: fonts.body }]}>시작 시간이 마감보다 늦어요.</Text>
+            <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>시작 시간이 마감보다 늦어요.</Text>
           )}
 
           <View style={styles.optionRow}>
@@ -328,7 +330,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
             thumbTintColor={colors.accent}
             accessibilityLabel="중요도 슬라이더"
           />
-          <Text style={[styles.hint, { color: priorityPinned ? colors.warn : colors.accent2, fontFamily: fonts.body }]}>
+          <Text style={[styles.hint, { color: priorityPinned ? colors.warnText : colors.accent2Text, fontFamily: fonts.body }]}>
             {priorityPinned ? (
               <><PixelIcon name="pin" size={11} /> 직접 지정 — 지정값을 바닥으로 지키고, 마감이 다가오면 실효값이 위로 올라가요</>
             ) : (
@@ -366,7 +368,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
               variant="ghost"
               onPress={() => {
                 if (remaining < AI_COSTS.SUBTASK_PROPOSAL) {
-                  toast.show('오늘 AI 점수가 부족해요.');
+                  toast.error('오늘 AI 점수가 부족해요.');
                   return;
                 }
                 splitRef.current?.present(task);

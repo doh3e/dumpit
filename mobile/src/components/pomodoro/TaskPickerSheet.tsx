@@ -2,9 +2,9 @@ import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { forwardRef, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFocus } from '../../a11y/useSheetFocus';
 import type { TaskResponse, TaskStatus } from '../../api/types';
 import { usePlanning } from '../../query/hooks';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 
@@ -17,10 +17,11 @@ type Props = {
 /** 집중할 태스크 선택 — 서버 실효 우선순위 내림차순 상위 30개 (웹 activeTasks 대응) */
 export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
   function TaskPickerSheet({ onPick }, ref) {
-    const { colors } = useTheme();
+    const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
     const { height: windowHeight } = useWindowDimensions();
     const planning = usePlanning();
+    const { headingRef, onChange } = useSheetFocus();
 
     const candidates = useMemo(() => {
       const tasks = planning.data?.tasks ?? [];
@@ -35,13 +36,14 @@ export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
         ref={ref}
         enableDynamicSizing
         maxDynamicContentSize={Math.round(windowHeight * 0.62)}
+        onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         {/* 일반 ScrollView는 시트 팬 제스처에 먹혀 스크롤 불가 — 시트 전용 스크롤러.
             하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마지막 행이 OS 내비 바에 가려진다 */}
-        <BottomSheetScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>무엇에 집중할까요?</Text>
+        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+          <Text ref={headingRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>무엇에 집중할까요?</Text>
           <Pressable
             onPress={() => onPick(null)}
             accessibilityRole="button"

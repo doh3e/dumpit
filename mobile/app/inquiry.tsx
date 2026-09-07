@@ -10,13 +10,12 @@ import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { PRIVACY_URL } from '../src/legal/links';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 const SUPPORT_EMAIL = 'dumpitadmin@gmail.com';
 
 export default function InquiryScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
 
@@ -35,7 +34,7 @@ export default function InquiryScreen() {
       toast.show('문의를 보냈어요. 답변은 가입한 이메일로 드릴게요.');
       router.back();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '문의를 보내지 못했어요. 잠시 후 다시 시도해주세요.'));
+      toast.error(getApiErrorMessage(e, '문의를 보내지 못했어요. 잠시 후 다시 시도해주세요.'));
       setSending(false);
     }
   };
@@ -55,9 +54,10 @@ export default function InquiryScreen() {
               defaultValue=""
               onChangeText={setSubject}
               placeholder="무엇을 도와드릴까요?"
-              placeholderTextColor={colors.sub}
+              placeholderTextColor={colors.subOnChip}
               maxLength={INQUIRY_LIMITS.subject}
               style={[styles.input, { borderColor: colors.edge, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+              accessibilityLabel="제목"
             />
 
             <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.displayBold }]}>내용</Text>
@@ -65,11 +65,12 @@ export default function InquiryScreen() {
               defaultValue=""
               onChangeText={setMessage}
               placeholder="겪으신 상황을 자세히 적어주시면 빠르게 확인할 수 있어요."
-              placeholderTextColor={colors.sub}
+              placeholderTextColor={colors.subOnChip}
               maxLength={INQUIRY_LIMITS.message}
               multiline
               textAlignVertical="top"
               style={[styles.input, styles.textarea, { borderColor: colors.edge, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+              accessibilityLabel="내용"
             />
 
             <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
@@ -87,7 +88,7 @@ export default function InquiryScreen() {
               앱에서 보내기 어려우면 아래 주소로 직접 보내주셔도 됩니다.
             </Text>
             <Text
-              style={[styles.link, { color: colors.accent, fontFamily: fonts.body }]}
+              style={[styles.link, { color: colors.accentText, fontFamily: fonts.body }]}
               onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
             >
               {SUPPORT_EMAIL}

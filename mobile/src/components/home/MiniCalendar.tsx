@@ -8,7 +8,6 @@ import type { TaskResponse } from '../../api/types';
 import { keys } from '../../query/keys';
 import { bucketByDay, buildMonthCells } from '../../tasks/calendarGrid';
 import { formatTime, parseDate } from '../../tasks/dates';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
@@ -68,7 +67,7 @@ type Props = {
 };
 
 export function MiniCalendar({ tasks, onTaskAdded }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const toast = useToast();
   const [{ year, month }, setVisibleMonth] = useState(() => {
     const today = new Date();
@@ -110,7 +109,7 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
 
   const connectGoogleCalendar = () => {
     Linking.openURL(GOOGLE_CALENDAR_CONNECT_URL).catch(() => {
-      toast.show('브라우저를 열지 못했어요. 잠시 후 다시 시도해주세요.');
+      toast.error('브라우저를 열지 못했어요. 잠시 후 다시 시도해주세요.');
     });
   };
 
@@ -142,7 +141,7 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
       toast.show('태스크로 가져왔어요!');
       onTaskAdded();
     } catch (error) {
-      toast.show(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error));
     } finally {
       setAddingEventId(null);
     }
@@ -186,7 +185,7 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
             key={weekday}
             style={[
               styles.weekday,
-              { color: index === 0 ? colors.accent : colors.sub, fontFamily: fonts.chrome },
+              { color: index === 0 ? colors.accentText : colors.sub, fontFamily: fonts.chrome },
             ]}
           >
             {weekday}
@@ -211,7 +210,7 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
                 onPress={() => toggleDay(day, hasAny)}
                 disabled={!hasAny}
                 accessibilityRole="button"
-                accessibilityLabel={`${month + 1}월 ${day}일`}
+                accessibilityLabel={`${month + 1}월 ${day}일${hasTasks ? `, 할 일 ${tasksByDay.get(day)!.length}개` : ''}${hasGoogleEvents ? `, 일정 ${googleByDay.get(day)!.length}개` : ''}`}
                 accessibilityState={{ disabled: !hasAny, selected: selectedDay === day }}
                 style={({ pressed }) => [
                   styles.dayCell,

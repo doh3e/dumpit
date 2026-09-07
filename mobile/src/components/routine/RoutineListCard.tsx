@@ -6,7 +6,6 @@ import { getApiErrorMessage } from '../../api/client';
 import { useRoutines, useToggleRoutine } from '../../query/routineHooks';
 import { parseDate } from '../../tasks/dates';
 import { repeatSummary, timeSummary } from '../../routines/repeatSummary';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
@@ -21,7 +20,7 @@ function nextRunLabel(nextRunAt: string | null): string | null {
 
 /** 루틴 목록 — 활성 우선 정렬(웹 sortedRoutines), 행 탭 = 편집, 스위치 = 활성 토글 */
 export function RoutineListCard() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const toast = useToast();
   const routines = useRoutines();
   const toggle = useToggleRoutine();
@@ -34,7 +33,7 @@ export function RoutineListCard() {
   const onToggle = (r: RoutineResponse) => {
     toggle.mutate(
       { routineId: r.routineId, enabled: !r.enabled },
-      { onError: (e) => toast.show(getApiErrorMessage(e, '루틴 상태를 바꾸지 못했어요.')) },
+      { onError: (e) => toast.error(getApiErrorMessage(e, '루틴 상태를 바꾸지 못했어요.')) },
     );
   };
 
@@ -74,7 +73,7 @@ export function RoutineListCard() {
                 {repeatSummary(r)} · {timeSummary(r)}
               </Text>
               {next && (
-                <Text style={[styles.meta, { color: colors.accent2, fontFamily: fonts.chrome }]}>{next}</Text>
+                <Text style={[styles.meta, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>{next}</Text>
               )}
             </View>
             <Switch

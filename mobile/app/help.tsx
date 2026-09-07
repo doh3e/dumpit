@@ -5,7 +5,6 @@ import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { PixelIcon, type PixelIconName } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 // 웹 HelpModal.jsx 정적 콘텐츠 이식 — 문구 변경 시 웹과 동기화
@@ -30,7 +29,7 @@ const FEATURES: { icon: PixelIconName; title: string; desc: string }[] = [
 ];
 
 export default function HelpScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.screen}>
@@ -38,7 +37,7 @@ export default function HelpScreen() {
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard style={[styles.card, { backgroundColor: colors.chip }] as never}>
-          <Text style={[styles.betaTitle, { color: colors.accent, fontFamily: fonts.displayBold }]}>
+          <Text style={[styles.betaTitle, { color: colors.accentText, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="party" size={13} /> 베타 서비스 안내
           </Text>
           <Text style={[styles.betaText, { color: colors.sub, fontFamily: fonts.body }]}>
