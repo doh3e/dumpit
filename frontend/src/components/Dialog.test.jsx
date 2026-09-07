@@ -48,4 +48,18 @@ describe('Dialog', () => {
     expect(connectedAtClose).toBe(true)
     spy.mockRestore()
   })
+  it('중첩 dialog에서 안쪽 Esc(cancel)는 바깥 onClose를 호출하지 않는다', () => {
+    const outerClose = vi.fn()
+    const innerClose = vi.fn()
+    render(
+      <Dialog onClose={outerClose} title="바깥">
+        <p>바깥 내용</p>
+        <Dialog onClose={innerClose} title="안쪽"><p>안쪽 내용</p></Dialog>
+      </Dialog>,
+    )
+    const inner = screen.getByRole('dialog', { name: '안쪽' })
+    fireEvent(inner, new Event('cancel', { cancelable: true }))
+    expect(innerClose).toHaveBeenCalledTimes(1)
+    expect(outerClose).not.toHaveBeenCalled()
+  })
 })

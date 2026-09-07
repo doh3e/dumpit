@@ -19,7 +19,12 @@ export default function Dialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleCancel = (e) => { e.preventDefault(); onClose?.() }
+  // 중첩 dialog: React는 포털을 건너 cancel을 전파시킨다 — 안쪽 Esc가 바깥까지 닫지 않게 대상을 가른다
+  const handleCancel = (e) => {
+    if (e.target !== ref.current) return
+    e.preventDefault()
+    onClose?.()
+  }
   const handleMouseDown = (e) => { downOnBackdrop.current = e.target === ref.current }
   const handleClick = (e) => {
     if (closeOnBackdrop && downOnBackdrop.current && e.target === ref.current) onClose?.()
