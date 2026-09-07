@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { setPomodoroFocus, clearPomodoroFocus } from '../services/pomodoroFocus'
 import { nextAfterFocus, autoStartNextFocus } from '../utils/pomodoroCycle'
 import { iconProps } from '../assets/icons'
+import { announce } from '../utils/announce'
 
 const DEFAULT_FOCUS_MIN = 25
 const DEFAULT_BREAK_MIN = 5
@@ -162,6 +163,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       setMode(MODE.FOCUS)
       setRemaining(focusMin * 60)
       setRunning(false)
+      announce(`${finishedSets}세트 모두 완료했어요`)
     } else {
       setCurrentSet(finishedSets)
       const nextBreakMin = decision.long ? longBreakMin : breakMin
@@ -169,6 +171,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       setMode(MODE.BREAK)
       setRemaining(nextBreakMin * 60)
       setRunning(true)
+      announce(`집중 끝. ${nextBreakMin}분 휴식을 시작해요`)
     }
     try {
       const res = await api.post('/pomodoro/complete', { focusMinutes: focusMin })
@@ -187,6 +190,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     setMode(MODE.FOCUS)
     setRemaining(focusMin * 60)
     setRunning(autoContinue)
+    announce(autoContinue ? '휴식 끝. 다음 집중을 시작해요' : '휴식이 끝났어요')
     if (!autoContinue) setCurrentSet(0) // 세트 1: 런 종료(기존 동작)
   }, [playAlarm, focusMin, setsTarget])
 
@@ -500,6 +504,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
             data-testid="pomodoro-clock"
+            role="timer"
+            aria-live="off"
+            aria-label={`${isFocus ? '집중' : '휴식'} 남은 시간 ${min}분 ${sec}초`}
             className={`font-dungeon text-xl text-dark tracking-wider ${blinking ? 'px-blink' : ''}`}
           >
             {min}:{sec}

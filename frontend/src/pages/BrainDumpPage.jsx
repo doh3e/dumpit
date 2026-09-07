@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import AiUsageBadge from '../components/AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
+import { announce } from '../utils/announce'
 
 const PLACEHOLDER = `예) 내일까지 기획서 초안 써야 하고, 이번 주 금요일 팀 발표 준비도 해야 해. 오늘 점심 약속 있고 오후엔 헬스장도 가야 함. 아, 이메일 답장도 밀려있어...`
 
@@ -36,6 +37,7 @@ export default function BrainDumpPage() {
   const [error, setError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
   const navigate = useNavigate()
+  const resultHeadingRef = useRef(null)
 
   const handleAnalyze = async () => {
     if (!text.trim()) return
@@ -46,6 +48,8 @@ export default function BrainDumpPage() {
       const res = await api.post('/brain-dump', { rawText: text.trim() })
       setResult(res.data)
       setSelected(res.data.tasks.map(() => true))
+      announce(`분석이 끝났어요. 후보 ${res.data.tasks.length}개`)
+      setTimeout(() => resultHeadingRef.current?.focus(), 0)
       dispatchAiUsed()
     } catch (err) {
       setError(getApiErrorMessage(err, 'AI 분석에 실패했어요. 다시 시도해주세요.'))
@@ -128,7 +132,7 @@ export default function BrainDumpPage() {
       </div>
 
       {error && (
-        <div className="card-retro tone-overdue">
+        <div className="card-retro tone-overdue" role="alert">
           <p className="font-bold text-primary text-sm">{error}</p>
         </div>
       )}
@@ -136,7 +140,7 @@ export default function BrainDumpPage() {
       {result && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-dungeon text-dark text-lg">AI 분석 결과</h3>
+            <h3 ref={resultHeadingRef} tabIndex={-1} className="font-dungeon text-dark text-lg">AI 분석 결과</h3>
             <div className="flex items-center gap-2">
               <button onClick={() => toggleAll(true)} className="text-xs font-black text-sub hover:text-primary">
                 전체 선택

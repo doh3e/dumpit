@@ -220,7 +220,7 @@ body {
   from { transform: rotate(0deg) translateX(var(--orbit-r, 29px)); }
   to { transform: rotate(360deg) translateX(var(--orbit-r, 29px)); }
 }
-@media (prefers-reduced-motion: reduce) { .orbit-sat { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .orbit-sat, .animate-bounce { animation: none; } }
 
 /* ---- 도트 시트 애니 (PixelSprite) — 8프레임 전용: steps(8)가 시트를 8등분 순환
    (N프레임 일반식: to = 100% * N/(N-1). 다른 프레임 수 추가 시 keyframes도 추가) ---- */
