@@ -94,7 +94,7 @@ export default function NowHeroCard({
                 onClick={() => onEdit(recommendation.task)}
                 className="flex items-center gap-2 rounded-lg border-2 border-line bg-card px-3 py-1.5 text-left hover:border-edge transition-colors"
               >
-                <span className="text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full border border-line bg-chip text-sub flex-shrink-0">
+                <span className="text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full border border-line bg-chip text-dark flex-shrink-0">
                   {QUEUE_BUCKET_LABEL[recommendation.bucket] || '추천'}
                 </span>
                 <span className="text-xs font-extrabold text-dark truncate max-w-[180px]">

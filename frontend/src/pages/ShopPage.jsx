@@ -71,7 +71,7 @@ function TierBadge({ tier }) {
         className="font-dungeon text-[0.6875rem] rounded-md px-2 py-0.5 border flex-shrink-0"
         style={{
           borderColor: 'var(--starlight)',
-          color: 'var(--starlight)',
+          color: 'var(--fg)',
           background: 'color-mix(in srgb, var(--starlight) 16%, var(--card))',
         }}
       >
@@ -136,7 +136,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
             {/* 아직 안 산 아이템의 가격은 테마와 무관하게 붉은색 고정 — 지불할 금액이 한눈에 띄게 */}
             <span
               className="font-dungeon text-sm text-dark"
-              style={item.owned ? undefined : { color: 'var(--danger)' }}
+              style={item.owned ? undefined : { color: 'var(--danger-text)' }}
             >
               {item.price}
             </span>
@@ -248,12 +248,12 @@ function PurchaseConfirmModal({ item, coinBalance, submitting, error, onConfirm,
       <div className="card-retro w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
         <h2 className="font-dungeon text-dark text-lg">{item.name}</h2>
         <p className="mt-3 text-sm font-bold text-dark">
-          <span className="font-dungeon" style={{ color: 'var(--danger)' }}>{item.price}</span>코인으로 구매할까요?
+          <span className="font-dungeon" style={{ color: 'var(--danger-text)' }}>{item.price}</span>코인으로 구매할까요?
         </p>
         <p className="mt-1 text-xs font-semibold text-sub">구매 후 잔액 {remaining}코인</p>
 
         {error && (
-          <p className="mt-3 text-xs font-bold" style={{ color: 'var(--danger)' }}>{error}</p>
+          <p className="mt-3 text-xs font-bold" style={{ color: 'var(--danger-text)' }}>{error}</p>
         )}
 
         <div className="mt-5 flex gap-3">
@@ -533,7 +533,7 @@ export default function ShopPage() {
       )}
 
       {actionError && (
-        <p className="text-xs font-bold text-center" style={{ color: 'var(--danger)' }}>{actionError}</p>
+        <p className="text-xs font-bold text-center" style={{ color: 'var(--danger-text)' }}>{actionError}</p>
       )}
 
       {(showOwnedSplit

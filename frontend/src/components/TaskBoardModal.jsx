@@ -66,7 +66,7 @@ function TaskRow({ task, onEdit, onToggle }) {
               {formatPriority(task)}
             </span>
             {task.parentTaskId && (
-              <span className="rounded-full border border-line bg-chip px-2 py-0.5 text-[0.625rem] font-black text-secondary">
+              <span className="rounded-full border border-line bg-chip px-2 py-0.5 text-[0.625rem] font-black text-dark">
                 서브
               </span>
             )}

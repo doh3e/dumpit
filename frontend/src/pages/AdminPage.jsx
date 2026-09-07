@@ -6,13 +6,13 @@ import { iconProps } from '../assets/icons'
 const STATUS_LABEL = {
   PENDING: { label: '대기 중', color: 'tone-urgent-soon text-warn' },
   REPLIED: { label: '답변 완료', color: 'cat-chip cat-health' },
-  CLOSED: { label: '종료', color: 'bg-chip text-sub border-line' },
+  CLOSED: { label: '종료', color: 'bg-chip text-dark border-line' },
 }
 
 const USER_STATUS = {
   ACTIVE: { label: '활성', color: 'cat-chip cat-health' },
   BANNED: { label: '밴', color: 'tone-danger' },
-  WITHDRAWN: { label: '탈퇴', color: 'bg-chip text-sub border-line' },
+  WITHDRAWN: { label: '탈퇴', color: 'bg-chip text-dark border-line' },
 }
 
 const USER_STATUS_FILTERS = [

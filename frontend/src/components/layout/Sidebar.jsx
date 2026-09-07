@@ -100,7 +100,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
           className={({ isActive }) =>
             `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
               isActive
-                ? 'bg-chip text-secondary'
+                ? 'bg-chip text-dark'
                 : 'text-secondary hover:bg-chip'
             }`
           }

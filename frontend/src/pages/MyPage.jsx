@@ -535,7 +535,7 @@ export default function MyPage() {
             {/* 파괴적 액션 — 테마 카피 없이 조용하고 명확하게 (스펙 7.5) */}
             <h2 className="text-xl font-bold text-dark">회원 탈퇴</h2>
             <div className="mt-4 rounded-lg border-2 tone-danger px-4 py-3">
-              <p className="text-sm font-black" style={{ color: 'var(--danger)' }}>탈퇴 전 확인해주세요.</p>
+              <p className="text-sm font-black" style={{ color: 'var(--danger-text)' }}>탈퇴 전 확인해주세요.</p>
               <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
                 탈퇴하면 바로 서비스를 이용할 수 없고, 작성한 할 일·루틴·아이디어·브레인덤프도 볼 수 없게 됩니다.
               </p>

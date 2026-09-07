@@ -156,7 +156,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
           ? 'w-full rounded-lg border-2 tone-urgent-soon px-2 py-2 text-center transition-colors'
           : `flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-dungeon text-sm transition-colors ${
               urgentCount > 0
-                ? 'bg-chip border-line text-warn'
+                ? 'bg-[var(--warn)] border-edge text-on-warn'
                 : 'bg-chip border-line text-sub hover:text-dark'
             }`
         }

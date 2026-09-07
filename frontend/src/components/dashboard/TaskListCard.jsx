@@ -99,7 +99,7 @@ function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
             {cat.label}
           </span>
           {isChild && (
-            <span className="text-[0.625rem] font-bold px-2 py-0.5 bg-chip border border-line rounded-full text-secondary">
+            <span className="text-[0.625rem] font-bold px-2 py-0.5 bg-chip border border-line rounded-full text-dark">
               ↳ 서브
             </span>
           )}
@@ -144,7 +144,7 @@ function DoneRow({ task, onToggle, onEdit }) {
         onClick={() => onToggle(task)}
         aria-label="완료 취소"
         className="w-5 h-5 rounded bg-primary flex-shrink-0 flex items-center justify-center"
-        style={{ border: '1.5px solid var(--accent)' }}
+        style={{ border: '1.5px solid var(--accent-fill)' }}
       >
         <span className="text-on-accent text-[0.625rem] font-bold">V</span>
       </button>
