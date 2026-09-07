@@ -130,6 +130,7 @@ export default function SettingsScreen() {
                 placeholder="탈퇴"
                 placeholderTextColor={colors.sub}
                 style={[styles.input, { borderColor: colors.warn, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+                accessibilityLabel="탈퇴 확인 입력"
               />
               <View style={styles.withdrawActions}>
                 <RetroButton label="취소" variant="ghost" size="sm" onPress={() => { setWithdrawStage(false); setConfirmText(''); }} />

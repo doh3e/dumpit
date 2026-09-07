@@ -26,6 +26,18 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
   const category = getCategory(task.category);
   const coins = calcCompletionCoins(task);
   const deadlineLabel = formatDeadline(task.deadline);
+  // 뱃지·메타는 행 라벨에 합성한다 — 행이 accessible이면 자식 텍스트는 따로 읽히지 않는다
+  const a11yParts = [
+    task.title,
+    child ? '서브 태스크' : null,
+    overdue ? '마감 지남' : null,
+    task.status === 'IN_PROGRESS' ? '진행 중' : null,
+    deadlineLabel ? `마감 ${deadlineLabel}` : null,
+    task.estimatedMinutes != null ? `${task.estimatedMinutes}분` : null,
+    `우선순위 ${Math.round((task.effectivePriority ?? 0) * 100)}`,
+    coins > 0 && !done ? `코인 ${coins}` : null,
+    category.label,
+  ].filter(Boolean).join(', ');
 
   const handleToggle = (e: GestureResponderEvent) => {
     onToggle(task, done ? 'TODO' : 'DONE', { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY });
@@ -55,8 +67,10 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
 
       <Pressable
         onPress={() => onPress(task)}
+        accessible
         accessibilityRole="button"
-        accessibilityLabel={`${task.title} 상세`}
+        accessibilityLabel={a11yParts}
+        accessibilityHint="상세 보기"
         style={({ pressed }) => [styles.body, { opacity: pressed ? 0.7 : 1 }]}
       >
         <View style={styles.titleRow}>

@@ -216,6 +216,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             placeholder="아이디어 제목 *"
             placeholderTextColor={colors.sub}
             style={[styles.input, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+            accessibilityLabel="아이디어 제목"
           />
           <View style={styles.previewRow}>
             <Chip label="작성" selected={!preview} onPress={() => setPreview(false)} />
@@ -237,6 +238,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
               placeholder="내용 (마크다운 지원, 선택)"
               placeholderTextColor={colors.sub}
               style={[styles.input, styles.contentInput, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+              accessibilityLabel="내용 (마크다운 지원, 선택)"
             />
           )}
         </RetroCard>

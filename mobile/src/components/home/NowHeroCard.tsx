@@ -50,10 +50,16 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
   const heroTime = task?.deadline
     ? (isToday(task.deadline) ? `${formatTime(task.deadline)} 마감` : `${formatDeadline(task.deadline)} 마감`)
     : null;
+  // 그룹 라벨은 상단 View에만 — 카드 전체를 accessible로 묶으면 액션 버튼·큐 행이 TalkBack 스톱에서 사라진다
+  const heroLabel = allDone
+    ? '오늘 할 일을 모두 끝냈어요'
+    : task
+      ? `지금 할 일, ${task.title}${heroTime ? `, ${heroTime}` : ''}`
+      : null;
 
   return (
     <RetroCard hero>
-      <View style={styles.top}>
+      <View style={styles.top} accessible={heroLabel != null} accessibilityLabel={heroLabel ?? undefined}>
         <View style={styles.main}>
           <Text style={[styles.eyebrow, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>지금 할 일</Text>
           {allDone ? (
@@ -111,8 +117,9 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
             <Pressable
               key={r.task.taskId}
               onPress={() => onEdit(r.task)}
+              accessible
               accessibilityRole="button"
-              accessibilityLabel={r.task.title}
+              accessibilityLabel={`${QUEUE_BUCKET_LABEL[r.bucket] ?? '추천'}, ${r.task.title}`}
               style={({ pressed }) => [styles.queueRow, { opacity: pressed ? 0.7 : 1 }]}
             >
               <RetroBadge text={QUEUE_BUCKET_LABEL[r.bucket] ?? '추천'} tone="sub" />

@@ -10,10 +10,16 @@ type Props = {
   /** 도트 아이콘 등 — emoji보다 우선 */
   icon?: ReactNode;
   disabled?: boolean;
+  /** 화면 글자만으로 뜻이 서지 않을 때, 읽히는 라벨만 바꾼다 */
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 };
 
 /** 선택형 칩 — 카테고리·마감모드·리스트 탭 공용. 선택 시 틸(accent2) 채움 */
-export function Chip({ label, selected = false, onPress, emoji, icon, disabled }: Props) {
+export function Chip({
+  label, selected = false, onPress, emoji, icon, disabled,
+  accessibilityLabel, accessibilityHint,
+}: Props) {
   const { colors, fonts } = useTheme();
   const text = (
     <Text style={[styles.text, { color: selected ? colors.onAccent : colors.fg, fontFamily: fonts.chrome }]}>
@@ -25,7 +31,8 @@ export function Chip({ label, selected = false, onPress, emoji, icon, disabled }
       onPress={onPress}
       disabled={disabled || !onPress}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ selected, disabled: !!disabled }}
       hitSlop={6}
       style={({ pressed }) => [

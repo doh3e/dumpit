@@ -38,7 +38,12 @@ export function ScreenHeader({
       ]}
     >
       {chromeDeco && <TiledImage source={chromeDeco} />}
-      <Pressable onPress={onBack ?? (() => router.back())} hitSlop={12} accessibilityLabel="뒤로">
+      <Pressable
+        onPress={onBack ?? (() => router.back())}
+        hitSlop={12}
+        accessibilityRole="button"
+        accessibilityLabel="뒤로"
+      >
         <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
       </Pressable>
       <View style={styles.titleRow}>

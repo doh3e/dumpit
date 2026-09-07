@@ -138,6 +138,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
             placeholder="예: 아침 스트레칭"
             placeholderTextColor={colors.sub}
             style={[styles.input, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+            accessibilityLabel="예: 아침 스트레칭"
           />
           {sectionTitle('메모 (선택)')}
           <TextInput
@@ -149,6 +150,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
             placeholder="루틴 설명"
             placeholderTextColor={colors.sub}
             style={[styles.input, styles.multiline, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+            accessibilityLabel="루틴 설명"
           />
         </RetroCard>
 

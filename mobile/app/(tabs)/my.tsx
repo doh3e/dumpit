@@ -153,6 +153,7 @@ export default function MyScreen() {
                 placeholder="한 줄 소개"
                 placeholderTextColor={colors.sub}
                 style={[styles.bioInput, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+                accessibilityLabel="한 줄 소개"
               />
               <View style={styles.bioActions}>
                 <RetroButton label="취소" variant="ghost" size="sm" onPress={() => setEditingBio(false)} />

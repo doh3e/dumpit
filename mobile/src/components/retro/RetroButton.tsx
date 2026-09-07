@@ -13,10 +13,16 @@ type Props = {
   style?: StyleProp<ViewStyle>;
   /** 라벨 앞 아이콘 (코인 등) — 접근성 라벨은 label만 읽는다 */
   icon?: ReactNode;
+  /** 화면 글자만으로 뜻이 서지 않을 때 (예: "확인"), 읽히는 라벨만 바꾼다 */
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 };
 
 /** 웹 .btn-retro 이식 — 누르면 3px 밀리며 오프셋 섀도가 접힌다 (login.tsx 패턴) */
-export function RetroButton({ label, onPress, variant = 'primary', size = 'md', disabled, busy, style, icon }: Props) {
+export function RetroButton({
+  label, onPress, variant = 'primary', size = 'md', disabled, busy, style, icon,
+  accessibilityLabel, accessibilityHint,
+}: Props) {
   const { colors, fonts } = useTheme();
   const palette = {
     primary: { bg: colors.accentFill, fg: colors.onAccent },
@@ -32,7 +38,8 @@ export function RetroButton({ label, onPress, variant = 'primary', size = 'md', 
       onPress={onPress}
       disabled={blocked}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: !!blocked, busy: !!busy }}
       style={({ pressed }) => [
         styles.base,

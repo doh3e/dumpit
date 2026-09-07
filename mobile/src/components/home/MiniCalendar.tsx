@@ -210,7 +210,7 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
                 onPress={() => toggleDay(day, hasAny)}
                 disabled={!hasAny}
                 accessibilityRole="button"
-                accessibilityLabel={`${month + 1}월 ${day}일`}
+                accessibilityLabel={`${month + 1}월 ${day}일${hasTasks ? `, 할 일 ${tasksByDay.get(day)!.length}개` : ''}${hasGoogleEvents ? `, 일정 ${googleByDay.get(day)!.length}개` : ''}`}
                 accessibilityState={{ disabled: !hasAny, selected: selectedDay === day }}
                 style={({ pressed }) => [
                   styles.dayCell,

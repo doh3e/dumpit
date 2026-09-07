@@ -64,6 +64,7 @@ export function AiMemoryCard() {
             placeholder={'예) 운동 관련 일이 나에게 제일 중요해요.\n예) "펌"은 회사 프로젝트를 뜻해요.'}
             placeholderTextColor={colors.sub}
             style={[styles.input, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+            accessibilityLabel="AI 메모리 내용"
           />
           <View style={styles.actions}>
             <Text style={[styles.counter, { color: colors.sub, fontFamily: fonts.chrome }]}>

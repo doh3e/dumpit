@@ -139,6 +139,7 @@ export default function IdeaDumpScreen() {
               placeholder="예) 사이드 프로젝트 아이디어… 픽셀 게임, 레트로 UI 키트, 굿즈…"
               placeholderTextColor={colors.sub}
               style={[styles.input, { borderColor: colors.line, backgroundColor: colors.card, color: colors.fg, fontFamily: fonts.body }]}
+              accessibilityLabel="아이디어 내용"
             />
             <Text style={[styles.counter, { color: colors.sub, fontFamily: fonts.chrome }]}>
               {/* AI 포인트 화폐 기호 — 웹 token 도트와 통일 (Text 내 인라인 이미지) */}
