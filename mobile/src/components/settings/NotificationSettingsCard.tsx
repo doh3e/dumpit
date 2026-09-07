@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { StyleSheet, Switch, Text, View } from 'react-native';
 import { getApiErrorMessage } from '../../api/client';
 import { useSaveSettings, useUserSettings } from '../../query/routineHooks';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { Chip } from '../retro/Chip';
 import { RetroCard } from '../retro/RetroCard';
@@ -12,7 +11,7 @@ import { PixelIcon } from '../common/PixelIcon';
 
 /** 알림 설정 카드 — 서버 /me/settings 소비, 마감 임계값·아침 브리핑 즉시 저장 */
 export function NotificationSettingsCard() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const { data: settings } = useUserSettings();
   const save = useSaveSettings();
   const toast = useToast();

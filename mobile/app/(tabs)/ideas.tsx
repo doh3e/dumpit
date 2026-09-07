@@ -12,11 +12,10 @@ import { buildTreeRows } from '../../src/ideas/tree';
 import { keys } from '../../src/query/keys';
 import { getCategory } from '../../src/tasks/constants';
 import { STICKER_SPRITES } from '../../src/tasks/stickers';
-import { fonts } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
 
 export default function IdeasScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const ideas = useQuery({ queryKey: keys.ideas, queryFn: fetchIdeas });
 

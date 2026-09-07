@@ -11,7 +11,6 @@ import { AI_COSTS, TASK_CATEGORIES } from '../../tasks/constants';
 import { parseDate, toLocalDateTimeString } from '../../tasks/dates';
 import { buildDeadlinePayload, type DeadlineMode } from '../../tasks/deadlineMode';
 import type { Category } from '../../api/types';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { Chip } from '../retro/Chip';
@@ -35,7 +34,7 @@ function next30(): string {
 
 /** ＋ → 태스크 추가 바텀시트 (웹 AddTaskModal 패리티). ref.present()로 연다 */
 export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_props, ref) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();

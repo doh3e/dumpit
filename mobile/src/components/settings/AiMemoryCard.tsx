@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getApiErrorMessage } from '../../api/client';
 import { useSaveSettings, useUserSettings } from '../../query/routineHooks';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 import { RetroButton } from '../retro/RetroButton';
@@ -13,7 +12,7 @@ const MAX_LENGTH = 500;
 
 /** AI 메모리 카드 — /me/settings.aiMemory 소비. 저장한 컨텍스트는 서버가 AI 분석 프롬프트에 주입한다 */
 export function AiMemoryCard() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const { data: settings } = useUserSettings();
   const save = useSaveSettings();
   const toast = useToast();

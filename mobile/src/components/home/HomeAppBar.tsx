@@ -3,7 +3,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MeResponse } from '../../api/auth';
 import type { AiUsage } from '../../api/types';
 import { PLANET_SPRITES, spriteFor } from '../../shop/spriteRegistry';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { TiledImage } from '../common/TiledImage';
 import { PixelSprite } from '../shop/PixelSprite';
@@ -14,7 +13,7 @@ const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
 /** 홈 상단 앱바 — 날짜·인사 + 코인/AI 배지 (웹 Header 대응) */
 export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: AiUsage | undefined }) {
-  const { colors, chromeDeco } = useTheme();
+  const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}월 ${now.getDate()}일 ${DAY_NAMES[now.getDay()]}`;

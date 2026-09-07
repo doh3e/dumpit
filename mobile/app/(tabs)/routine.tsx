@@ -3,11 +3,10 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RoutineListCard } from '../../src/components/routine/RoutineListCard';
 import { useRoutines } from '../../src/query/routineHooks';
-import { fonts } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
 
 export default function RoutineScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const routines = useRoutines();
 

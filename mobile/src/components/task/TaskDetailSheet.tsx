@@ -16,7 +16,6 @@ import { parseDate } from '../../tasks/dates';
 import { buildDeadlinePayload, type DeadlineMode } from '../../tasks/deadlineMode';
 import { updateTaskInPlanning } from '../../tasks/planningCache';
 import type { PlanningResponse } from '../../api/types';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { Chip } from '../retro/Chip';
@@ -37,7 +36,7 @@ const DEADLINE_MODES: { id: DeadlineMode; label: string; icon?: PixelIconName }[
 
 /** 태스크 상세 — 수정·중요도·스티커·AI 재분석·쪼개기·삭제 (웹 EditTaskModal 이식) */
 export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDetailSheet(_props, ref) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();

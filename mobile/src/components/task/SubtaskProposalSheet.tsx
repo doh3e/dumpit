@@ -9,7 +9,6 @@ import type { TaskResponse } from '../../api/types';
 import { invalidateAfterAi } from '../../query/hooks';
 import { keys } from '../../query/keys';
 import { AI_COSTS } from '../../tasks/constants';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 import { RetroButton } from '../retro/RetroButton';
@@ -24,7 +23,7 @@ type Props = { onCreated: () => void };
 /** AI 서브태스크 분해 — 제안(3점) 받아 편집·선택 후 확정 생성 (웹 SubtaskProposalModal 이식) */
 export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props>(
   function SubtaskProposalSheet({ onCreated }, ref) {
-    const { colors } = useTheme();
+    const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
     const toast = useToast();
     const qc = useQueryClient();

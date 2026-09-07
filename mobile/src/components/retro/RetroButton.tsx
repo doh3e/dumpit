@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { retroShadow } from '../../theme/tokens';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 
 type Props = {
@@ -18,7 +17,7 @@ type Props = {
 
 /** 웹 .btn-retro 이식 — 누르면 3px 밀리며 오프셋 섀도가 접힌다 (login.tsx 패턴) */
 export function RetroButton({ label, onPress, variant = 'primary', size = 'md', disabled, busy, style, icon }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const palette = {
     primary: { bg: colors.accentFill, fg: colors.onAccent },
     ghost: { bg: colors.card, fg: colors.fg },

@@ -5,7 +5,6 @@ import { getCategory } from '../../tasks/constants';
 import { STICKER_SPRITES } from '../../tasks/stickers';
 import { formatDeadline } from '../../tasks/dates';
 import { calcCompletionCoins } from '../../tasks/rewards';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { CoinIcon } from '../common/CoinIcon';
 import { PixelIcon } from '../common/PixelIcon';
@@ -22,7 +21,7 @@ type Props = {
 };
 
 export const TaskRow = memo(function TaskRow({ task, overdue = false, child = false, onToggle, onPress }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const done = task.status === 'DONE';
   const category = getCategory(task.category);
   const coins = calcCompletionCoins(task);

@@ -20,7 +20,6 @@ import { STATION_SPRITES, spriteFor } from '../../src/shop/spriteRegistry';
 import { PRIVACY_URL, TERMS_URL } from '../../src/legal/links';
 import { getCategory } from '../../src/tasks/constants';
 import { formatDeadline, toLocalDateString } from '../../src/tasks/dates';
-import { fonts } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
 
 // url을 가진 항목은 웹 문서를 브라우저로 연다 — 약관·방침은 웹에 하나만 두고
@@ -39,7 +38,7 @@ const MENU: { icon: PixelIconName; label: string; href?: Href; url?: string }[] 
 const HEAT_ALPHA = [0.12, 0.4, 0.7, 1] as const;
 
 export default function MyScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const toast = useToast();
   const qc = useQueryClient();
   const { me, refresh } = useAuth();

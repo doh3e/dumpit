@@ -2,7 +2,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NowSuggestion, TaskRecommendation, TaskResponse } from '../../api/types';
 import { formatDeadline, formatTime, isToday } from '../../tasks/dates';
 import { QUEUE_BUCKET_LABEL } from '../../tasks/constants';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 import { RetroBadge } from '../retro/RetroBadge';
@@ -24,7 +23,7 @@ type Props = {
 
 /** "지금 할 일" 히어로 — 웹 NowHeroCard 3상태(전부 완료/제안/빈 시간) 이식 */
 export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDone, focus, onComplete, onEdit }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const task = allDone ? null : nowSuggestion?.task ?? null;
   // 오늘 몫을 일과시간 안에 다 비웠으면 "내일 만나요" 대신 다음 일을 미리 권한다.
   // 활동시간 판정은 서버가 단일 소스 — nowSuggestion.type이 SLEEP이 아니면 아직 일과시간.

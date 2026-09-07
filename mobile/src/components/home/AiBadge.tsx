@@ -1,12 +1,11 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 import type { AiUsage } from '../../api/types';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 import { useToast } from '../retro/ToastProvider';
 
 export function AiBadge({ usage }: { usage: AiUsage | undefined }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const toast = useToast();
   if (!usage) return null;
 

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { CoinIcon } from '../common/CoinIcon';
 
@@ -10,7 +9,7 @@ const COUNT_MS = 240;
 
 /** 코인 배지 — 증가 시 카운트업 + 바운스 (웹 헤더 코인 배지 이식) */
 export function CoinBadge({ coins }: { coins: number }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const [shown, setShown] = useState(coins);
   const prev = useRef(coins);
   const scale = useSharedValue(1);

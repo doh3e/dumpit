@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { TiledImage } from '../common/TiledImage';
 
@@ -24,7 +23,7 @@ export function ScreenHeader({
   /** 기본은 router.back() */
   onBack?: () => void;
 }) {
-  const { colors, chromeDeco } = useTheme();
+  const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (

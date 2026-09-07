@@ -3,7 +3,6 @@ import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { retroShadow } from '../../theme/tokens';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 
@@ -17,7 +16,7 @@ type Props = {
 
 /** FAB 위로 펼쳐지는 두 갈래 스피드다이얼 — 딤 탭·뒤로가기로 닫힘 */
 export function SpeedDial({ open, onClose, actions }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
 
   useEffect(() => {

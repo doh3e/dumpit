@@ -4,7 +4,6 @@ import { Pressable, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { TaskResponse, TaskStatus } from '../../api/types';
 import { usePlanning } from '../../query/hooks';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 
@@ -17,7 +16,7 @@ type Props = {
 /** 집중할 태스크 선택 — 서버 실효 우선순위 내림차순 상위 30개 (웹 activeTasks 대응) */
 export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
   function TaskPickerSheet({ onPick }, ref) {
-    const { colors } = useTheme();
+    const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
     const { height: windowHeight } = useWindowDimensions();
     const planning = usePlanning();

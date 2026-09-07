@@ -19,12 +19,11 @@ import { sortParentCandidates } from '../src/ideas/tree';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, TASK_CATEGORIES } from '../src/tasks/constants';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 /** 아이디어 추가·편집 풀스크린 — 마크다운·스티커·태스크 전환 (웹 IdeaDumpPage 폼 패리티) */
 export default function IdeaEditScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const { ideaId, parentIdeaId } = useLocalSearchParams<{ ideaId?: string; parentIdeaId?: string }>();
   const ideas = useQuery({ queryKey: keys.ideas, queryFn: fetchIdeas });
 
@@ -82,7 +81,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
   allIdeas: IdeaResponse[];
   initialParentId: string | null;
 }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const toast = useToast();

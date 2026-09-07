@@ -1,10 +1,9 @@
 import Markdown from 'react-native-markdown-display';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 
 /** 아이디어·공지 본문 마크다운 렌더 — 헤딩·리스트·강조·코드·링크 최소셋을 테마 토큰으로 */
 export function MarkdownView({ children }: { children: string }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   return (
     <Markdown
       style={{

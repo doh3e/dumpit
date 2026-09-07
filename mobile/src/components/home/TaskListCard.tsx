@@ -4,7 +4,6 @@ import type { PlanningSections, TaskResponse, TaskStatus } from '../../api/types
 import { formatTime, isToday } from '../../tasks/dates';
 import { groupByParent, sortByDeadline } from '../../tasks/grouping';
 import { calcCompletionCoins } from '../../tasks/rewards';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { CoinIcon } from '../common/CoinIcon';
 import { RetroBadge } from '../retro/RetroBadge';
@@ -39,7 +38,7 @@ type Props = {
 
 /** "해야 할 일" 리스트 — 탭 5종 + overdue 상단 고정 + 오늘 완료 접이식 (웹 TaskListCard 이식) */
 export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const [tab, setTab] = useState<TabId>('today');
   const [doneOpen, setDoneOpen] = useState(false);
 

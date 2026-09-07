@@ -41,7 +41,6 @@ import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, getCategory } from '../src/tasks/constants';
 import { formatDeadline } from '../src/tasks/dates';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 const MAX_LENGTH = 3000;
@@ -164,7 +163,7 @@ function ResultItem({
   selected: boolean;
   onToggle: () => void;
 }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const priority = getPriority(item.aiPriorityScore);
   const deadline = formatDeadline(item.deadline);
   const category = getCategory(item.category);
@@ -220,7 +219,7 @@ function ResultItem({
 
 /** 머릿속 할 일을 AI로 구조화하고 골라 등록하는 3단계 풀스크린 플로우 */
 export default function BrainDumpScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();

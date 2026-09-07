@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 
 type Props = {
@@ -15,7 +14,7 @@ type Props = {
 
 /** 선택형 칩 — 카테고리·마감모드·리스트 탭 공용. 선택 시 틸(accent2) 채움 */
 export function Chip({ label, selected = false, onPress, emoji, icon, disabled }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const text = (
     <Text style={[styles.text, { color: selected ? colors.onAccent : colors.fg, fontFamily: fonts.chrome }]}>
       {!icon && emoji ? `${emoji} ${label}` : label}

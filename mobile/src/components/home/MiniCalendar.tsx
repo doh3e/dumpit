@@ -8,7 +8,6 @@ import type { TaskResponse } from '../../api/types';
 import { keys } from '../../query/keys';
 import { bucketByDay, buildMonthCells } from '../../tasks/calendarGrid';
 import { formatTime, parseDate } from '../../tasks/dates';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
@@ -68,7 +67,7 @@ type Props = {
 };
 
 export function MiniCalendar({ tasks, onTaskAdded }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const toast = useToast();
   const [{ year, month }, setVisibleMonth] = useState(() => {
     const today = new Date();

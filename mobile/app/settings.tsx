@@ -14,7 +14,6 @@ import { NotificationSettingsCard } from '../src/components/settings/Notificatio
 import { PixelIcon, type PixelIconName } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { useA11yPrefs, useThemeMode, type ContrastMode, type ThemeMode } from '../src/theme/ThemeProvider';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 const THEME_MODES: { id: ThemeMode; label: string; icon: PixelIconName }[] = [
@@ -30,7 +29,7 @@ const CONTRAST_MODES: { id: ContrastMode; label: string }[] = [
 ];
 
 export default function SettingsScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const { mode, setMode } = useThemeMode();
   const { contrastMode, setContrastMode, boldText, setBoldText } = useA11yPrefs();

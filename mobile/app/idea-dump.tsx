@@ -15,13 +15,13 @@ import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, getCategory } from '../src/tasks/constants';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 const SCRATCH_KEY = 'dumpit_idea_scratch';
 const MAX_SCRATCH = 2000;
 
 function NodePreview({ node, depth, colors }: { node: IdeaNode; depth: number; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const { fonts } = useTheme();
   const category = node.category ? getCategory(node.category) : null;
   return (
     <View style={{ paddingLeft: depth * 14 }}>
@@ -48,7 +48,7 @@ const previewStyles = StyleSheet.create({
 
 /** 아이디어 덤프 — 쏟아내기 → AI 계층 정리(5점) → 선택 확정 (웹 IdeaDumpPage 덤프 모드 패리티) */
 export default function IdeaDumpScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();

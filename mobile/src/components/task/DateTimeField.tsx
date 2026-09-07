@@ -2,7 +2,6 @@ import DateTimePicker, { type DateTimePickerEvent } from '@react-native-communit
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { parseDate, toLocalDateTimeString } from '../../tasks/dates';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 
@@ -15,7 +14,7 @@ type Props = {
 
 /** 날짜→시간 2단계 안드로이드 픽커. 표시 "M/D HH:mm" (둥근모) */
 export function DateTimeField({ value, onChange, minimumDate, placeholder = '선택 안 함' }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const [stage, setStage] = useState<'none' | 'date' | 'time'>('none');
   const [draft, setDraft] = useState<Date>(new Date());
 

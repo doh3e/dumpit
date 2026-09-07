@@ -3,7 +3,6 @@ import { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { getApiErrorMessage } from '../../api/client';
 import { useSaveSettings, useUserSettings } from '../../query/routineHooks';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { Chip } from '../retro/Chip';
 import { RetroButton } from '../retro/RetroButton';
@@ -16,7 +15,7 @@ const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
 
 /** 활동시간(일과) 카드 — 서버 /me/settings 소비, AI 시각 배치·추천 개인화에 쓰인다 */
 export function ActiveHoursCard() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const toast = useToast();
   const settings = useUserSettings();
   const save = useSaveSettings();

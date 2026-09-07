@@ -6,7 +6,6 @@ import { getApiErrorMessage } from '../../api/client';
 import { useRoutines, useToggleRoutine } from '../../query/routineHooks';
 import { parseDate } from '../../tasks/dates';
 import { repeatSummary, timeSummary } from '../../routines/repeatSummary';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
@@ -21,7 +20,7 @@ function nextRunLabel(nextRunAt: string | null): string | null {
 
 /** 루틴 목록 — 활성 우선 정렬(웹 sortedRoutines), 행 탭 = 편집, 스위치 = 활성 토글 */
 export function RoutineListCard() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const toast = useToast();
   const routines = useRoutines();
   const toggle = useToggleRoutine();

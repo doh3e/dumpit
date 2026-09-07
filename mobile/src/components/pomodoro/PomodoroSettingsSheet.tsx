@@ -3,7 +3,6 @@ import { forwardRef, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { clampSettings, type PomodoroSettings } from '../../pomodoro/engine';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { RetroButton } from '../retro/RetroButton';
 
@@ -20,7 +19,7 @@ type RowProps = {
 };
 
 function StepperRow({ label, value, display, onDelta }: RowProps) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   return (
     <View style={styles.row}>
       <Text style={[styles.rowLabel, { color: colors.fg, fontFamily: fonts.body }]}>{label}</Text>
@@ -42,7 +41,7 @@ function StepperRow({ label, value, display, onDelta }: RowProps) {
 /** 뽀모도로 설정 시트 — 실행 중에는 열지 않는다(설정 변경 = 리셋 후 재시작 정책) */
 export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
   function PomodoroSettingsSheet({ initial, onApply }, ref) {
-    const { colors } = useTheme();
+    const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
     const [draft, setDraft] = useState(initial);
 

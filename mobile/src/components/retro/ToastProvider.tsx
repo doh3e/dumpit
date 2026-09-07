@@ -3,7 +3,6 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { retroShadow } from '../../theme/tokens';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 
 type ToastState = { id: number; message: string } | null;
@@ -13,7 +12,7 @@ const TOAST_MS = 2500;
 
 /** 하단 공용 토스트 — 에러·안내 겸용. 새 토스트가 오면 교체 */
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const [toast, setToast] = useState<ToastState>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);

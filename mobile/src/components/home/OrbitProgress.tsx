@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 
 const DOTS = 12;
@@ -9,7 +8,7 @@ const SIZE = (RADIUS + DOT) * 2;
 
 /** 오늘 진행률 픽셀 링 — 12개 사각 도트를 원형 배치, 완료 비율만큼 starlight 채움 (SVG 없이) */
 export function OrbitProgress({ done, total }: { done: number; total: number }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const filled = total > 0 ? Math.round((done / total) * DOTS) : 0;
 
   return (

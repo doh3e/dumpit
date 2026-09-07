@@ -3,7 +3,6 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { fetchUnreadNotices, markNoticeRead } from '../../api/notices';
 import type { NoticeResponse } from '../../api/types';
 import { retroShadow } from '../../theme/tokens';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { MarkdownView } from '../common/MarkdownView';
 import { RetroButton } from '../retro/RetroButton';
@@ -11,7 +10,7 @@ import { PixelIcon } from '../common/PixelIcon';
 
 /** 미읽음 popup 공지 순차 모달 (웹 NoticeModal 패리티) — 닫으면 read 처리 */
 export function NoticePopup() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const [queue, setQueue] = useState<NoticeResponse[]>([]);
 
   useEffect(() => {

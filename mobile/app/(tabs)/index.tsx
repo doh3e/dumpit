@@ -24,11 +24,10 @@ import { getSession, reconcile, subscribe, takePendingSettleResult } from '../..
 import { useAiUsage, usePlanning, useToggleTask } from '../../src/query/hooks';
 import { isToday } from '../../src/tasks/dates';
 import { buildHeroQueue } from '../../src/tasks/heroQueue';
-import { fonts } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
 
 export default function HomeScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const { me, refresh } = useAuth();
   const toast = useToast();

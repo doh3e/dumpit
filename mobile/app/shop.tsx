@@ -22,7 +22,6 @@ import { PLANET_SPRITES, STATION_SPRITES } from '../src/shop/spriteRegistry';
 import { STICKER_SPRITES } from '../src/tasks/stickers';
 import { useSkinPreview } from '../src/theme/ThemeProvider';
 import { BG_SKINS, CHROME_SKINS, POMO_SKINS, skinKey } from '../src/theme/skins';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 // 웹 SHOP_TABS 순서 대응 — 탭 키는 slot(스티커만 type)
@@ -87,7 +86,7 @@ function ItemPreview({ item, scheme }: { item: CatalogItem; scheme: 'light' | 'd
 const PREVIEWABLE = new Set(['BACKGROUND', 'CHROME', 'POMODORO']);
 
 export default function ShopScreen() {
-  const { colors, scheme } = useTheme();
+  const { colors, fonts, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();

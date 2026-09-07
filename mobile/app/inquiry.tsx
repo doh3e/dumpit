@@ -10,13 +10,12 @@ import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { PRIVACY_URL } from '../src/legal/links';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 const SUPPORT_EMAIL = 'dumpitadmin@gmail.com';
 
 export default function InquiryScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
 

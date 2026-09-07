@@ -22,11 +22,10 @@ import {
   getSession, pauseSession, reconcile, resetSession, resumeSession, startSession, subscribe,
 } from '../src/pomodoro/store';
 import { keys } from '../src/query/keys';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 export default function PomodoroScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();

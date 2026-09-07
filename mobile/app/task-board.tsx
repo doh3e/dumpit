@@ -10,7 +10,6 @@ import { useToast } from '../src/components/retro/ToastProvider';
 import { TaskDetailSheet, type TaskDetailSheetHandle } from '../src/components/task/TaskDetailSheet';
 import { usePlanning, useToggleTask } from '../src/query/hooks';
 import { sortByDeadline, sortTasks } from '../src/tasks/grouping';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,7 +27,7 @@ type SortMode = 'priority' | 'deadline';
 
 /** 태스크 전체 보드 — 7개 버킷 조망 (웹 TaskBoardModal 대응) */
 export default function TaskBoardScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const planning = usePlanning();

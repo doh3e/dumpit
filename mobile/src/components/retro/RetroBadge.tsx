@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 
 type Tone = 'accent' | 'accent2' | 'warn' | 'starlight' | 'sub';
@@ -11,7 +10,7 @@ type Props = { text: string; tone?: Tone; icon?: ReactNode };
 
 /** 소형 상태 라벨 — "마감 지남"·"진행 중"·"↳ 서브" 등. 둥근모 크롬층 */
 export function RetroBadge({ text, tone = 'sub', icon }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const filled = FILL[tone];
   const bg = tone === 'accent' ? colors.accentFill : tone === 'accent2' ? colors.accent2Fill : tone === 'warn' ? colors.warn : colors.starlight;
   const textColor = !filled ? colors.sub : tone === 'accent' || tone === 'accent2' ? colors.onAccent : colors.onWarn;
