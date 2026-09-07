@@ -45,7 +45,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 retroShadow(3, colors.shadowSm),
               ]}
             >
-              <Text style={[styles.text, { color: colors.fg, fontFamily: fonts.body }]} numberOfLines={2}>
+              <Text style={[styles.text, { color: colors.fg, fontFamily: fonts.body }]} numberOfLines={3}>
                 {toast.message}
               </Text>
             </View>

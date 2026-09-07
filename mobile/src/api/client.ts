@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 import { hostFrom, resolveBaseUrl } from './devHost';
+import { DEFAULT_ERROR_MESSAGE, describeError, withErrorCode } from './errors';
 
 const PROD_API_URL = 'https://api.dumpit.kr/api';
 
@@ -33,20 +34,9 @@ export const api = axios.create({
   timeout: 15_000,
 });
 
-export function getApiErrorMessage(
-  error: unknown,
-  fallback = '요청을 처리하지 못했어요. 잠시 후 다시 시도해주세요.',
-): string {
-  if (!axios.isAxiosError(error)) return fallback;
-  const data = error.response?.data as { error?: string; message?: string } | undefined;
-  if (typeof data?.error === 'string' && data.error.trim()) return data.error;
-  if (typeof data?.message === 'string' && data.message.trim()) return data.message;
-
-  const status = error.response?.status;
-  if (status === 401) return '로그인이 필요합니다.';
-  if (status === 403) return '접근 권한이 없습니다.';
-  if (status === 404) return '요청한 대상을 찾을 수 없습니다.';
-  if (status === 429) return '사용 가능 횟수를 모두 사용했어요.';
-  if (status && status >= 500) return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-  return fallback;
+/** 실패 문구. 예상 밖 실패(네트워크·5xx·문구 없는 4xx·앱 예외)에는 진단 코드가 붙는다 — 정책은 errors.ts */
+export function getApiErrorMessage(error: unknown, fallback: string = DEFAULT_ERROR_MESSAGE): string {
+  const info = describeError(error, fallback);
+  if (info.silent) return fallback;
+  return info.tagged ? withErrorCode(info.message, info.code) : info.message;
 }

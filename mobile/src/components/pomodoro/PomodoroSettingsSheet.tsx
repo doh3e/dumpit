@@ -1,5 +1,5 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { forwardRef, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { clampSettings, type PomodoroSettings } from '../../pomodoro/engine';
@@ -45,6 +45,12 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
     const { colors } = useTheme();
     const insets = useSafeAreaInsets();
     const [draft, setDraft] = useState(initial);
+
+    // 저장 설정은 화면 마운트 후 비동기로 로드된다 — 마운트 시점 값에 갇히면
+    // 시트를 열 때마다 기본값이 보이므로 initial(로드·적용 반영)을 따라간다
+    useEffect(() => {
+      setDraft(initial);
+    }, [initial]);
 
     const patch = (p: Partial<PomodoroSettings>) => setDraft((d) => clampSettings({ ...d, ...p }));
 

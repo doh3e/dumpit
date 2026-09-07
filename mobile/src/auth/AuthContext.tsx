@@ -1,4 +1,4 @@
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { GoogleSignin, isErrorWithCode } from '@react-native-google-signin/google-signin';
 import axios from 'axios';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
@@ -10,6 +10,7 @@ import {
   type MeResponse,
 } from '../api/auth';
 import { api } from '../api/client';
+import { AppError, GoogleSignInError } from '../api/errors';
 import { bypassReauth, installSilentReauth } from '../api/reauth';
 import { registerPushDevice, unregisterPushDevice } from '../push/fcm';
 import { clearWidgetMirrors } from '../widget/mirror';
@@ -87,11 +88,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   const signInWithGoogle = useCallback(async () => {
-    await GoogleSignin.hasPlayServices();
-    const result = await GoogleSignin.signIn();
+    let result: Awaited<ReturnType<typeof GoogleSignin.signIn>>;
+    try {
+      await GoogleSignin.hasPlayServices();
+      result = await GoogleSignin.signIn();
+    } catch (e) {
+      // 네이티브 에러의 code(예: '10'=앱 서명 미등록)가 화면에 GSI-<code>로 노출돼야 캡처만으로 원인을 잡는다
+      if (isErrorWithCode(e)) throw new GoogleSignInError(String(e.code), e.message);
+      throw e;
+    }
     if (result.type === 'cancelled') return;
     const idToken = result.data?.idToken;
-    if (!idToken) throw new Error('구글에서 ID 토큰을 받지 못했어요.');
+    if (!idToken) throw new AppError('NO_ID_TOKEN', '구글에서 ID 토큰을 받지 못했어요. 다시 시도해주세요.');
     // 로그인 버튼만으로는 복구 의사로 보지 않는다 — 유예 중 계정이면 서버 신호를 받아
     // "복구하시겠습니까?"를 묻고, 동의한 재시도에서만 탈퇴가 철회된다
     const login = await loginWithRestoreConfirm(idToken, confirmRestore);

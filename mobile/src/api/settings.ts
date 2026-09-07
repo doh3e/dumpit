@@ -9,7 +9,7 @@ export async function fetchSettings(): Promise<UserSettings> {
 /** null 필드는 미변경 */
 export type SettingsPatch = Partial<
   Pick<UserSettings, 'routineStartHour' | 'routineEndHour'
-    | 'notificationsEnabled' | 'notificationThresholds' | 'briefingEnabled'>
+    | 'notificationsEnabled' | 'notificationThresholds' | 'briefingEnabled' | 'aiMemory'>
 >;
 
 export async function patchSettings(patch: SettingsPatch): Promise<UserSettings> {

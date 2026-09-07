@@ -112,6 +112,7 @@ export type UserSettings = {
   notificationsEnabled: boolean;
   notificationThresholds: number[];
   briefingEnabled: boolean;
+  aiMemory: string | null;    // AI 분석 프롬프트 주입용 유저 메모리(500자), 빈 문자열 저장 = 삭제
 };
 
 export type PomodoroSettleResponse = { coins: number; totalCoins: number; settledSessions: number };

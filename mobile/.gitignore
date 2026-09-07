@@ -52,3 +52,6 @@ modules/*/android/.gradle/
 
 # Firebase 클라이언트 설정 (public 리포 노출 방지)
 google-services.json
+
+# 스토어 업로드용 빌드 산출물 (EAS에서 다운로드)
+/release/
