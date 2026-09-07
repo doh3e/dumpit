@@ -100,6 +100,7 @@ export default function Layout() {
         paddingRight: 'env(safe-area-inset-right)',
       }}
     >
+      <div id="a11y-announcer" role="status" aria-live="polite" aria-atomic="true" className="sr-only" />
       <StarField />
       <Header
         onOpenDrawer={() => setDrawerOpen(true)}
