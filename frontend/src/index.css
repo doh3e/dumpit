@@ -25,7 +25,7 @@
 @tailwind utilities;
 
 :root {
-  --bg:#F7EFDF; --card:#FFFDF6; --fg:#33271E; --sub:#8C7C66;
+  --bg:#F7EFDF; --card:#FFFDF6; --fg:#33271E; --sub:#726553;
   --line:#E0D2B6; --edge:#3A2C21; --chip:#F0DFBB;
   --accent:#D95F52; --accent2:#3E8E85; --on-accent:#FFFBF0;
   --shadow-hero:#EBC0AC; --shadow-sm:#DCC5A0;
@@ -33,6 +33,14 @@
   --danger:#BE4B3D;
   /* 색 역할: accent=주 포인트(빨강) accent2=보조 포인트(틸) warn=마감 임박(앰버) starlight=별·보상(골드) */
   --warn:#D98E2B; --starlight:#E9B44C;
+  /* 글자용(-text)·크림 글자를 얹는 채움용(-fill) 분리 토큰 — 원색은 테두리·장식·아이콘 전용.
+     값은 src/theme/tokens.test.js가 4.5:1을 강제한다. 스킨 블록마다 같은 6개를 반드시 함께 정의할 것 */
+  --accent-text:#C63A2C; --accent-fill:#D13F30;
+  --accent2-text:#357871; --accent2-fill:#387F77;
+  --warn-text:#97621B; --danger-text:#AF4538;
+  /* 앰버·골드 채움 위 글자 — 라이트는 본문색, 다크는 어두운 갈색(다크 fg는 밝아서 골드 위 1.6:1) */
+  --on-warn:#33271E;
+  --focus-w:2px;
   --chrome-bg:var(--card); --chrome-line:var(--line);
   /* 뽀모도로는 전역 테마와 독립된 고정 팔레트 — pomo 스킨 장착 시에만 아래 스킨 블록이 관장 */
   --pomo-focus:#D95F52; --pomo-break:#3E8E85; --pomo-ring:#E0D2B6; --pomo-soft:#F7EFDF;
@@ -45,6 +53,10 @@
   --shadow-hero:#141021; --shadow-sm:#141021;
   --overlay:rgba(10,8,20,.55);
   --danger:#E57B67;
+  --accent-text:#F09355; --accent-fill:#F09355;
+  --accent2-text:#5FC4B4; --accent2-fill:#5FC4B4;
+  --warn-text:#E9B44C; --danger-text:#E57B67;
+  --on-warn:#241E14;
   --warn:#E9B44C; --starlight:#E9B44C;
   --pomo-focus:#F09355; --pomo-break:#5FC4B4; --pomo-ring:#413966; --pomo-soft:#1F1B2E;
 }
@@ -102,7 +114,7 @@ body {
   .btn-retro-primary { @apply btn-retro bg-primary text-on-accent; }
   .btn-retro-secondary { @apply btn-retro bg-secondary text-on-accent; }
   /* 테마색 테두리+글자 변형 — 채움(primary)과 나란히 있어도 구분된다 */
-  .btn-retro-outline { @apply btn-retro; color: var(--accent); border-color: var(--accent); }
+  .btn-retro-outline { @apply btn-retro; color: var(--accent-text); border-color: var(--accent); }
 
   .card-retro {
     @apply bg-card rounded-2xl p-5;
@@ -128,7 +140,7 @@ body {
     @apply w-3.5 h-3.5 rounded bg-card inline-flex items-center justify-center flex-none;
     border: 1.5px solid var(--edge);
   }
-  .check-retro.done { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .check-retro.done { background: var(--accent-fill); border-color: var(--accent-fill); color: var(--on-accent); }
   .divider-retro { border-bottom: 1px dashed var(--line); }
 
   .overlay-retro { background: var(--overlay); }
@@ -415,78 +427,92 @@ body {
 [data-skin-bg="ocean"] {
   --bg:#E4EFEC; --card:#FCFEFD; --chip:#D3E6E1; --line:#B7D4CD; --edge:#28423C;
   --accent:#2E7D8A; --accent2:#D97757; --on-accent:#F4FBF9;
+  --accent-text:#2B7581; --accent-fill:#2E7D8A; --accent2-text:#B34B29; --accent2-fill:#C0502B;
   --shadow-hero:#A9CEC5; --shadow-sm:#C6DDD7; --overlay:rgba(40,66,60,.35);
 }
 [data-skin-bg="ocean"][data-theme="dark"] {
   --bg:#152430; --card:#1E3240; --chip:#28414F; --line:#375366; --edge:#0B141C;
   --accent:#5FB8C9; --accent2:#F09355; --on-accent:#0F1D26;
+  --accent-text:#5FB8C9; --accent-fill:#5FB8C9; --accent2-text:#F09355; --accent2-fill:#F09355;
   --shadow-hero:#0B141C; --shadow-sm:#0B141C; --overlay:rgba(5,12,18,.55);
 }
 [data-skin-bg="lavender"] {
   --bg:#EEEAF4; --card:#FDFCFF; --chip:#E2DAEC; --line:#CBBEDC; --edge:#372C48;
   --accent:#8A63C4; --accent2:#3E8E85; --on-accent:#FBF9FF;
+  --accent-text:#7F54BE; --accent-fill:#875FC3; --accent2-text:#33756E; --accent2-fill:#377F77;
   --shadow-hero:#CDBEE2; --shadow-sm:#D8CCE8; --overlay:rgba(55,44,72,.35);
 }
 [data-skin-bg="lavender"][data-theme="dark"] {
   --bg:#251D3A; --card:#32294E; --chip:#40355F; --line:#4F4373; --edge:#151022;
   --accent:#B79CE8; --accent2:#5FC4B4; --on-accent:#1D1630;
+  --accent-text:#B79CE8; --accent-fill:#B79CE8; --accent2-text:#5FC4B4; --accent2-fill:#5FC4B4;
   --shadow-hero:#151022; --shadow-sm:#151022; --overlay:rgba(12,8,22,.55);
 }
 [data-skin-bg="sprout"] {
   --bg:#EAF2E3; --card:#FBFEF7; --chip:#DCEBCE; --line:#C2DBAA; --edge:#2F4224;
   --accent:#5C8A3C; --accent2:#C4708F; --on-accent:#F7FCF0;
+  --accent-text:#4F7734; --accent-fill:#547F37; --accent2-text:#B14970; --accent2-fill:#B75177;
   --shadow-hero:#BFD8A6; --shadow-sm:#CFE2BA; --overlay:rgba(47,66,36,.35);
   --bg-pattern:url('./assets/shop/pattern_sprout_light.png');
 }
 [data-skin-bg="sprout"][data-theme="dark"] {
   --bg:#1B2617; --card:#26351F; --chip:#31452A; --line:#40573A; --edge:#0E150B;
   --accent:#8FBF6F; --accent2:#D98BA6; --on-accent:#131C0E;
+  --accent-text:#8FBF6F; --accent-fill:#8FBF6F; --accent2-text:#D98BA6; --accent2-fill:#D98BA6;
   --shadow-hero:#0E150B; --shadow-sm:#0E150B; --overlay:rgba(6,10,4,.55);
   --bg-pattern:url('./assets/shop/pattern_sprout_dark.png');
 }
 [data-skin-bg="galaxy"] {
   --bg:#E9EAF6; --card:#FDFDFF; --chip:#DBDDF0; --line:#C2C5E4; --edge:#2E3050;
   --accent:#6D74C9; --accent2:#C9922E; --on-accent:#F8F9FF;
+  --accent-text:#5860C1; --accent-fill:#636BC5; --accent2-text:#89631F; --accent2-fill:#946C22;
   --shadow-hero:#C6C9E8; --shadow-sm:#D2D5EC; --overlay:rgba(46,48,80,.35);
   --bg-pattern:url('./assets/shop/pattern_galaxy_light.png');
 }
 [data-skin-bg="galaxy"][data-theme="dark"] {
   --bg:#151329; --card:#201D3D; --chip:#2B2750; --line:#3D3866; --edge:#0A0918;
   --accent:#8F97E8; --accent2:#E9B44C; --on-accent:#12102A;
+  --accent-text:#8F97E8; --accent-fill:#8F97E8; --accent2-text:#E9B44C; --accent2-fill:#E9B44C;
   --shadow-hero:#0A0918; --shadow-sm:#0A0918; --overlay:rgba(5,4,16,.55);
   --bg-pattern:url('./assets/shop/pattern_galaxy_dark.png');
 }
 [data-skin-bg="rose"] {
   --bg:#F5E9EA; --card:#FEFCFC; --chip:#EDD8DB; --line:#DDBCC2; --edge:#43282E;
   --accent:#C25B6E; --accent2:#6E9E62; --on-accent:#FFF7F8;
+  --accent-text:#B54358; --accent-fill:#BD4D62; --accent2-text:#507447; --accent2-fill:#567C4D;
   --shadow-hero:#E3C2C8; --shadow-sm:#E9CFD4; --overlay:rgba(67,40,46,.35);
 }
 [data-skin-bg="rose"][data-theme="dark"] {
   --bg:#2A1B20; --card:#3A282E; --chip:#48333A; --line:#5C424B; --edge:#170D10;
   --accent:#E8899B; --accent2:#8FBF6F; --on-accent:#251318;
+  --accent-text:#E8899B; --accent-fill:#E8899B; --accent2-text:#8FBF6F; --accent2-fill:#8FBF6F;
   --shadow-hero:#170D10; --shadow-sm:#170D10; --overlay:rgba(10,5,7,.55);
 }
 [data-skin-bg="wood"] {
   --bg:#F1E5D2; --card:#FDF8EE; --chip:#E7D5B8; --line:#D6BE97; --edge:#3E2E1C;
   --accent:#A8763E; --accent2:#5C8A6E; --on-accent:#FFF9EC;
+  --accent-text:#885F32; --accent-fill:#976A38; --accent2-text:#4A6F59; --accent2-fill:#537C63;
   --shadow-hero:#D9C29B; --shadow-sm:#E3D2B2; --overlay:rgba(62,46,28,.35);
   --bg-pattern:url('./assets/shop/pattern_wood_light.png');
 }
 [data-skin-bg="wood"][data-theme="dark"] {
   --bg:#241B10; --card:#2F2517; --chip:#3B2F1E; --line:#4E3F2A; --edge:#120C06;
   --accent:#C99B5C; --accent2:#7FAF8F; --on-accent:#1D150A;
+  --accent-text:#C99B5C; --accent-fill:#C99B5C; --accent2-text:#7FAF8F; --accent2-fill:#7FAF8F;
   --shadow-hero:#120C06; --shadow-sm:#120C06; --overlay:rgba(8,5,2,.55);
   --bg-pattern:url('./assets/shop/pattern_wood_dark.png');
 }
 [data-skin-bg="candy"] {
   --bg:#F7E7EE; --card:#FEFAFC; --chip:#F2D7E2; --line:#E5BCCE; --edge:#46243A;
   --accent:#E05C8A; --accent2:#3E93B8; --on-accent:#FFF6FA;
+  --accent-text:#C8265F; --accent-fill:#D62A66; --accent2-text:#30718E; --accent2-fill:#347A99;
   --shadow-hero:#EBC4D4; --shadow-sm:#F0D2DE; --overlay:rgba(70,36,58,.35);
   --bg-pattern:url('./assets/shop/pattern_candy_light.png');
 }
 [data-skin-bg="candy"][data-theme="dark"] {
   --bg:#2A1722; --card:#3A2230; --chip:#482C3D; --line:#5E3B50; --edge:#160A11;
   --accent:#F08CAE; --accent2:#7FB8E8; --on-accent:#2A1220;
+  --accent-text:#F08CAE; --accent-fill:#F08CAE; --accent2-text:#7FB8E8; --accent2-fill:#7FB8E8;
   --shadow-hero:#160A11; --shadow-sm:#160A11; --overlay:rgba(12,4,9,.55);
   --bg-pattern:url('./assets/shop/pattern_candy_dark.png');
 }
