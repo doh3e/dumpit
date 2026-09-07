@@ -12,6 +12,11 @@
         var f = localStorage.getItem('dumpit-font-scale');
         var scales = { sm: '90%', lg: '112.5%', xl: '125%' };
         if (scales[f]) document.documentElement.style.fontSize = scales[f];
+        // 대비·굵은 글자 부트 적용 — utils/a11y.js의 키·값과 동기화 유지
+        var c = localStorage.getItem('dumpit-contrast');
+        var high = c === 'high' || (c !== 'normal' && matchMedia('(prefers-contrast: more)').matches);
+        if (high) document.documentElement.dataset.contrast = 'high';
+        if (localStorage.getItem('dumpit-bold-text') === '1') document.documentElement.dataset.boldText = '1';
       })();
     </script>
     <!-- 랜딩 히어로(LCP, 288px) 기준 preload — img srcset과 동일 후보라 홈에서 중복 요청 없음 -->

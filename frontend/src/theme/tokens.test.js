@@ -58,8 +58,7 @@ describe('상점 스킨(라이트)', () => {
   }
 })
 
-// Task 4에서 고대비 블록을 추가하면 skip을 해제한다
-describe.skip('고대비 모드', () => {
+describe('고대비 모드', () => {
   it('라이트 고대비: 글자 7:1, 경계선 3:1', () => {
     const hc = blocks.get(':root[data-contrast="high"]')
     expect(hc).toBeTruthy()

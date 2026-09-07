@@ -61,6 +61,31 @@
   --pomo-focus:#F09355; --pomo-break:#5FC4B4; --pomo-ring:#413966; --pomo-soft:#1F1B2E;
 }
 
+/* ---- 사용자 선택: 고대비 — 글자 7:1, 경계선 3:1, 포커스 3px. 스킨 블록보다 뒤에 두어 스킨 accent를 이긴다(아래 스킨별 블록 참고) ---- */
+:root[data-contrast="high"] {
+  --fg:#1A120C; --sub:#53493C; --line:#9E8043; --edge:#1A120C;
+  --accent-text:#932B20; --accent-fill:#932B20;
+  --accent2-text:#275853; --accent2-fill:#275853;
+  --warn-text:#684313; --danger-text:#803229;
+  --focus-w:3px;
+}
+[data-theme="dark"][data-contrast="high"] {
+  --fg:#FFFFFF; --sub:#C9C2D2; --line:#7A6FB0; --edge:#000000;
+  --accent-text:#F2A16B; --accent-fill:#F2A16B;
+  --accent2-text:#5FC4B4; --accent2-fill:#5FC4B4;
+  --focus-w:3px;
+}
+
+/* ---- 사용자 선택: 굵은 글자 — 둥근모는 굵기가 하나뿐이라 갈무리11 Bold로 대체(합성 볼드는 픽셀이 번진다) ---- */
+/* Tailwind font-medium/semibold는 요소에 굵기를 직접 찍으므로 body 상속만으로는 굵어지지 않는다 — 명시 굵기 클래스도 함께 덮는다 */
+:root[data-bold-text="1"] :is(body, .font-normal, .font-medium, .font-semibold) { font-weight: 700; }
+:root[data-bold-text="1"] .font-galmuri,
+:root[data-bold-text="1"] .galmuri-semibold { font-weight: 700; text-shadow: none; }
+:root[data-bold-text="1"] .font-dungeon,
+:root[data-bold-text="1"] .btn-retro,
+:root[data-bold-text="1"] .chip-retro,
+:root[data-bold-text="1"] .label-retro { font-family: 'Galmuri11', 'Pretendard Variable', Pretendard, sans-serif; font-weight: 700; }
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -532,6 +557,16 @@ body {
 [data-skin-chrome="galaxy"][data-theme="dark"] { --chrome-bg:#201D3D; --chrome-line:#3D3866; }
 [data-skin-chrome="candy"] { --chrome-bg:#F7E7EE; --chrome-line:#E5BCCE; }
 [data-skin-chrome="candy"][data-theme="dark"] { --chrome-bg:#3A2230; --chrome-line:#5E3B50; }
+
+/* ---- 스킨 + 고대비: 스킨 accent 기준 7:1 글자·채움 (라이트) ---- */
+[data-skin-bg="ocean"][data-contrast="high"]    { --accent-text:#1F555E; --accent-fill:#1F555E; --accent2-text:#84371E; --accent2-fill:#84371E; }
+[data-skin-bg="lavender"][data-contrast="high"] { --accent-text:#5F3998; --accent-fill:#5F3998; --accent2-text:#265650; --accent2-fill:#265650; }
+[data-skin-bg="sprout"][data-contrast="high"]   { --accent-text:#3B5826; --accent-fill:#3B5826; --accent2-text:#833652; --accent2-fill:#833652; }
+[data-skin-bg="galaxy"][data-contrast="high"]   { --accent-text:#3B43A1; --accent-fill:#3B43A1; --accent2-text:#644917; --accent2-fill:#644917; }
+[data-skin-bg="rose"][data-contrast="high"]     { --accent-text:#853241; --accent-fill:#853241; --accent2-text:#3B5434; --accent2-fill:#3B5434; }
+[data-skin-bg="wood"][data-contrast="high"]     { --accent-text:#634524; --accent-fill:#634524; --accent2-text:#365141; --accent2-fill:#365141; }
+[data-skin-bg="candy"][data-contrast="high"]    { --accent-text:#941C46; --accent-fill:#941C46; --accent2-text:#235368; --accent2-fill:#235368; }
+[data-skin-bg][data-theme="dark"][data-contrast="high"] { --accent-text:var(--accent); --accent-fill:var(--accent); --accent2-text:var(--accent2); --accent2-fill:var(--accent2); }
 
 /* 컨셉 크롬 도트 장식 — 크롬 전면에 은은한 산포 타일 (COLOR 크롬은 장식 없음)
    background-image라 메뉴/버튼 콘텐츠보다 항상 아래에 깔린다 */

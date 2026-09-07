@@ -12,6 +12,7 @@ import PomodoroTimer from '../PomodoroTimer'
 import api from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { watchSystemTheme } from '../../utils/theme'
+import { watchSystemContrast } from '../../utils/a11y'
 
 const HELP_SEEN_KEY = 'dumpit_help_seen'
 
@@ -74,6 +75,7 @@ export default function Layout() {
   }, [])
 
   useEffect(() => watchSystemTheme(), [])
+  useEffect(() => watchSystemContrast(), [])
 
   const handleCloseHelp = () => {
     localStorage.setItem(HELP_SEEN_KEY, '1')
