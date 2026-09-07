@@ -1,6 +1,6 @@
 import { composeTheme } from '../compose';
 import { BG_SKINS, CHROME_SKINS, POMO_SKINS, skinKey } from '../skins';
-import { palettes, pomoDefaults } from '../tokens';
+import { highContrast, palettes, pomoDefaults } from '../tokens';
 
 jest.mock('../../auth/AuthContext', () => ({}), { virtual: true });
 
@@ -106,5 +106,27 @@ describe('스킨 레지스트리 정합성', () => {
       expect(POMO_SKINS[k].light.focus).toMatch(/^#[0-9A-F]{6}$/i);
       expect(POMO_SKINS[k].dark.focus).toMatch(/^#[0-9A-F]{6}$/i);
     });
+  });
+});
+
+describe('composeTheme 고대비', () => {
+  it('옵션이 없으면 기본 팔레트', () => {
+    expect(composeTheme('light', null).colors.fg).toBe(palettes.light.fg);
+  });
+  it('highContrast면 글자·선 토큰이 오버레이 값', () => {
+    const c = composeTheme('light', null, { highContrast: true }).colors;
+    expect(c.fg).toBe(highContrast.light.fg);
+    expect(c.line).toBe(highContrast.light.line);
+    expect(c.accentText).toBe(highContrast.light.accentText);
+  });
+  it('스킨 위 고대비는 스킨 accent 기준 7:1 값', () => {
+    const c = composeTheme('light', { BACKGROUND: 'bg.ocean' }, { highContrast: true }).colors;
+    expect(c.accentText).toBe('#1F555E');
+    expect(c.bg).toBe('#E4EFEC');
+  });
+  it('다크 스킨 고대비는 스킨 accent 유지', () => {
+    const c = composeTheme('dark', { BACKGROUND: 'bg.ocean' }, { highContrast: true }).colors;
+    expect(c.accentText).toBe('#5FB8C9');
+    expect(c.fg).toBe('#FFFFFF');
   });
 });
