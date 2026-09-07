@@ -5,7 +5,11 @@ import { contrastRatio } from '../contrast';
 const TEXT_KEYS: (keyof Palette)[] = ['sub', 'accentText', 'accent2Text', 'dangerText'];
 
 function expectMin(fg: string, bg: string, min: number, label: string) {
-  expect(contrastRatio(fg, bg), `${label}: ${fg} on ${bg}`).toBeGreaterThanOrEqual(min);
+  const ratio = contrastRatio(fg, bg);
+  if (!(ratio >= min)) {
+    throw new Error(`${label}: ${fg} on ${bg} = ${ratio.toFixed(2)} < ${min}`);
+  }
+  expect(ratio).toBeGreaterThanOrEqual(min);
 }
 
 describe('palettes', () => {
