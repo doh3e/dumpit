@@ -76,4 +76,11 @@ describe('고대비 모드', () => {
     expectText(hc.sub, dark.card, 7, 'hc dark sub')
     expectText(hc.line, dark.card, 3, 'hc dark line')
   })
+  it('다크 스킨 + 고대비: 스킨 블록이 덮은 line/edge를 되돌리는 블록이 있다', () => {
+    const hc = blocks.get('[data-theme="dark"][data-contrast="high"]')
+    const skinHc = blocks.get('[data-skin-bg][data-theme="dark"][data-contrast="high"]')
+    expect(skinHc, '[data-skin-bg][data-theme="dark"][data-contrast="high"] 블록').toBeTruthy()
+    expect(skinHc.line).toBe(hc.line)
+    expect(skinHc.edge).toBe(hc.edge)
+  })
 })

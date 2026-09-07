@@ -61,7 +61,7 @@
   --pomo-focus:#F09355; --pomo-break:#5FC4B4; --pomo-ring:#413966; --pomo-soft:#1F1B2E;
 }
 
-/* ---- 사용자 선택: 고대비 — 글자 7:1, 경계선 3:1, 포커스 3px. 스킨 블록보다 뒤에 두어 스킨 accent를 이긴다(아래 스킨별 블록 참고) ---- */
+/* ---- 사용자 선택: 고대비 — 글자 7:1, 경계선 3:1, 포커스 3px. 라이트 스킨 블록(0,1,0)보다 특이도가 높아 순서와 무관하게 이기고, 같은 특이도인 다크 스킨 블록은 아래 스킨+고대비 블록이 다시 덮는다 ---- */
 :root[data-contrast="high"] {
   --fg:#1A120C; --sub:#53493C; --line:#9E8043; --edge:#1A120C;
   --accent-text:#932B20; --accent-fill:#932B20;
@@ -566,7 +566,7 @@ body {
 [data-skin-bg="rose"][data-contrast="high"]     { --accent-text:#853241; --accent-fill:#853241; --accent2-text:#3B5434; --accent2-fill:#3B5434; }
 [data-skin-bg="wood"][data-contrast="high"]     { --accent-text:#634524; --accent-fill:#634524; --accent2-text:#365141; --accent2-fill:#365141; }
 [data-skin-bg="candy"][data-contrast="high"]    { --accent-text:#941C46; --accent-fill:#941C46; --accent2-text:#235368; --accent2-fill:#235368; }
-[data-skin-bg][data-theme="dark"][data-contrast="high"] { --accent-text:var(--accent); --accent-fill:var(--accent); --accent2-text:var(--accent2); --accent2-fill:var(--accent2); }
+[data-skin-bg][data-theme="dark"][data-contrast="high"] { --accent-text:var(--accent); --accent-fill:var(--accent); --accent2-text:var(--accent2); --accent2-fill:var(--accent2); --line:#7A6FB0; --edge:#000000; }
 
 /* 컨셉 크롬 도트 장식 — 크롬 전면에 은은한 산포 타일 (COLOR 크롬은 장식 없음)
    background-image라 메뉴/버튼 콘텐츠보다 항상 아래에 깔린다 */
