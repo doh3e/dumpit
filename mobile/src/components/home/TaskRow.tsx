@@ -26,7 +26,7 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
   const category = getCategory(task.category);
   const coins = calcCompletionCoins(task);
   const deadlineLabel = formatDeadline(task.deadline);
-  // 뱃지·메타는 행 라벨에 합성한다 — 행이 accessible이면 자식 텍스트는 따로 읽히지 않는다
+  // 행이 accessible이면 자식 텍스트는 따로 읽히지 않는다
   const a11yParts = [
     task.title,
     child ? '서브 태스크' : null,

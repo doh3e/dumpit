@@ -53,10 +53,14 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
   // 그룹 라벨은 상단 View에만 — 카드 전체를 accessible로 묶으면 액션 버튼·큐 행이 TalkBack 스톱에서 사라진다.
   // 상단에 든 OrbitProgress도 함께 삼켜지므로 그 문장을 라벨 끝에 붙인다.
   const progressLabel = orbitProgressLabel(todayDone, todayTotal);
+  const allDoneTitle = '오늘 다 비웠어요';
+  const allDoneMessage = bonusTime
+    ? '아직 일과시간이네요. 여유가 되면 다음 일을 미리 당겨볼까요?'
+    : '머릿속이 가벼워졌네요. 내일 또 만나요.';
   const heroLabel = allDone
-    ? `오늘 할 일을 모두 끝냈어요, ${progressLabel}`
+    ? [allDoneTitle, allDoneMessage, progressLabel].join(', ')
     : task
-      ? `지금 할 일, ${task.title}${heroTime ? `, ${heroTime}` : ''}, ${progressLabel}`
+      ? [`지금 할 일, ${task.title}`, heroTime, nowSuggestion?.message, progressLabel].filter(Boolean).join(', ')
       : null;
 
   return (
@@ -67,12 +71,10 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
           {allDone ? (
             <>
               <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-                오늘 다 비웠어요 <PixelIcon name="rocket" size={18} />
+                {allDoneTitle} <PixelIcon name="rocket" size={18} />
               </Text>
               <Text style={[styles.message, { color: colors.sub, fontFamily: fonts.body }]}>
-                {bonusTime
-                  ? '아직 일과시간이네요. 여유가 되면 다음 일을 미리 당겨볼까요?'
-                  : '머릿속이 가벼워졌네요. 내일 또 만나요.'}
+                {allDoneMessage}
               </Text>
             </>
           ) : task ? (
