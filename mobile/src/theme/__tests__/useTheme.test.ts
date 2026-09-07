@@ -7,6 +7,7 @@ jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
 jest.mock('react', () => ({ ...jest.requireActual('react'), useContext: () => null }));
 
 import { palettes, pomoDefaults } from '../tokens';
+import { fonts } from '../typography';
 import { useTheme } from '../useTheme';
 
 const mocked = require('react-native/Libraries/Utilities/useColorScheme').default as jest.Mock;
@@ -14,14 +15,14 @@ const mocked = require('react-native/Libraries/Utilities/useColorScheme').defaul
 it('dark 스킴이면 dark 팔레트', () => {
   mocked.mockReturnValue('dark');
   expect(useTheme()).toEqual({
-    colors: palettes.dark, pomo: pomoDefaults.dark, scheme: 'dark', bgPattern: null, chromeDeco: null,
+    colors: palettes.dark, pomo: pomoDefaults.dark, fonts, scheme: 'dark', bgPattern: null, chromeDeco: null,
   });
 });
 
 it('light 스킴이면 light 팔레트', () => {
   mocked.mockReturnValue('light');
   expect(useTheme()).toEqual({
-    colors: palettes.light, pomo: pomoDefaults.light, scheme: 'light', bgPattern: null, chromeDeco: null,
+    colors: palettes.light, pomo: pomoDefaults.light, fonts, scheme: 'light', bgPattern: null, chromeDeco: null,
   });
 });
 

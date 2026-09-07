@@ -2,15 +2,22 @@ import { createContext, useContext } from 'react';
 import type { ComposedTheme, Equipments } from './compose';
 import type { PomoColors } from './skins';
 import type { Palette } from './tokens';
+import type { Fonts } from './typography';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
+export type ContrastMode = 'system' | 'high' | 'normal';
 
 export type ThemeContextValue = ComposedTheme & {
   colors: Palette;
   pomo: PomoColors;
+  fonts: Fonts;
   scheme: 'light' | 'dark';
   mode: ThemeMode;
   setMode: (m: ThemeMode) => void;
+  contrastMode: ContrastMode;
+  setContrastMode: (m: ContrastMode) => void;
+  boldText: boolean;
+  setBoldText: (on: boolean) => void;
   /** 상점 미리보기 — 실제 장착을 바꾸지 않고 화면만 임시로 입힌다. null이면 해제 */
   previewEquipments: Equipments;
   setPreviewEquipments: (eq: Equipments) => void;
@@ -33,4 +40,14 @@ export function useSkinPreview(): { preview: Equipments; setPreview: (eq: Equipm
   return ctx
     ? { preview: ctx.previewEquipments, setPreview: ctx.setPreviewEquipments }
     : { preview: null, setPreview: () => {} };
+}
+
+export function useA11yPrefs(): {
+  contrastMode: ContrastMode; setContrastMode: (m: ContrastMode) => void;
+  boldText: boolean; setBoldText: (on: boolean) => void;
+} {
+  const ctx = useContext(ThemeContext);
+  return ctx
+    ? { contrastMode: ctx.contrastMode, setContrastMode: ctx.setContrastMode, boldText: ctx.boldText, setBoldText: ctx.setBoldText }
+    : { contrastMode: 'system', setContrastMode: () => {}, boldText: false, setBoldText: () => {} };
 }
