@@ -157,7 +157,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
           : `flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-dungeon text-sm transition-colors ${
               urgentCount > 0
                 ? 'bg-[var(--warn)] border-edge text-on-warn'
-                : 'bg-chip border-line text-sub hover:text-dark'
+                : 'bg-chip border-line text-dark'
             }`
         }
         aria-label="마감 임박 알림"
