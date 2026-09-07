@@ -120,6 +120,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
               accessible
               accessibilityRole="button"
               accessibilityLabel={`${QUEUE_BUCKET_LABEL[r.bucket] ?? '추천'}, ${r.task.title}`}
+              hitSlop={{ top: 8, bottom: 8, left: 0, right: 0 }}
               style={({ pressed }) => [styles.queueRow, { opacity: pressed ? 0.7 : 1 }]}
             >
               <RetroBadge text={QUEUE_BUCKET_LABEL[r.bucket] ?? '추천'} tone="sub" />
@@ -144,6 +145,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 8, marginTop: 14 },
   queue: { borderTopWidth: 1.5, marginTop: 14, paddingTop: 10, gap: 7 },
   queueTitle: { fontSize: 11 },
-  queueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 28 },
+  queueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 32 },
   queueText: { fontSize: 13, flexShrink: 1 },
 });

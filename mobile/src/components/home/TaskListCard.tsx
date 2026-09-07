@@ -139,7 +139,7 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
                   accessibilityRole="checkbox"
                   accessibilityLabel={`${t.title} 완료 해제`}
                   accessibilityState={{ checked: true }}
-                  hitSlop={10}
+                  hitSlop={14}
                   style={({ pressed }) => [
                     styles.doneCheckbox,
                     { borderColor: colors.edge, backgroundColor: colors.accentFill },

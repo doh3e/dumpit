@@ -17,7 +17,7 @@ export function AiBadge({ usage }: { usage: AiUsage | undefined }) {
       onPress={() => toast.show(`오늘 AI ${usage.used}/${usage.limit}점 사용 · 자정에 초기화돼요`)}
       accessibilityRole="button"
       accessibilityLabel={`AI 잔여 ${usage.remaining}점${usage.remaining < 10 ? ', 거의 소진' : ''}`}
-      hitSlop={6}
+      hitSlop={8}
       style={({ pressed }) => [
         styles.badge,
         { borderColor: tone, opacity: pressed ? 0.7 : 1 },
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row', gap: 4,
     borderWidth: 1.5, borderRadius: 8,
-    paddingHorizontal: 9, paddingVertical: 5, minHeight: 26,
+    paddingHorizontal: 9, paddingVertical: 5, minHeight: 32,
     alignItems: 'center', justifyContent: 'center',
   },
   text: { fontSize: 12 },

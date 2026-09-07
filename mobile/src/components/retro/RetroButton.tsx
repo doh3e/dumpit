@@ -41,6 +41,8 @@ export function RetroButton({
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: !!blocked, busy: !!busy }}
+      // sm은 34dp — 위아래 7dp씩 넓혀 48dp 타깃을 맞춘다 (모양은 그대로)
+      hitSlop={size === 'sm' ? { top: 7, bottom: 7, left: 0, right: 0 } : undefined}
       style={({ pressed }) => [
         styles.base,
         size === 'sm' ? styles.sm : styles.md,

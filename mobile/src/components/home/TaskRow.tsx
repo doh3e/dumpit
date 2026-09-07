@@ -55,7 +55,7 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
         accessibilityRole="checkbox"
         accessibilityLabel={`${task.title} ${done ? '완료 해제' : '완료'}`}
         accessibilityState={{ checked: done }}
-        hitSlop={10}
+        hitSlop={13}
         style={({ pressed }) => [
           styles.checkbox,
           { borderColor: colors.edge, backgroundColor: done ? colors.accentFill : colors.card },
