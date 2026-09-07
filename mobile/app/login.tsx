@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { PRIVACY_URL, TERMS_URL } from '../src/legal/links';
 import { useAuth } from '../src/auth/AuthContext';
-import { getApiErrorMessage } from '../src/api/client';
+import { describeError, type ErrorInfo } from '../src/api/errors';
 import { fonts } from '../src/theme/typography';
 import { retroShadow } from '../src/theme/tokens';
 import { useTheme } from '../src/theme/useTheme';
@@ -10,7 +10,7 @@ import { useTheme } from '../src/theme/useTheme';
 export default function LoginScreen() {
   const { colors } = useTheme();
   const { signInWithGoogle } = useAuth();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorInfo | null>(null);
   const [busy, setBusy] = useState(false);
 
   const onPress = async () => {
@@ -19,7 +19,8 @@ export default function LoginScreen() {
     try {
       await signInWithGoogle();
     } catch (e) {
-      setError(getApiErrorMessage(e, '로그인에 실패했어요. 다시 시도해주세요.'));
+      const info = describeError(e, '로그인에 실패했어요. 다시 시도해주세요.');
+      if (!info.silent) setError(info);
     } finally {
       setBusy(false);
     }
@@ -58,7 +59,14 @@ export default function LoginScreen() {
       </Pressable>
       <View style={styles.errorSlot}>
         {error && (
-          <Text style={[styles.error, { color: colors.warn, fontFamily: fonts.body }]}>{error}</Text>
+          <>
+            <Text style={[styles.error, { color: colors.warn, fontFamily: fonts.body }]}>{error.message}</Text>
+            {error.code && (
+              <Text selectable style={[styles.errorCode, { color: colors.sub, fontFamily: fonts.chrome }]}>
+                오류 코드 {error.code}
+              </Text>
+            )}
+          </>
         )}
       </View>
 
@@ -95,9 +103,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonText: { fontSize: 16 },
-  // 에러 출현으로 버튼이 밀리지 않도록 자리를 항상 확보
-  errorSlot: { minHeight: 32, marginTop: 8, justifyContent: 'flex-start' },
-  error: { fontSize: 13, textAlign: 'center' },
+  // 에러 출현으로 버튼이 밀리지 않도록 자리를 항상 확보 (문구 줄 + 코드 줄)
+  errorSlot: { minHeight: 48, marginTop: 8, alignItems: 'center', gap: 4 },
+  error: { fontSize: 13, textAlign: 'center', maxWidth: 300 },
+  errorCode: { fontSize: 12, textAlign: 'center' },
   consent: { fontSize: 11, lineHeight: 17, textAlign: 'center', maxWidth: 300 },
   consentLink: { textDecorationLine: 'underline' },
 });
