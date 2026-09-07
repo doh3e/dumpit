@@ -13,7 +13,7 @@ export function MarkdownView({ children }: { children: string }) {
         heading2: { color: colors.fg, fontFamily: fonts.displayBold, fontSize: 17, marginTop: 8, marginBottom: 4 },
         heading3: { color: colors.fg, fontFamily: fonts.displayBold, fontSize: 15, marginTop: 6, marginBottom: 3 },
         strong: { fontFamily: fonts.bodyBold },
-        link: { color: colors.accent2, textDecorationLine: 'underline' },
+        link: { color: colors.accent2Text, textDecorationLine: 'underline' },
         bullet_list: { marginVertical: 4 },
         ordered_list: { marginVertical: 4 },
         code_inline: {

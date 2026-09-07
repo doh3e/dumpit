@@ -87,7 +87,7 @@ export default function InquiryScreen() {
               앱에서 보내기 어려우면 아래 주소로 직접 보내주셔도 됩니다.
             </Text>
             <Text
-              style={[styles.link, { color: colors.accent, fontFamily: fonts.body }]}
+              style={[styles.link, { color: colors.accentText, fontFamily: fonts.body }]}
               onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
             >
               {SUPPORT_EMAIL}

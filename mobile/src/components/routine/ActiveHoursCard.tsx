@@ -84,12 +84,12 @@ export function ActiveHoursCard() {
             ))}
           </View>
           {wraps && (
-            <Text style={[styles.wrapNote, { color: colors.warn, fontFamily: fonts.body }]}>
+            <Text style={[styles.wrapNote, { color: colors.warnText, fontFamily: fonts.body }]}>
               <PixelIcon name="moon" size={12} /> 자정을 넘겨 다음날 새벽 {hh(draftEnd)}까지 이어지는 야행성 일과예요.
             </Text>
           )}
           {draftStart === draftEnd && (
-            <Text style={[styles.wrapNote, { color: colors.warn, fontFamily: fonts.body }]}>
+            <Text style={[styles.wrapNote, { color: colors.warnText, fontFamily: fonts.body }]}>
               시작과 끝이 같을 수는 없어요.
             </Text>
           )}

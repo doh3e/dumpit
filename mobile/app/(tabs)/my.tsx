@@ -253,7 +253,7 @@ export default function MyScreen() {
 
         {(overdue.data?.length ?? 0) > 0 && (
           <RetroCard style={styles.card}>
-            <Text style={[styles.sectionTitle, { color: colors.warn, fontFamily: fonts.displayBold }]}>
+            <Text style={[styles.sectionTitle, { color: colors.warnText, fontFamily: fonts.displayBold }]}>
               ⏰ 기한 지난 태스크 {overdue.data!.length}
             </Text>
             {overdue.data!.map((t) => (
@@ -262,7 +262,7 @@ export default function MyScreen() {
                   <Text numberOfLines={1} style={[styles.overdueTitle, { color: colors.fg, fontFamily: fonts.body }]}>
                     <PixelIcon name={getCategory(t.category).icon} size={11} /> {t.title}
                   </Text>
-                  <Text style={[styles.overdueDeadline, { color: colors.warn, fontFamily: fonts.chrome }]}>
+                  <Text style={[styles.overdueDeadline, { color: colors.warnText, fontFamily: fonts.chrome }]}>
                     {formatDeadline(t.deadline)} 마감
                   </Text>
                 </View>

@@ -17,7 +17,7 @@ type Props = {
 export function Chip({ label, selected = false, onPress, emoji, icon, disabled }: Props) {
   const { colors } = useTheme();
   const text = (
-    <Text style={[styles.text, { color: selected ? colors.onAccent : colors.sub, fontFamily: fonts.chrome }]}>
+    <Text style={[styles.text, { color: selected ? colors.onAccent : colors.fg, fontFamily: fonts.chrome }]}>
       {!icon && emoji ? `${emoji} ${label}` : label}
     </Text>
   );
@@ -32,7 +32,7 @@ export function Chip({ label, selected = false, onPress, emoji, icon, disabled }
       style={({ pressed }) => [
         styles.chip,
         selected
-          ? { backgroundColor: colors.accent2, borderColor: colors.edge }
+          ? { backgroundColor: colors.accent2Fill, borderColor: colors.edge }
           : { backgroundColor: colors.chip, borderColor: colors.line },
         { opacity: disabled ? 0.45 : pressed ? 0.8 : 1 },
       ]}

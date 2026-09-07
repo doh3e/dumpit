@@ -152,7 +152,7 @@ export default function IdeaDumpScreen() {
               disabled={!text.trim() || remaining < AI_COSTS.IDEA_EXTRACT}
             />
             {remaining < AI_COSTS.IDEA_EXTRACT && (
-              <Text style={[styles.hint, { color: colors.warn, fontFamily: fonts.body }]}>
+              <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>
                 오늘의 AI 사용량이 부족해요. 내일 자정(KST)에 초기화돼요.
               </Text>
             )}
@@ -168,7 +168,7 @@ export default function IdeaDumpScreen() {
                 <Pressable key={i} onPress={() => toggleRoot(i)} accessibilityRole="button"
                   accessibilityState={{ selected: !off }}>
                   <RetroCard style={StyleSheet.flatten([styles.rootCard, off && styles.rootOff])}>
-                    <Text style={[styles.rootMark, { color: off ? colors.sub : colors.accent2, fontFamily: fonts.chrome }]}>
+                    <Text style={[styles.rootMark, { color: off ? colors.sub : colors.accent2Text, fontFamily: fonts.chrome }]}>
                       <PixelIcon name={off ? 'checkboxOff' : 'checkboxOn'} size={12} /> {off ? '제외됨' : '저장'}
                     </Text>
                     <NodePreview node={node} depth={0} colors={colors} />

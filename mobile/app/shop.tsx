@@ -242,7 +242,7 @@ export default function ShopScreen() {
                   busy={busyCode === item.code}
                 />
               ) : (
-                <Text style={[styles.ownedText, { color: colors.accent2, fontFamily: fonts.chrome }]}>보유중</Text>
+                <Text style={[styles.ownedText, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>보유중</Text>
               )}
             </View>
           </RetroCard>

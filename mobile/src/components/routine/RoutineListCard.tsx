@@ -74,7 +74,7 @@ export function RoutineListCard() {
                 {repeatSummary(r)} · {timeSummary(r)}
               </Text>
               {next && (
-                <Text style={[styles.meta, { color: colors.accent2, fontFamily: fonts.chrome }]}>{next}</Text>
+                <Text style={[styles.meta, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>{next}</Text>
               )}
             </View>
             <Switch

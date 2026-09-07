@@ -6,6 +6,7 @@ import { groupByParent, sortByDeadline } from '../../tasks/grouping';
 import { calcCompletionCoins } from '../../tasks/rewards';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { CoinIcon } from '../common/CoinIcon';
 import { RetroBadge } from '../retro/RetroBadge';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
@@ -82,7 +83,7 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
     <RetroCard style={{ paddingBottom: 10 }}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-          해야 할 일 <Text style={{ color: colors.accent2 }}>({activeCount})</Text>
+          해야 할 일 <Text style={{ color: colors.accent2Text }}>({activeCount})</Text>
         </Text>
         <RetroButton label="전체 보드" size="sm" variant="ghost" onPress={onPressBoard} />
       </View>
@@ -142,7 +143,7 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
                   hitSlop={10}
                   style={({ pressed }) => [
                     styles.doneCheckbox,
-                    { borderColor: colors.edge, backgroundColor: colors.accent },
+                    { borderColor: colors.edge, backgroundColor: colors.accentFill },
                     pressed && { transform: [{ scale: 0.9 }] },
                   ]}
                 >
@@ -154,8 +155,8 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
                 >
                   {t.title}
                 </Text>
-                <Text style={[styles.doneMeta, { color: colors.starlight, fontFamily: fonts.chrome }]}>
-                  +{t.coinsGranted ?? calcCompletionCoins(t)}
+                <Text style={[styles.doneMeta, { color: colors.fg, fontFamily: fonts.chrome }]}>
+                  <CoinIcon size={10} /> +{t.coinsGranted ?? calcCompletionCoins(t)}
                 </Text>
                 {t.completedAt && (
                   <Text style={[styles.doneMeta, { color: colors.sub, fontFamily: fonts.chrome }]}>

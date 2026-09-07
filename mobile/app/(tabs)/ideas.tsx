@@ -93,7 +93,7 @@ export default function IdeasScreen() {
                       { borderColor: colors.accent2, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 },
                     ]}
                   >
-                    <Text style={[styles.caretText, { color: colors.accent2, fontFamily: fonts.chrome }]}>
+                    <Text style={[styles.caretText, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>
                       {isExpanded ? '▾' : '▸'} {childCount}
                     </Text>
                   </Pressable>

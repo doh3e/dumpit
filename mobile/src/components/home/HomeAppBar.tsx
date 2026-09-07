@@ -35,7 +35,7 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
           <Text style={[styles.date, { color: colors.sub, fontFamily: fonts.chrome }]}>{dateLabel}</Text>
           <Text style={[styles.greeting, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={1}>
             {me?.name ? `${me.name}의 덤프` : 'DUMPIT!'}
-            <Text style={{ color: colors.starlight }}> ★</Text>
+            <Text style={{ color: colors.starlight }} accessibilityElementsHidden importantForAccessibility="no"> ★</Text>
           </Text>
         </View>
       </View>

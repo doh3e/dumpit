@@ -22,6 +22,7 @@ const SKIN_HIGH_CONTRAST_LIGHT: Record<SkinKey, Pick<Palette, 'accentText' | 'ac
   candy:    { accentText: '#941C46', accentFill: '#941C46', accent2Text: '#235368', accent2Fill: '#235368' },
 };
 
+/** 장착 스킨을 기본 팔레트에 합성한다 — 웹 CSS 캐스케이드와 같은 순서: 기본(light|dark) → BACKGROUND → CHROME → (옵션) 고대비. POMODORO는 전역 팔레트에 끼지 않고 따로 반환한다 (웹도 --pomo-* 별도 그룹). */
 export function composeTheme(scheme: Scheme, equipments: Equipments, options: ComposeOptions = {}): ComposedTheme {
   const base = palettes[scheme];
   const bgKey = skinKey(equipments?.BACKGROUND);
@@ -32,6 +33,7 @@ export function composeTheme(scheme: Scheme, equipments: Equipments, options: Co
   const chromeSkin = chromeKey ? CHROME_SKINS[chromeKey] : null;
 
   const withBg: Palette = { ...base, ...(bgSkin?.[scheme] ?? {}) };
+  // BACKGROUND는 card/line까지 덮으므로, CHROME 미장착 시 크롬도 그 값을 따라가야 웹과 같아진다 (웹 :root의 --chrome-bg:var(--card) 참조와 동일).
   const withChrome: Palette = {
     ...withBg,
     chromeBg: chromeSkin?.[scheme].chromeBg ?? withBg.card,

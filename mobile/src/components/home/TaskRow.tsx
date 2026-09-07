@@ -7,6 +7,7 @@ import { formatDeadline } from '../../tasks/dates';
 import { calcCompletionCoins } from '../../tasks/rewards';
 import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
+import { CoinIcon } from '../common/CoinIcon';
 import { PixelIcon } from '../common/PixelIcon';
 import { RetroBadge } from '../retro/RetroBadge';
 
@@ -46,7 +47,7 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
         hitSlop={10}
         style={({ pressed }) => [
           styles.checkbox,
-          { borderColor: colors.edge, backgroundColor: done ? colors.accent : colors.card },
+          { borderColor: colors.edge, backgroundColor: done ? colors.accentFill : colors.card },
           pressed && { transform: [{ scale: 0.9 }] },
         ]}
       >
@@ -84,7 +85,7 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
         </Text>
         <View style={styles.meta}>
           {deadlineLabel && (
-            <Text style={[styles.metaText, { color: overdue ? colors.warn : colors.sub, fontFamily: fonts.chrome }]}>
+            <Text style={[styles.metaText, { color: colors.sub, fontFamily: fonts.chrome }]}>
               {deadlineLabel}
             </Text>
           )}
@@ -97,7 +98,9 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
             P {Math.round((task.effectivePriority ?? 0) * 100)}
           </Text>
           {coins > 0 && !done && (
-            <Text style={[styles.metaText, { color: colors.starlight, fontFamily: fonts.chrome }]}>+{coins}</Text>
+            <Text style={[styles.metaText, { color: colors.fg, fontFamily: fonts.chrome }]}>
+              <CoinIcon size={10} /> +{coins}
+            </Text>
           )}
           <Text style={[styles.metaText, { color: colors.sub, fontFamily: fonts.body }]}>
             <PixelIcon name={category.icon} size={10} /> {category.label}

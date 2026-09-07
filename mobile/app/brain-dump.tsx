@@ -390,7 +390,7 @@ export default function BrainDumpScreen() {
             {insufficient ? (
               <Text
                 accessibilityRole="alert"
-                style={[styles.insufficient, { color: colors.warn, fontFamily: fonts.bodyBold }]}
+                style={[styles.insufficient, { color: colors.warnText, fontFamily: fonts.bodyBold }]}
               >
                 오늘 AI 점수가 부족해요
               </Text>

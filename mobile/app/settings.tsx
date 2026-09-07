@@ -101,7 +101,7 @@ export default function SettingsScreen() {
           <RetroButton label="로그아웃" variant="ghost" onPress={confirmSignOut} />
           {withdrawStage ? (
             <>
-              <Text style={[styles.hint, { color: colors.warn, fontFamily: fonts.body }]}>
+              <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>
                 정말 탈퇴하시려면 아래에 "탈퇴"를 입력해주세요.
               </Text>
               {/* 한글 IME 조합 보호 — uncontrolled */}

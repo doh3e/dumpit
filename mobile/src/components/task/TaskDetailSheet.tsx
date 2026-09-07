@@ -287,7 +287,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
             )}
           </View>
           {startAfterDeadline && (
-            <Text style={[styles.hint, { color: colors.warn, fontFamily: fonts.body }]}>시작 시간이 마감보다 늦어요.</Text>
+            <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>시작 시간이 마감보다 늦어요.</Text>
           )}
 
           <View style={styles.optionRow}>

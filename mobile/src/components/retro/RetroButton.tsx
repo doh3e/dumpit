@@ -20,10 +20,11 @@ type Props = {
 export function RetroButton({ label, onPress, variant = 'primary', size = 'md', disabled, busy, style, icon }: Props) {
   const { colors } = useTheme();
   const palette = {
-    primary: { bg: colors.accent, fg: colors.onAccent },
+    primary: { bg: colors.accentFill, fg: colors.onAccent },
     ghost: { bg: colors.card, fg: colors.fg },
-    danger: { bg: colors.warn, fg: colors.onAccent },
-    focus: { bg: colors.accent2, fg: colors.onAccent },   // 진행 중 상태 표시용 (틸)
+    // 앰버 위 크림은 2.6:1 — 앰버 채움은 onWarn 글자 (웹 결정 C)
+    danger: { bg: colors.warn, fg: colors.onWarn },
+    focus: { bg: colors.accent2Fill, fg: colors.onAccent },   // 진행 중 상태 표시용 (틸)
   }[variant];
   const blocked = disabled || busy;
 

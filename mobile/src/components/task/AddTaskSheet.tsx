@@ -205,7 +205,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
         )}
 
         {startAfterDeadline && (
-          <Text style={[styles.warnText, { color: colors.warn, fontFamily: fonts.body }]}>
+          <Text style={[styles.warnText, { color: colors.warnText, fontFamily: fonts.body }]}>
             시작 시간이 마감보다 늦어요.
           </Text>
         )}

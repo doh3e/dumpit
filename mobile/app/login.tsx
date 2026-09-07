@@ -48,7 +48,7 @@ export default function LoginScreen() {
         <Text style={[styles.body, { color: colors.sub, fontFamily: fonts.body }]}>
           해야 할 일들이 우주먼지처럼 뒤엉켜 있나요?
         </Text>
-        <Text style={[styles.shout, { color: colors.accent, fontFamily: fonts.chrome }]}>
+        <Text style={[styles.shout, { color: colors.accentText, fontFamily: fonts.chrome }]}>
           그냥 다 쏟아내세요!
         </Text>
         <Text style={[styles.body, { color: colors.sub, fontFamily: fonts.body }]}>
@@ -84,7 +84,7 @@ export default function LoginScreen() {
         <View style={styles.errorSlot}>
           {error && (
             <>
-              <Text selectable style={[styles.error, { color: colors.warn, fontFamily: fonts.body }]}>{error.message}</Text>
+              <Text selectable style={[styles.error, { color: colors.warnText, fontFamily: fonts.body }]}>{error.message}</Text>
               {error.code && (
                 <Text selectable style={[styles.errorCode, { color: colors.sub, fontFamily: fonts.chrome }]}>
                   오류 코드 {error.code}

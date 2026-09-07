@@ -35,7 +35,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
       <RetroCard hero>
         <View style={styles.top}>
           <View style={styles.main}>
-            <Text style={[styles.eyebrow, { color: colors.accent2, fontFamily: fonts.chrome }]}>집중 타임</Text>
+            <Text style={[styles.eyebrow, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>집중 타임</Text>
             <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={2}>
               지금은 「{focus.title}」 중이에요 <PixelIcon name="tomato" size={18} />
             </Text>
@@ -56,7 +56,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
     <RetroCard hero>
       <View style={styles.top}>
         <View style={styles.main}>
-          <Text style={[styles.eyebrow, { color: colors.accent2, fontFamily: fonts.chrome }]}>지금 할 일</Text>
+          <Text style={[styles.eyebrow, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>지금 할 일</Text>
           {allDone ? (
             <>
               <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
@@ -76,7 +76,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
                 </Text>
               </Pressable>
               {heroTime && (
-                <Text style={[styles.time, { color: colors.warn, fontFamily: fonts.chrome }]}>{heroTime}</Text>
+                <Text style={[styles.time, { color: colors.warnText, fontFamily: fonts.chrome }]}>{heroTime}</Text>
               )}
               <Text style={[styles.message, { color: colors.sub, fontFamily: fonts.body }]} numberOfLines={2}>
                 {nowSuggestion.message}
