@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Header from './Header'
 import Sidebar from './Sidebar'
@@ -28,6 +28,7 @@ export default function Layout() {
   const [tasks, setTasks] = useState([])
   const [focusRecommendation, setFocusRecommendation] = useState(null)
   const [unreadNotices, setUnreadNotices] = useState([])
+  const drawerOpenerRef = useRef(null)
 
   const fetchTasks = useCallback(() => {
     if (!user) {
@@ -80,6 +81,17 @@ export default function Layout() {
   useEffect(() => watchSystemTheme(), [])
   useEffect(() => watchSystemContrast(), [])
 
+  const openDrawer = () => {
+    drawerOpenerRef.current = document.activeElement
+    setDrawerOpen(true)
+  }
+
+  const closeDrawer = () => {
+    setDrawerOpen(false)
+    // inert가 풀린 다음 프레임에 복귀해야 포커스가 body로 튕기지 않는다
+    setTimeout(() => drawerOpenerRef.current?.focus?.(), 0)
+  }
+
   const handleCloseHelp = () => {
     localStorage.setItem(HELP_SEEN_KEY, '1')
     setShowHelp(false)
@@ -110,7 +122,7 @@ export default function Layout() {
         본문으로 건너뛰기
       </a>
       <Header
-        onOpenDrawer={() => setDrawerOpen(true)}
+        onOpenDrawer={openDrawer}
         onOpenHelp={() => setShowHelp(true)}
         onOpenSettings={() => setShowSettings(true)}
       />
@@ -121,7 +133,7 @@ export default function Layout() {
           tasks={tasks}
           focusRecommendation={focusRecommendation}
           isDrawerOpen={drawerOpen}
-          onCloseDrawer={() => setDrawerOpen(false)}
+          onCloseDrawer={closeDrawer}
         />
         <main id="main" tabIndex={-1} className="flex-1 p-6 max-w-5xl mx-auto w-full">
           <Outlet />

@@ -18,6 +18,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
   const { user } = useAuth()
   const scrollRef = useRef(null)
   const contentRef = useRef(null)
+  const drawerRef = useRef(null)
   const [scrollHint, setScrollHint] = useState({ up: false, down: false })
 
   // 스크롤바를 숨긴 대신, 위/아래에 가려진 메뉴가 있으면 페이드로 알린다
@@ -55,6 +56,10 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [isDrawerOpen, onCloseDrawer])
+
+  useEffect(() => {
+    if (isDrawerOpen) drawerRef.current?.focus()
+  }, [isDrawerOpen])
 
   // isDrawer: 행성 로고만 드로어에서 생략 (상단바 텍스트 로고와 중복 + 메뉴가 먼저 보이는 게 깔끔)
   const renderSidebarContent = (isDrawer) => (
@@ -204,6 +209,8 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
         <div className="lg:hidden fixed inset-0 z-[60]" onClick={onCloseDrawer}>
           <div className="absolute inset-0 overlay-retro" />
           <aside
+            ref={drawerRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label="메뉴"
