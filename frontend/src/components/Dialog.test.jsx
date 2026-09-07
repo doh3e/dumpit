@@ -23,15 +23,29 @@ describe('Dialog', () => {
     const dialog = screen.getByRole('dialog')
     fireEvent(dialog, new Event('cancel', { cancelable: true }))
     expect(onClose).toHaveBeenCalledTimes(1)
+    fireEvent.mouseDown(dialog)
     fireEvent.click(dialog)
     expect(onClose).toHaveBeenCalledTimes(2)
-    fireEvent.click(screen.getByText('내용'))
+    fireEvent.mouseDown(screen.getByText('내용'))
+    fireEvent.click(dialog)
     expect(onClose).toHaveBeenCalledTimes(2)
   })
   it('closeOnBackdrop=false면 배경 클릭을 무시한다', () => {
     const onClose = vi.fn()
     render(<Dialog onClose={onClose} title="t" closeOnBackdrop={false}><p>내용</p></Dialog>)
-    fireEvent.click(screen.getByRole('dialog'))
+    const dialog = screen.getByRole('dialog')
+    fireEvent.mouseDown(dialog)
+    fireEvent.click(dialog)
     expect(onClose).not.toHaveBeenCalled()
+  })
+  it('언마운트 시 dialog가 문서에 붙어 있는 동안 close된다(포커스 복귀 조건)', () => {
+    let connectedAtClose = null
+    const spy = vi.spyOn(HTMLDialogElement.prototype, 'close').mockImplementation(function () {
+      connectedAtClose = this.isConnected
+      this.removeAttribute('open')
+    })
+    render(<Dialog onClose={() => {}} title="t"><p>내용</p></Dialog>).unmount()
+    expect(connectedAtClose).toBe(true)
+    spy.mockRestore()
   })
 })
