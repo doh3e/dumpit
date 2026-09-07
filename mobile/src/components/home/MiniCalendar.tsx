@@ -186,7 +186,7 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
             key={weekday}
             style={[
               styles.weekday,
-              { color: index === 0 ? colors.accent : colors.sub, fontFamily: fonts.chrome },
+              { color: index === 0 ? colors.accentText : colors.sub, fontFamily: fonts.chrome },
             ]}
           >
             {weekday}

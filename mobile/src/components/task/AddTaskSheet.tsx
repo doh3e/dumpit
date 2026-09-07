@@ -211,7 +211,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
         )}
 
         <View style={styles.footer}>
-          <Text style={[styles.cost, { color: remaining < AI_COSTS.TASK_CREATE ? colors.accent : colors.sub, fontFamily: fonts.chrome }]}>
+          <Text style={[styles.cost, { color: remaining < AI_COSTS.TASK_CREATE ? colors.accentText : colors.sub, fontFamily: fonts.chrome }]}>
             {remaining < AI_COSTS.TASK_CREATE ? (
               '오늘 AI를 다 썼어요'
             ) : (

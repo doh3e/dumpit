@@ -56,7 +56,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
         style={({ pressed }) => [styles.tab, { transform: [{ translateY: pressed ? 1 : 0 }] }]}
       >
         <PixelIcon name={meta.icon} size={20} style={{ opacity: focused ? 1 : 0.55 }} />
-        <Text style={[styles.label, { fontFamily: fonts.chrome, color: focused ? colors.accent : colors.sub }]}>
+        <Text style={[styles.label, { fontFamily: fonts.chrome, color: focused ? colors.accentText : colors.sub }]}>
           {meta.label}
         </Text>
       </Pressable>

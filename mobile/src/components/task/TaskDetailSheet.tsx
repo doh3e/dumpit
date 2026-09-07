@@ -328,7 +328,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
             thumbTintColor={colors.accent}
             accessibilityLabel="중요도 슬라이더"
           />
-          <Text style={[styles.hint, { color: priorityPinned ? colors.warn : colors.accent2, fontFamily: fonts.body }]}>
+          <Text style={[styles.hint, { color: priorityPinned ? colors.warnText : colors.accent2Text, fontFamily: fonts.body }]}>
             {priorityPinned ? (
               <><PixelIcon name="pin" size={11} /> 직접 지정 — 지정값을 바닥으로 지키고, 마감이 다가오면 실효값이 위로 올라가요</>
             ) : (
