@@ -8,7 +8,7 @@ type Props = {
   style?: StyleProp<ViewStyle>;
   /** 히어로 카드는 5px 오프셋 섀도, 기본은 3px (웹 .card-retro 대응) */
   hero?: boolean;
-  /** 카드를 한 덩어리로 읽힌다 — 안에 버튼이 있으면 그 버튼이 TalkBack 스톱에서 사라지니 쓰지 말 것 */
+  /** 카드 전체를 한 덩어리로 읽는다 — 안에 버튼이 있으면 그 버튼이 TalkBack 스톱에서 사라지니 쓰지 말 것 */
   accessible?: boolean;
   accessibilityLabel?: string;
 };

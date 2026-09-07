@@ -7,7 +7,7 @@ import { PixelIcon } from '../common/PixelIcon';
 import { RetroBadge } from '../retro/RetroBadge';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
-import { OrbitProgress } from './OrbitProgress';
+import { OrbitProgress, orbitProgressLabel } from './OrbitProgress';
 
 type Props = {
   nowSuggestion: NowSuggestion;
@@ -50,11 +50,13 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
   const heroTime = task?.deadline
     ? (isToday(task.deadline) ? `${formatTime(task.deadline)} 마감` : `${formatDeadline(task.deadline)} 마감`)
     : null;
-  // 그룹 라벨은 상단 View에만 — 카드 전체를 accessible로 묶으면 액션 버튼·큐 행이 TalkBack 스톱에서 사라진다
+  // 그룹 라벨은 상단 View에만 — 카드 전체를 accessible로 묶으면 액션 버튼·큐 행이 TalkBack 스톱에서 사라진다.
+  // 상단에 든 OrbitProgress도 함께 삼켜지므로 그 문장을 라벨 끝에 붙인다.
+  const progressLabel = orbitProgressLabel(todayDone, todayTotal);
   const heroLabel = allDone
-    ? '오늘 할 일을 모두 끝냈어요'
+    ? `오늘 할 일을 모두 끝냈어요, ${progressLabel}`
     : task
-      ? `지금 할 일, ${task.title}${heroTime ? `, ${heroTime}` : ''}`
+      ? `지금 할 일, ${task.title}${heroTime ? `, ${heroTime}` : ''}, ${progressLabel}`
       : null;
 
   return (

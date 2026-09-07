@@ -57,7 +57,7 @@ export default function InquiryScreen() {
               placeholderTextColor={colors.sub}
               maxLength={INQUIRY_LIMITS.subject}
               style={[styles.input, { borderColor: colors.edge, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
-              accessibilityLabel="무엇을 도와드릴까요?"
+              accessibilityLabel="제목"
             />
 
             <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.displayBold }]}>내용</Text>
@@ -70,7 +70,7 @@ export default function InquiryScreen() {
               multiline
               textAlignVertical="top"
               style={[styles.input, styles.textarea, { borderColor: colors.edge, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
-              accessibilityLabel="겪으신 상황을 자세히 적어주시면 빠르게 확인할 수 있어요."
+              accessibilityLabel="내용"
             />
 
             <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
