@@ -343,7 +343,7 @@ export default function AdminPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-dungeon text-dark text-2xl">관리자</h2>
+          <h1 className="font-dungeon text-dark text-2xl">관리자</h1>
           <p className="mt-2 text-sm font-semibold text-sub">
             문의 {inquiries.length}건 · 대기 {pendingCount}건 · 회원 {users.length}명
           </p>

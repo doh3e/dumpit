@@ -294,7 +294,7 @@ export default function SettingsModal({ onClose }) {
           </div>
         </div>
         {routineStart === routineEnd && (
-          <p className="mt-2 text-xs font-bold text-warn">시작과 종료 시각은 서로 달라야 해요.</p>
+          <p role="alert" className="mt-2 text-xs font-bold text-warn">시작과 종료 시각은 서로 달라야 해요.</p>
         )}
         {confirmWrap && (
           <div className="mt-3 rounded-lg border-2 border-warn bg-chip p-3">

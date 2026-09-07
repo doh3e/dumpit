@@ -219,7 +219,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                       <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[0.625rem] font-black ${
                         task.overdue
                           ? 'border-primary bg-primary text-on-accent'
-                          : 'border-warn bg-warn text-on-accent'
+                          : 'border-warn bg-warn text-on-warn'
                       }`}>
                         {formatRemaining(task.deadline)}
                       </span>

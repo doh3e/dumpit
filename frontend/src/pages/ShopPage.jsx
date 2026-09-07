@@ -526,7 +526,7 @@ export default function ShopPage() {
       )}
 
       {actionError && (
-        <p className="text-xs font-bold text-center" style={{ color: 'var(--danger-text)' }}>{actionError}</p>
+        <p role="alert" className="text-xs font-bold text-center" style={{ color: 'var(--danger-text)' }}>{actionError}</p>
       )}
 
       {(showOwnedSplit

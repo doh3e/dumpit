@@ -43,7 +43,7 @@
   --focus-w:2px;
   --chrome-bg:var(--card); --chrome-line:var(--line);
   /* 뽀모도로는 전역 테마와 독립된 고정 팔레트 — pomo 스킨 장착 시에만 아래 스킨 블록이 관장 */
-  --pomo-focus:#D95F52; --pomo-break:#3E8E85; --pomo-ring:#E0D2B6; --pomo-soft:#F7EFDF;
+  --pomo-focus:#D13F30; --pomo-break:#387F77; --pomo-ring:#E0D2B6; --pomo-soft:#F7EFDF;
 }
 
 [data-theme="dark"] {
@@ -87,7 +87,7 @@
 :root[data-bold-text="1"] .label-retro { font-family: 'Galmuri11', 'Pretendard Variable', Pretendard, sans-serif; font-weight: 700; }
 
 @layer base {
-  :focus-visible { outline: var(--focus-w) solid var(--accent2); outline-offset: 2px; }
+  :focus-visible { outline: var(--focus-w) solid var(--accent2-text); outline-offset: 2px; }
   #main:focus { outline: none; }
 }
 
@@ -139,7 +139,7 @@ body {
   }
   .btn-retro:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--shadow-sm); }
   .btn-retro:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--shadow-sm); }
-  .btn-retro:focus-visible { outline: var(--focus-w) solid var(--accent2); outline-offset: 2px; }
+  .btn-retro:focus-visible { outline: var(--focus-w) solid var(--accent2-text); outline-offset: 2px; }
   .btn-retro:disabled { opacity: .5; transform: none; box-shadow: 3px 3px 0 var(--shadow-sm); }
   .btn-retro-primary { @apply btn-retro bg-primary text-on-accent; }
   .btn-retro-secondary { @apply btn-retro bg-secondary text-on-accent; }
@@ -646,7 +646,7 @@ body {
 .md-preview blockquote {
   border-left: 3px solid var(--line); padding-left: 0.75rem; margin: 0.6em 0; color: var(--sub);
 }
-.md-preview a { color: var(--accent); text-decoration: underline; }
+.md-preview a { color: var(--accent-text); text-decoration: underline; }
 .md-preview hr { border: none; border-top: 1.5px solid var(--line); margin: 1em 0; }
 .md-preview table { display: block; overflow-x: auto; border-collapse: collapse; margin: 0.6em 0; }
 .md-preview th, .md-preview td { border: 1px solid var(--line); padding: 0.3em 0.6em; }

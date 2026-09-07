@@ -84,3 +84,38 @@ describe('고대비 모드', () => {
     expect(skinHc.edge).toBe(hc.edge)
   })
 })
+
+describe('포커스 링과 채움 위 글자', () => {
+  it('포커스 링(--accent2-text)이 기본·스킨 bg·card 위에서 3:1 이상', () => {
+    expectText(root['accent2-text'], root.bg, 3, 'ring/bg')
+    expectText(root['accent2-text'], root.card, 3, 'ring/card')
+    for (const skin of SKINS) {
+      const s = blocks.get(`[data-skin-bg="${skin}"]`)
+      expectText(s['accent2-text'], s.bg, 3, `${skin} ring/bg`)
+      expectText(s['accent2-text'], s.card, 3, `${skin} ring/card`)
+    }
+  })
+  it('뽀모도로 채움 위 크림 글자가 4.5:1 이상 (라이트·다크)', () => {
+    expectText(root['on-accent'], root['pomo-focus'], 4.5, 'on-accent/pomo-focus')
+    expectText(root['on-accent'], root['pomo-break'], 4.5, 'on-accent/pomo-break')
+    expectText(dark['on-accent'], dark['pomo-focus'], 4.5, 'dark on-accent/pomo-focus')
+    expectText(dark['on-accent'], dark['pomo-break'], 4.5, 'dark on-accent/pomo-break')
+  })
+  it('warn-text가 card 위에서 4.5:1 이상', () => {
+    expectText(root['warn-text'], root.card, 4.5, 'warn-text/card')
+  })
+})
+
+describe('스킨 + 고대비(라이트)', () => {
+  for (const skin of SKINS) {
+    it(`${skin}: 스킨 고대비 글자 7:1, 채움 위 크림 7:1`, () => {
+      const s = blocks.get(`[data-skin-bg="${skin}"]`)
+      const hc = blocks.get(`[data-skin-bg="${skin}"][data-contrast="high"]`)
+      expect(hc, `[data-skin-bg="${skin}"][data-contrast="high"] 블록`).toBeTruthy()
+      expectText(hc['accent-text'], s.bg, 7, `${skin} hc accent-text`)
+      expectText(hc['accent2-text'], s.bg, 7, `${skin} hc accent2-text`)
+      expectText(s['on-accent'], hc['accent-fill'], 7, `${skin} hc on-accent/accent-fill`)
+      expectText(s['on-accent'], hc['accent2-fill'], 7, `${skin} hc on-accent/accent2-fill`)
+    })
+  }
+})

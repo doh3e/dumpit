@@ -90,7 +90,7 @@ export default function HomePage() {
             { title: '마이페이지', desc: '자신의 할 일을 어떻게 관리하고 있는지 통계로 확인하기' },
           ].map(({ title, desc }) => (
             <div key={title} className="card-retro text-left">
-              <h3 className="font-extrabold text-dark text-base mb-1">{title}</h3>
+              <h2 className="font-extrabold text-dark text-base mb-1">{title}</h2>
               <p className="text-sm text-sub font-medium">{desc}</p>
             </div>
           ))}

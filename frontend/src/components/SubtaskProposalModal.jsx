@@ -77,7 +77,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
           </div>
         ) : error ? (
           <div className="text-center py-10">
-            <p className="font-bold text-primary text-sm">{error}</p>
+            <p role="alert" className="font-bold text-primary text-sm">{error}</p>
           </div>
         ) : (
           <>

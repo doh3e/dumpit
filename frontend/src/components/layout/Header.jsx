@@ -185,7 +185,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              aria-controls={accountMenuId}
+              aria-controls={menuOpen ? accountMenuId : undefined}
               aria-expanded={menuOpen}
               aria-label="계정 메뉴"
               className="w-9 h-9 rounded-full border border-line overflow-hidden bg-chip font-bold text-dark text-sm"

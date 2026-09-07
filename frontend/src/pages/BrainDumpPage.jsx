@@ -9,7 +9,7 @@ const PLACEHOLDER = `예) 내일까지 기획서 초안 써야 하고, 이번 �
 
 const PRIORITY_COLOR = {
   높음: 'bg-primary text-on-accent border-primary',
-  중간: 'bg-warn text-on-accent border-warn',
+  중간: 'bg-warn text-on-warn border-warn',
   낮음: 'bg-chip text-dark border-line',
 }
 

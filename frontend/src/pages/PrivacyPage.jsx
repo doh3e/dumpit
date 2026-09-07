@@ -6,7 +6,7 @@ export default function PrivacyPage() {
   useDocumentTitle(titleFor(useLocation().pathname))
   return (
     <div className="min-h-screen bg-accent">
-      <div className="max-w-2xl mx-auto px-4 py-12">
+      <main className="max-w-2xl mx-auto px-4 py-12">
         <div className="mb-8">
           <Link to="/" className="text-sm font-bold text-primary hover:underline">
             ← 홈으로
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
 
           <PrivacyPolicyContent />
         </div>
-      </div>
+      </main>
     </div>
   )
 }

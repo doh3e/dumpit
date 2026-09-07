@@ -102,7 +102,7 @@ export default function ContactModal({ onClose }) {
             </p>
           </div>
 
-          {error && <p className="text-xs font-bold text-primary">{error}</p>}
+          {error && <p role="alert" className="text-xs font-bold text-primary">{error}</p>}
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="btn-retro flex-1 text-sm py-2">
