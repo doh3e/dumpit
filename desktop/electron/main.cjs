@@ -66,6 +66,7 @@ let latestPomodoroState = {
 let preferences = {
   skipCloseToTrayPrompt: false,
   launchAtLoginPrompted: false,
+  zoomFactor: DESKTOP_ZOOM_FACTOR,
 }
 const CONTENT_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -210,6 +211,13 @@ function savePreferences() {
   fs.writeFileSync(getPreferencesPath(), JSON.stringify(preferences, null, 2))
 }
 
+function applyZoom(win, factor) {
+  const clamped = Math.min(2, Math.max(0.5, Math.round(factor * 100) / 100))
+  win.webContents.setZoomFactor(clamped)
+  preferences.zoomFactor = clamped
+  savePreferences()
+}
+
 function resolveFrontendFile(url) {
   const distPath = getFrontendDistPath()
   const parsed = new URL(url)
@@ -275,6 +283,7 @@ function createApplicationMenu(mainWindow) {
         },
       ],
     },
+    ...(process.platform === 'darwin' ? [{ role: 'editMenu' }, { role: 'windowMenu' }] : []),
     {
       label: '보기',
       submenu: [
@@ -284,15 +293,18 @@ function createApplicationMenu(mainWindow) {
         },
         {
           label: '확대',
-          role: 'zoomIn',
+          accelerator: 'CmdOrCtrl+=',
+          click: () => applyZoom(mainWindow, mainWindow.webContents.getZoomFactor() + 0.1),
         },
         {
           label: '축소',
-          role: 'zoomOut',
+          accelerator: 'CmdOrCtrl+-',
+          click: () => applyZoom(mainWindow, mainWindow.webContents.getZoomFactor() - 0.1),
         },
         {
           label: '기본 크기',
-          click: () => mainWindow?.webContents.setZoomFactor(DESKTOP_ZOOM_FACTOR),
+          accelerator: 'CmdOrCtrl+0',
+          click: () => applyZoom(mainWindow, DESKTOP_ZOOM_FACTOR),
         },
         { type: 'separator' },
         {
@@ -959,8 +971,11 @@ function createWindow() {
   createApplicationMenu(createdWindow)
 
   createdWindow.webContents.on('did-finish-load', () => {
-    createdWindow.webContents.setZoomFactor(DESKTOP_ZOOM_FACTOR)
+    createdWindow.webContents.setZoomFactor(preferences.zoomFactor ?? DESKTOP_ZOOM_FACTOR)
     createdWindow.setTitle('덤핏(Dumpit!)')
+  })
+  createdWindow.webContents.on('zoom-changed', (_event, direction) => {
+    applyZoom(createdWindow, createdWindow.webContents.getZoomFactor() + (direction === 'in' ? 0.1 : -0.1))
   })
 
   createdWindow.on('page-title-updated', (event) => {

@@ -235,7 +235,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="font-dungeon text-dark text-2xl">대시보드</h2>
+          <h1 className="font-dungeon text-dark text-2xl">대시보드</h1>
           <p className="mt-2 text-sm font-semibold text-sub">
             오늘의 할 일을 확인하고 시간을 효율적으로 관리해보세요
           </p>

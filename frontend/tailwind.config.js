@@ -23,6 +23,19 @@ export default {
         warn:        'var(--warn)',
         'on-accent': 'var(--on-accent)',
       },
+      // 글자와 채움을 다른 변수로 — text-primary는 글자 토큰, bg-primary는 크림 글자용 채움 토큰,
+      // border-primary/ring-primary는 colors의 원색을 그대로 본다
+      textColor: {
+        primary:   'var(--accent-text)',
+        secondary: 'var(--accent2-text)',
+        warn:      'var(--warn-text)',
+        danger:    'var(--danger-text)',
+        'on-warn': 'var(--on-warn)',
+      },
+      backgroundColor: {
+        primary:   'var(--accent-fill)',
+        secondary: 'var(--accent2-fill)',
+      },
       fontFamily: {
         sans: ['"Pretendard Variable"', 'Pretendard', '"Malgun Gothic"', 'system-ui', 'sans-serif'],
         dungeon: ['DungGeunMo', '"Malgun Gothic"', 'monospace'],

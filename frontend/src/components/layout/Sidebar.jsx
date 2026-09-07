@@ -18,6 +18,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
   const { user } = useAuth()
   const scrollRef = useRef(null)
   const contentRef = useRef(null)
+  const drawerRef = useRef(null)
   const [scrollHint, setScrollHint] = useState({ up: false, down: false })
 
   // 스크롤바를 숨긴 대신, 위/아래에 가려진 메뉴가 있으면 페이드로 알린다
@@ -56,6 +57,10 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
     return () => document.removeEventListener('keydown', onKey)
   }, [isDrawerOpen, onCloseDrawer])
 
+  useEffect(() => {
+    if (isDrawerOpen) drawerRef.current?.focus()
+  }, [isDrawerOpen])
+
   // isDrawer: 행성 로고만 드로어에서 생략 (상단바 텍스트 로고와 중복 + 메뉴가 먼저 보이는 게 깔끔)
   const renderSidebarContent = (isDrawer) => (
     <>
@@ -76,39 +81,41 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
         </Link>
       )}
 
-      {MENU.map(({ label, path }) => (
-        <NavLink
-          key={path}
-          to={path}
-          onClick={handleNavClick}
-          className={({ isActive }) =>
-            `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
-              isActive
-                ? 'bg-chip text-dark'
-                : 'text-sub hover:text-dark hover:bg-chip'
-            }`
-          }
-        >
-          {label}
-        </NavLink>
-      ))}
+      <nav aria-label="주 메뉴" className="flex flex-col gap-1">
+        {MENU.map(({ label, path }) => (
+          <NavLink
+            key={path}
+            to={path}
+            onClick={handleNavClick}
+            className={({ isActive }) =>
+              `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
+                isActive
+                  ? 'bg-chip text-dark'
+                  : 'text-sub hover:text-dark hover:bg-chip'
+              }`
+            }
+          >
+            {label}
+          </NavLink>
+        ))}
 
-      {user?.isAdmin && (
-        <NavLink
-          to="/admin"
-          onClick={handleNavClick}
-          className={({ isActive }) =>
-            `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
-              isActive
-                ? 'bg-chip text-secondary'
-                : 'text-secondary hover:bg-chip'
-            }`
-          }
-        >
-          <img {...iconProps('setting', 20)} alt="" className="mr-2 h-5 w-5 flex-shrink-0 object-contain" />
-          관리자 페이지
-        </NavLink>
-      )}
+        {user?.isAdmin && (
+          <NavLink
+            to="/admin"
+            onClick={handleNavClick}
+            className={({ isActive }) =>
+              `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
+                isActive
+                  ? 'bg-chip text-dark'
+                  : 'text-secondary hover:bg-chip'
+              }`
+            }
+          >
+            <img {...iconProps('setting', 20)} alt="" className="mr-2 h-5 w-5 flex-shrink-0 object-contain" />
+            관리자 페이지
+          </NavLink>
+        )}
+      </nav>
 
       <div className="mt-4 pt-4 border-t border-line">
         <h4 className="label-retro mx-2 mb-1">
@@ -199,9 +206,15 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
       {/* body 포털: 본문 컨테이너(z-10) 스태킹 컨텍스트에 갇히면
           상단바(z-50)를 못 덮는다 */}
       {isDrawerOpen && createPortal(
-        <div className="lg:hidden fixed inset-0 z-[60]" onClick={onCloseDrawer}>
+        <div className="lg:hidden fixed inset-0 z-[60]" role="presentation" onClick={onCloseDrawer}>
           <div className="absolute inset-0 overlay-retro" />
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 이 onClick은 stopPropagation 가드일 뿐, 닫기의 키보드 경로는 Escape 리스너 */}
           <aside
+            ref={drawerRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label="메뉴"
             className="app-sidebar absolute left-0 top-0 bottom-0 w-64 bg-chrome border-r border-chrome-line pt-6 pb-10 px-3 flex flex-col gap-1 overflow-y-auto scrollbar-none"
             onClick={(e) => e.stopPropagation()}
           >

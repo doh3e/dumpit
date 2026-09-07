@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useId, useMemo, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import { parseDate } from '../utils/dates'
 
@@ -76,6 +76,10 @@ function toggleNumber(list, value) {
 }
 
 export default function RoutinePage() {
+  const nameId = useId()
+  const descriptionId = useId()
+  const startDateId = useId()
+  const endDateId = useId()
   const [routines, setRoutines] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
   const [editingId, setEditingId] = useState(null)
@@ -191,7 +195,7 @@ export default function RoutinePage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="font-dungeon text-dark text-2xl">루틴</h2>
+          <h1 className="font-dungeon text-dark text-2xl">루틴</h1>
           <p className="mt-2 text-sm font-semibold text-sub">
             정해둔 날짜나 요일에 루틴명과 같은 태스크를 자동으로 만들어요.
           </p>
@@ -288,24 +292,26 @@ export default function RoutinePage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-sub mb-1">루틴명 *</label>
+            <label htmlFor={nameId} className="block text-xs font-bold text-sub mb-1">루틴명 *</label>
             <input
+              id={nameId}
               value={form.name}
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
               maxLength={200}
               placeholder="예: 아침 스트레칭"
-              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
+              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-sub mb-1">메모</label>
+            <label htmlFor={descriptionId} className="block text-xs font-bold text-sub mb-1">메모</label>
             <textarea
+              id={descriptionId}
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               rows={3}
               maxLength={1000}
-              className="w-full resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+              className="w-full resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold focus:border-primary"
             />
           </div>
 
@@ -382,7 +388,7 @@ export default function RoutinePage() {
           {form.repeatType === 'MONTHLY_WEEKDAY' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-sub mb-1">몇째 주</label>
+                <span className="block text-xs font-bold text-sub mb-1">몇째 주</span>
                 <div className="grid grid-cols-5 gap-1.5">
                   {MONTHLY_ORDINALS.map((ordinal) => (
                     <button
@@ -399,7 +405,7 @@ export default function RoutinePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-sub mb-1">요일</label>
+                <span className="block text-xs font-bold text-sub mb-1">요일</span>
                 <div className="flex flex-wrap gap-1.5">
                   {WEEK_DAYS.map((day) => (
                     <button
@@ -436,9 +442,10 @@ export default function RoutinePage() {
                 <div className="space-y-2">
                   <input
                     type="time"
+                    aria-label="시작 시간"
                     value={form.startTime}
                     onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
-                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
+                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
                   />
                   <label className="flex items-center gap-2 text-xs font-bold text-sub">
                     <input
@@ -452,9 +459,10 @@ export default function RoutinePage() {
                   {form.hasEndTime ? (
                     <input
                       type="time"
+                      aria-label="종료 시간"
                       value={form.endTime}
                       onChange={(e) => setForm((prev) => ({ ...prev, endTime: e.target.value }))}
-                      className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
+                      className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
                     />
                   ) : (
                     <div className="rounded-lg border-2 border-line bg-accent px-3 py-2 text-xs font-extrabold text-sub">
@@ -469,23 +477,25 @@ export default function RoutinePage() {
               )}
             </div>
             <div>
-              <label className="block text-xs font-bold text-sub mb-1">시작일</label>
+              <label htmlFor={startDateId} className="block text-xs font-bold text-sub mb-1">시작일</label>
               <input
+                id={startDateId}
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setForm((prev) => ({ ...prev, startDate: e.target.value }))}
-                className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
+                className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-sub mb-1">종료일</label>
+            <label htmlFor={endDateId} className="block text-xs font-bold text-sub mb-1">종료일</label>
             <input
+              id={endDateId}
               type="date"
               value={form.endDate}
               onChange={(e) => setForm((prev) => ({ ...prev, endDate: e.target.value }))}
-              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
+              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
             />
           </div>
 

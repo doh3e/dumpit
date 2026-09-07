@@ -52,7 +52,7 @@ function NoticeRow({ notice, isPinned, expanded, onToggle }) {
           <span className={`truncate text-sm text-dark ${expanded ? 'font-black' : 'font-bold'}`}>{notice.title}</span>
           <span
             aria-hidden
-            className={`flex-shrink-0 text-[0.5625rem] text-sub transition-transform ${expanded ? 'rotate-180' : ''}`}
+            className={`flex-shrink-0 text-[0.625rem] text-sub transition-transform ${expanded ? 'rotate-180' : ''}`}
           >
             ▼
           </span>

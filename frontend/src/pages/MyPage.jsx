@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { saveUserSettings } from '../services/userSettings'
 import { iconProps } from '../assets/icons'
 import PixelStation from '../components/PixelStation'
+import Dialog from '../components/Dialog'
 import { useAuth } from '../context/AuthContext'
 
 function useDragScroll() {
@@ -103,7 +103,12 @@ function HeatmapGrid({ heatmap }) {
   }, [heatmap])
 
   return (
-    <div ref={scrollRef} className="overflow-x-auto">
+    <div
+      ref={scrollRef}
+      role="img"
+      aria-label={`최근 28주 완료 기록, 총 ${entries.reduce((s, [, c]) => s + c, 0)}개 완료`}
+      className="overflow-x-auto"
+    >
       <div className="flex gap-1 justify-center">
         {weeks.map((week, wi) => (
           <div key={wi} className="flex flex-col gap-1">
@@ -124,8 +129,8 @@ function HeatmapGrid({ heatmap }) {
         ))}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[0.5625rem] text-sub">{entries[0]?.[0]?.slice(5)}</span>
-        <span className="text-[0.5625rem] text-sub">오늘</span>
+        <span className="text-[0.625rem] text-sub">{entries[0]?.[0]?.slice(5)}</span>
+        <span className="text-[0.625rem] text-sub">오늘</span>
       </div>
     </div>
   )
@@ -335,12 +340,13 @@ export default function MyPage() {
             <div className="mt-2 space-y-2">
               <textarea
                 ref={bioRef}
+                aria-label="자기소개를 입력하세요"
                 value={bioInput}
                 onChange={(e) => setBioInput(e.target.value)}
                 maxLength={500}
                 rows={3}
                 placeholder="자기소개를 입력하세요"
-                className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card outline-none focus:border-primary resize-none"
+                className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card focus:border-primary resize-none"
               />
               <div className="flex gap-2">
                 <button onClick={handleSaveBio} disabled={savingBio}
@@ -384,12 +390,13 @@ export default function MyPage() {
         {editingAiMemory ? (
           <div className="space-y-2">
             <textarea
+              aria-label="AI 메모리"
               value={aiMemoryInput}
               onChange={(e) => setAiMemoryInput(e.target.value)}
               maxLength={500}
               rows={4}
               placeholder={'예) 운동 관련 일이 나에게 제일 중요해요.\n예) "펌"은 회사 프로젝트를 뜻해요.'}
-              className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card outline-none focus:border-primary resize-none"
+              className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card focus:border-primary resize-none"
             />
             <div className="flex items-center gap-2">
               <button onClick={handleSaveAiMemory} disabled={savingAiMemory}
@@ -420,6 +427,13 @@ export default function MyPage() {
             onPointerMove={sliderDrag.onPointerMove}
             onPointerUp={sliderDrag.onPointerUp}
             onPointerLeave={sliderDrag.onPointerUp}
+            tabIndex={0}
+            role="group"
+            aria-label="통계 카드, 좌우 화살표로 이동"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') { e.preventDefault(); e.currentTarget.scrollBy({ left: 140 }) }
+              if (e.key === 'ArrowLeft') { e.preventDefault(); e.currentTarget.scrollBy({ left: -140 }) }
+            }}
             className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none select-none cursor-grab"
             style={{ scrollBehavior: 'smooth' }}
           >
@@ -435,7 +449,7 @@ export default function MyPage() {
                   <p className={`font-dungeon text-[0.625rem] text-center leading-tight ${text}`}>{theme}</p>
                 )}
                 <p className={`text-[0.625rem] font-black text-center leading-tight ${text} opacity-70`}>{label}</p>
-                {sub && <p className={`text-[0.5625rem] font-semibold ${text} opacity-50`}>{sub}</p>}
+                {sub && <p className={`text-[0.625rem] font-semibold ${text} opacity-50`}>{sub}</p>}
               </div>
             ))}
           </div>
@@ -459,7 +473,7 @@ export default function MyPage() {
             ].map(([label, count]) => (
               <div key={label} className="flex items-center gap-1.5">
                 <div className={`w-3 h-3 rounded-sm border ${heatmapColorClass(count)}`} />
-                <span className="text-[0.5625rem] text-sub">{label}</span>
+                <span className="text-[0.625rem] text-sub">{label}</span>
               </div>
             ))}
           </div>
@@ -526,45 +540,44 @@ export default function MyPage() {
         </button>
       </div>
 
-      {showWithdrawModal && createPortal(
-        <div className="fixed inset-0 z-[70] flex items-center justify-center overlay-retro px-4" onClick={() => !withdrawing && setShowWithdrawModal(false)}>
-          <div
-            className="card-retro w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* 파괴적 액션 — 테마 카피 없이 조용하고 명확하게 (스펙 7.5) */}
-            <h2 className="text-xl font-bold text-dark">회원 탈퇴</h2>
-            <div className="mt-4 rounded-lg border-2 tone-danger px-4 py-3">
-              <p className="text-sm font-black" style={{ color: 'var(--danger)' }}>탈퇴 전 확인해주세요.</p>
-              <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
-                탈퇴하면 바로 서비스를 이용할 수 없고, 작성한 할 일·루틴·아이디어·브레인덤프도 볼 수 없게 됩니다.
-              </p>
-              <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
-                30일 안에 같은 구글 계정으로 다시 로그인하면 되돌릴 수 있어요. 30일이 지나면 계정과 기록이 완전히 삭제되고, 그때부터는 복구할 수 없습니다.
-              </p>
-            </div>
-            <div className="mt-5 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowWithdrawModal(false)}
-                disabled={withdrawing}
-                className="btn-retro flex-1 py-2 text-sm"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleWithdraw}
-                disabled={withdrawing}
-                className="btn-retro flex-1 py-2 text-sm text-on-accent"
-                style={{ background: 'var(--danger)' }}
-              >
-                {withdrawing ? '처리 중...' : '탈퇴'}
-              </button>
-            </div>
+      {showWithdrawModal && (
+        <Dialog
+          onClose={() => !withdrawing && setShowWithdrawModal(false)}
+          title="회원 탈퇴"
+          closeOnBackdrop={!withdrawing}
+          className="w-full max-w-md"
+        >
+          {/* 파괴적 액션 — 테마 카피 없이 조용하고 명확하게 (스펙 7.5) */}
+          <h2 className="text-xl font-bold text-dark">회원 탈퇴</h2>
+          <div className="mt-4 rounded-lg border-2 tone-danger px-4 py-3">
+            <p className="text-sm font-black" style={{ color: 'var(--danger-text)' }}>탈퇴 전 확인해주세요.</p>
+            <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
+              탈퇴하면 바로 서비스를 이용할 수 없고, 작성한 할 일·루틴·아이디어·브레인덤프도 볼 수 없게 됩니다.
+            </p>
+            <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
+              30일 안에 같은 구글 계정으로 다시 로그인하면 되돌릴 수 있어요. 30일이 지나면 계정과 기록이 완전히 삭제되고, 그때부터는 복구할 수 없습니다.
+            </p>
           </div>
-        </div>,
-        document.body
+          <div className="mt-5 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowWithdrawModal(false)}
+              disabled={withdrawing}
+              className="btn-retro flex-1 py-2 text-sm"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={handleWithdraw}
+              disabled={withdrawing}
+              className="btn-retro flex-1 py-2 text-sm text-on-accent"
+              style={{ background: 'var(--danger)' }}
+            >
+              {withdrawing ? '처리 중...' : '탈퇴'}
+            </button>
+          </div>
+        </Dialog>
       )}
     </div>
   )

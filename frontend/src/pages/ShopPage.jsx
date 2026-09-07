@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { iconProps } from '../assets/icons'
 import { useAuth } from '../context/AuthContext'
 import RocketLaunch from '../components/RocketLaunch'
 import PixelSprite from '../components/PixelSprite'
+import Dialog from '../components/Dialog'
 import useReducedMotion from '../hooks/useReducedMotion'
 import { applySkinsTransient, applyCachedSkins } from '../shop/applySkins'
 import {
@@ -71,7 +71,7 @@ function TierBadge({ tier }) {
         className="font-dungeon text-[0.6875rem] rounded-md px-2 py-0.5 border flex-shrink-0"
         style={{
           borderColor: 'var(--starlight)',
-          color: 'var(--starlight)',
+          color: 'var(--fg)',
           background: 'color-mix(in srgb, var(--starlight) 16%, var(--card))',
         }}
       >
@@ -136,7 +136,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
             {/* 아직 안 산 아이템의 가격은 테마와 무관하게 붉은색 고정 — 지불할 금액이 한눈에 띄게 */}
             <span
               className="font-dungeon text-sm text-dark"
-              style={item.owned ? undefined : { color: 'var(--danger)' }}
+              style={item.owned ? undefined : { color: 'var(--danger-text)' }}
             >
               {item.price}
             </span>
@@ -240,43 +240,42 @@ function PurchaseConfirmModal({ item, coinBalance, submitting, error, onConfirm,
   if (!item) return null
   const remaining = coinBalance - item.price
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center overlay-retro px-4"
-      onClick={() => !submitting && onCancel()}
+  return (
+    <Dialog
+      onClose={() => !submitting && onCancel()}
+      title={item.name}
+      closeOnBackdrop={!submitting}
+      className="w-full max-w-sm"
     >
-      <div className="card-retro w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-        <h2 className="font-dungeon text-dark text-lg">{item.name}</h2>
-        <p className="mt-3 text-sm font-bold text-dark">
-          <span className="font-dungeon" style={{ color: 'var(--danger)' }}>{item.price}</span>코인으로 구매할까요?
-        </p>
-        <p className="mt-1 text-xs font-semibold text-sub">구매 후 잔액 {remaining}코인</p>
+      <h2 className="font-dungeon text-dark text-lg">{item.name}</h2>
+      <p className="mt-3 text-sm font-bold text-dark">
+        <span className="font-dungeon" style={{ color: 'var(--danger-text)' }}>{item.price}</span>코인으로 구매할까요?
+      </p>
+      <p className="mt-1 text-xs font-semibold text-sub">구매 후 잔액 {remaining}코인</p>
 
-        {error && (
-          <p className="mt-3 text-xs font-bold" style={{ color: 'var(--danger)' }}>{error}</p>
-        )}
+      {error && (
+        <p className="mt-3 text-xs font-bold" style={{ color: 'var(--danger-text)' }}>{error}</p>
+      )}
 
-        <div className="mt-5 flex gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={submitting}
-            className="btn-retro flex-1 py-2 text-sm"
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={submitting}
-            className="btn-retro-primary flex-1 py-2 text-sm"
-          >
-            {submitting ? '구매 중...' : '구매하기'}
-          </button>
-        </div>
+      <div className="mt-5 flex gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={submitting}
+          className="btn-retro flex-1 py-2 text-sm"
+        >
+          취소
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={submitting}
+          className="btn-retro-primary flex-1 py-2 text-sm"
+        >
+          {submitting ? '구매 중...' : '구매하기'}
+        </button>
       </div>
-    </div>,
-    document.body
+    </Dialog>
   )
 }
 
@@ -284,34 +283,29 @@ function PurchaseConfirmModal({ item, coinBalance, submitting, error, onConfirm,
 function SpritePreviewModal({ item, onClose }) {
   if (!item) return null
   const sprite = spriteFor(SPRITE_MAP_BY_SLOT[item.slot] || {}, item.code)
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center overlay-retro px-4"
-      onClick={onClose}
-    >
-      <div className="card-retro w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-            <h2 className="font-dungeon text-dark text-lg">{item.name}</h2>
-            <TierBadge tier={item.tier} />
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-7 h-7 flex-shrink-0 rounded-lg border border-line font-black text-sub text-xs hover:bg-chip transition-colors"
-          >
-            X
-          </button>
+  return (
+    <Dialog onClose={onClose} title={item.name} className="w-full max-w-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+          <h2 className="font-dungeon text-dark text-lg">{item.name}</h2>
+          <TierBadge tier={item.tier} />
         </div>
-        <div className="my-6 flex items-center justify-center">
-          <PixelSprite sprite={sprite} className="w-32 h-32 sm:w-40 sm:h-40 object-contain" />
-        </div>
-        {item.description && (
-          <p className="text-xs font-semibold text-sub leading-snug text-center">{item.description}</p>
-        )}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="닫기"
+          className="w-7 h-7 flex-shrink-0 rounded-lg border border-line font-black text-sub text-xs hover:bg-chip transition-colors"
+        >
+          X
+        </button>
       </div>
-    </div>,
-    document.body
+      <div className="my-6 flex items-center justify-center">
+        <PixelSprite sprite={sprite} className="w-32 h-32 sm:w-40 sm:h-40 object-contain" />
+      </div>
+      {item.description && (
+        <p className="text-xs font-semibold text-sub leading-snug text-center">{item.description}</p>
+      )}
+    </Dialog>
   )
 }
 
@@ -487,20 +481,19 @@ export default function ShopPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="font-dungeon text-dark text-2xl">코인샵</h2>
+        <h1 className="font-dungeon text-dark text-2xl">코인샵</h1>
         <div className="flex items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1.5">
           <img {...iconProps('coin', 20)} alt="" className="w-5 h-5 object-contain" />
           <span className="font-dungeon text-lg text-dark">{coinBalance}</span>
         </div>
       </div>
 
-      <div role="tablist" className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2">
         {SHOP_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
+            aria-pressed={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`font-dungeon text-sm px-3.5 py-2 rounded-full border-[1.5px] transition-colors ${
               activeTab === tab.id
@@ -533,7 +526,7 @@ export default function ShopPage() {
       )}
 
       {actionError && (
-        <p className="text-xs font-bold text-center" style={{ color: 'var(--danger)' }}>{actionError}</p>
+        <p role="alert" className="text-xs font-bold text-center" style={{ color: 'var(--danger-text)' }}>{actionError}</p>
       )}
 
       {(showOwnedSplit
