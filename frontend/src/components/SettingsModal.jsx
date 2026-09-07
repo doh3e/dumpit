@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
 import { applyTheme, getThemePref } from '../utils/theme'
 import { applyFontScale, getFontScalePref, FONT_SCALES } from '../utils/fontScale'
+import { applyContrast, getContrastPref, applyBoldText, getBoldTextPref, CONTRAST_OPTIONS } from '../utils/a11y'
 import { getUserSettings, saveUserSettings } from '../services/userSettings'
 import { notifyToast } from '../context/ToastContext'
 
@@ -37,6 +38,8 @@ export default function SettingsModal({ onClose }) {
   const [savingRoutine, setSavingRoutine] = useState(false)
   const [themePref, setThemePref] = useState(getThemePref)
   const [fontScale, setFontScale] = useState(getFontScalePref)
+  const [contrastPref, setContrastPref] = useState(getContrastPref)
+  const [boldText, setBoldText] = useState(getBoldTextPref)
   const [permission, setPermission] = useState(getNotificationPermission)
   const [notificationsEnabled, setNotificationsEnabled] = useState(serverSettings.notificationsEnabled)
   const [selectedThresholds, setSelectedThresholds] = useState(serverSettings.notificationThresholds)
@@ -187,6 +190,7 @@ export default function SettingsModal({ onClose }) {
               <button
                 key={value}
                 type="button"
+                aria-pressed={themePref === value}
                 onClick={() => { applyTheme(value); setThemePref(value) }}
                 className={`flex-1 text-xs ${themePref === value ? 'btn-retro-primary' : 'btn-retro'}`}
               >
@@ -205,6 +209,7 @@ export default function SettingsModal({ onClose }) {
               <button
                 key={value}
                 type="button"
+                aria-pressed={fontScale === value}
                 onClick={() => { applyFontScale(value); setFontScale(value) }}
                 className={`text-xs ${fontScale === value ? 'btn-retro-primary' : 'btn-retro'}`}
               >
@@ -212,6 +217,37 @@ export default function SettingsModal({ onClose }) {
               </button>
             ))}
           </div>
+        </section>
+
+        <hr className="border-line mb-6" />
+
+        <section className="mb-6">
+          <h3 className="font-galmuri font-bold text-dark text-sm mb-3">보기 편하게</h3>
+          <p className="text-xs text-sub font-medium mb-2">대비</p>
+          <div className="flex gap-2 mb-4">
+            {CONTRAST_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={contrastPref === value}
+                onClick={() => { applyContrast(value); setContrastPref(value) }}
+                className={`flex-1 text-xs ${contrastPref === value ? 'btn-retro-primary' : 'btn-retro'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            aria-pressed={boldText}
+            onClick={() => { applyBoldText(!boldText); setBoldText(!boldText) }}
+            className={`w-full text-xs ${boldText ? 'btn-retro-primary' : 'btn-retro'}`}
+          >
+            굵은 글자 {boldText ? '켬' : '끔'}
+          </button>
+          <p className="mt-2 text-xs text-sub font-medium">
+            '시스템'은 기기의 고대비 설정을 따라요. 이 설정은 이 기기에만 저장돼요.
+          </p>
         </section>
 
         <hr className="border-line mb-6" />
