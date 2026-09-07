@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 
 const DOTS = 12;
@@ -7,13 +6,16 @@ const RADIUS = 30;
 const DOT = 6;
 const SIZE = (RADIUS + DOT) * 2;
 
+/** 링을 삼키는 그룹 라벨(NowHeroCard 히어로)도 이 문장을 쓴다 — 문구는 여기서만 만든다 */
+export const orbitProgressLabel = (done: number, total: number) => `오늘 ${total}개 중 ${done}개 완료`;
+
 /** 오늘 진행률 픽셀 링 — 12개 사각 도트를 원형 배치, 완료 비율만큼 starlight 채움 (SVG 없이) */
 export function OrbitProgress({ done, total }: { done: number; total: number }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const filled = total > 0 ? Math.round((done / total) * DOTS) : 0;
 
   return (
-    <View style={styles.wrap} accessibilityLabel={`오늘 ${total}개 중 ${done}개 완료`}>
+    <View style={styles.wrap} accessibilityLabel={orbitProgressLabel(done, total)}>
       {Array.from({ length: DOTS }, (_, i) => {
         const angle = (i / DOTS) * Math.PI * 2 - Math.PI / 2;   // 12시 방향부터 시계 방향
         return (

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 
 type Props = {
@@ -12,7 +11,7 @@ type Props = {
 
 /** 미구현 탭의 준비중 화면 — 픽셀 점 장식 + 예고 문구 */
 export function ComingSoon({ emoji, title, phase, children }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   return (
     <View style={styles.container}>
       <Text style={styles.emoji}>{emoji}</Text>

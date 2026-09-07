@@ -5,7 +5,6 @@ import { describeError, type ErrorInfo } from '../src/api/errors';
 import { useAuth } from '../src/auth/AuthContext';
 import { GoogleGIcon } from '../src/components/common/GoogleGIcon';
 import { PRIVACY_URL, TERMS_URL } from '../src/legal/links';
-import { fonts } from '../src/theme/typography';
 import { retroShadow } from '../src/theme/tokens';
 import { useTheme } from '../src/theme/useTheme';
 
@@ -14,7 +13,7 @@ const LOGO = require('../assets/images/login-logo.png');
 
 // 문구는 웹 랜딩(frontend/src/pages/HomePage.jsx)과 글자 단위로 같아야 한다 — 바꿀 때 양쪽 동시 수정
 export default function LoginScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const { signInWithGoogle } = useAuth();
   const [error, setError] = useState<ErrorInfo | null>(null);
@@ -48,7 +47,7 @@ export default function LoginScreen() {
         <Text style={[styles.body, { color: colors.sub, fontFamily: fonts.body }]}>
           해야 할 일들이 우주먼지처럼 뒤엉켜 있나요?
         </Text>
-        <Text style={[styles.shout, { color: colors.accent, fontFamily: fonts.chrome }]}>
+        <Text style={[styles.shout, { color: colors.accentText, fontFamily: fonts.chrome }]}>
           그냥 다 쏟아내세요!
         </Text>
         <Text style={[styles.body, { color: colors.sub, fontFamily: fonts.body }]}>
@@ -84,7 +83,7 @@ export default function LoginScreen() {
         <View style={styles.errorSlot}>
           {error && (
             <>
-              <Text selectable style={[styles.error, { color: colors.warn, fontFamily: fonts.body }]}>{error.message}</Text>
+              <Text selectable style={[styles.error, { color: colors.warnText, fontFamily: fonts.body }]}>{error.message}</Text>
               {error.code && (
                 <Text selectable style={[styles.errorCode, { color: colors.sub, fontFamily: fonts.chrome }]}>
                   오류 코드 {error.code}

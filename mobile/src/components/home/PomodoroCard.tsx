@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { deriveState } from '../../pomodoro/engine';
 import { getSession, subscribe } from '../../pomodoro/store';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 import { RetroButton } from '../retro/RetroButton';
@@ -17,7 +16,7 @@ function fmt(sec: number): string {
 
 /** 홈 뽀모도로 진입 카드 — 대기: 시작 버튼 / 실행 중: 남은 시간 미니 표시 (umbrella §3) */
 export function PomodoroCard() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   // 렌더 중 Date.now() 직접 읽기는 React Compiler가 캐시해 시간이 멈춰 보인다 — now를 상태로 관리
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => subscribe(() => setNow(Date.now())), []);

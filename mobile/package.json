@@ -12,6 +12,8 @@
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@tanstack/react-query": "^5.101.4",
     "axios": "^1.18.1",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.2",
     "expo": "^57.0.9",
     "expo-constants": "~57.0.6",
     "expo-dev-client": "~57.0.18",
@@ -39,6 +41,7 @@
   "devDependencies": {
     "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
+    "eslint-plugin-react-native-a11y": "^3.5.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -55,6 +58,11 @@
       "^react-native-notify-kit$": "<rootDir>/src/test/mocks/notifyKit.ts",
       "^@react-native-async-storage/async-storage$": "@react-native-async-storage/async-storage/jest/async-storage-mock",
       "^@react-native-firebase/messaging$": "<rootDir>/src/test/mocks/firebaseMessaging.ts"
+    }
+  },
+  "overrides": {
+    "eslint-plugin-react-native-a11y": {
+      "eslint": "$eslint"
     }
   },
   "private": true

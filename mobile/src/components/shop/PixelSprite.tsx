@@ -15,6 +15,8 @@ export function PixelSprite({ sprite, size }: Props) {
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
   }, []);
 
   useEffect(() => {

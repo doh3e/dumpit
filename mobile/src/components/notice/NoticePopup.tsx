@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, findNodeHandle, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { fetchUnreadNotices, markNoticeRead } from '../../api/notices';
 import type { NoticeResponse } from '../../api/types';
 import { retroShadow } from '../../theme/tokens';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { MarkdownView } from '../common/MarkdownView';
 import { RetroButton } from '../retro/RetroButton';
@@ -11,8 +10,9 @@ import { PixelIcon } from '../common/PixelIcon';
 
 /** 미읽음 popup 공지 순차 모달 (웹 NoticeModal 패리티) — 닫으면 read 처리 */
 export function NoticePopup() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const [queue, setQueue] = useState<NoticeResponse[]>([]);
+  const titleRef = useRef<Text>(null);
 
   useEffect(() => {
     fetchUnreadNotices().then(setQueue).catch(() => {});
@@ -27,7 +27,15 @@ export function NoticePopup() {
   };
 
   return (
-    <Modal transparent animationType="fade" onRequestClose={dismiss}>
+    <Modal
+      transparent
+      animationType="fade"
+      onRequestClose={dismiss}
+      onShow={() => {
+        const tag = titleRef.current ? findNodeHandle(titleRef.current) : null;
+        if (tag) AccessibilityInfo.setAccessibilityFocus(tag);
+      }}
+    >
       <View style={styles.overlay}>
         <View
           style={[
@@ -36,7 +44,7 @@ export function NoticePopup() {
             retroShadow(5, colors.shadowHero),
           ]}
         >
-          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+          <Text ref={titleRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="megaphone" size={14} /> {current.title}
           </Text>
           <ScrollView style={styles.content}>

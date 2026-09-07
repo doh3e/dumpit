@@ -2,7 +2,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { retroShadow } from '../../theme/tokens';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { TiledImage } from '../common/TiledImage';
@@ -30,7 +29,7 @@ type Props = TabBarProps & {
 
 /** 4탭 + 중앙 FAB. 탭 순서: 홈 · 루틴 · ＋ · 아이디어 · MY (2:2 대칭) */
 export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
-  const { colors, chromeDeco } = useTheme();
+  const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
 
   const fabIconStyle = useAnimatedStyle(() => ({
@@ -56,7 +55,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
         style={({ pressed }) => [styles.tab, { transform: [{ translateY: pressed ? 1 : 0 }] }]}
       >
         <PixelIcon name={meta.icon} size={20} style={{ opacity: focused ? 1 : 0.55 }} />
-        <Text style={[styles.label, { fontFamily: fonts.chrome, color: focused ? colors.accent : colors.sub }]}>
+        <Text style={[styles.label, { fontFamily: fonts.chrome, color: focused ? colors.accentText : colors.sub }]}>
           {meta.label}
         </Text>
       </Pressable>

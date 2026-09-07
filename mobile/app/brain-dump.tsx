@@ -31,6 +31,7 @@ import {
 } from '../src/api/brainDump';
 import { getApiErrorMessage } from '../src/api/client';
 import type { DumpResponse, DumpTaskItem } from '../src/api/types';
+import { announce } from '../src/a11y/announce';
 import { Chip } from '../src/components/retro/Chip';
 import { PixelIcon } from '../src/components/common/PixelIcon';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
@@ -41,7 +42,6 @@ import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, getCategory } from '../src/tasks/constants';
 import { formatDeadline } from '../src/tasks/dates';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 const MAX_LENGTH = 3000;
@@ -164,7 +164,7 @@ function ResultItem({
   selected: boolean;
   onToggle: () => void;
 }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const priority = getPriority(item.aiPriorityScore);
   const deadline = formatDeadline(item.deadline);
   const category = getCategory(item.category);
@@ -220,7 +220,7 @@ function ResultItem({
 
 /** 머릿속 할 일을 AI로 구조화하고 골라 등록하는 3단계 풀스크린 플로우 */
 export default function BrainDumpScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
@@ -274,11 +274,12 @@ export default function BrainDumpScreen() {
     try {
       const response = await submitBrainDump(rawText);
       setResult(response);
+      announce(`분석이 끝났어요. 후보 ${response.tasks.length}개`);
       setSelectedIndexes(new Set(response.tasks.map((_task, index) => index)));
       invalidateAfterAi(qc);
       setStage('select');
     } catch (error) {
-      toast.show(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error));
       setStage('input');
     }
   }, [analysisDisabled, qc, text, toast]);
@@ -321,7 +322,7 @@ export default function BrainDumpScreen() {
       toast.show(`${selected.length}개를 할 일에 등록했어요!`);
       router.back();
     } catch (error) {
-      toast.show(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -390,7 +391,7 @@ export default function BrainDumpScreen() {
             {insufficient ? (
               <Text
                 accessibilityRole="alert"
-                style={[styles.insufficient, { color: colors.warn, fontFamily: fonts.bodyBold }]}
+                style={[styles.insufficient, { color: colors.warnText, fontFamily: fonts.bodyBold }]}
               >
                 오늘 AI 점수가 부족해요
               </Text>

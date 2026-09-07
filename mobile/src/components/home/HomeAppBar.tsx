@@ -3,7 +3,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MeResponse } from '../../api/auth';
 import type { AiUsage } from '../../api/types';
 import { PLANET_SPRITES, spriteFor } from '../../shop/spriteRegistry';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { TiledImage } from '../common/TiledImage';
 import { PixelSprite } from '../shop/PixelSprite';
@@ -14,10 +13,11 @@ const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
 /** 홈 상단 앱바 — 날짜·인사 + 코인/AI 배지 (웹 Header 대응) */
 export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: AiUsage | undefined }) {
-  const { colors, chromeDeco } = useTheme();
+  const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}월 ${now.getDate()}일 ${DAY_NAMES[now.getDay()]}`;
+  const greeting = me?.name ? `${me.name}의 덤프` : 'DUMPIT!';
 
   return (
     <View
@@ -33,8 +33,13 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
         <PixelSprite sprite={spriteFor(PLANET_SPRITES, me?.equipments?.PLANET)} size={34} />
         <View style={styles.leftText}>
           <Text style={[styles.date, { color: colors.sub, fontFamily: fonts.chrome }]}>{dateLabel}</Text>
-          <Text style={[styles.greeting, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={1}>
-            {me?.name ? `${me.name}의 덤프` : 'DUMPIT!'}
+          {/* 안드로이드는 중첩 Text를 평탄화해 자식의 숨김 속성이 먹지 않는다 — 부모 라벨로 ★을 뺀다 */}
+          <Text
+            style={[styles.greeting, { color: colors.fg, fontFamily: fonts.displayBold }]}
+            numberOfLines={1}
+            accessibilityLabel={greeting}
+          >
+            {greeting}
             <Text style={{ color: colors.starlight }}> ★</Text>
           </Text>
         </View>

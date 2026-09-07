@@ -18,7 +18,6 @@ import {
 } from '../src/routines/payload';
 import { MONTHLY_ORDINALS, WEEK_DAYS } from '../src/routines/repeatSummary';
 import { parseDate, toLocalDateString } from '../src/tasks/dates';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 import { PixelIcon } from '../src/components/common/PixelIcon';
 
@@ -37,7 +36,7 @@ function toggleNumber(list: number[], value: number): number[] {
 
 /** 루틴 추가·편집 풀스크린 — 폼이 커서 바텀시트 대신 전용 화면 (웹 RoutinePage 폼 패리티) */
 export default function RoutineEditScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const { routineId } = useLocalSearchParams<{ routineId?: string }>();
   const routines = useRoutines();
 
@@ -70,7 +69,7 @@ export default function RoutineEditScreen() {
 }
 
 function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const save = useSaveRoutine();
@@ -92,14 +91,14 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
   const onSave = () => {
     const error = validateRoutineForm(form);
     if (error) {
-      toast.show(error);
+      toast.error(error);
       return;
     }
     save.mutate(
       { payload: buildRoutinePayload(form), routineId: editing?.routineId },
       {
         onSuccess: () => router.back(),
-        onError: (e) => toast.show(getApiErrorMessage(e, '루틴을 저장하지 못했어요.')),
+        onError: (e) => toast.error(getApiErrorMessage(e, '루틴을 저장하지 못했어요.')),
       },
     );
   };
@@ -114,7 +113,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
         onPress: () =>
           remove.mutate(editing.routineId, {
             onSuccess: () => router.back(),
-            onError: (e) => toast.show(getApiErrorMessage(e, '루틴을 삭제하지 못했어요.')),
+            onError: (e) => toast.error(getApiErrorMessage(e, '루틴을 삭제하지 못했어요.')),
           }),
       },
     ]);
@@ -137,8 +136,9 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
             onChangeText={(v) => patch({ name: v })}
             maxLength={200}
             placeholder="예: 아침 스트레칭"
-            placeholderTextColor={colors.sub}
+            placeholderTextColor={colors.subOnChip}
             style={[styles.input, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+            accessibilityLabel="루틴 이름"
           />
           {sectionTitle('메모 (선택)')}
           <TextInput
@@ -148,8 +148,9 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
             multiline
             numberOfLines={2}
             placeholder="루틴 설명"
-            placeholderTextColor={colors.sub}
+            placeholderTextColor={colors.subOnChip}
             style={[styles.input, styles.multiline, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+            accessibilityLabel="루틴 메모"
           />
         </RetroCard>
 

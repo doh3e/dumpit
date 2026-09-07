@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
+import { announce } from '../src/a11y/announce';
 import { PomodoroSettingsSheet } from '../src/components/pomodoro/PomodoroSettingsSheet';
 import { TaskPickerSheet, type PickedTask } from '../src/components/pomodoro/TaskPickerSheet';
 import { TimerRing } from '../src/components/pomodoro/TimerRing';
@@ -22,11 +23,10 @@ import {
   getSession, pauseSession, reconcile, resetSession, resumeSession, startSession, subscribe,
 } from '../src/pomodoro/store';
 import { keys } from '../src/query/keys';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 export default function PomodoroScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
@@ -48,6 +48,19 @@ export default function PomodoroScreen() {
   const derived = session ? deriveState(session, now) : null;
   const running = !!session && session.pausedAt == null && derived?.phase !== 'DONE';
 
+  const phase = derived?.phase ?? null;
+  const longBreak = derived?.long ?? false;
+
+  const prevPhase = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevPhase.current && phase && phase !== prevPhase.current) {
+      if (phase === 'BREAK') announce(`집중 끝. ${longBreak ? '긴 ' : ''}휴식을 시작해요`);
+      else if (phase === 'FOCUS') announce('휴식 끝. 집중을 시작해요');
+      else if (phase === 'DONE') announce('모든 세트를 완료했어요');
+    }
+    prevPhase.current = phase;
+  }, [phase, longBreak]);
+
   // 화면에 보이는 동안만 1초 틱 — 시간 자체는 앵커 재계산이라 틱은 표시용
   useEffect(() => {
     if (!running) return;
@@ -68,7 +81,7 @@ export default function PomodoroScreen() {
       await startSession(settings, picked);
       qc.invalidateQueries({ queryKey: keys.planning });
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '타이머를 시작하지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '타이머를 시작하지 못했어요.'));
     } finally {
       setStarting(false);
     }
@@ -76,6 +89,7 @@ export default function PomodoroScreen() {
 
   const onStart = useCallback(async () => {
     const notifOk = await requestNotificationPermission();
+    // 시작 자체는 성공한 흐름이라 안내 토스트 — error()는 sticky라 성공 경로를 막는다
     if (!notifOk) toast.show('알림 권한이 없어 타이머 알림이 오지 않아요.');
     const exact = await checkExactAlarm();
     if (!exact) {
@@ -94,7 +108,7 @@ export default function PomodoroScreen() {
 
   const doReset = useCallback(async () => {
     const ok = await resetSession();
-    if (!ok) toast.show('오프라인이라 완료 세트를 정산하지 못했어요. 연결 후 다시 리셋해주세요.');
+    if (!ok) toast.error('오프라인이라 완료 세트를 정산하지 못했어요. 연결 후 다시 리셋해주세요.');
   }, [toast]);
 
   const onReset = useCallback(() => {

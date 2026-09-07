@@ -3,13 +3,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
 import { confirmSplit, proposeSplit } from '../../api/tasks';
 import type { TaskResponse } from '../../api/types';
 import { invalidateAfterAi } from '../../query/hooks';
 import { keys } from '../../query/keys';
 import { AI_COSTS } from '../../tasks/constants';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 import { RetroButton } from '../retro/RetroButton';
@@ -24,12 +24,13 @@ type Props = { onCreated: () => void };
 /** AI 서브태스크 분해 — 제안(3점) 받아 편집·선택 후 확정 생성 (웹 SubtaskProposalModal 이식) */
 export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props>(
   function SubtaskProposalSheet({ onCreated }, ref) {
-    const { colors } = useTheme();
+    const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
     const toast = useToast();
     const qc = useQueryClient();
     const sheetRef = useRef<BottomSheetModal>(null);
     const presentedIdRef = useRef<string | null>(null);
+    const { headingRef, onChange } = useSheetFocus();
 
     const [task, setTask] = useState<TaskResponse | null>(null);
     const [items, setItems] = useState<Item[]>([]);
@@ -52,7 +53,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
         })));
       } catch (e) {
         if (presentedIdRef.current !== id) return;
-        toast.show(getApiErrorMessage(e, 'AI 제안을 받지 못했어요.'));
+        toast.error(getApiErrorMessage(e, 'AI 제안을 받지 못했어요.'));
         sheetRef.current?.dismiss();
       } finally {
         if (presentedIdRef.current === id) setLoading(false);
@@ -85,7 +86,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
         sheetRef.current?.dismiss();
         onCreated();
       } catch (e) {
-        toast.show(getApiErrorMessage(e, '서브태스크 생성에 실패했어요.'));
+        toast.error(getApiErrorMessage(e, '서브태스크 생성에 실패했어요.'));
       } finally {
         setSaving(false);
       }
@@ -98,14 +99,15 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
       <BottomSheetModal
         ref={sheetRef}
         snapPoints={['65%']}
+        onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 확정 버튼이 OS 내비 바에 가려진다 */}
-        <BottomSheetScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
           <View style={styles.headingRow}>
             <PixelIcon name="puzzle" size={16} />
-            <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+            <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>
               AI로 쪼개기 <Text style={{ color: colors.sub, fontSize: 11, fontFamily: fonts.chrome }}><PixelIcon name="token" size={11} /> {AI_COSTS.SUBTASK_PROPOSAL}점</Text>
             </Text>
           </View>

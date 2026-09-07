@@ -1,7 +1,6 @@
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 
@@ -20,7 +19,7 @@ function toDate(value: string): Date {
 
 /** 시간 단독 픽커 — DateTimeField의 시간 단계만 (루틴 시각용) */
 export function TimeField({ value, onChange, accessibilityLabel }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const [open, setOpen] = useState(false);
 
   const onPick = (event: DateTimePickerEvent, picked?: Date) => {

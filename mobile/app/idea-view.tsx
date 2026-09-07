@@ -17,7 +17,6 @@ import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, getCategory } from '../src/tasks/constants';
 import { STICKER_SPRITES } from '../src/tasks/stickers';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 /**
@@ -25,7 +24,7 @@ import { useTheme } from '../src/theme/useTheme';
  * 웹은 좌우 분할이라 목록+상세를 동시에 보지만 앱은 한 번에 하나만 보이므로 읽기 → 편집 순서.
  */
 export default function IdeaViewScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const { ideaId } = useLocalSearchParams<{ ideaId?: string }>();
   const ideas = useQuery({ queryKey: keys.ideas, queryFn: fetchIdeas });
@@ -81,7 +80,7 @@ export default function IdeaViewScreen() {
             qc.invalidateQueries({ queryKey: keys.planning });
             toast.show('태스크로 전환했어요!');
           } catch (e) {
-            toast.show(getApiErrorMessage(e, '전환에 실패했어요.'));
+            toast.error(getApiErrorMessage(e, '전환에 실패했어요.'));
           } finally {
             setBusy(false);
           }

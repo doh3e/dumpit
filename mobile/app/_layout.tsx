@@ -5,8 +5,8 @@ import { router, Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SheetA11yProvider, SheetA11yScreenHost } from '../src/a11y/SheetA11yContext';
 import { AuthProvider, useAuth } from '../src/auth/AuthContext';
 import { ToastProvider } from '../src/components/retro/ToastProvider';
 import { AppBackground } from '../src/components/shell/AppBackground';
@@ -81,20 +81,22 @@ export default function RootLayout() {
           <ThemeProvider>
             <BottomSheetModalProvider>
               <ToastProvider>
-                <ThemedStatusBar />
-                <AuthRouteGate />
-                <PushHandlerGate />
-                <WidgetMirrorGate />
-                <View style={{ flex: 1 }}>
-                  <AppBackground />
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                      // 화면이 불투명하면 전역 배경 무늬가 가려진다
-                      contentStyle: { backgroundColor: 'transparent' },
-                    }}
-                  />
-                </View>
+                <SheetA11yProvider>
+                  <ThemedStatusBar />
+                  <AuthRouteGate />
+                  <PushHandlerGate />
+                  <WidgetMirrorGate />
+                  <SheetA11yScreenHost>
+                    <AppBackground />
+                    <Stack
+                      screenOptions={{
+                        headerShown: false,
+                        // 화면이 불투명하면 전역 배경 무늬가 가려진다
+                        contentStyle: { backgroundColor: 'transparent' },
+                      }}
+                    />
+                  </SheetA11yScreenHost>
+                </SheetA11yProvider>
               </ToastProvider>
             </BottomSheetModalProvider>
           </ThemeProvider>

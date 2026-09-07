@@ -20,7 +20,6 @@ import { STATION_SPRITES, spriteFor } from '../../src/shop/spriteRegistry';
 import { PRIVACY_URL, TERMS_URL } from '../../src/legal/links';
 import { getCategory } from '../../src/tasks/constants';
 import { formatDeadline, toLocalDateString } from '../../src/tasks/dates';
-import { fonts } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
 
 // url을 가진 항목은 웹 문서를 브라우저로 연다 — 약관·방침은 웹에 하나만 두고
@@ -39,7 +38,7 @@ const MENU: { icon: PixelIconName; label: string; href?: Href; url?: string }[] 
 const HEAT_ALPHA = [0.12, 0.4, 0.7, 1] as const;
 
 export default function MyScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const toast = useToast();
   const qc = useQueryClient();
   const { me, refresh } = useAuth();
@@ -76,7 +75,7 @@ export default function MyScreen() {
       qc.invalidateQueries({ queryKey: keys.profile });
       setEditingBio(false);
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '소개를 저장하지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '소개를 저장하지 못했어요.'));
     } finally {
       setSavingBio(false);
     }
@@ -92,7 +91,7 @@ export default function MyScreen() {
       const coins = updated.coinsGranted ?? 0;
       toast.show(coins > 0 ? `"${title}" 완료! +${coins} 코인` : `"${title}" 완료!`);
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '완료 처리에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, '완료 처리에 실패했어요.'));
     }
   };
 
@@ -152,8 +151,9 @@ export default function MyScreen() {
                 maxLength={500}
                 multiline
                 placeholder="한 줄 소개"
-                placeholderTextColor={colors.sub}
+                placeholderTextColor={colors.subOnChip}
                 style={[styles.bioInput, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+                accessibilityLabel="한 줄 소개"
               />
               <View style={styles.bioActions}>
                 <RetroButton label="취소" variant="ghost" size="sm" onPress={() => setEditingBio(false)} />
@@ -253,7 +253,7 @@ export default function MyScreen() {
 
         {(overdue.data?.length ?? 0) > 0 && (
           <RetroCard style={styles.card}>
-            <Text style={[styles.sectionTitle, { color: colors.warn, fontFamily: fonts.displayBold }]}>
+            <Text style={[styles.sectionTitle, { color: colors.warnText, fontFamily: fonts.displayBold }]}>
               ⏰ 기한 지난 태스크 {overdue.data!.length}
             </Text>
             {overdue.data!.map((t) => (
@@ -262,7 +262,7 @@ export default function MyScreen() {
                   <Text numberOfLines={1} style={[styles.overdueTitle, { color: colors.fg, fontFamily: fonts.body }]}>
                     <PixelIcon name={getCategory(t.category).icon} size={11} /> {t.title}
                   </Text>
-                  <Text style={[styles.overdueDeadline, { color: colors.warn, fontFamily: fonts.chrome }]}>
+                  <Text style={[styles.overdueDeadline, { color: colors.warnText, fontFamily: fonts.chrome }]}>
                     {formatDeadline(t.deadline)} 마감
                   </Text>
                 </View>

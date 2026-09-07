@@ -22,7 +22,6 @@ import { PLANET_SPRITES, STATION_SPRITES } from '../src/shop/spriteRegistry';
 import { STICKER_SPRITES } from '../src/tasks/stickers';
 import { useSkinPreview } from '../src/theme/ThemeProvider';
 import { BG_SKINS, CHROME_SKINS, POMO_SKINS, skinKey } from '../src/theme/skins';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 // 웹 SHOP_TABS 순서 대응 — 탭 키는 slot(스티커만 type)
@@ -87,7 +86,7 @@ function ItemPreview({ item, scheme }: { item: CatalogItem; scheme: 'light' | 'd
 const PREVIEWABLE = new Set(['BACKGROUND', 'CHROME', 'POMODORO']);
 
 export default function ShopScreen() {
-  const { colors, scheme } = useTheme();
+  const { colors, fonts, scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const qc = useQueryClient();
@@ -134,7 +133,7 @@ export default function ShopScreen() {
             toast.show(`구매 완료! ${item.type === 'THEME' ? '바로 장착했어요.' : ''}`);
             afterChange();
           } catch (e) {
-            toast.show(getApiErrorMessage(e, '구매에 실패했어요.'));
+            toast.error(getApiErrorMessage(e, '구매에 실패했어요.'));
           } finally {
             setBusyCode(null);
           }
@@ -150,7 +149,7 @@ export default function ShopScreen() {
       else await equipItem(item.code);
       afterChange();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '장착을 바꾸지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '장착을 바꾸지 못했어요.'));
     } finally {
       setBusyCode(null);
     }
@@ -242,7 +241,7 @@ export default function ShopScreen() {
                   busy={busyCode === item.code}
                 />
               ) : (
-                <Text style={[styles.ownedText, { color: colors.accent2, fontFamily: fonts.chrome }]}>보유중</Text>
+                <Text style={[styles.ownedText, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>보유중</Text>
               )}
             </View>
           </RetroCard>

@@ -2,8 +2,8 @@ import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { forwardRef, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { clampSettings, type PomodoroSettings } from '../../pomodoro/engine';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { RetroButton } from '../retro/RetroButton';
 
@@ -20,7 +20,7 @@ type RowProps = {
 };
 
 function StepperRow({ label, value, display, onDelta }: RowProps) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   return (
     <View style={styles.row}>
       <Text style={[styles.rowLabel, { color: colors.fg, fontFamily: fonts.body }]}>{label}</Text>
@@ -42,8 +42,9 @@ function StepperRow({ label, value, display, onDelta }: RowProps) {
 /** 뽀모도로 설정 시트 — 실행 중에는 열지 않는다(설정 변경 = 리셋 후 재시작 정책) */
 export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
   function PomodoroSettingsSheet({ initial, onApply }, ref) {
-    const { colors } = useTheme();
+    const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
+    const { headingRef, onChange } = useSheetFocus();
     const [draft, setDraft] = useState(initial);
 
     // 저장 설정은 화면 마운트 후 비동기로 로드된다 — 마운트 시점 값에 갇히면
@@ -63,12 +64,13 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
         ref={ref}
         enableDynamicSizing
         onDismiss={() => setDraft(initial)}
+        onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 적용 버튼이 OS 내비 바에 가려진다 */}
-        <BottomSheetView style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>타이머 설정</Text>
+        <BottomSheetView accessibilityViewIsModal style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+          <Text ref={headingRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>타이머 설정</Text>
           <StepperRow label="집중 (분)" value={draft.focusMin} onDelta={(d) => patch({ focusMin: step5(draft.focusMin, d) })} />
           <StepperRow label="휴식 (분)" value={draft.breakMin} onDelta={(d) => patch({ breakMin: draft.breakMin + d })} />
           <StepperRow label="세트 수" value={draft.setsTarget} display={draft.setsTarget === 0 ? '∞' : String(draft.setsTarget)}

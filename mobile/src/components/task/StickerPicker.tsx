@@ -3,7 +3,6 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { fetchOwnedStickers } from '../../api/shop';
 import { keys } from '../../query/keys';
 import { STICKER_SPRITES } from '../../tasks/stickers';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { Chip } from '../retro/Chip';
 
@@ -15,7 +14,7 @@ type Props = {
 
 /** 보유 스티커 그리드 — GET /shop/catalog에서 owned STICKER만 (웹 StickerPicker 이식) */
 export function StickerPicker({ current, onSelect, disabled }: Props) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const owned = useQuery({ queryKey: keys.catalog, queryFn: fetchOwnedStickers, staleTime: 5 * 60_000 });
   const codes = (owned.data ?? []).filter((c) => STICKER_SPRITES[c]);
 

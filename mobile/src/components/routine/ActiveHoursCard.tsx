@@ -1,9 +1,9 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
 import { useSaveSettings, useUserSettings } from '../../query/routineHooks';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { Chip } from '../retro/Chip';
 import { RetroButton } from '../retro/RetroButton';
@@ -16,11 +16,12 @@ const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
 
 /** 활동시간(일과) 카드 — 서버 /me/settings 소비, AI 시각 배치·추천 개인화에 쓰인다 */
 export function ActiveHoursCard() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const toast = useToast();
   const settings = useUserSettings();
   const save = useSaveSettings();
   const sheet = useRef<BottomSheetModal>(null);
+  const { headingRef, onChange } = useSheetFocus();
 
   const start = settings.data?.routineStartHour ?? 9;
   const end = settings.data?.routineEndHour ?? 22;
@@ -42,7 +43,7 @@ export function ActiveHoursCard() {
           toast.show('일과 시간을 저장했어요.');
           sheet.current?.dismiss();
         },
-        onError: (e) => toast.show(getApiErrorMessage(e, '저장하지 못했어요.')),
+        onError: (e) => toast.error(getApiErrorMessage(e, '저장하지 못했어요.')),
       },
     );
   };
@@ -67,29 +68,31 @@ export function ActiveHoursCard() {
       <BottomSheetModal
         ref={sheet}
         enableDynamicSizing
+        onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
-        <BottomSheetView style={styles.sheetBody}>
-          <Text style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 시작 시각</Text>
+        <BottomSheetView accessibilityViewIsModal style={styles.sheetBody}>
+          <Text ref={headingRef} accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 시작 시각</Text>
           <View style={styles.grid}>
+            {/* 24칸 격자가 둘이라 "09:00"만으로는 시작·끝을 가릴 수 없다 */}
             {HOURS.map((h) => (
-              <Chip key={`s${h}`} label={hh(h)} selected={h === draftStart} onPress={() => setDraftStart(h)} />
+              <Chip key={`s${h}`} label={hh(h)} accessibilityLabel={`시작 ${h}시`} selected={h === draftStart} onPress={() => setDraftStart(h)} />
             ))}
           </View>
-          <Text style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 끝 시각</Text>
+          <Text accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 끝 시각</Text>
           <View style={styles.grid}>
             {HOURS.map((h) => (
-              <Chip key={`e${h}`} label={hh(h)} selected={h === draftEnd} onPress={() => setDraftEnd(h)} />
+              <Chip key={`e${h}`} label={hh(h)} accessibilityLabel={`끝 ${h}시`} selected={h === draftEnd} onPress={() => setDraftEnd(h)} />
             ))}
           </View>
           {wraps && (
-            <Text style={[styles.wrapNote, { color: colors.warn, fontFamily: fonts.body }]}>
+            <Text style={[styles.wrapNote, { color: colors.warnText, fontFamily: fonts.body }]}>
               <PixelIcon name="moon" size={12} /> 자정을 넘겨 다음날 새벽 {hh(draftEnd)}까지 이어지는 야행성 일과예요.
             </Text>
           )}
           {draftStart === draftEnd && (
-            <Text style={[styles.wrapNote, { color: colors.warn, fontFamily: fonts.body }]}>
+            <Text style={[styles.wrapNote, { color: colors.warnText, fontFamily: fonts.body }]}>
               시작과 끝이 같을 수는 없어요.
             </Text>
           )}

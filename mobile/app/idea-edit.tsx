@@ -4,6 +4,7 @@ import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFocus } from '../src/a11y/useSheetFocus';
 import { getApiErrorMessage } from '../src/api/client';
 import { convertIdeaToTask, createIdea, deleteIdea, fetchIdeas, patchIdea, setIdeaSticker } from '../src/api/ideas';
 import type { IdeaResponse } from '../src/api/types';
@@ -19,12 +20,11 @@ import { sortParentCandidates } from '../src/ideas/tree';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, TASK_CATEGORIES } from '../src/tasks/constants';
-import { fonts } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 /** 아이디어 추가·편집 풀스크린 — 마크다운·스티커·태스크 전환 (웹 IdeaDumpPage 폼 패리티) */
 export default function IdeaEditScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const { ideaId, parentIdeaId } = useLocalSearchParams<{ ideaId?: string; parentIdeaId?: string }>();
   const ideas = useQuery({ queryKey: keys.ideas, queryFn: fetchIdeas });
 
@@ -82,7 +82,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
   allIdeas: IdeaResponse[];
   initialParentId: string | null;
 }) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const toast = useToast();
@@ -100,6 +100,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
   const [busy, setBusy] = useState(false);
   const [stickerCode, setStickerCode] = useState<string | null>(editing?.stickerCode ?? null);
   const parentSheet = useRef<BottomSheetModal>(null);
+  const { headingRef, onChange } = useSheetFocus();
 
   const childCount = editing ? allIdeas.filter((i) => i.parentIdeaId === editing.ideaId).length : 0;
   // 자기 자신·자기 후손은 상위로 지정 불가 (사이클 방지)
@@ -117,7 +118,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
 
   const save = async () => {
     if (!title.trim()) {
-      toast.show('제목을 입력해주세요.');
+      toast.error('제목을 입력해주세요.');
       return;
     }
     setSaving(true);
@@ -134,7 +135,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
       qc.invalidateQueries({ queryKey: keys.ideas });
       router.back();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '아이디어를 저장하지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '아이디어를 저장하지 못했어요.'));
     } finally {
       setSaving(false);
     }
@@ -148,7 +149,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
       setStickerCode(updated.stickerCode);
       qc.invalidateQueries({ queryKey: keys.ideas });
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '스티커를 바꾸지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '스티커를 바꾸지 못했어요.'));
     } finally {
       setBusy(false);
     }
@@ -169,7 +170,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             qc.invalidateQueries({ queryKey: keys.planning });
             toast.show('태스크로 전환했어요!');
           } catch (e) {
-            toast.show(getApiErrorMessage(e, '전환에 실패했어요.'));
+            toast.error(getApiErrorMessage(e, '전환에 실패했어요.'));
           } finally {
             setBusy(false);
           }
@@ -193,7 +194,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             // 뒤로 가면 방금 지운 아이디어의 읽기 화면이라 목록으로 보낸다
             router.replace('/ideas' as Href);
           } catch (e) {
-            toast.show(getApiErrorMessage(e, '삭제하지 못했어요.'));
+            toast.error(getApiErrorMessage(e, '삭제하지 못했어요.'));
             setBusy(false);
           }
         },
@@ -213,8 +214,9 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             onChangeText={setTitle}
             maxLength={200}
             placeholder="아이디어 제목 *"
-            placeholderTextColor={colors.sub}
+            placeholderTextColor={colors.subOnChip}
             style={[styles.input, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+            accessibilityLabel="아이디어 제목"
           />
           <View style={styles.previewRow}>
             <Chip label="작성" selected={!preview} onPress={() => setPreview(false)} />
@@ -234,8 +236,9 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
               maxLength={5000}
               multiline
               placeholder="내용 (마크다운 지원, 선택)"
-              placeholderTextColor={colors.sub}
+              placeholderTextColor={colors.subOnChip}
               style={[styles.input, styles.contentInput, { borderColor: colors.line, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+              accessibilityLabel="내용 (마크다운 지원, 선택)"
             />
           )}
         </RetroCard>
@@ -297,14 +300,16 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
         ref={parentSheet}
         enableDynamicSizing
         maxDynamicContentSize={Math.round(windowHeight * 0.62)}
+        onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         {/* 일반 ScrollView는 시트 팬 제스처에 먹혀 스크롤 불가 — 시트 전용 스크롤러 + OS 내비 바 인셋 필수 */}
-        <BottomSheetScrollView contentContainerStyle={[styles.sheetBody, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>상위 아이디어 선택</Text>
+        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.sheetBody, { paddingBottom: insets.bottom + 24 }]}>
+          <Text ref={headingRef} accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>상위 아이디어 선택</Text>
           <Pressable
             onPress={() => { setParentId(null); parentSheet.current?.dismiss(); }}
+            accessibilityRole="button"
             style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
           >
             <Text style={[styles.sheetRowText, { color: colors.sub, fontFamily: fonts.body }]}>없음 (최상위)</Text>
@@ -313,6 +318,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             <Pressable
               key={i.ideaId}
               onPress={() => { setParentId(i.ideaId); parentSheet.current?.dismiss(); }}
+              accessibilityRole="button"
               style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
             >
               <Text numberOfLines={1} style={[styles.sheetRowText, { color: colors.fg, fontFamily: fonts.body }]}>{i.title}</Text>

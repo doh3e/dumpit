@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { fonts } from '../../theme/typography';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
 
@@ -23,7 +22,7 @@ function fmt(sec: number): string {
 
 /** 뽀모도로 픽셀 링 — OrbitProgress 확장판. 경과 비율만큼 도트가 차오른다 (SVG 없이) */
 export function TimerRing({ remainingSec, totalSec, phase, long = false }: Props) {
-  const { colors, pomo } = useTheme();
+  const { colors, fonts, pomo } = useTheme();
   const elapsed = totalSec > 0 ? (totalSec - remainingSec) / totalSec : 1;
   const filled = phase === 'DONE' ? DOTS : Math.round(elapsed * DOTS);
   // POMODORO 스킨 팔레트 — 긴 휴식만 전역 starlight를 유지(스킨엔 대응 색이 없다)
@@ -31,7 +30,12 @@ export function TimerRing({ remainingSec, totalSec, phase, long = false }: Props
   const label = phase === 'FOCUS' ? '집중' : phase === 'BREAK' ? (long ? '긴 휴식' : '휴식') : '완료';
 
   return (
-    <View style={styles.wrap} accessibilityLabel={`${label} 남은 시간 ${fmt(remainingSec)}`}>
+    <View
+      style={styles.wrap}
+      accessible
+      accessibilityRole="timer"
+      accessibilityLabel={`${label} 남은 시간 ${fmt(remainingSec)}`}
+    >
       {Array.from({ length: DOTS }, (_, i) => {
         const angle = (i / DOTS) * Math.PI * 2 - Math.PI / 2;
         return (

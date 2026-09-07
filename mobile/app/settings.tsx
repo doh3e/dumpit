@@ -13,8 +13,7 @@ import { ActiveHoursCard } from '../src/components/routine/ActiveHoursCard';
 import { NotificationSettingsCard } from '../src/components/settings/NotificationSettingsCard';
 import { PixelIcon, type PixelIconName } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
-import { useThemeMode, type ThemeMode } from '../src/theme/ThemeProvider';
-import { fonts } from '../src/theme/typography';
+import { useA11yPrefs, useThemeMode, type ContrastMode, type ThemeMode } from '../src/theme/ThemeProvider';
 import { useTheme } from '../src/theme/useTheme';
 
 const THEME_MODES: { id: ThemeMode; label: string; icon: PixelIconName }[] = [
@@ -23,12 +22,21 @@ const THEME_MODES: { id: ThemeMode; label: string; icon: PixelIconName }[] = [
   { id: 'system', label: '시스템', icon: 'phone' },
 ];
 
+const CONTRAST_MODES: { id: ContrastMode; label: string }[] = [
+  { id: 'system', label: '시스템' },
+  { id: 'high', label: '고대비' },
+  { id: 'normal', label: '기본' },
+];
+
 export default function SettingsScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const { mode, setMode } = useThemeMode();
+  const { contrastMode, setContrastMode, boldText, setBoldText } = useA11yPrefs();
   const { me, signOut } = useAuth();
   const toast = useToast();
+
+  const boldLabel = boldText ? '켬' : '끔';
 
   const [withdrawStage, setWithdrawStage] = useState(false);
   const [confirmText, setConfirmText] = useState('');
@@ -66,7 +74,7 @@ export default function SettingsScreen() {
       await deleteAccount();          // 서버가 계정을 잠그고 30일 뒤 완전 삭제를 예약
       await signOut({ afterWithdrawal: true });   // 구글 세션 해제 + 로컬 정리 → 로그인 화면
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '탈퇴 처리에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, '탈퇴 처리에 실패했어요.'));
       setWithdrawing(false);
     }
   };
@@ -88,6 +96,20 @@ export default function SettingsScreen() {
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
             글자 크기는 휴대폰 시스템 설정을 따라요.
           </Text>
+          <Text accessibilityRole="header" style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>대비</Text>
+          <View style={styles.chipRow}>
+            {CONTRAST_MODES.map((m) => (
+              // 테마 그리드에도 '시스템' 칩이 있어 라벨만으로는 어느 그룹인지 갈린다
+              <Chip key={m.id} label={m.label} accessibilityLabel={`대비 ${m.label}`} selected={contrastMode === m.id} onPress={() => setContrastMode(m.id)} />
+            ))}
+          </View>
+          <Text accessibilityRole="header" style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>굵은 글자</Text>
+          <View style={styles.chipRow}>
+            <Chip label={boldLabel} accessibilityLabel={`굵은 글자 ${boldLabel}`} selected={boldText} onPress={() => setBoldText(!boldText)} />
+          </View>
+          <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
+            &apos;시스템&apos;은 휴대폰의 고대비 텍스트 설정을 따라요. 이 설정은 이 기기에만 저장돼요.
+          </Text>
         </RetroCard>
 
         <ActiveHoursCard />
@@ -101,16 +123,17 @@ export default function SettingsScreen() {
           <RetroButton label="로그아웃" variant="ghost" onPress={confirmSignOut} />
           {withdrawStage ? (
             <>
-              <Text style={[styles.hint, { color: colors.warn, fontFamily: fonts.body }]}>
-                정말 탈퇴하시려면 아래에 "탈퇴"를 입력해주세요.
+              <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>
+                정말 탈퇴하시려면 아래에 &quot;탈퇴&quot;를 입력해주세요.
               </Text>
               {/* 한글 IME 조합 보호 — uncontrolled */}
               <TextInput
                 defaultValue=""
                 onChangeText={setConfirmText}
                 placeholder="탈퇴"
-                placeholderTextColor={colors.sub}
+                placeholderTextColor={colors.subOnChip}
                 style={[styles.input, { borderColor: colors.warn, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+                accessibilityLabel="탈퇴 확인 입력"
               />
               <View style={styles.withdrawActions}>
                 <RetroButton label="취소" variant="ghost" size="sm" onPress={() => { setWithdrawStage(false); setConfirmText(''); }} />
@@ -144,6 +167,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 14 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   hint: { fontSize: 12, lineHeight: 18 },
+  subTitle: { fontSize: 11, marginTop: 6 },
   input: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, minHeight: 44 },
   withdrawActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
   version: { fontSize: 11, textAlign: 'center', marginTop: 6 },
