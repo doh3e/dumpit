@@ -1,8 +1,16 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ToastProvider, notifyToast } from './ToastContext'
+
+beforeAll(() => {
+  // jsdom은 Popover API가 없으면서 UA 스타일로 [popover]를 display:none 처리한다 — 표시 여부만 흉내 낸다
+  if (!HTMLElement.prototype.showPopover) {
+    HTMLElement.prototype.showPopover = function () { this.style.display = 'block' }
+    HTMLElement.prototype.hidePopover = function () { this.style.display = 'none' }
+  }
+})
 
 describe('ToastProvider', () => {
   beforeEach(() => vi.useFakeTimers())
@@ -25,5 +33,22 @@ describe('ToastProvider', () => {
     expect(screen.queryByRole('button', { name: '닫기' })).toBeNull()
     act(() => vi.advanceTimersByTime(3200))
     expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('토스트 컨테이너는 popover=manual로 top layer에 올라간다', () => {
+    const show = vi.spyOn(HTMLElement.prototype, 'showPopover')
+    const hide = vi.spyOn(HTMLElement.prototype, 'hidePopover')
+    try {
+      render(<ToastProvider><div /></ToastProvider>)
+      act(() => notifyToast('저장에 실패했어요.', 'error'))
+      const layer = screen.getByRole('alert').parentElement
+      expect(layer.getAttribute('popover')).toBe('manual')
+      expect(show).toHaveBeenCalledTimes(1)
+      fireEvent.click(screen.getByRole('button', { name: '닫기' }))
+      expect(hide).toHaveBeenCalledTimes(1)
+    } finally {
+      show.mockRestore()
+      hide.mockRestore()
+    }
   })
 })

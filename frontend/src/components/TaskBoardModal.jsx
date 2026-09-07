@@ -90,7 +90,7 @@ export default function TaskBoardModal({ sections: planningSections, onClose, on
   )
 
   return (
-    <Dialog onClose={onClose} title="할 일 크게 보기" className="w-full max-w-6xl p-0 bg-accent overflow-hidden">
+    <Dialog onClose={onClose} title="할 일 크게 보기" className="w-full max-w-6xl p-0 bg-accent overflow-hidden flex flex-col">
       <div className="flex flex-col gap-3 border-b border-line bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-dungeon text-dark text-xl">할 일 크게 보기</h2>
@@ -125,7 +125,7 @@ export default function TaskBoardModal({ sections: planningSections, onClose, on
         </div>
       </div>
 
-      <div className="max-h-[calc(90vh-78px)] overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <div className="grid auto-rows-[17rem] grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {sections.map((section) => (
             <section key={section.id} className={`flex min-h-0 flex-col rounded-lg border-2 p-3 ${section.tone}`}>

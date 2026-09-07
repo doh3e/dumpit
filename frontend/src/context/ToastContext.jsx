@@ -13,6 +13,7 @@ const SUCCESS_MS = 3200
 export function ToastProvider({ children }) {
   const [toast, setToast] = useState(null)
   const timerRef = useRef(null)
+  const layerRef = useRef(null)
 
   const showToast = (message, type = 'error') => {
     if (!message) return
@@ -31,13 +32,25 @@ export function ToastProvider({ children }) {
     }
   }, [])
 
+  // 모달 <dialog>는 top layer에 그려져 z-index를 무시한다 — 토스트도 popover로 top layer에 올려야 보인다
+  useEffect(() => {
+    const el = layerRef.current
+    if (!el || typeof el.showPopover !== 'function') return
+    try { el.showPopover() } catch {}
+    return () => { try { el.hidePopover() } catch {} }
+  }, [toast?.id])
+
   const isError = toast?.type !== 'success'
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {toast && (
-        <div className="fixed left-1/2 top-4 z-[100] w-[calc(100%-2rem)] max-w-md -translate-x-1/2">
+        <div
+          ref={layerRef}
+          popover="manual"
+          className="fixed left-1/2 top-4 z-[100] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 m-0 border-0 p-0 bg-transparent text-inherit overflow-visible right-auto bottom-auto"
+        >
           <div
             key={toast.id}
             role={isError ? 'alert' : 'status'}
