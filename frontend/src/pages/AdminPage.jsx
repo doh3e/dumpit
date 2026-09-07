@@ -437,7 +437,7 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-sub">문의 내용</label>
+                    <span className="mb-1 block text-xs font-bold text-sub">문의 내용</span>
                     <pre className="whitespace-pre-wrap rounded-lg border-2 border-line bg-card p-3 text-sm font-medium text-dark">
                       {selected.message}
                     </pre>

@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { axe } from 'vitest-axe'
+import * as matchers from 'vitest-axe/matchers'
 import Dialog from './Dialog'
+
+expect.extend(matchers)
 
 beforeAll(() => {
   // jsdom은 showModal/close를 구현하지 않는다
@@ -61,5 +65,9 @@ describe('Dialog', () => {
     fireEvent(inner, new Event('cancel', { cancelable: true }))
     expect(innerClose).toHaveBeenCalledTimes(1)
     expect(outerClose).not.toHaveBeenCalled()
+  })
+  it('axe 위반이 없다', async () => {
+    const { container } = render(<Dialog onClose={() => {}} title="t"><label htmlFor="x">이름</label><input id="x" /></Dialog>)
+    expect(await axe(container)).toHaveNoViolations()
   })
 })

@@ -185,9 +185,9 @@ export default function AddTaskModal({ onClose, onCreated }) {
         <hr className="border-line" />
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">
+          <span className="block text-xs font-bold text-sub mb-1">
             카테고리 (비워두면 AI가 자동 분류)
-          </label>
+          </span>
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"

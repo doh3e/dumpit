@@ -388,7 +388,7 @@ export default function RoutinePage() {
           {form.repeatType === 'MONTHLY_WEEKDAY' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-sub mb-1">몇째 주</label>
+                <span className="block text-xs font-bold text-sub mb-1">몇째 주</span>
                 <div className="grid grid-cols-5 gap-1.5">
                   {MONTHLY_ORDINALS.map((ordinal) => (
                     <button
@@ -405,7 +405,7 @@ export default function RoutinePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-sub mb-1">요일</label>
+                <span className="block text-xs font-bold text-sub mb-1">요일</span>
                 <div className="flex flex-wrap gap-1.5">
                   {WEEK_DAYS.map((day) => (
                     <button

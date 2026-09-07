@@ -208,7 +208,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">카테고리</label>
+          <span className="block text-xs font-bold text-sub mb-1">카테고리</span>
           <div className="flex flex-wrap gap-1.5">
             {TASK_CATEGORIES.map((c) => (
               <button

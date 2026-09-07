@@ -38,6 +38,7 @@ export default function Dialog({
       onCancel={handleCancel}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
+      onKeyDown={() => {}}
       className={['dialog-retro', placement === 'bottom' && 'dialog-retro-bottom'].filter(Boolean).join(' ')}
     >
       <div className={`card-retro ${className}`}>{children}</div>

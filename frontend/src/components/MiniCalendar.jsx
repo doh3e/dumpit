@@ -222,6 +222,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
           return (
             <div
               key={day}
+              role="presentation"
               className={`relative ${selectedDay === day || hoveredDay === day ? 'z-10' : ''}`}
               onMouseEnter={() => hasAny && handleDayEnter(day)}
               onMouseLeave={handleDayLeave}

@@ -24,7 +24,7 @@ export default function DeadlineModeField({ mode, onModeChange, deadline, onDead
   const selected = DEADLINE_MODES.find((m) => m.value === mode)
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-bold text-sub">마감</label>
+      <span className="block text-xs font-bold text-sub">마감</span>
       <div className="flex flex-wrap gap-1.5">
         {DEADLINE_MODES.map((m) => (
           <button

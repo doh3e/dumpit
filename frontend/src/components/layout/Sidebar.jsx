@@ -206,7 +206,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
       {/* body 포털: 본문 컨테이너(z-10) 스태킹 컨텍스트에 갇히면
           상단바(z-50)를 못 덮는다 */}
       {isDrawerOpen && createPortal(
-        <div className="lg:hidden fixed inset-0 z-[60]" onClick={onCloseDrawer}>
+        <div className="lg:hidden fixed inset-0 z-[60]" role="presentation" onClick={onCloseDrawer}>
           <div className="absolute inset-0 overlay-retro" />
           <aside
             ref={drawerRef}
@@ -216,6 +216,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
             aria-label="메뉴"
             className="app-sidebar absolute left-0 top-0 bottom-0 w-64 bg-chrome border-r border-chrome-line pt-6 pb-10 px-3 flex flex-col gap-1 overflow-y-auto scrollbar-none"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={() => {}}
           >
             {/* 명시적 닫기 버튼 — 오버레이 클릭만으론 닫는 법을 못 찾는 사용자 대비 */}
             <div className="flex items-center justify-between mb-2 px-1">
