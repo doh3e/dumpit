@@ -1,9 +1,17 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import WithdrawalPendingModal from './WithdrawalPendingModal'
 
 vi.mock('../services/api', () => ({ API_BASE_URL: 'https://api.test/api' }))
+
+beforeAll(() => {
+  // jsdom은 showModal/close를 구현하지 않는다
+  if (!HTMLDialogElement.prototype.showModal) {
+    HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', '') }
+    HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); this.dispatchEvent(new Event('close')) }
+  }
+})
 
 function renderAt(url) {
   window.history.replaceState({}, '', url)

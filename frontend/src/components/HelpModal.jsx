@@ -1,5 +1,5 @@
-import { createPortal } from 'react-dom'
 import { iconProps } from '../assets/icons'
+import Dialog from './Dialog'
 
 const AI_COSTS = [
   { label: '일일 총 한도', cost: '100점', highlight: true },
@@ -22,76 +22,70 @@ const FEATURES = [
 ]
 
 export default function HelpModal({ onClose }) {
-  return createPortal(
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
-      <div className="absolute inset-0 overlay-retro" onClick={onClose} />
-      <div
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto card-retro"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h2 className="font-dungeon text-dark text-base text-dark">Dumpit! 도움말</h2>
-            <p className="text-xs font-bold text-sub mt-0.5">현재 베타 서비스 중이에요</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg border border-line font-black text-sub hover:bg-chip hover:text-dark transition-colors flex-shrink-0 flex items-center justify-center"
-          >
-            ✕
-          </button>
+  return (
+    <Dialog onClose={onClose} title="Dumpit! 도움말" className="w-full max-w-lg">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h2 className="font-dungeon text-dark text-base text-dark">Dumpit! 도움말</h2>
+          <p className="text-xs font-bold text-sub mt-0.5">현재 베타 서비스 중이에요</p>
         </div>
-
-        <div className="mb-5 rounded-lg border-2 tone-urgent-soon px-4 py-3">
-          <p className="inline-flex items-center gap-1 text-xs font-black text-secondary mb-1">
-            <img {...iconProps('party', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
-            베타 서비스 안내
-          </p>
-          <p className="text-xs font-semibold text-sub leading-relaxed">
-            Dumpit!은 현재 베타 서비스 중이에요. 모든 활동이 무료인 대신,
-            AI를 활용하는 기능에는 일일 사용량 제한이 있습니다.
-          </p>
-        </div>
-
-        <h3 className="font-galmuri font-bold text-sm text-dark mb-2">주요 기능</h3>
-        <div className="space-y-2 mb-5">
-          {FEATURES.map(({ icon, title, desc }) => (
-            <div key={title} className="flex gap-3 rounded-lg border border-line bg-card px-3 py-2">
-              <img {...iconProps(icon, 16)} alt="" className="w-4 h-4 flex-shrink-0 object-contain mt-0.5" />
-              <div>
-                <p className="text-xs font-black text-dark">{title}</p>
-                <p className="text-[0.6875rem] font-semibold text-sub leading-snug">{desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <h3 className="inline-flex items-center gap-1.5 font-galmuri font-bold text-sm text-dark mb-2">
-          <img {...iconProps('token', 16)} alt="" className="w-4 h-4 object-contain" />
-          일일 AI 사용량 안내
-        </h3>
-        <div className="rounded-lg border-2 border-line overflow-hidden mb-1">
-          {AI_COSTS.map(({ label, cost, highlight }) => (
-            <div
-              key={label}
-              className={`flex items-center justify-between px-3 py-2 border-b border-line last:border-0 ${
-                highlight ? 'bg-chip' : 'bg-card'
-              }`}
-            >
-              <span className={`text-xs ${highlight ? 'font-black text-dark' : 'font-semibold text-sub'}`}>
-                {label}
-              </span>
-              <span className={`text-xs font-black ${highlight ? 'text-dark' : 'text-dark'}`}>{cost}</span>
-            </div>
-          ))}
-        </div>
-        <p className="text-[0.6875rem] font-semibold text-sub mb-5">매일 자정(KST)에 초기화돼요.</p>
-
-        <button onClick={onClose} className="w-full btn-retro text-sm">
-          확인했어요!
+        <button
+          onClick={onClose}
+          aria-label="닫기"
+          className="w-8 h-8 rounded-lg border border-line font-black text-sub hover:bg-chip hover:text-dark transition-colors flex-shrink-0 flex items-center justify-center"
+        >
+          ✕
         </button>
       </div>
-    </div>,
-    document.body
+
+      <div className="mb-5 rounded-lg border-2 tone-urgent-soon px-4 py-3">
+        <p className="inline-flex items-center gap-1 text-xs font-black text-secondary mb-1">
+          <img {...iconProps('party', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+          베타 서비스 안내
+        </p>
+        <p className="text-xs font-semibold text-sub leading-relaxed">
+          Dumpit!은 현재 베타 서비스 중이에요. 모든 활동이 무료인 대신,
+          AI를 활용하는 기능에는 일일 사용량 제한이 있습니다.
+        </p>
+      </div>
+
+      <h3 className="font-galmuri font-bold text-sm text-dark mb-2">주요 기능</h3>
+      <div className="space-y-2 mb-5">
+        {FEATURES.map(({ icon, title, desc }) => (
+          <div key={title} className="flex gap-3 rounded-lg border border-line bg-card px-3 py-2">
+            <img {...iconProps(icon, 16)} alt="" className="w-4 h-4 flex-shrink-0 object-contain mt-0.5" />
+            <div>
+              <p className="text-xs font-black text-dark">{title}</p>
+              <p className="text-[0.6875rem] font-semibold text-sub leading-snug">{desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <h3 className="inline-flex items-center gap-1.5 font-galmuri font-bold text-sm text-dark mb-2">
+        <img {...iconProps('token', 16)} alt="" className="w-4 h-4 object-contain" />
+        일일 AI 사용량 안내
+      </h3>
+      <div className="rounded-lg border-2 border-line overflow-hidden mb-1">
+        {AI_COSTS.map(({ label, cost, highlight }) => (
+          <div
+            key={label}
+            className={`flex items-center justify-between px-3 py-2 border-b border-line last:border-0 ${
+              highlight ? 'bg-chip' : 'bg-card'
+            }`}
+          >
+            <span className={`text-xs ${highlight ? 'font-black text-dark' : 'font-semibold text-sub'}`}>
+              {label}
+            </span>
+            <span className={`text-xs font-black ${highlight ? 'text-dark' : 'text-dark'}`}>{cost}</span>
+          </div>
+        ))}
+      </div>
+      <p className="text-[0.6875rem] font-semibold text-sub mb-5">매일 자정(KST)에 초기화돼요.</p>
+
+      <button onClick={onClose} className="w-full btn-retro text-sm">
+        확인했어요!
+      </button>
+    </Dialog>
   )
 }
