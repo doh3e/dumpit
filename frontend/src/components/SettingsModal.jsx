@@ -4,7 +4,6 @@ import { applyTheme, getThemePref } from '../utils/theme'
 import { applyFontScale, getFontScalePref, FONT_SCALES } from '../utils/fontScale'
 import { applyContrast, getContrastPref, applyBoldText, getBoldTextPref, CONTRAST_OPTIONS } from '../utils/a11y'
 import { getUserSettings, saveUserSettings } from '../services/userSettings'
-import { notifyToast } from '../context/ToastContext'
 import Dialog from './Dialog'
 
 const THRESHOLDS = [
@@ -46,6 +45,7 @@ export default function SettingsModal({ onClose }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(serverSettings.notificationsEnabled)
   const [selectedThresholds, setSelectedThresholds] = useState(serverSettings.notificationThresholds)
   const [testSent, setTestSent] = useState(false)
+  const [saveError, setSaveError] = useState(null)
   const isIOS = isIOSDevice()
   const isStandalone = isStandaloneWebApp()
   const notificationNote = isIOS && !isStandalone
@@ -53,9 +53,10 @@ export default function SettingsModal({ onClose }) {
     : '현재 알림은 Dumpit! 탭이나 앱이 열려 있을 때 마감 정보를 확인해 띄워요.'
 
   const persistNotifications = (patch, rollback) => {
+    setSaveError(null)
     saveUserSettings(patch).catch((error) => {
       rollback()
-      notifyToast(error.userMessage || '설정 저장에 실패했어요.')
+      setSaveError(error.userMessage || '설정 저장에 실패했어요.')
     })
   }
 
@@ -128,11 +129,12 @@ export default function SettingsModal({ onClose }) {
     if (launchAtLogin === null) return
     const next = !launchAtLogin
     setLaunchAtLogin(next)
+    setSaveError(null)
     try {
       await window.dumpitDesktop.setLaunchAtLogin(next)
     } catch {
       setLaunchAtLogin(!next)
-      notifyToast('시작프로그램 설정을 바꾸지 못했어요.')
+      setSaveError('시작프로그램 설정을 바꾸지 못했어요.')
     }
   }
 
@@ -155,11 +157,12 @@ export default function SettingsModal({ onClose }) {
       return
     }
     setSavingRoutine(true)
+    setSaveError(null)
     try {
       await saveUserSettings({ routineStartHour: routineStart, routineEndHour: routineEnd })
       onClose()
     } catch (error) {
-      notifyToast(error.userMessage || '일과 시간 저장에 실패했어요.')
+      setSaveError(error.userMessage || '일과 시간 저장에 실패했어요.')
     } finally {
       setSavingRoutine(false)
     }
@@ -177,6 +180,10 @@ export default function SettingsModal({ onClose }) {
           X
         </button>
       </div>
+
+      {saveError && (
+        <p role="alert" className="mb-4 text-xs font-bold text-primary">{saveError}</p>
+      )}
 
       <section className="mb-6">
         <h3 className="font-galmuri font-bold text-dark text-sm mb-3">테마</h3>
