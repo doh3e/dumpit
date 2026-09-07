@@ -59,7 +59,7 @@ export function DateTimeField({ value, onChange, minimumDate, placeholder = '선
         </Text>
         {current && (
           <Pressable onPress={() => onChange(null)} hitSlop={8} accessibilityLabel="지우기">
-            <Text style={[styles.clear, { color: colors.sub, fontFamily: fonts.chrome }]}>✕</Text>
+            <Text style={[styles.clear, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>✕</Text>
           </Pressable>
         )}
       </Pressable>
