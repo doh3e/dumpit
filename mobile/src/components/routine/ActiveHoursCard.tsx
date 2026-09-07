@@ -1,6 +1,7 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
 import { useSaveSettings, useUserSettings } from '../../query/routineHooks';
 import { useTheme } from '../../theme/useTheme';
@@ -20,6 +21,7 @@ export function ActiveHoursCard() {
   const settings = useUserSettings();
   const save = useSaveSettings();
   const sheet = useRef<BottomSheetModal>(null);
+  const { headingRef, onChange } = useSheetFocus();
 
   const start = settings.data?.routineStartHour ?? 9;
   const end = settings.data?.routineEndHour ?? 22;
@@ -66,11 +68,12 @@ export function ActiveHoursCard() {
       <BottomSheetModal
         ref={sheet}
         enableDynamicSizing
+        onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
-        <BottomSheetView style={styles.sheetBody}>
-          <Text style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 시작 시각</Text>
+        <BottomSheetView accessibilityViewIsModal style={styles.sheetBody}>
+          <Text ref={headingRef} accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 시작 시각</Text>
           <View style={styles.grid}>
             {HOURS.map((h) => (
               <Chip key={`s${h}`} label={hh(h)} selected={h === draftStart} onPress={() => setDraftStart(h)} />

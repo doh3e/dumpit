@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
 import { createTask } from '../../api/tasks';
 import { invalidateAfterAi, useAiUsage } from '../../query/hooks';
@@ -39,6 +40,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
+  const { headingRef, onChange } = useSheetFocus();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -105,13 +107,14 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
       onDismiss={reset}
+      onChange={onChange}
       backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
       handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
     >
       {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마감·시작시간 필드를 펼쳤을 때
           시트가 길어지며 추가 버튼이 OS 내비 바에 가려진다 */}
-      <BottomSheetView style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-        <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 추가</Text>
+      <BottomSheetView accessibilityViewIsModal style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+        <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 추가</Text>
 
         <BottomSheetTextInput
           key={`title-${formKey}`}

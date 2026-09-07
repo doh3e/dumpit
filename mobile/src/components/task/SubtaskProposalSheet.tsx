@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
 import { confirmSplit, proposeSplit } from '../../api/tasks';
 import type { TaskResponse } from '../../api/types';
@@ -29,6 +30,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
     const qc = useQueryClient();
     const sheetRef = useRef<BottomSheetModal>(null);
     const presentedIdRef = useRef<string | null>(null);
+    const { headingRef, onChange } = useSheetFocus();
 
     const [task, setTask] = useState<TaskResponse | null>(null);
     const [items, setItems] = useState<Item[]>([]);
@@ -97,14 +99,15 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
       <BottomSheetModal
         ref={sheetRef}
         snapPoints={['65%']}
+        onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 확정 버튼이 OS 내비 바에 가려진다 */}
-        <BottomSheetScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
           <View style={styles.headingRow}>
             <PixelIcon name="puzzle" size={16} />
-            <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+            <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>
               AI로 쪼개기 <Text style={{ color: colors.sub, fontSize: 11, fontFamily: fonts.chrome }}><PixelIcon name="token" size={11} /> {AI_COSTS.SUBTASK_PROPOSAL}점</Text>
             </Text>
           </View>

@@ -4,6 +4,7 @@ import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFocus } from '../src/a11y/useSheetFocus';
 import { getApiErrorMessage } from '../src/api/client';
 import { convertIdeaToTask, createIdea, deleteIdea, fetchIdeas, patchIdea, setIdeaSticker } from '../src/api/ideas';
 import type { IdeaResponse } from '../src/api/types';
@@ -99,6 +100,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
   const [busy, setBusy] = useState(false);
   const [stickerCode, setStickerCode] = useState<string | null>(editing?.stickerCode ?? null);
   const parentSheet = useRef<BottomSheetModal>(null);
+  const { headingRef, onChange } = useSheetFocus();
 
   const childCount = editing ? allIdeas.filter((i) => i.parentIdeaId === editing.ideaId).length : 0;
   // 자기 자신·자기 후손은 상위로 지정 불가 (사이클 방지)
@@ -296,12 +298,13 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
         ref={parentSheet}
         enableDynamicSizing
         maxDynamicContentSize={Math.round(windowHeight * 0.62)}
+        onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         {/* 일반 ScrollView는 시트 팬 제스처에 먹혀 스크롤 불가 — 시트 전용 스크롤러 + OS 내비 바 인셋 필수 */}
-        <BottomSheetScrollView contentContainerStyle={[styles.sheetBody, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>상위 아이디어 선택</Text>
+        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.sheetBody, { paddingBottom: insets.bottom + 24 }]}>
+          <Text ref={headingRef} accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>상위 아이디어 선택</Text>
           <Pressable
             onPress={() => { setParentId(null); parentSheet.current?.dismiss(); }}
             style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 }]}

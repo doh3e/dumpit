@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
 import { deleteTask, patchTask, reanalyzeTask, setSticker } from '../../api/tasks';
 import type { Category, TaskResponse } from '../../api/types';
@@ -43,6 +44,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
   const aiUsage = useAiUsage();
   const sheetRef = useRef<BottomSheetModal>(null);
   const splitRef = useRef<SubtaskProposalSheetHandle>(null);
+  const { headingRef, onChange } = useSheetFocus();
   // 지금 열려 있는 태스크 id — 늦게 도착한 응답이 다른 태스크 상태를 오염시키지 않게 가드
   const presentedIdRef = useRef<string | null>(null);
 
@@ -225,12 +227,13 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
         snapPoints={['72%', '95%']}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
+        onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마지막 버튼이 OS 내비 바에 가려진다 */}
-        <BottomSheetScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 상세</Text>
+        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+          <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 상세</Text>
 
           {/* 한글 IME 조합 보호 — uncontrolled, 태스크 바뀌면 key로 리마운트 */}
           <BottomSheetTextInput

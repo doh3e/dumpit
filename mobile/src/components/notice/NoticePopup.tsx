@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, findNodeHandle, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { fetchUnreadNotices, markNoticeRead } from '../../api/notices';
 import type { NoticeResponse } from '../../api/types';
 import { retroShadow } from '../../theme/tokens';
@@ -12,6 +12,7 @@ import { PixelIcon } from '../common/PixelIcon';
 export function NoticePopup() {
   const { colors, fonts } = useTheme();
   const [queue, setQueue] = useState<NoticeResponse[]>([]);
+  const titleRef = useRef<Text>(null);
 
   useEffect(() => {
     fetchUnreadNotices().then(setQueue).catch(() => {});
@@ -26,7 +27,15 @@ export function NoticePopup() {
   };
 
   return (
-    <Modal transparent animationType="fade" onRequestClose={dismiss}>
+    <Modal
+      transparent
+      animationType="fade"
+      onRequestClose={dismiss}
+      onShow={() => {
+        const tag = titleRef.current ? findNodeHandle(titleRef.current) : null;
+        if (tag) AccessibilityInfo.setAccessibilityFocus(tag);
+      }}
+    >
       <View style={styles.overlay}>
         <View
           style={[
@@ -35,7 +44,7 @@ export function NoticePopup() {
             retroShadow(5, colors.shadowHero),
           ]}
         >
-          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+          <Text ref={titleRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="megaphone" size={14} /> {current.title}
           </Text>
           <ScrollView style={styles.content}>
