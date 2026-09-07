@@ -51,7 +51,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
         })));
       } catch (e) {
         if (presentedIdRef.current !== id) return;
-        toast.show(getApiErrorMessage(e, 'AI 제안을 받지 못했어요.'));
+        toast.error(getApiErrorMessage(e, 'AI 제안을 받지 못했어요.'));
         sheetRef.current?.dismiss();
       } finally {
         if (presentedIdRef.current === id) setLoading(false);
@@ -84,7 +84,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
         sheetRef.current?.dismiss();
         onCreated();
       } catch (e) {
-        toast.show(getApiErrorMessage(e, '서브태스크 생성에 실패했어요.'));
+        toast.error(getApiErrorMessage(e, '서브태스크 생성에 실패했어요.'));
       } finally {
         setSaving(false);
       }

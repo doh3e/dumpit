@@ -116,7 +116,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
 
   const save = async () => {
     if (!title.trim()) {
-      toast.show('제목을 입력해주세요.');
+      toast.error('제목을 입력해주세요.');
       return;
     }
     setSaving(true);
@@ -133,7 +133,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
       qc.invalidateQueries({ queryKey: keys.ideas });
       router.back();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '아이디어를 저장하지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '아이디어를 저장하지 못했어요.'));
     } finally {
       setSaving(false);
     }
@@ -147,7 +147,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
       setStickerCode(updated.stickerCode);
       qc.invalidateQueries({ queryKey: keys.ideas });
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '스티커를 바꾸지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '스티커를 바꾸지 못했어요.'));
     } finally {
       setBusy(false);
     }
@@ -168,7 +168,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             qc.invalidateQueries({ queryKey: keys.planning });
             toast.show('태스크로 전환했어요!');
           } catch (e) {
-            toast.show(getApiErrorMessage(e, '전환에 실패했어요.'));
+            toast.error(getApiErrorMessage(e, '전환에 실패했어요.'));
           } finally {
             setBusy(false);
           }
@@ -192,7 +192,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             // 뒤로 가면 방금 지운 아이디어의 읽기 화면이라 목록으로 보낸다
             router.replace('/ideas' as Href);
           } catch (e) {
-            toast.show(getApiErrorMessage(e, '삭제하지 못했어요.'));
+            toast.error(getApiErrorMessage(e, '삭제하지 못했어요.'));
             setBusy(false);
           }
         },

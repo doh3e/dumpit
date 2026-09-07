@@ -133,7 +133,7 @@ export default function ShopScreen() {
             toast.show(`구매 완료! ${item.type === 'THEME' ? '바로 장착했어요.' : ''}`);
             afterChange();
           } catch (e) {
-            toast.show(getApiErrorMessage(e, '구매에 실패했어요.'));
+            toast.error(getApiErrorMessage(e, '구매에 실패했어요.'));
           } finally {
             setBusyCode(null);
           }
@@ -149,7 +149,7 @@ export default function ShopScreen() {
       else await equipItem(item.code);
       afterChange();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '장착을 바꾸지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '장착을 바꾸지 못했어요.'));
     } finally {
       setBusyCode(null);
     }

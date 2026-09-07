@@ -92,7 +92,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
       reset();
       (ref as React.RefObject<BottomSheetModal | null>)?.current?.dismiss();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '추가에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, '추가에 실패했어요.'));
     } finally {
       setSaving(false);
     }

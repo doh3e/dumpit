@@ -41,7 +41,7 @@ export function ActiveHoursCard() {
           toast.show('일과 시간을 저장했어요.');
           sheet.current?.dismiss();
         },
-        onError: (e) => toast.show(getApiErrorMessage(e, '저장하지 못했어요.')),
+        onError: (e) => toast.error(getApiErrorMessage(e, '저장하지 못했어요.')),
       },
     );
   };

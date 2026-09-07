@@ -22,7 +22,7 @@ export function NotificationSettingsCard() {
   const patch = (p: Parameters<typeof save.mutate>[0]) => {
     setPending(true);
     save.mutate(p, {
-      onError: (e) => toast.show(getApiErrorMessage(e, '저장하지 못했어요.')),
+      onError: (e) => toast.error(getApiErrorMessage(e, '저장하지 못했어요.')),
       onSettled: () => setPending(false),
     });
   };

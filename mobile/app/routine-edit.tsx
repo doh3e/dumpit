@@ -91,14 +91,14 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
   const onSave = () => {
     const error = validateRoutineForm(form);
     if (error) {
-      toast.show(error);
+      toast.error(error);
       return;
     }
     save.mutate(
       { payload: buildRoutinePayload(form), routineId: editing?.routineId },
       {
         onSuccess: () => router.back(),
-        onError: (e) => toast.show(getApiErrorMessage(e, '루틴을 저장하지 못했어요.')),
+        onError: (e) => toast.error(getApiErrorMessage(e, '루틴을 저장하지 못했어요.')),
       },
     );
   };
@@ -113,7 +113,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
         onPress: () =>
           remove.mutate(editing.routineId, {
             onSuccess: () => router.back(),
-            onError: (e) => toast.show(getApiErrorMessage(e, '루틴을 삭제하지 못했어요.')),
+            onError: (e) => toast.error(getApiErrorMessage(e, '루틴을 삭제하지 못했어요.')),
           }),
       },
     ]);

@@ -67,7 +67,7 @@ export default function PomodoroScreen() {
       await startSession(settings, picked);
       qc.invalidateQueries({ queryKey: keys.planning });
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '타이머를 시작하지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '타이머를 시작하지 못했어요.'));
     } finally {
       setStarting(false);
     }
@@ -75,7 +75,7 @@ export default function PomodoroScreen() {
 
   const onStart = useCallback(async () => {
     const notifOk = await requestNotificationPermission();
-    if (!notifOk) toast.show('알림 권한이 없어 타이머 알림이 오지 않아요.');
+    if (!notifOk) toast.error('알림 권한이 없어 타이머 알림이 오지 않아요.');
     const exact = await checkExactAlarm();
     if (!exact) {
       Alert.alert(
@@ -93,7 +93,7 @@ export default function PomodoroScreen() {
 
   const doReset = useCallback(async () => {
     const ok = await resetSession();
-    if (!ok) toast.show('오프라인이라 완료 세트를 정산하지 못했어요. 연결 후 다시 리셋해주세요.');
+    if (!ok) toast.error('오프라인이라 완료 세트를 정산하지 못했어요. 연결 후 다시 리셋해주세요.');
   }, [toast]);
 
   const onReset = useCallback(() => {

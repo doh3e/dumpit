@@ -33,7 +33,7 @@ export function AiMemoryCard() {
     setSaving(true);
     save.mutate({ aiMemory: draft.trim() }, {
       onSuccess: () => setEditing(false),
-      onError: (e) => toast.show(getApiErrorMessage(e, 'AI 메모리를 저장하지 못했어요.')),
+      onError: (e) => toast.error(getApiErrorMessage(e, 'AI 메모리를 저장하지 못했어요.')),
       onSettled: () => setSaving(false),
     });
   };

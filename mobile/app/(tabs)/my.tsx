@@ -75,7 +75,7 @@ export default function MyScreen() {
       qc.invalidateQueries({ queryKey: keys.profile });
       setEditingBio(false);
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '소개를 저장하지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '소개를 저장하지 못했어요.'));
     } finally {
       setSavingBio(false);
     }
@@ -91,7 +91,7 @@ export default function MyScreen() {
       const coins = updated.coinsGranted ?? 0;
       toast.show(coins > 0 ? `"${title}" 완료! +${coins} 코인` : `"${title}" 완료!`);
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '완료 처리에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, '완료 처리에 실패했어요.'));
     }
   };
 

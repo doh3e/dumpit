@@ -72,7 +72,7 @@ export default function SettingsScreen() {
       await deleteAccount();          // 서버가 계정을 잠그고 30일 뒤 완전 삭제를 예약
       await signOut({ afterWithdrawal: true });   // 구글 세션 해제 + 로컬 정리 → 로그인 화면
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '탈퇴 처리에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, '탈퇴 처리에 실패했어요.'));
       setWithdrawing(false);
     }
   };

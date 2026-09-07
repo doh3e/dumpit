@@ -84,7 +84,7 @@ export default function IdeaDumpScreen() {
       setExcluded(new Set());
       setStage('preview');
     } catch (e) {
-      toast.show(getApiErrorMessage(e, 'AI 정리에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, 'AI 정리에 실패했어요.'));
     } finally {
       setBusy(false);
     }
@@ -102,7 +102,7 @@ export default function IdeaDumpScreen() {
   const saveSelected = async () => {
     const selected = nodes.filter((_, i) => !excluded.has(i));
     if (selected.length === 0) {
-      toast.show('저장할 아이디어를 선택해주세요.');
+      toast.error('저장할 아이디어를 선택해주세요.');
       return;
     }
     setBusy(true);
@@ -113,7 +113,7 @@ export default function IdeaDumpScreen() {
       toast.show(`아이디어 ${selected.length}개를 저장했어요!`);
       router.back();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '저장에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, '저장에 실패했어요.'));
       setBusy(false);
     }
   };

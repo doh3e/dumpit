@@ -109,7 +109,7 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
 
   const connectGoogleCalendar = () => {
     Linking.openURL(GOOGLE_CALENDAR_CONNECT_URL).catch(() => {
-      toast.show('브라우저를 열지 못했어요. 잠시 후 다시 시도해주세요.');
+      toast.error('브라우저를 열지 못했어요. 잠시 후 다시 시도해주세요.');
     });
   };
 
@@ -141,7 +141,7 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
       toast.show('태스크로 가져왔어요!');
       onTaskAdded();
     } catch (error) {
-      toast.show(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error));
     } finally {
       setAddingEventId(null);
     }

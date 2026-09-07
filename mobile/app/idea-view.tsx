@@ -80,7 +80,7 @@ export default function IdeaViewScreen() {
             qc.invalidateQueries({ queryKey: keys.planning });
             toast.show('태스크로 전환했어요!');
           } catch (e) {
-            toast.show(getApiErrorMessage(e, '전환에 실패했어요.'));
+            toast.error(getApiErrorMessage(e, '전환에 실패했어요.'));
           } finally {
             setBusy(false);
           }

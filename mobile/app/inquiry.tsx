@@ -34,7 +34,7 @@ export default function InquiryScreen() {
       toast.show('문의를 보냈어요. 답변은 가입한 이메일로 드릴게요.');
       router.back();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '문의를 보내지 못했어요. 잠시 후 다시 시도해주세요.'));
+      toast.error(getApiErrorMessage(e, '문의를 보내지 못했어요. 잠시 후 다시 시도해주세요.'));
       setSending(false);
     }
   };

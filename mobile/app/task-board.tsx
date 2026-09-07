@@ -50,7 +50,7 @@ export default function TaskBoardScreen() {
     (task: TaskResponse, next: TaskStatus) => {
       toggle.mutate(
         { taskId: task.taskId, status: next },
-        { onError: (e) => toast.show(getApiErrorMessage(e, '상태 변경에 실패했어요.')) },
+        { onError: (e) => toast.error(getApiErrorMessage(e, '상태 변경에 실패했어요.')) },
       );
     },
     [toggle, toast],

@@ -33,7 +33,7 @@ export function RoutineListCard() {
   const onToggle = (r: RoutineResponse) => {
     toggle.mutate(
       { routineId: r.routineId, enabled: !r.enabled },
-      { onError: (e) => toast.show(getApiErrorMessage(e, '루틴 상태를 바꾸지 못했어요.')) },
+      { onError: (e) => toast.error(getApiErrorMessage(e, '루틴 상태를 바꾸지 못했어요.')) },
     );
   };
 

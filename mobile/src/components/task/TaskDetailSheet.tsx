@@ -107,7 +107,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
     } catch (e) {
       qc.setQueryData<PlanningResponse>(keys.planning, (cur) =>
         cur && prevTask ? updateTaskInPlanning(cur, id, { stickerCode: prevTask.stickerCode }) : cur);
-      toast.show(getApiErrorMessage(e, '스티커를 바꾸지 못했어요.'));
+      toast.error(getApiErrorMessage(e, '스티커를 바꾸지 못했어요.'));
     } finally {
       if (presentedIdRef.current === id) setStickerBusy(false);
     }
@@ -129,7 +129,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       setClearOverride(false);
       toast.show(`AI 중요도 ${Math.round((updated.aiPriorityScore ?? 0.5) * 100)}점 — 자동 조정으로 반영돼요.`);
     } catch (e) {
-      toast.show(getApiErrorMessage(e, 'AI 재분석에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, 'AI 재분석에 실패했어요.'));
     } finally {
       if (presentedIdRef.current === id) setReanalyzing(false);
     }
@@ -172,7 +172,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       toast.show('저장했어요.');
       sheetRef.current?.dismiss();
     } catch (e) {
-      toast.show(getApiErrorMessage(e, '저장에 실패했어요.'));
+      toast.error(getApiErrorMessage(e, '저장에 실패했어요.'));
     } finally {
       setSaving(false);
     }
@@ -191,7 +191,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
             toast.show('삭제했어요.');
             sheetRef.current?.dismiss();
           } catch (e) {
-            toast.show(getApiErrorMessage(e, '삭제에 실패했어요.'));
+            toast.error(getApiErrorMessage(e, '삭제에 실패했어요.'));
           }
         },
       },
@@ -365,7 +365,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
               variant="ghost"
               onPress={() => {
                 if (remaining < AI_COSTS.SUBTASK_PROPOSAL) {
-                  toast.show('오늘 AI 점수가 부족해요.');
+                  toast.error('오늘 AI 점수가 부족해요.');
                   return;
                 }
                 splitRef.current?.present(task);

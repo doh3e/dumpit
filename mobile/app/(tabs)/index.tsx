@@ -63,7 +63,7 @@ export default function HomeScreen() {
       toggle.mutate(
         { taskId: task.taskId, status: next },
         {
-          onError: (e) => toast.show(getApiErrorMessage(e, '상태 변경에 실패했어요.')),
+          onError: (e) => toast.error(getApiErrorMessage(e, '상태 변경에 실패했어요.')),
           onSuccess: (data) => {
             if (next !== 'DONE') return;
             // 서버 실지급액 신뢰 — 점감으로 0이면 토스트 생략 (|| 폴백 금지)

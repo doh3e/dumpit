@@ -277,7 +277,7 @@ export default function BrainDumpScreen() {
       invalidateAfterAi(qc);
       setStage('select');
     } catch (error) {
-      toast.show(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error));
       setStage('input');
     }
   }, [analysisDisabled, qc, text, toast]);
@@ -320,7 +320,7 @@ export default function BrainDumpScreen() {
       toast.show(`${selected.length}개를 할 일에 등록했어요!`);
       router.back();
     } catch (error) {
-      toast.show(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
