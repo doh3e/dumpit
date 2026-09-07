@@ -42,6 +42,8 @@ export default function HomeScreen() {
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
   }, []);
 
   // 오늘 진행률 (웹 DashboardPage 파생 로직 이식)

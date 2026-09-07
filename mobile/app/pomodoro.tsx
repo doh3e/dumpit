@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
+import { announce } from '../src/a11y/announce';
 import { PomodoroSettingsSheet } from '../src/components/pomodoro/PomodoroSettingsSheet';
 import { TaskPickerSheet, type PickedTask } from '../src/components/pomodoro/TaskPickerSheet';
 import { TimerRing } from '../src/components/pomodoro/TimerRing';
@@ -46,6 +47,17 @@ export default function PomodoroScreen() {
   const session = getSession();
   const derived = session ? deriveState(session, now) : null;
   const running = !!session && session.pausedAt == null && derived?.phase !== 'DONE';
+
+  const prevPhase = useRef<string | null>(null);
+  useEffect(() => {
+    const phase = derived?.phase ?? null;
+    if (prevPhase.current && phase && phase !== prevPhase.current) {
+      if (phase === 'BREAK') announce(`집중 끝. ${derived!.long ? '긴 ' : ''}휴식을 시작해요`);
+      else if (phase === 'FOCUS') announce('휴식 끝. 집중을 시작해요');
+      else if (phase === 'DONE') announce('모든 세트를 완료했어요');
+    }
+    prevPhase.current = phase;
+  }, [derived?.phase, derived?.long]);
 
   // 화면에 보이는 동안만 1초 틱 — 시간 자체는 앵커 재계산이라 틱은 표시용
   useEffect(() => {

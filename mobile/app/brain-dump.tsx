@@ -31,6 +31,7 @@ import {
 } from '../src/api/brainDump';
 import { getApiErrorMessage } from '../src/api/client';
 import type { DumpResponse, DumpTaskItem } from '../src/api/types';
+import { announce } from '../src/a11y/announce';
 import { Chip } from '../src/components/retro/Chip';
 import { PixelIcon } from '../src/components/common/PixelIcon';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
@@ -273,6 +274,7 @@ export default function BrainDumpScreen() {
     try {
       const response = await submitBrainDump(rawText);
       setResult(response);
+      announce(`분석이 끝났어요. 후보 ${response.tasks.length}개`);
       setSelectedIndexes(new Set(response.tasks.map((_task, index) => index)));
       invalidateAfterAi(qc);
       setStage('select');

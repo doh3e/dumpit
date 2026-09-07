@@ -30,7 +30,12 @@ export function TimerRing({ remainingSec, totalSec, phase, long = false }: Props
   const label = phase === 'FOCUS' ? '집중' : phase === 'BREAK' ? (long ? '긴 휴식' : '휴식') : '완료';
 
   return (
-    <View style={styles.wrap} accessibilityLabel={`${label} 남은 시간 ${fmt(remainingSec)}`}>
+    <View
+      style={styles.wrap}
+      accessible
+      accessibilityRole="timer"
+      accessibilityLabel={`${label} 남은 시간 ${fmt(remainingSec)}`}
+    >
       {Array.from({ length: DOTS }, (_, i) => {
         const angle = (i / DOTS) * Math.PI * 2 - Math.PI / 2;
         return (
