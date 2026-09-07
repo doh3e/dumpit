@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import DeadlineNudgeMenu from '../DeadlineNudgeMenu'
@@ -20,6 +20,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
+  const accountMenuId = useId()
   const { usage } = useAiUsage()
 
   // 코인 증가 시 배지 바운스 + 숫자 카운트업 (보상 모션 2)
@@ -184,7 +185,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              aria-haspopup="menu"
+              aria-controls={accountMenuId}
               aria-expanded={menuOpen}
               aria-label="계정 메뉴"
               className="w-9 h-9 rounded-full border border-line overflow-hidden bg-chip font-bold text-dark text-sm"
@@ -195,8 +196,8 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1rem))] sm:w-auto">
-                <div role="menu" className="card-retro py-2 sm:min-w-[160px]">
+              <div id={accountMenuId} className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1rem))] sm:w-auto">
+                <div className="card-retro py-2 sm:min-w-[160px]">
                   <div className="sm:hidden px-3 pb-2 mb-2 border-b border-line">
                     {/* 데스크톱 상단바 배지와 동일한 순서: 마감 → AI → 코인 */}
                     <div className="grid grid-cols-3 gap-2">
@@ -224,14 +225,12 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
                   <hr className="my-1 border-line" />
                   <Link
                     to="/mypage"
-                    role="menuitem"
                     onClick={() => setMenuOpen(false)}
                     className="block px-4 py-2 text-sm font-bold text-dark hover:bg-chip rounded transition-colors"
                   >
                     마이페이지
                   </Link>
                   <button
-                    role="menuitem"
                     onClick={() => { setMenuOpen(false); logout() }}
                     className="w-full text-left px-4 py-2 text-sm font-bold text-dark hover:bg-chip rounded transition-colors"
                   >
