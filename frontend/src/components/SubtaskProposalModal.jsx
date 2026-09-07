@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react'
-import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
+import Dialog from './Dialog'
 import AiUsageBadge from './AiUsageBadge'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
@@ -59,11 +59,9 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
     }
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-[70] flex items-center justify-center">
-      <div className="absolute inset-0 overlay-retro" onClick={onClose} />
-
-      <div className="relative card-retro w-full max-w-lg mx-4 space-y-4 max-h-[90vh] overflow-y-auto">
+  return (
+    <Dialog onClose={onClose} title="태스크 쪼개기" className="w-full max-w-lg">
+      <div className="space-y-4">
         <div>
           <h3 className="font-dungeon text-dark text-xl">태스크 쪼개기</h3>
           <p className="mt-1 text-xs font-semibold text-sub truncate">
@@ -164,7 +162,6 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
           </button>
         </div>
       </div>
-    </div>,
-    document.body
+    </Dialog>
   )
 }

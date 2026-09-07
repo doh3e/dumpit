@@ -1,7 +1,7 @@
-import { useId, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useId, useRef, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES } from '../constants/categories'
+import Dialog from './Dialog'
 import AiUsageBadge from './AiUsageBadge'
 import { EstimatedMinutesField, TaskDateTimeField } from './TaskTimeInputs'
 import DeadlineModeField, { getTodayDeadline } from './DeadlineModeField'
@@ -36,6 +36,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
   const aiUsage = useAiUsage()
   const titleId = useId()
   const descriptionId = useId()
+  const titleRef = useRef(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [useStartTime, setUseStartTime] = useState(false)
@@ -92,27 +93,22 @@ export default function AddTaskModal({ onClose, onCreated }) {
     }
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <div className="absolute inset-0 overlay-retro" onClick={onClose} />
-
-      <form
-        onSubmit={handleSubmit}
-        className="relative card-retro w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto space-y-4"
-      >
+  return (
+    <Dialog onClose={onClose} title="일정 추가" className="w-full max-w-md" initialFocusRef={titleRef}>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <h3 className="font-dungeon text-dark text-xl">일정 추가</h3>
 
         <div>
           <label htmlFor={titleId} className="block text-xs font-bold text-sub mb-1">할 일 *</label>
           <input
             id={titleId}
+            ref={titleRef}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="어떤 일을 해야 하나요?"
             maxLength={200}
             className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
-            autoFocus
           />
         </div>
 
@@ -243,7 +239,6 @@ export default function AddTaskModal({ onClose, onCreated }) {
           </button>
         </div>
       </form>
-    </div>,
-    document.body
+    </Dialog>
   )
 }

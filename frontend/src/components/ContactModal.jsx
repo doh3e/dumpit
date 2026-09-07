@@ -1,12 +1,13 @@
-import { useId, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useId, useRef, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import Dialog from './Dialog'
 
 export default function ContactModal({ onClose }) {
   const { user } = useAuth()
   const subjectId = useId()
   const messageId = useId()
+  const subjectRef = useRef(null)
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -32,94 +33,91 @@ export default function ContactModal({ onClose }) {
     }
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-center justify-center">
-      <div className="absolute inset-0 overlay-retro" onClick={onClose} />
+  return (
+    <Dialog onClose={onClose} title="문의하기" className="w-full max-w-md" initialFocusRef={subjectRef}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-dungeon text-dark text-xl">문의하기</h2>
+        <button
+          onClick={onClose}
+          aria-label="닫기"
+          className="w-8 h-8 rounded-lg border border-line font-black text-sub text-sm hover:bg-chip hover:text-dark transition-colors"
+        >
+          X
+        </button>
+      </div>
 
-      <div className="relative card-retro w-full max-w-md mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-dungeon text-dark text-xl">문의하기</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg border border-line font-black text-sub text-sm hover:bg-chip hover:text-dark transition-colors"
-          >
-            X
+      {submitted ? (
+        <div className="py-6 text-center space-y-3">
+          <p className="font-extrabold text-dark text-base">문의가 접수되었습니다!</p>
+          <p className="text-sm text-sub">
+            {user?.email}로 접수 안내 메일을 발송했어요.
+            <br />
+            영업일 기준 1~3일 내에 답변드리겠습니다.
+          </p>
+          <button type="button" onClick={onClose} className="btn-retro bg-secondary text-on-accent text-sm py-2 px-6 mt-2">
+            닫기
           </button>
         </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="text-xs text-sub font-semibold p-3 bg-accent rounded-lg border border-line">
+            {user ? (
+              <>답변은 <span className="font-bold text-dark">{user.email}</span>로 발송됩니다.</>
+            ) : (
+              '로그인 후 이용해주세요.'
+            )}
+          </div>
 
-        {submitted ? (
-          <div className="py-6 text-center space-y-3">
-            <p className="font-extrabold text-dark text-base">문의가 접수되었습니다!</p>
-            <p className="text-sm text-sub">
-              {user?.email}로 접수 안내 메일을 발송했어요.
-              <br />
-              영업일 기준 1~3일 내에 답변드리겠습니다.
+          <div>
+            <label htmlFor={subjectId} className="block text-xs font-bold text-sub mb-1">제목 *</label>
+            <input
+              id={subjectId}
+              ref={subjectRef}
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              maxLength={200}
+              placeholder="간단한 제목을 입력해주세요"
+              className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
+              disabled={!user}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor={messageId} className="block text-xs font-bold text-sub mb-1">내용 *</label>
+            <textarea
+              id={messageId}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={6}
+              maxLength={3000}
+              placeholder="문의 내용을 자세히 적어주세요"
+              className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary resize-none"
+              disabled={!user}
+              required
+            />
+            <p className="text-[0.625rem] text-sub font-bold mt-1 text-right">
+              {message.length} / 5000
             </p>
-            <button type="button" onClick={onClose} className="btn-retro bg-secondary text-on-accent text-sm py-2 px-6 mt-2">
-              닫기
+          </div>
+
+          {error && <p className="text-xs font-bold text-primary">{error}</p>}
+
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="btn-retro flex-1 text-sm py-2">
+              취소
+            </button>
+            <button
+              type="submit"
+              disabled={!user || !subject.trim() || !message.trim() || submitting}
+              className="btn-retro flex-1 bg-secondary text-on-accent text-sm py-2 disabled:opacity-50"
+            >
+              {submitting ? '전송 중...' : '문의 보내기'}
             </button>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="text-xs text-sub font-semibold p-3 bg-accent rounded-lg border border-line">
-              {user ? (
-                <>답변은 <span className="font-bold text-dark">{user.email}</span>로 발송됩니다.</>
-              ) : (
-                '로그인 후 이용해주세요.'
-              )}
-            </div>
-
-            <div>
-              <label htmlFor={subjectId} className="block text-xs font-bold text-sub mb-1">제목 *</label>
-              <input
-                id={subjectId}
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                maxLength={200}
-                placeholder="간단한 제목을 입력해주세요"
-                className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
-                disabled={!user}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor={messageId} className="block text-xs font-bold text-sub mb-1">내용 *</label>
-              <textarea
-                id={messageId}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={6}
-                maxLength={3000}
-                placeholder="문의 내용을 자세히 적어주세요"
-                className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary resize-none"
-                disabled={!user}
-                required
-              />
-              <p className="text-[0.625rem] text-sub font-bold mt-1 text-right">
-                {message.length} / 5000
-              </p>
-            </div>
-
-            {error && <p className="text-xs font-bold text-primary">{error}</p>}
-
-            <div className="flex gap-3 pt-2">
-              <button type="button" onClick={onClose} className="btn-retro flex-1 text-sm py-2">
-                취소
-              </button>
-              <button
-                type="submit"
-                disabled={!user || !subject.trim() || !message.trim() || submitting}
-                className="btn-retro flex-1 bg-secondary text-on-accent text-sm py-2 disabled:opacity-50"
-              >
-                {submitting ? '전송 중...' : '문의 보내기'}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>,
-    document.body
+        </form>
+      )}
+    </Dialog>
   )
 }
