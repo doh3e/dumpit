@@ -208,6 +208,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
       {isDrawerOpen && createPortal(
         <div className="lg:hidden fixed inset-0 z-[60]" role="presentation" onClick={onCloseDrawer}>
           <div className="absolute inset-0 overlay-retro" />
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 이 onClick은 stopPropagation 가드일 뿐, 닫기의 키보드 경로는 Escape 리스너 */}
           <aside
             ref={drawerRef}
             tabIndex={-1}
@@ -216,7 +217,6 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
             aria-label="메뉴"
             className="app-sidebar absolute left-0 top-0 bottom-0 w-64 bg-chrome border-r border-chrome-line pt-6 pb-10 px-3 flex flex-col gap-1 overflow-y-auto scrollbar-none"
             onClick={(e) => e.stopPropagation()}
-            onKeyDown={() => {}}
           >
             {/* 명시적 닫기 버튼 — 오버레이 클릭만으론 닫는 법을 못 찾는 사용자 대비 */}
             <div className="flex items-center justify-between mb-2 px-1">

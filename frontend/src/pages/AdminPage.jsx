@@ -445,9 +445,9 @@ export default function AdminPage() {
 
                   {selected.status === 'REPLIED' && selected.adminReply && (
                     <div>
-                      <label className="mb-1 block text-xs font-bold text-sub">
+                      <span className="mb-1 block text-xs font-bold text-sub">
                         이전 답변 ({formatDate(selected.repliedAt)})
-                      </label>
+                      </span>
                       <pre className="whitespace-pre-wrap rounded-lg border-2 cat-chip cat-health p-3 text-sm font-medium text-dark">
                         {selected.adminReply}
                       </pre>

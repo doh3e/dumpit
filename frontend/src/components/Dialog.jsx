@@ -32,13 +32,13 @@ export default function Dialog({
   }
 
   return createPortal(
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 배경 클릭은 포인터 전용, 키보드 동등 경로는 Esc(native cancel → handleCancel)
     <dialog
       ref={ref}
       aria-label={title}
       onCancel={handleCancel}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
-      onKeyDown={() => {}}
       className={['dialog-retro', placement === 'bottom' && 'dialog-retro-bottom'].filter(Boolean).join(' ')}
     >
       <div className={`card-retro ${className}`}>{children}</div>

@@ -67,7 +67,7 @@ describe('Dialog', () => {
     expect(outerClose).not.toHaveBeenCalled()
   })
   it('axe 위반이 없다', async () => {
-    const { container } = render(<Dialog onClose={() => {}} title="t"><label htmlFor="x">이름</label><input id="x" /></Dialog>)
-    expect(await axe(container)).toHaveNoViolations()
+    const { baseElement } = render(<Dialog onClose={() => {}} title="t"><label htmlFor="x">이름</label><input id="x" /></Dialog>)
+    expect(await axe(baseElement)).toHaveNoViolations()
   })
 })
