@@ -9,8 +9,8 @@ import { fonts } from '../src/theme/typography';
 import { retroShadow } from '../src/theme/tokens';
 import { useTheme } from '../src/theme/useTheme';
 
-// 스플래시와 같은 투명 배경 토성 로고 — 별도 에셋을 추가하지 않는다
-const LOGO = require('../assets/images/splash-icon.png');
+// 스플래시 원본을 440px로 줄인 사본(scripts/gen_login_logo.py) — 원본을 require하면 AAB가 1.5MB 늘어난다
+const LOGO = require('../assets/images/login-logo.png');
 
 // 문구는 웹 랜딩(frontend/src/pages/HomePage.jsx)과 글자 단위로 같아야 한다 — 바꿀 때 양쪽 동시 수정
 export default function LoginScreen() {
@@ -84,7 +84,7 @@ export default function LoginScreen() {
         <View style={styles.errorSlot}>
           {error && (
             <>
-              <Text style={[styles.error, { color: colors.warn, fontFamily: fonts.body }]}>{error.message}</Text>
+              <Text selectable style={[styles.error, { color: colors.warn, fontFamily: fonts.body }]}>{error.message}</Text>
               {error.code && (
                 <Text selectable style={[styles.errorCode, { color: colors.sub, fontFamily: fonts.chrome }]}>
                   오류 코드 {error.code}
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   },
   buttonContent: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   buttonText: { fontSize: 16 },
-  // 에러 출현으로 버튼이 밀리지 않도록 자리를 항상 확보 (문구 줄 + 코드 줄)
+  // 에러 출현으로 버튼이 밀리지 않도록 자리 확보 — 한 줄 문구 + 코드 줄 기준(더 긴 문구는 스크롤 화면이라 흡수)
   errorSlot: { minHeight: 48, marginTop: 8, alignItems: 'center', gap: 4 },
   error: { fontSize: 13, textAlign: 'center', maxWidth: 300 },
   errorCode: { fontSize: 12, textAlign: 'center' },

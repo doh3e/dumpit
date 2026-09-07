@@ -43,7 +43,6 @@ const GSI_CANCELLED = '12501';
 const GSI_MESSAGES: Record<string, string> = {
   '10': '앱 설정 문제로 로그인할 수 없어요. 이 화면을 캡처해 dumpitadmin@gmail.com으로 보내주세요.',
   '7': '인터넷 연결을 확인한 뒤 다시 시도해주세요.',
-  '12500': '구글 로그인에 실패했어요. 다시 시도해주세요.',
   ASYNC_OP_IN_PROGRESS: '이미 로그인이 진행 중이에요. 잠시만 기다려주세요.',
   PLAY_SERVICES_NOT_AVAILABLE:
     'Google Play 서비스를 사용할 수 없어요. Play 스토어에서 업데이트한 뒤 다시 시도해주세요.',

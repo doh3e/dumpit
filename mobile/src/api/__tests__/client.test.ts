@@ -1,4 +1,5 @@
 import { api, getApiErrorMessage } from '../client';
+import { GoogleSignInError } from '../errors';
 
 describe('api client', () => {
   it('세션 쿠키와 CSRF 대체 헤더를 기본 장착한다', () => {
@@ -42,5 +43,8 @@ describe('getApiErrorMessage', () => {
   });
   it('알 수 없는 에러는 fallback + APP-UNKNOWN', () => {
     expect(getApiErrorMessage(new Error('boom'), '기본')).toBe('기본 [APP-UNKNOWN]');
+  });
+  it('사용자가 취소한 구글 로그인은 빈 문구 대신 fallback', () => {
+    expect(getApiErrorMessage(new GoogleSignInError('12501', 'cancelled'), '기본')).toBe('기본');
   });
 });

@@ -37,5 +37,6 @@ export const api = axios.create({
 /** 실패 문구. 예상 밖 실패(네트워크·5xx·문구 없는 4xx·앱 예외)에는 진단 코드가 붙는다 — 정책은 errors.ts */
 export function getApiErrorMessage(error: unknown, fallback: string = DEFAULT_ERROR_MESSAGE): string {
   const info = describeError(error, fallback);
+  if (info.silent) return fallback;
   return info.tagged ? withErrorCode(info.message, info.code) : info.message;
 }
