@@ -156,11 +156,13 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
           ? 'w-full rounded-lg border-2 tone-urgent-soon px-2 py-2 text-center transition-colors'
           : `flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-dungeon text-sm transition-colors ${
               urgentCount > 0
-                ? 'bg-chip border-line text-warn'
-                : 'bg-chip border-line text-sub hover:text-dark'
+                ? 'bg-[var(--warn)] border-edge text-on-warn'
+                : 'bg-chip border-line text-dark'
             }`
         }
         aria-label="마감 임박 알림"
+        aria-expanded={open}
+        aria-haspopup="dialog"
       >
         {isCard ? (
           <>
@@ -217,7 +219,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                       <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[0.625rem] font-black ${
                         task.overdue
                           ? 'border-primary bg-primary text-on-accent'
-                          : 'border-warn bg-warn text-on-accent'
+                          : 'border-warn bg-warn text-on-warn'
                       }`}>
                         {formatRemaining(task.deadline)}
                       </span>

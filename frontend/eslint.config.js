@@ -3,6 +3,7 @@ import globals from 'globals'
 import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
 
 export default [
   { ignores: ['dist', 'node_modules'] },
@@ -22,6 +23,7 @@ export default [
       react,
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
+      'jsx-a11y': jsxA11y,
     },
     rules: {
       ...js.configs.recommended.rules,
@@ -35,6 +37,12 @@ export default [
       'no-empty': ['error', { allowEmptyCatch: true }],
       // 한국어 본문에 따옴표를 그대로 쓰는 코드베이스 관례
       'react/no-unescaped-entities': 'off',
+      // 이관이 끝난 규칙부터 error로 올린다
+      ...Object.fromEntries(Object.entries(jsxA11y.configs.recommended.rules).map(([k, v]) => [k, Array.isArray(v) ? ['warn', ...v.slice(1)] : 'warn'])),
+      'jsx-a11y/alt-text': 'error',
+      'jsx-a11y/label-has-associated-control': ['error', { assert: 'either' }],
+      'jsx-a11y/click-events-have-key-events': 'error',
+      'jsx-a11y/no-static-element-interactions': 'error',
     },
   },
   {

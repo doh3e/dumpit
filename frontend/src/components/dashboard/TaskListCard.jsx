@@ -79,9 +79,10 @@ function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
       <button
         onClick={(e) => onToggle(task, e)}
         aria-label="완료 처리"
-        className="mt-0.5 w-5 h-5 rounded bg-card flex-shrink-0 hover:bg-primary transition-colors"
-        style={{ border: '1.5px solid var(--edge)' }}
-      />
+        className="group -m-0.5 mt-0 w-6 h-6 flex-shrink-0 flex items-center justify-center"
+      >
+        <span className="block w-5 h-5 rounded bg-card group-hover:bg-primary transition-colors" style={{ border: '1.5px solid var(--edge)' }} />
+      </button>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           {overdue && (
@@ -99,7 +100,7 @@ function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
             {cat.label}
           </span>
           {isChild && (
-            <span className="text-[0.625rem] font-bold px-2 py-0.5 bg-chip border border-line rounded-full text-secondary">
+            <span className="text-[0.625rem] font-bold px-2 py-0.5 bg-chip border border-line rounded-full text-dark">
               ↳ 서브
             </span>
           )}
@@ -144,7 +145,7 @@ function DoneRow({ task, onToggle, onEdit }) {
         onClick={() => onToggle(task)}
         aria-label="완료 취소"
         className="w-5 h-5 rounded bg-primary flex-shrink-0 flex items-center justify-center"
-        style={{ border: '1.5px solid var(--accent)' }}
+        style={{ border: '1.5px solid var(--accent-fill)' }}
       >
         <span className="text-on-accent text-[0.625rem] font-bold">V</span>
       </button>

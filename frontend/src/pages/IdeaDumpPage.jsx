@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { useBlocker } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES, getCategory } from '../constants/categories'
@@ -147,6 +147,7 @@ function CategoryPills({ value, onChange, compact = false, iconOnly = false }) {
 }
 
 export default function IdeaDumpPage() {
+  const detailParentId = useId()
   const [ideas, setIdeas] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
@@ -411,7 +412,7 @@ export default function IdeaDumpPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="font-dungeon text-dark text-2xl">아이디어 덤프</h2>
+          <h1 className="font-dungeon text-dark text-2xl">아이디어 덤프</h1>
           <p className="mt-2 text-sm font-semibold text-sub">
             생각을 자유롭게 쏟아내고, AI가 맥락을 잡아 정리해줘요.
           </p>
@@ -443,11 +444,12 @@ export default function IdeaDumpPage() {
         {inputMode === 'dump' ? (
           <>
             <textarea
+              aria-label="아이디어 덤프 입력"
               value={scratchText}
               onChange={(e) => handleScratchChange(e.target.value)}
               rows={7}
               placeholder={'생각나는 대로 자유롭게 적어보세요.\nAI가 맥락을 파악해 아이디어로 정리해줄 거예요.\n\n※ 분석 후 원본 텍스트는 보존되지 않아요.'}
-              className="w-full resize-none bg-transparent text-sm font-semibold leading-relaxed text-dark outline-none placeholder:text-sub"
+              className="w-full resize-none bg-transparent text-sm font-semibold leading-relaxed text-dark placeholder:text-sub"
             />
             <div className="border-t-2 border-line pt-4 flex items-center justify-between gap-3 flex-wrap">
               <p className="text-xs font-bold text-sub">
@@ -500,27 +502,30 @@ export default function IdeaDumpPage() {
           <div className="space-y-3">
             <input
               autoFocus
+              aria-label="제목"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={handleNewIdeaKeyDown}
               placeholder="제목"
               maxLength={200}
-              className="w-full bg-transparent text-sm font-black text-dark outline-none placeholder:text-sub"
+              className="w-full bg-transparent text-sm font-black text-dark placeholder:text-sub"
             />
             <textarea
+              aria-label="내용 (선택)"
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
               rows={3}
               maxLength={5000}
               placeholder="내용 (선택)"
-              className="w-full resize-none rounded-lg border-2 border-line bg-accent px-3 py-2 text-sm font-semibold leading-relaxed text-dark outline-none focus:border-primary placeholder:text-sub"
+              className="w-full resize-none rounded-lg border-2 border-line bg-accent px-3 py-2 text-sm font-semibold leading-relaxed text-dark focus:border-primary placeholder:text-sub"
             />
             <div className="border-t-2 border-line pt-3 flex flex-wrap items-center gap-2">
               <CategoryPills value={newCategory} onChange={setNewCategory} iconOnly />
               <select
+                aria-label="상위 아이디어"
                 value={newParentId}
                 onChange={(e) => setNewParentId(e.target.value)}
-                className="rounded-lg border border-line bg-card px-2 py-1.5 text-xs font-extrabold outline-none max-w-[180px]"
+                className="rounded-lg border border-line bg-card px-2 py-1.5 text-xs font-extrabold max-w-[180px]"
               >
                 <option value="">상위 아이디어 없음</option>
                 {ideas.map((idea) => (
@@ -550,10 +555,11 @@ export default function IdeaDumpPage() {
         <section className="space-y-3">
           <div className="card-retro !p-3">
             <input
+              aria-label="검색"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="검색"
-              className="w-full bg-transparent px-1 py-1 text-sm font-bold outline-none placeholder:text-sub"
+              className="w-full bg-transparent px-1 py-1 text-sm font-bold placeholder:text-sub"
             />
           </div>
 
@@ -585,6 +591,7 @@ export default function IdeaDumpPage() {
                         toggleExpanded(idea.ideaId)
                       }}
                       disabled={childCount === 0}
+                      aria-expanded={isExpanded}
                       aria-label={isExpanded ? '하위 아이디어 접기' : '하위 아이디어 펼치기'}
                       className="mt-0.5 h-6 w-6 shrink-0 text-[0.625rem] font-black leading-none text-sub hover:text-dark disabled:invisible"
                     >
@@ -646,10 +653,11 @@ export default function IdeaDumpPage() {
               </div>
 
               <input
+                aria-label="아이디어 제목"
                 value={detailForm.title}
                 onChange={(e) => setDetailForm((prev) => ({ ...prev, title: e.target.value }))}
                 maxLength={200}
-                className="w-full rounded-lg border border-line bg-card px-3 py-2 text-base font-black outline-none focus:border-primary"
+                className="w-full rounded-lg border border-line bg-card px-3 py-2 text-base font-black focus:border-primary"
               />
 
               <div className="space-y-3">
@@ -662,11 +670,12 @@ export default function IdeaDumpPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-black text-sub">상위 아이디어</label>
+                  <label htmlFor={detailParentId} className="mb-1 block text-xs font-black text-sub">상위 아이디어</label>
                   <select
+                    id={detailParentId}
                     value={detailForm.parentIdeaId}
                     onChange={(e) => setDetailForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
-                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-extrabold outline-none"
+                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-extrabold"
                   >
                     <option value="">상위 아이디어 없음</option>
                     {selectableParents.map((idea) => (

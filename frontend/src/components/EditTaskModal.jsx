@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useId, useRef, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES } from '../constants/categories'
+import Dialog from './Dialog'
 import SubtaskProposalModal from './SubtaskProposalModal'
 import AiUsageBadge from './AiUsageBadge'
 import { EstimatedMinutesField, TaskDateTimeField } from './TaskTimeInputs'
@@ -24,6 +24,10 @@ function getMinDeadlineInput() {
 
 export default function EditTaskModal({ task, onClose, onUpdated }) {
   const aiUsage = useAiUsage()
+  const titleId = useId()
+  const descriptionId = useId()
+  const priorityId = useId()
+  const titleRef = useRef(null)
   const [showSplit, setShowSplit] = useState(false)
   const initialDeadline = task.deadline ? task.deadline.slice(0, 16) : ''
   const initialStartTime = task.startTime ? task.startTime.slice(0, 16) : ''
@@ -123,36 +127,33 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
     }
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <div className="absolute inset-0 overlay-retro" onClick={onClose} />
-
-      <form
-        onSubmit={handleSubmit}
-        className="relative card-retro w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto space-y-4"
-      >
+  return (
+    <Dialog onClose={onClose} title="일정 수정" className="w-full max-w-md" initialFocusRef={titleRef}>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <h3 className="font-dungeon text-dark text-xl">일정 수정</h3>
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">할 일 *</label>
+          <label htmlFor={titleId} className="block text-xs font-bold text-sub mb-1">할 일 *</label>
           <input
+            id={titleId}
+            ref={titleRef}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
-            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary"
-            autoFocus
+            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">메모 (선택)</label>
+          <label htmlFor={descriptionId} className="block text-xs font-bold text-sub mb-1">메모 (선택)</label>
           <textarea
+            id={descriptionId}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             maxLength={1000}
-            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent outline-none focus:border-primary resize-none"
+            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary resize-none"
           />
         </div>
 
@@ -207,7 +208,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">카테고리</label>
+          <span className="block text-xs font-bold text-sub mb-1">카테고리</span>
           <div className="flex flex-wrap gap-1.5">
             {TASK_CATEGORIES.map((c) => (
               <button
@@ -230,7 +231,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">
+          <label htmlFor={priorityId} className="block text-xs font-bold text-sub mb-1">
             중요도 ({Math.round(priorityScore * 100)}점)
             {isUserOverridden && (
               <button
@@ -247,6 +248,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             )}
           </label>
           <input
+            id={priorityId}
             type="range"
             min="0"
             max="1"
@@ -342,7 +344,6 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           }}
         />
       )}
-    </div>,
-    document.body
+    </Dialog>
   )
 }

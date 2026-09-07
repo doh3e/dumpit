@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useId, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { setPomodoroFocus, clearPomodoroFocus } from '../services/pomodoroFocus'
 import { nextAfterFocus, autoStartNextFocus } from '../utils/pomodoroCycle'
 import { iconProps } from '../assets/icons'
+import { announce } from '../utils/announce'
 
 const DEFAULT_FOCUS_MIN = 25
 const DEFAULT_BREAK_MIN = 5
@@ -48,6 +49,11 @@ function openDesktopPomodoroWidget() {
 
 export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', compact = false }) {
   const { refreshCoins } = useAuth()
+  const focusMinId = useId()
+  const breakMinId = useId()
+  const setsTargetId = useId()
+  const longBreakMinId = useId()
+  const longBreakEveryId = useId()
   const [focusMin, setFocusMin] = useState(() => loadMinutes('dumpit_pomodoro_focus', DEFAULT_FOCUS_MIN))
   const [breakMin, setBreakMin] = useState(() => loadMinutes('dumpit_pomodoro_break', DEFAULT_BREAK_MIN))
   const [setsTarget, setSetsTarget] = useState(() => loadIntSetting('dumpit_pomodoro_sets', DEFAULT_SETS, 0, MAX_SETS))
@@ -162,6 +168,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       setMode(MODE.FOCUS)
       setRemaining(focusMin * 60)
       setRunning(false)
+      announce(`${finishedSets}세트 모두 완료했어요`)
     } else {
       setCurrentSet(finishedSets)
       const nextBreakMin = decision.long ? longBreakMin : breakMin
@@ -169,6 +176,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       setMode(MODE.BREAK)
       setRemaining(nextBreakMin * 60)
       setRunning(true)
+      announce(`집중 끝. ${nextBreakMin}분 휴식을 시작해요`)
     }
     try {
       const res = await api.post('/pomodoro/complete', { focusMinutes: focusMin })
@@ -187,6 +195,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     setMode(MODE.FOCUS)
     setRemaining(focusMin * 60)
     setRunning(autoContinue)
+    announce(autoContinue ? '휴식 끝. 다음 집중을 시작해요' : '휴식이 끝났어요')
     if (!autoContinue) setCurrentSet(0) // 세트 1: 런 종료(기존 동작)
   }, [playAlarm, focusMin, setsTarget])
 
@@ -397,6 +406,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         <button
           onClick={() => setShowSettings(!showSettings)}
           className="w-6 h-6 flex items-center justify-center hover:opacity-70 transition-opacity"
+          aria-expanded={showSettings}
           aria-label="타이머 설정"
           title="타이머 설정"
         >
@@ -407,8 +417,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       {showSettings && (
         <div className="w-full border border-line rounded-lg p-2 space-y-2" style={{ background: 'var(--pomo-soft)' }}>
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[0.625rem] font-bold text-sub">집중 (분)</label>
+            <label htmlFor={focusMinId} className="text-[0.625rem] font-bold text-sub">집중 (분)</label>
             <input
+              id={focusMinId}
               type="number"
               min={MIN_MIN}
               max={MAX_MIN}
@@ -418,8 +429,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
             />
           </div>
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[0.625rem] font-bold text-sub">휴식 (분)</label>
+            <label htmlFor={breakMinId} className="text-[0.625rem] font-bold text-sub">휴식 (분)</label>
             <input
+              id={breakMinId}
               type="number"
               min={MIN_MIN}
               max={MAX_MIN}
@@ -429,8 +441,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
             />
           </div>
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[0.625rem] font-bold text-sub">반복 세트</label>
+            <label htmlFor={setsTargetId} className="text-[0.625rem] font-bold text-sub">반복 세트</label>
             <select
+              id={setsTargetId}
               value={setsTarget}
               onChange={(e) => setSetsTarget(Number(e.target.value))}
               className="w-16 text-xs font-bold border border-line rounded px-1 py-1 bg-card"
@@ -445,8 +458,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           {setsTarget !== 1 && (
             <>
               <div className="flex items-center justify-between gap-2">
-                <label className="text-[0.625rem] font-bold text-sub">긴 휴식 (분)</label>
+                <label htmlFor={longBreakMinId} className="text-[0.625rem] font-bold text-sub">긴 휴식 (분)</label>
                 <input
+                  id={longBreakMinId}
                   type="number"
                   min={MIN_MIN}
                   max={MAX_MIN}
@@ -456,8 +470,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
                 />
               </div>
               <div className="flex items-center justify-between gap-2">
-                <label className="text-[0.625rem] font-bold text-sub">긴 휴식 주기 (세트)</label>
+                <label htmlFor={longBreakEveryId} className="text-[0.625rem] font-bold text-sub">긴 휴식 주기 (세트)</label>
                 <input
+                  id={longBreakEveryId}
                   type="number"
                   min={2}
                   max={MAX_SETS}
@@ -500,6 +515,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
             data-testid="pomodoro-clock"
+            role="timer"
+            aria-live="off"
+            aria-label={`${isFocus ? '집중' : '휴식'} 남은 시간 ${min}분 ${sec}초`}
             className={`font-dungeon text-xl text-dark tracking-wider ${blinking ? 'px-blink' : ''}`}
           >
             {min}:{sec}
@@ -509,6 +527,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
 
       {activeTasks.length > 0 && (
         <select
+          aria-label="집중할 태스크"
           value={selectedTaskId}
           onChange={(e) => setSelectedTaskId(e.target.value)}
           className="w-full text-[0.625rem] font-bold border border-line rounded-lg px-2 py-1.5 bg-card truncate"
