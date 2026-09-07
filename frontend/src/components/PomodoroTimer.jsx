@@ -406,6 +406,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
         <button
           onClick={() => setShowSettings(!showSettings)}
           className="w-6 h-6 flex items-center justify-center hover:opacity-70 transition-opacity"
+          aria-expanded={showSettings}
           aria-label="타이머 설정"
           title="타이머 설정"
         >

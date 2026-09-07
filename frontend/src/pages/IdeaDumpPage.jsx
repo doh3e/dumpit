@@ -591,6 +591,7 @@ export default function IdeaDumpPage() {
                         toggleExpanded(idea.ideaId)
                       }}
                       disabled={childCount === 0}
+                      aria-expanded={isExpanded}
                       aria-label={isExpanded ? '하위 아이디어 접기' : '하위 아이디어 펼치기'}
                       className="mt-0.5 h-6 w-6 shrink-0 text-[0.625rem] font-black leading-none text-sub hover:text-dark disabled:invisible"
                     >

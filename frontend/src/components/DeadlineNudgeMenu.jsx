@@ -161,6 +161,8 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
             }`
         }
         aria-label="마감 임박 알림"
+        aria-expanded={open}
+        aria-haspopup="dialog"
       >
         {isCard ? (
           <>

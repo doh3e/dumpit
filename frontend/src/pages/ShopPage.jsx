@@ -488,13 +488,12 @@ export default function ShopPage() {
         </div>
       </div>
 
-      <div role="tablist" className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2">
         {SHOP_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
+            aria-pressed={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`font-dungeon text-sm px-3.5 py-2 rounded-full border-[1.5px] transition-colors ${
               activeTab === tab.id

@@ -118,6 +118,7 @@ export default function StickerPicker({ current, onSelect }) {
       <button
         type="button"
         onClick={handleTriggerClick}
+        aria-expanded={open}
         aria-label={currentSprite ? `부착된 스티커: ${currentSprite.name}` : '스티커 붙이기'}
         title={currentSprite ? currentSprite.name : '스티커 붙이기'}
         className={

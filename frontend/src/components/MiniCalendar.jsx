@@ -225,10 +225,15 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
               className={`relative ${selectedDay === day || hoveredDay === day ? 'z-10' : ''}`}
               onMouseEnter={() => hasAny && handleDayEnter(day)}
               onMouseLeave={handleDayLeave}
-              onClick={() => handleDayClick(day, hasAny)}
             >
-              <div
-                className={`text-center py-1.5 rounded text-xs font-bold transition-colors ${
+              <button
+                type="button"
+                onClick={() => handleDayClick(day, hasAny)}
+                onFocus={() => hasAny && handleDayEnter(day)}
+                onBlur={handleDayLeave}
+                aria-label={`${month + 1}월 ${day}일${hasDeadline ? `, 할 일 ${dayTasks.length}개` : ''}${hasGoogle ? `, 일정 ${dayGoogle.length}개` : ''}`}
+                aria-expanded={hasAny ? selectedDay === day : undefined}
+                className={`w-full text-center py-1.5 rounded text-xs font-bold transition-colors ${
                   isToday
                     ? 'bg-primary text-on-accent'
                     : hasAny
@@ -245,7 +250,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                     <span className={`w-1 h-1 rounded-full ${isToday ? 'bg-card' : 'gcal-dot'}`} />
                   )}
                 </div>
-              </div>
+              </button>
 
               {hoveredDay === day && !selectedDay && hasAny && (
                 <div className={`absolute z-50 ${popAlign} top-full mt-1 w-52 card-retro !p-3 space-y-2 pointer-events-none`}>
@@ -281,6 +286,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                     <p className="text-[0.625rem] font-bold text-sub">{month + 1}월 {day}일</p>
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelectedDay(null) }}
+                      aria-label="닫기"
                       className="text-[0.625rem] text-sub hover:text-dark transition-colors leading-none"
                     >✕</button>
                   </div>

@@ -103,7 +103,12 @@ function HeatmapGrid({ heatmap }) {
   }, [heatmap])
 
   return (
-    <div ref={scrollRef} className="overflow-x-auto">
+    <div
+      ref={scrollRef}
+      role="img"
+      aria-label={`최근 28주 완료 기록, 총 ${entries.reduce((s, [, c]) => s + c, 0)}개 완료`}
+      className="overflow-x-auto"
+    >
       <div className="flex gap-1 justify-center">
         {weeks.map((week, wi) => (
           <div key={wi} className="flex flex-col gap-1">
@@ -422,6 +427,13 @@ export default function MyPage() {
             onPointerMove={sliderDrag.onPointerMove}
             onPointerUp={sliderDrag.onPointerUp}
             onPointerLeave={sliderDrag.onPointerUp}
+            tabIndex={0}
+            role="group"
+            aria-label="통계 카드, 좌우 화살표로 이동"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') { e.preventDefault(); e.currentTarget.scrollBy({ left: 140 }) }
+              if (e.key === 'ArrowLeft') { e.preventDefault(); e.currentTarget.scrollBy({ left: -140 }) }
+            }}
             className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none select-none cursor-grab"
             style={{ scrollBehavior: 'smooth' }}
           >
