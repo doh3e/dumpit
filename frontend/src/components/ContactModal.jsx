@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
 export default function ContactModal({ onClose }) {
   const { user } = useAuth()
+  const subjectId = useId()
+  const messageId = useId()
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -68,8 +70,9 @@ export default function ContactModal({ onClose }) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-sub mb-1">제목 *</label>
+              <label htmlFor={subjectId} className="block text-xs font-bold text-sub mb-1">제목 *</label>
               <input
+                id={subjectId}
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
@@ -82,8 +85,9 @@ export default function ContactModal({ onClose }) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-sub mb-1">내용 *</label>
+              <label htmlFor={messageId} className="block text-xs font-bold text-sub mb-1">내용 *</label>
               <textarea
+                id={messageId}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={6}

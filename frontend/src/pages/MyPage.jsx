@@ -335,6 +335,7 @@ export default function MyPage() {
             <div className="mt-2 space-y-2">
               <textarea
                 ref={bioRef}
+                aria-label="자기소개를 입력하세요"
                 value={bioInput}
                 onChange={(e) => setBioInput(e.target.value)}
                 maxLength={500}
@@ -384,6 +385,7 @@ export default function MyPage() {
         {editingAiMemory ? (
           <div className="space-y-2">
             <textarea
+              aria-label="AI 메모리"
               value={aiMemoryInput}
               onChange={(e) => setAiMemoryInput(e.target.value)}
               maxLength={500}

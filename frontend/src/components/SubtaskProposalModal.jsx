@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import AiUsageBadge from './AiUsageBadge'
@@ -6,6 +6,7 @@ import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 
 export default function SubtaskProposalModal({ task, onClose, onCreated }) {
   const aiUsage = useAiUsage()
+  const estimatedMinutesId = useId()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -97,6 +98,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                   <div className="flex items-start gap-2">
                     <input
                       type="checkbox"
+                      aria-label="하위 태스크 포함"
                       checked={s.include}
                       onChange={(e) => updateField(idx, 'include', e.target.checked)}
                       className="mt-1.5 w-4 h-4 accent-primary flex-shrink-0"
@@ -104,6 +106,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                     <div className="flex-1 min-w-0 space-y-2">
                       <input
                         type="text"
+                        aria-label="서브태스크 제목"
                         value={s.title}
                         onChange={(e) => updateField(idx, 'title', e.target.value)}
                         placeholder="서브태스크 제목"
@@ -112,6 +115,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         disabled={!s.include}
                       />
                       <textarea
+                        aria-label="메모 (선택)"
                         value={s.description}
                         onChange={(e) => updateField(idx, 'description', e.target.value)}
                         rows={1}
@@ -121,8 +125,9 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         disabled={!s.include}
                       />
                       <div className="flex items-center gap-2">
-                        <label className="text-[0.625rem] font-bold text-sub">예상 시간</label>
+                        <label htmlFor={`${estimatedMinutesId}-${idx}`} className="text-[0.625rem] font-bold text-sub">예상 시간</label>
                         <input
+                          id={`${estimatedMinutesId}-${idx}`}
                           type="number"
                           value={s.estimatedMinutes}
                           onChange={(e) => updateField(idx, 'estimatedMinutes', e.target.value)}

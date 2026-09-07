@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { useBlocker } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES, getCategory } from '../constants/categories'
@@ -147,6 +147,7 @@ function CategoryPills({ value, onChange, compact = false, iconOnly = false }) {
 }
 
 export default function IdeaDumpPage() {
+  const detailParentId = useId()
   const [ideas, setIdeas] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
@@ -443,6 +444,7 @@ export default function IdeaDumpPage() {
         {inputMode === 'dump' ? (
           <>
             <textarea
+              aria-label="아이디어 덤프 입력"
               value={scratchText}
               onChange={(e) => handleScratchChange(e.target.value)}
               rows={7}
@@ -500,6 +502,7 @@ export default function IdeaDumpPage() {
           <div className="space-y-3">
             <input
               autoFocus
+              aria-label="제목"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={handleNewIdeaKeyDown}
@@ -508,6 +511,7 @@ export default function IdeaDumpPage() {
               className="w-full bg-transparent text-sm font-black text-dark outline-none placeholder:text-sub"
             />
             <textarea
+              aria-label="내용 (선택)"
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
               rows={3}
@@ -518,6 +522,7 @@ export default function IdeaDumpPage() {
             <div className="border-t-2 border-line pt-3 flex flex-wrap items-center gap-2">
               <CategoryPills value={newCategory} onChange={setNewCategory} iconOnly />
               <select
+                aria-label="상위 아이디어"
                 value={newParentId}
                 onChange={(e) => setNewParentId(e.target.value)}
                 className="rounded-lg border border-line bg-card px-2 py-1.5 text-xs font-extrabold outline-none max-w-[180px]"
@@ -550,6 +555,7 @@ export default function IdeaDumpPage() {
         <section className="space-y-3">
           <div className="card-retro !p-3">
             <input
+              aria-label="검색"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="검색"
@@ -646,6 +652,7 @@ export default function IdeaDumpPage() {
               </div>
 
               <input
+                aria-label="아이디어 제목"
                 value={detailForm.title}
                 onChange={(e) => setDetailForm((prev) => ({ ...prev, title: e.target.value }))}
                 maxLength={200}
@@ -662,8 +669,9 @@ export default function IdeaDumpPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-black text-sub">상위 아이디어</label>
+                  <label htmlFor={detailParentId} className="mb-1 block text-xs font-black text-sub">상위 아이디어</label>
                   <select
+                    id={detailParentId}
                     value={detailForm.parentIdeaId}
                     onChange={(e) => setDetailForm((prev) => ({ ...prev, parentIdeaId: e.target.value }))}
                     className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-extrabold outline-none"

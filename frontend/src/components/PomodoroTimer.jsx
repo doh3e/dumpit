@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useId, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { setPomodoroFocus, clearPomodoroFocus } from '../services/pomodoroFocus'
@@ -49,6 +49,11 @@ function openDesktopPomodoroWidget() {
 
 export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', compact = false }) {
   const { refreshCoins } = useAuth()
+  const focusMinId = useId()
+  const breakMinId = useId()
+  const setsTargetId = useId()
+  const longBreakMinId = useId()
+  const longBreakEveryId = useId()
   const [focusMin, setFocusMin] = useState(() => loadMinutes('dumpit_pomodoro_focus', DEFAULT_FOCUS_MIN))
   const [breakMin, setBreakMin] = useState(() => loadMinutes('dumpit_pomodoro_break', DEFAULT_BREAK_MIN))
   const [setsTarget, setSetsTarget] = useState(() => loadIntSetting('dumpit_pomodoro_sets', DEFAULT_SETS, 0, MAX_SETS))
@@ -411,8 +416,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       {showSettings && (
         <div className="w-full border border-line rounded-lg p-2 space-y-2" style={{ background: 'var(--pomo-soft)' }}>
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[0.625rem] font-bold text-sub">집중 (분)</label>
+            <label htmlFor={focusMinId} className="text-[0.625rem] font-bold text-sub">집중 (분)</label>
             <input
+              id={focusMinId}
               type="number"
               min={MIN_MIN}
               max={MAX_MIN}
@@ -422,8 +428,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
             />
           </div>
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[0.625rem] font-bold text-sub">휴식 (분)</label>
+            <label htmlFor={breakMinId} className="text-[0.625rem] font-bold text-sub">휴식 (분)</label>
             <input
+              id={breakMinId}
               type="number"
               min={MIN_MIN}
               max={MAX_MIN}
@@ -433,8 +440,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
             />
           </div>
           <div className="flex items-center justify-between gap-2">
-            <label className="text-[0.625rem] font-bold text-sub">반복 세트</label>
+            <label htmlFor={setsTargetId} className="text-[0.625rem] font-bold text-sub">반복 세트</label>
             <select
+              id={setsTargetId}
               value={setsTarget}
               onChange={(e) => setSetsTarget(Number(e.target.value))}
               className="w-16 text-xs font-bold border border-line rounded px-1 py-1 bg-card"
@@ -449,8 +457,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           {setsTarget !== 1 && (
             <>
               <div className="flex items-center justify-between gap-2">
-                <label className="text-[0.625rem] font-bold text-sub">긴 휴식 (분)</label>
+                <label htmlFor={longBreakMinId} className="text-[0.625rem] font-bold text-sub">긴 휴식 (분)</label>
                 <input
+                  id={longBreakMinId}
                   type="number"
                   min={MIN_MIN}
                   max={MAX_MIN}
@@ -460,8 +469,9 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
                 />
               </div>
               <div className="flex items-center justify-between gap-2">
-                <label className="text-[0.625rem] font-bold text-sub">긴 휴식 주기 (세트)</label>
+                <label htmlFor={longBreakEveryId} className="text-[0.625rem] font-bold text-sub">긴 휴식 주기 (세트)</label>
                 <input
+                  id={longBreakEveryId}
                   type="number"
                   min={2}
                   max={MAX_SETS}
@@ -516,6 +526,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
 
       {activeTasks.length > 0 && (
         <select
+          aria-label="집중할 태스크"
           value={selectedTaskId}
           onChange={(e) => setSelectedTaskId(e.target.value)}
           className="w-full text-[0.625rem] font-bold border border-line rounded-lg px-2 py-1.5 bg-card truncate"

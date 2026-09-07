@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import MarkdownRenderer from '../components/MarkdownRenderer'
 import { iconProps } from '../assets/icons'
@@ -79,6 +79,15 @@ function StatPill({ label, value }) {
 }
 
 export default function AdminPage() {
+  const replyId = useId()
+  const userSearchId = useId()
+  const userStatusFilterId = useId()
+  const userSortId = useId()
+  const noticeTitleId = useId()
+  const noticeContentId = useId()
+  const noticePublishAtId = useId()
+  const noticeStatusId = useId()
+  const banReasonId = useId()
   const [tab, setTab] = useState('inquiries')
   const [inquiries, setInquiries] = useState([])
   const [users, setUsers] = useState([])
@@ -445,10 +454,11 @@ export default function AdminPage() {
                   )}
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-sub">
+                    <label htmlFor={replyId} className="mb-1 block text-xs font-bold text-sub">
                       {selected.status === 'REPLIED' ? '답변 다시 보내기' : '답변 작성'}
                     </label>
                     <textarea
+                      id={replyId}
                       value={reply}
                       onChange={(e) => setReply(e.target.value)}
                       rows={6}
@@ -491,8 +501,9 @@ export default function AdminPage() {
           <div className="rounded-lg border border-line bg-card p-3">
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_160px_180px]">
               <div>
-                <label className="mb-1 block text-[0.625rem] font-black text-sub">검색</label>
+                <label htmlFor={userSearchId} className="mb-1 block text-[0.625rem] font-black text-sub">검색</label>
                 <input
+                  id={userSearchId}
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
                   placeholder="이메일, 닉네임, 밴 사유"
@@ -500,8 +511,9 @@ export default function AdminPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[0.625rem] font-black text-sub">상태</label>
+                <label htmlFor={userStatusFilterId} className="mb-1 block text-[0.625rem] font-black text-sub">상태</label>
                 <select
+                  id={userStatusFilterId}
                   value={userStatusFilter}
                   onChange={(e) => setUserStatusFilter(e.target.value)}
                   className="w-full rounded-lg border-2 border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
@@ -512,8 +524,9 @@ export default function AdminPage() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-[0.625rem] font-black text-sub">정렬</label>
+                <label htmlFor={userSortId} className="mb-1 block text-[0.625rem] font-black text-sub">정렬</label>
                 <select
+                  id={userSortId}
                   value={userSort}
                   onChange={(e) => setUserSort(e.target.value)}
                   className="w-full rounded-lg border-2 border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
@@ -643,8 +656,9 @@ export default function AdminPage() {
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-bold text-sub">제목</label>
+                <label htmlFor={noticeTitleId} className="mb-1 block text-xs font-bold text-sub">제목</label>
                 <input
+                  id={noticeTitleId}
                   value={noticeForm.title}
                   onChange={(e) => setNoticeForm((prev) => ({ ...prev, title: e.target.value }))}
                   maxLength={200}
@@ -653,7 +667,7 @@ export default function AdminPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold text-sub">내용</label>
+                <label htmlFor={noticeContentId} className="mb-1 block text-xs font-bold text-sub">내용</label>
                 <div className="overflow-hidden rounded-lg border border-line bg-card">
                   <div className="flex flex-wrap gap-1 border-b-2 border-line bg-accent px-2 py-2">
                     {MARKDOWN_TOOLS.map((tool) => (
@@ -668,6 +682,7 @@ export default function AdminPage() {
                     ))}
                   </div>
                   <textarea
+                    id={noticeContentId}
                     ref={noticeEditorRef}
                     value={noticeForm.content}
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, content: e.target.value }))}
@@ -691,8 +706,9 @@ export default function AdminPage() {
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-bold text-sub">게시 시간</label>
+                  <label htmlFor={noticePublishAtId} className="mb-1 block text-xs font-bold text-sub">게시 시간</label>
                   <input
+                    id={noticePublishAtId}
                     type="datetime-local"
                     value={noticeForm.publishAt}
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, publishAt: e.target.value }))}
@@ -700,8 +716,9 @@ export default function AdminPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-bold text-sub">상태</label>
+                  <label htmlFor={noticeStatusId} className="mb-1 block text-xs font-bold text-sub">상태</label>
                   <select
+                    id={noticeStatusId}
                     value={noticeForm.status}
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, status: e.target.value }))}
                     className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none focus:border-primary"
@@ -873,6 +890,7 @@ export default function AdminPage() {
                   <div className="mt-2 flex flex-wrap gap-2">
                     <input
                       type="number"
+                      aria-label="지급량"
                       min={1}
                       max={10000}
                       value={coinAmountInput}
@@ -881,6 +899,7 @@ export default function AdminPage() {
                       className="w-24 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
                     />
                     <input
+                      aria-label="지급 사유 (운영 기록용, 선택)"
                       value={coinReasonInput}
                       onChange={(e) => setCoinReasonInput(e.target.value)}
                       maxLength={200}
@@ -901,8 +920,9 @@ export default function AdminPage() {
 
               {managingUser.status !== 'BANNED' && (
                 <div>
-                  <label className="mb-1 block text-xs font-bold text-sub">밴 사유</label>
+                  <label htmlFor={banReasonId} className="mb-1 block text-xs font-bold text-sub">밴 사유</label>
                   <textarea
+                    id={banReasonId}
                     value={banReasonInput}
                     onChange={(e) => setBanReasonInput(e.target.value)}
                     rows={4}

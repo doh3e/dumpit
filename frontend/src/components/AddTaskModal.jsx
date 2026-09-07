@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES } from '../constants/categories'
@@ -34,6 +34,8 @@ function getDefaultStartTime() {
 
 export default function AddTaskModal({ onClose, onCreated }) {
   const aiUsage = useAiUsage()
+  const titleId = useId()
+  const descriptionId = useId()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [useStartTime, setUseStartTime] = useState(false)
@@ -101,8 +103,9 @@ export default function AddTaskModal({ onClose, onCreated }) {
         <h3 className="font-dungeon text-dark text-xl">일정 추가</h3>
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">할 일 *</label>
+          <label htmlFor={titleId} className="block text-xs font-bold text-sub mb-1">할 일 *</label>
           <input
+            id={titleId}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -114,8 +117,9 @@ export default function AddTaskModal({ onClose, onCreated }) {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">메모 (선택)</label>
+          <label htmlFor={descriptionId} className="block text-xs font-bold text-sub mb-1">메모 (선택)</label>
           <textarea
+            id={descriptionId}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="추가 정보가 있다면 적어주세요. AI가 더 똑똑하게 분석할 수 있어요."

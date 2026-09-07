@@ -23,7 +23,7 @@ export function MarkdownView({ children }) {
   )
 }
 
-export default function MarkdownEditor({ value, onChange, maxLength = 5000, rows = 12, placeholder, defaultMode = 'write' }) {
+export default function MarkdownEditor({ value, onChange, maxLength = 5000, rows = 12, placeholder, defaultMode = 'write', ariaLabel }) {
   const [previewing, setPreviewing] = useState(defaultMode === 'preview')
   const textareaRef = useRef(null)
 
@@ -83,6 +83,7 @@ export default function MarkdownEditor({ value, onChange, maxLength = 5000, rows
       ) : (
         <textarea
           ref={textareaRef}
+          aria-label={ariaLabel ?? '내용'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           maxLength={maxLength}

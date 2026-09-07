@@ -101,6 +101,7 @@ export default function BrainDumpPage() {
 
       <div className="card-retro">
         <textarea
+          aria-label="브레인 덤프 입력"
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={PLACEHOLDER}

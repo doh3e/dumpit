@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useId, useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { getNotificationPermission, showBrowserNotification } from '../utils/notifications'
 import { applyTheme, getThemePref } from '../utils/theme'
@@ -28,6 +28,8 @@ function isStandaloneWebApp() {
 
 
 export default function SettingsModal({ onClose }) {
+  const routineStartId = useId()
+  const routineEndId = useId()
   const isDesktop = typeof window !== 'undefined' && Boolean(window.dumpitDesktop)
   const [appInfo, setAppInfo] = useState(null)
   const [checkingUpdate, setCheckingUpdate] = useState(false)
@@ -260,8 +262,9 @@ export default function SettingsModal({ onClose }) {
           </p>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <label className="text-xs font-bold text-sub">시작</label>
+              <label htmlFor={routineStartId} className="text-xs font-bold text-sub">시작</label>
               <select
+                id={routineStartId}
                 value={routineStart}
                 onChange={(e) => { setRoutineStart(Number(e.target.value)); setConfirmWrap(false) }}
                 className="text-sm font-bold border border-line rounded-lg px-2 py-1.5 bg-card"
@@ -273,8 +276,9 @@ export default function SettingsModal({ onClose }) {
             </div>
             <span className="font-bold text-sub">~</span>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-bold text-sub">종료</label>
+              <label htmlFor={routineEndId} className="text-xs font-bold text-sub">종료</label>
               <select
+                id={routineEndId}
                 value={routineEnd}
                 onChange={(e) => { setRoutineEnd(Number(e.target.value)); setConfirmWrap(false) }}
                 className="text-sm font-bold border border-line rounded-lg px-2 py-1.5 bg-card"

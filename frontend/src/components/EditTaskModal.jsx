@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { createPortal } from 'react-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import { CATEGORIES } from '../constants/categories'
@@ -24,6 +24,9 @@ function getMinDeadlineInput() {
 
 export default function EditTaskModal({ task, onClose, onUpdated }) {
   const aiUsage = useAiUsage()
+  const titleId = useId()
+  const descriptionId = useId()
+  const priorityId = useId()
   const [showSplit, setShowSplit] = useState(false)
   const initialDeadline = task.deadline ? task.deadline.slice(0, 16) : ''
   const initialStartTime = task.startTime ? task.startTime.slice(0, 16) : ''
@@ -134,8 +137,9 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         <h3 className="font-dungeon text-dark text-xl">일정 수정</h3>
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">할 일 *</label>
+          <label htmlFor={titleId} className="block text-xs font-bold text-sub mb-1">할 일 *</label>
           <input
+            id={titleId}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -146,8 +150,9 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">메모 (선택)</label>
+          <label htmlFor={descriptionId} className="block text-xs font-bold text-sub mb-1">메모 (선택)</label>
           <textarea
+            id={descriptionId}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
@@ -230,7 +235,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-sub mb-1">
+          <label htmlFor={priorityId} className="block text-xs font-bold text-sub mb-1">
             중요도 ({Math.round(priorityScore * 100)}점)
             {isUserOverridden && (
               <button
@@ -247,6 +252,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             )}
           </label>
           <input
+            id={priorityId}
             type="range"
             min="0"
             max="1"

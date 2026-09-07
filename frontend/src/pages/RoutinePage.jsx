@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useId, useMemo, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import { parseDate } from '../utils/dates'
 
@@ -76,6 +76,10 @@ function toggleNumber(list, value) {
 }
 
 export default function RoutinePage() {
+  const nameId = useId()
+  const descriptionId = useId()
+  const startDateId = useId()
+  const endDateId = useId()
   const [routines, setRoutines] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
   const [editingId, setEditingId] = useState(null)
@@ -288,8 +292,9 @@ export default function RoutinePage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-sub mb-1">루틴명 *</label>
+            <label htmlFor={nameId} className="block text-xs font-bold text-sub mb-1">루틴명 *</label>
             <input
+              id={nameId}
               value={form.name}
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
               maxLength={200}
@@ -299,8 +304,9 @@ export default function RoutinePage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-sub mb-1">메모</label>
+            <label htmlFor={descriptionId} className="block text-xs font-bold text-sub mb-1">메모</label>
             <textarea
+              id={descriptionId}
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               rows={3}
@@ -436,6 +442,7 @@ export default function RoutinePage() {
                 <div className="space-y-2">
                   <input
                     type="time"
+                    aria-label="시작 시간"
                     value={form.startTime}
                     onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
                     className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
@@ -452,6 +459,7 @@ export default function RoutinePage() {
                   {form.hasEndTime ? (
                     <input
                       type="time"
+                      aria-label="종료 시간"
                       value={form.endTime}
                       onChange={(e) => setForm((prev) => ({ ...prev, endTime: e.target.value }))}
                       className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold outline-none"
@@ -469,8 +477,9 @@ export default function RoutinePage() {
               )}
             </div>
             <div>
-              <label className="block text-xs font-bold text-sub mb-1">시작일</label>
+              <label htmlFor={startDateId} className="block text-xs font-bold text-sub mb-1">시작일</label>
               <input
+                id={startDateId}
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setForm((prev) => ({ ...prev, startDate: e.target.value }))}
@@ -480,8 +489,9 @@ export default function RoutinePage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-sub mb-1">종료일</label>
+            <label htmlFor={endDateId} className="block text-xs font-bold text-sub mb-1">종료일</label>
             <input
+              id={endDateId}
               type="date"
               value={form.endDate}
               onChange={(e) => setForm((prev) => ({ ...prev, endDate: e.target.value }))}
