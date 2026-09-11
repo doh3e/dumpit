@@ -1,8 +1,12 @@
 import { ESLint } from 'eslint'
 import { expect, it } from 'vitest'
+import eslintConfig from '../../eslint.config.js'
 
 it('비활성 권장 규칙은 꺼져 있고 현재 린트 정책은 유지된다', async () => {
-  const config = await new ESLint().calculateConfigForFile('src/pages/IdeaDumpPage.jsx')
+  const config = await new ESLint({
+    overrideConfig: eslintConfig,
+    overrideConfigFile: true,
+  }).calculateConfigForFile('src/pages/IdeaDumpPage.jsx')
 
   expect(config.rules['jsx-a11y/label-has-for'][0]).toBe(0)
   expect(config.rules['jsx-a11y/control-has-associated-label'][0]).toBe(0)
