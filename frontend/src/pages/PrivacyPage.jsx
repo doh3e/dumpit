@@ -8,14 +8,14 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-accent">
       <main className="max-w-2xl mx-auto px-4 py-12">
         <div className="mb-8">
-          <Link to="/" className="text-sm font-bold text-primary hover:underline">
+          <Link to="/" className="btn-refined btn-refined-text !px-2 text-sm text-primary">
             ← 홈으로
           </Link>
         </div>
 
-        <div className="card-retro space-y-6">
+        <div className="surface-refined space-y-6 border border-line p-5">
           <div>
-            <h1 className="font-dungeon text-dark text-2xl">개인정보처리방침</h1>
+            <h1 className="page-refined-heading">개인정보처리방침</h1>
             <p className="text-sm text-sub font-semibold mt-3">
               덤핏(Dumpit!, 이하 “서비스”)은 이용자의 개인정보를 중요하게 생각하며, 「개인정보 보호법」 등 관련 법령을 준수하기 위하여 다음과 같이 개인정보처리방침을 수립·공개합니다.
             </p>

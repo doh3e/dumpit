@@ -148,7 +148,7 @@ const SECTIONS = [
   {
     title: '제13조 (문의)',
     body: (
-      <div className="p-3 bg-accent rounded-lg border border-line">
+      <div className="surface-refined border border-line p-3">
         <p className="text-sm">
           이 약관에 관한 문의는 서비스 내 문의하기 또는 아래 연락처로 하실 수 있습니다.
         </p>
@@ -178,21 +178,21 @@ export default function TermsPage() {
     <div className="min-h-screen bg-accent">
       <main className="max-w-2xl mx-auto px-4 py-12">
         <div className="mb-8">
-          <Link to="/" className="text-sm font-bold text-primary hover:underline">
+          <Link to="/" className="btn-refined btn-refined-text !px-2 text-sm text-primary">
             ← 홈으로
           </Link>
         </div>
 
-        <div className="card-retro space-y-6">
+        <div className="surface-refined space-y-6 border border-line p-5">
           <div>
-            <h1 className="font-dungeon text-dark text-2xl">서비스 이용약관</h1>
+            <h1 className="page-refined-heading">서비스 이용약관</h1>
             <p className="text-xs text-sub font-semibold mt-2">시행일자: 2026년 8월 18일</p>
           </div>
 
           <div className="space-y-6 text-sm text-dark">
             {SECTIONS.map((section) => (
               <section key={section.title}>
-                <h2 className="font-extrabold text-dark mb-2">{section.title}</h2>
+                <h2 className="mb-2 font-galmuri font-bold text-dark">{section.title}</h2>
                 <div className="text-sub leading-relaxed">{section.body}</div>
               </section>
             ))}

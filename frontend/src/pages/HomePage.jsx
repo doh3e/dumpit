@@ -21,8 +21,8 @@ export default function HomePage() {
       <WithdrawalPendingModal />
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-20 text-center">
         {showLoginError && (
-          <div className="card-retro tone-overdue mb-6 max-w-md">
-            <p className="font-bold text-primary text-sm">
+          <div className="surface-refined tone-overdue mb-6 max-w-md border p-5">
+            <p className="text-sm font-bold text-danger">
               로그인에 실패했어요. 다시 시도해주세요.
             </p>
           </div>
@@ -38,7 +38,7 @@ export default function HomePage() {
             height={288}
             className="w-72 mx-auto drop-shadow-lg"
           />
-          <h1 className="mt-4 text-xl font-extrabold text-dark tracking-wide">
+          <h1 className="page-refined-heading mt-4 text-xl tracking-wide">
             생각을 쏟아내면, AI가 정리해드려요
           </h1>
         </div>
@@ -58,7 +58,7 @@ export default function HomePage() {
 
         <button
           onClick={handleGoogleLogin}
-          className="btn-retro-primary text-lg flex items-center gap-3 mx-auto"
+          className="btn-refined btn-refined-primary mx-auto flex gap-3 text-lg"
         >
           <svg className="w-5 h-5 drop-shadow-xl" viewBox="0 0 24 24" fill="currentColor">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -89,8 +89,8 @@ export default function HomePage() {
             { title: '루틴 관리', desc: '반복적으로 해야할 일을 루틴으로 등록해 관리하기' },
             { title: '마이페이지', desc: '자신의 할 일을 어떻게 관리하고 있는지 통계로 확인하기' },
           ].map(({ title, desc }) => (
-            <div key={title} className="card-retro text-left">
-              <h2 className="font-extrabold text-dark text-base mb-1">{title}</h2>
+            <div key={title} className="surface-refined border border-line p-5 text-left">
+              <h2 className="mb-1 font-galmuri text-base font-bold text-dark">{title}</h2>
               <p className="text-sm text-sub font-medium">{desc}</p>
             </div>
           ))}
@@ -101,15 +101,15 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-sm font-bold text-sub">
           <span>&copy; 2026 Dumpit!</span>
           <span className="hidden sm:inline text-sub">|</span>
-          <Link to="/privacy" className="hover:text-primary transition-colors">
+          <Link to="/privacy" className="inline-flex min-h-[max(44px,2.75rem)] items-center px-2 transition-colors hover:text-primary">
             개인정보 처리방침
           </Link>
           <span className="hidden sm:inline text-sub">|</span>
-          <Link to="/terms" className="hover:text-primary transition-colors">
+          <Link to="/terms" className="inline-flex min-h-[max(44px,2.75rem)] items-center px-2 transition-colors hover:text-primary">
             서비스 이용약관
           </Link>
           <span className="hidden sm:inline text-sub">|</span>
-          <a href="mailto:dumpitadmin@gmail.com" className="hover:text-primary transition-colors">
+          <a href="mailto:dumpitadmin@gmail.com" className="inline-flex min-h-[max(44px,2.75rem)] items-center px-2 transition-colors hover:text-primary">
             dumpitadmin@gmail.com
           </a>
         </div>

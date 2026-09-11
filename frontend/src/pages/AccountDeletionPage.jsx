@@ -8,14 +8,14 @@ export default function AccountDeletionPage() {
     <div className="min-h-screen bg-accent">
       <main className="max-w-2xl mx-auto px-4 py-12">
         <div className="mb-8">
-          <Link to="/" className="text-sm font-bold text-primary hover:underline">
+          <Link to="/" className="btn-refined btn-refined-text !px-2 text-sm text-primary">
             ← 홈으로
           </Link>
         </div>
 
-        <div className="card-retro space-y-6">
+        <div className="surface-refined space-y-6 border border-line p-5">
           <div>
-            <h1 className="font-dungeon text-dark text-2xl">계정 및 데이터 삭제</h1>
+            <h1 className="page-refined-heading">계정 및 데이터 삭제</h1>
             <p className="text-sm text-sub font-semibold mt-3">
               덤핏(Dumpit!) 계정과 계정에 저장된 데이터를 삭제하는 방법을 안내합니다.
               웹사이트와 안드로이드 앱 모두 동일하게 적용됩니다.
@@ -23,7 +23,7 @@ export default function AccountDeletionPage() {
           </div>
 
           <section>
-            <h2 className="font-extrabold text-dark mb-2">1. 직접 삭제하기</h2>
+            <h2 className="mb-2 font-galmuri font-bold text-dark">1. 직접 삭제하기</h2>
             <div className="text-sub leading-relaxed text-sm space-y-2">
               <p><span className="font-bold text-dark">웹사이트</span>: 로그인 후 마이페이지 → 회원 탈퇴</p>
               <p><span className="font-bold text-dark">안드로이드 앱</span>: MY 탭 → 설정 → 회원 탈퇴</p>
@@ -31,7 +31,7 @@ export default function AccountDeletionPage() {
           </section>
 
           <section>
-            <h2 className="font-extrabold text-dark mb-2">2. 계정을 유지하고 일부 데이터만 삭제하기</h2>
+            <h2 className="mb-2 font-galmuri font-bold text-dark">2. 계정을 유지하고 일부 데이터만 삭제하기</h2>
             <div className="text-sub leading-relaxed text-sm space-y-2">
               <p>
                 계정을 삭제하지 않아도, 등록한 할 일·아이디어·루틴·브레인덤프는 웹사이트와 앱에서
@@ -46,13 +46,13 @@ export default function AccountDeletionPage() {
           </section>
 
           <section>
-            <h2 className="font-extrabold text-dark mb-2">3. 앱을 이미 삭제한 경우</h2>
+            <h2 className="mb-2 font-galmuri font-bold text-dark">3. 앱을 이미 삭제한 경우</h2>
             <div className="text-sub leading-relaxed text-sm space-y-2">
               <p>
                 앱을 지웠거나 서비스에 접속하기 어려운 경우, 가입에 사용한 Google 계정 이메일 주소로
                 아래 주소에 삭제를 요청해 주세요. 본인 확인 후 처리해 드립니다.
               </p>
-              <div className="p-3 bg-accent rounded-lg border border-line">
+              <div className="surface-refined border border-line p-3">
                 <p className="text-sm">
                   <span className="font-bold">이메일</span>:{' '}
                   <a href="mailto:dumpitadmin@gmail.com" className="text-primary underline">
@@ -65,7 +65,7 @@ export default function AccountDeletionPage() {
           </section>
 
           <section>
-            <h2 className="font-extrabold text-dark mb-2">4. 삭제되는 데이터와 시점</h2>
+            <h2 className="mb-2 font-galmuri font-bold text-dark">4. 삭제되는 데이터와 시점</h2>
             <div className="text-sub leading-relaxed text-sm space-y-2">
               <p>
                 탈퇴하면 <span className="font-bold text-dark">즉시</span> 서비스 이용이 중단되고, 등록한 할 일·아이디어·루틴·브레인덤프를
@@ -90,7 +90,7 @@ export default function AccountDeletionPage() {
           </section>
 
           <section>
-            <h2 className="font-extrabold text-dark mb-2">5. Google 계정 연결 해제</h2>
+            <h2 className="mb-2 font-galmuri font-bold text-dark">5. Google 계정 연결 해제</h2>
             <div className="text-sub leading-relaxed text-sm space-y-2">
               <p>
                 탈퇴 시 서비스에 부여된 Google 권한은 자동으로 해제됩니다. 직접 확인하거나 해제하려면
