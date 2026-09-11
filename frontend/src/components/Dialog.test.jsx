@@ -21,6 +21,18 @@ describe('Dialog', () => {
     render(<Dialog onClose={() => {}} title="일정 추가"><p>내용</p></Dialog>)
     expect(screen.getByRole('dialog', { name: '일정 추가' })).toBeTruthy()
   })
+  it('기본 변형은 기존 레트로 패널을 유지한다', () => {
+    render(<Dialog title="설정"><p>기본 설정 내용</p></Dialog>)
+    const panel = screen.getByText('기본 설정 내용').parentElement
+    expect(panel.classList.contains('card-retro')).toBe(true)
+    expect(panel.classList.contains('surface-refined')).toBe(false)
+  })
+  it('refined 변형을 명시한 모달만 새 표면을 사용한다', () => {
+    render(<Dialog title="설정" variant="refined"><p>설정 내용</p></Dialog>)
+    const panel = screen.getByText('설정 내용').parentElement
+    expect(panel.classList.contains('surface-refined')).toBe(true)
+    expect(panel.classList.contains('card-retro')).toBe(false)
+  })
   it('Esc(cancel)와 배경 클릭은 onClose, 패널 클릭은 무시', () => {
     const onClose = vi.fn()
     render(<Dialog onClose={onClose} title="t"><p>내용</p></Dialog>)

@@ -1,9 +1,11 @@
 import { readFileSync } from 'node:fs'
+import postcss from 'postcss'
 import { describe, expect, it } from 'vitest'
 import { contrastRatio, parseCssVars } from '../utils/contrast'
 
 const css = readFileSync(new URL('../index.css', import.meta.url), 'utf8')
 const blocks = parseCssVars(css)
+const stylesheet = postcss.parse(css)
 const root = blocks.get(':root')
 const dark = blocks.get('[data-theme="dark"]')
 const SKINS = ['ocean', 'lavender', 'sprout', 'galaxy', 'rose', 'wood', 'candy']
@@ -11,6 +13,19 @@ const TEXT_TOKENS = ['sub', 'accent-text', 'accent2-text', 'danger-text']
 
 function expectText(fg, bg, min, label) {
   expect(contrastRatio(fg, bg), `${label}: ${fg} on ${bg}`).toBeGreaterThanOrEqual(min)
+}
+
+function declarationsFor(selector) {
+  let declarations
+  stylesheet.walkRules(selector, (rule) => {
+    declarations = Object.fromEntries(
+      rule.nodes
+        .filter((node) => node.type === 'decl')
+        .map(({ prop, value }) => [prop, value]),
+    )
+  })
+  expect(declarations, `${selector} 규칙`).toBeTruthy()
+  return declarations
 }
 
 describe('라이트 기본 팔레트', () => {
@@ -75,6 +90,19 @@ describe('고대비 모드', () => {
     expectText(hc.fg, dark.card, 7, 'hc dark fg')
     expectText(hc.sub, dark.card, 7, 'hc dark sub')
     expectText(hc.line, dark.card, 3, 'hc dark line')
+  })
+  it('다크 고대비 위험 글자·경계는 기존 다크 의미색을 재사용하고 모든 스킨 card에서 4.5:1 이상이다', () => {
+    expect(
+      declarationsFor('[data-theme="dark"][data-contrast="high"]')['--danger-text'],
+    ).toBe('var(--danger)')
+
+    const palettes = [
+      ['default', dark],
+      ...SKINS.map((skin) => [skin, blocks.get(`[data-skin-bg="${skin}"][data-theme="dark"]`)]),
+    ]
+    for (const [name, palette] of palettes) {
+      expectText(palette.danger ?? dark.danger, palette.card, 4.5, `${name} hc danger-text/card`)
+    }
   })
   it('다크 스킨 + 고대비: 스킨 블록이 덮은 line/edge를 되돌리는 블록이 있다', () => {
     const hc = blocks.get('[data-theme="dark"][data-contrast="high"]')

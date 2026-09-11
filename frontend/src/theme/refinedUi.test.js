@@ -74,15 +74,47 @@ describe('정돈된 레트로 공통 변형', () => {
     })
   })
 
+  it('Dialog의 refined 표면도 기존 패널의 정렬·높이·스크롤 계약을 유지한다', () => {
+    expect(ruleFor('.dialog-retro > .surface-refined').declarations).toMatchObject({
+      margin: '0 auto',
+      'max-height': '90vh',
+      'overflow-y': 'auto',
+    })
+  })
+
+  it('위험·선택 버튼과 페이지 제목은 각각의 의미 토큰과 타이포그래피를 사용한다', () => {
+    expect(ruleFor('.btn-refined-danger').declarations).toMatchObject({
+      color: 'var(--danger-text)',
+      'border-color': 'var(--danger-text)',
+    })
+    expect(ruleFor('.btn-refined-selected').declarations).toMatchObject({
+      background: 'var(--chip)',
+      'border-color': 'var(--fg)',
+    })
+    expect(ruleFor('.page-refined-heading').appliedUtilities).toContain(
+      'font-galmuri text-2xl font-bold text-dark',
+    )
+  })
+
   it('버튼 상호작용은 토큰과 비활성 상태를 유지한다', () => {
     const neutralHover = ruleFor(
-      '.btn-refined:not(.btn-refined-primary):not(:disabled):hover',
+      '.btn-refined:not(.btn-refined-primary):not(.btn-refined-danger):not(.btn-refined-selected):not(:disabled):hover',
     )
     const neutralActive = ruleFor(
-      '.btn-refined:not(.btn-refined-primary):not(:disabled):active',
+      '.btn-refined:not(.btn-refined-primary):not(.btn-refined-danger):not(.btn-refined-selected):not(:disabled):active',
     )
     expect(neutralHover.declarations.background).toBe('var(--chip)')
     expect(neutralActive.declarations.background).toBe('var(--chip)')
+    for (const selector of [
+      '.btn-refined-danger:not(:disabled):hover',
+      '.btn-refined-danger:not(:disabled):active',
+      '.btn-refined-selected:not(:disabled):hover',
+      '.btn-refined-selected:not(:disabled):active',
+    ]) {
+      expect(ruleFor(selector).declarations['box-shadow']).toBe(
+        'inset 0 0 0 1px currentColor',
+      )
+    }
     expect(ruleFor('.btn-refined-primary:not(:disabled):hover').declarations['box-shadow']).toBe(
       'inset 0 0 0 1px var(--on-accent)',
     )
