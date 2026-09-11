@@ -6,6 +6,7 @@ import { iconProps } from '../assets/icons'
 import PixelStation from '../components/PixelStation'
 import Dialog from '../components/Dialog'
 import { useAuth } from '../context/AuthContext'
+import useReducedMotion from '../hooks/useReducedMotion'
 
 function useDragScroll() {
   const ref = useRef(null)
@@ -206,7 +207,9 @@ export default function MyPage() {
   const [withdrawing, setWithdrawing] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const bioRef = useRef(null)
+  const aiMemoryRef = useRef(null)
   const sliderDrag = useDragScroll()
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
     Promise.all([
@@ -227,6 +230,10 @@ export default function MyPage() {
   useEffect(() => {
     if (editingBio && bioRef.current) bioRef.current.focus()
   }, [editingBio])
+
+  useEffect(() => {
+    if (editingAiMemory && aiMemoryRef.current) aiMemoryRef.current.focus()
+  }, [editingAiMemory])
 
   const handleSaveBio = async () => {
     setSavingBio(true)
@@ -314,12 +321,14 @@ export default function MyPage() {
   })()
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6">
+
+      <h1 className="page-refined-heading">마이페이지</h1>
 
       {/* 나의 우주정거장 — 프로필이 도킹된 느낌 */}
       <PixelStation />
 
-      <div className="card-retro !p-5 flex items-start gap-4">
+      <div className="surface-refined flex items-start gap-4 p-5">
         {profile?.picture ? (
           <img
             src={profile.picture}
@@ -346,15 +355,15 @@ export default function MyPage() {
                 maxLength={500}
                 rows={3}
                 placeholder="자기소개를 입력하세요"
-                className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card focus:border-primary resize-none"
+                className="input-refined w-full resize-none text-sm"
               />
-              <div className="flex gap-2">
-                <button onClick={handleSaveBio} disabled={savingBio}
-                  className="btn-retro-primary text-xs py-1 px-3 disabled:opacity-50">
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={handleSaveBio} disabled={savingBio}
+                  className="btn-refined btn-refined-primary flex-1 px-3 text-xs sm:flex-none">
                   {savingBio ? '저장 중...' : '저장'}
                 </button>
-                <button onClick={() => { setEditingBio(false); setBioInput(profile?.bio || '') }}
-                  className="btn-retro text-xs py-1 px-3">
+                <button type="button" onClick={() => { setEditingBio(false); setBioInput(profile?.bio || '') }}
+                  className="btn-refined flex-1 px-3 text-xs sm:flex-none">
                   취소
                 </button>
               </div>
@@ -364,8 +373,8 @@ export default function MyPage() {
               <p className="text-sm font-semibold text-sub flex-1 min-w-0 break-words">
                 {profile?.bio || <span className="text-sub">자기소개가 없어요</span>}
               </p>
-              <button onClick={() => setEditingBio(true)}
-                className="text-[0.625rem] font-black text-sub hover:text-primary flex-shrink-0">
+              <button type="button" onClick={() => setEditingBio(true)}
+                className="btn-refined btn-refined-text flex-shrink-0 !px-2 text-[0.625rem] text-sub">
                 수정
               </button>
             </div>
@@ -374,12 +383,12 @@ export default function MyPage() {
       </div>
 
       {/* AI 메모리 — 5종 AI 분석 프롬프트에 <user_context>로 주입되는 유저 상시 컨텍스트 */}
-      <div className="card-retro !p-4 space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="font-galmuri font-bold text-sm text-dark">AI 메모리 <span className="text-sub font-sans font-bold">· AI가 기억할 내용</span></p>
+      <div className="surface-refined space-y-2 p-4">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+          <p className="min-w-0 font-galmuri font-bold text-sm text-dark">AI 메모리 <span className="text-sub font-sans font-bold">· AI가 기억할 내용</span></p>
           {!editingAiMemory && (
-            <button onClick={() => setEditingAiMemory(true)}
-              className="text-[0.625rem] font-black text-sub hover:text-primary flex-shrink-0">
+            <button type="button" onClick={() => setEditingAiMemory(true)}
+              className="btn-refined btn-refined-text flex-shrink-0 !px-2 text-[0.625rem] text-sub">
               수정
             </button>
           )}
@@ -390,21 +399,22 @@ export default function MyPage() {
         {editingAiMemory ? (
           <div className="space-y-2">
             <textarea
+              ref={aiMemoryRef}
               aria-label="AI 메모리"
               value={aiMemoryInput}
               onChange={(e) => setAiMemoryInput(e.target.value)}
               maxLength={500}
               rows={4}
               placeholder={'예) 운동 관련 일이 나에게 제일 중요해요.\n예) "펌"은 회사 프로젝트를 뜻해요.'}
-              className="w-full px-2 py-1 border border-line rounded text-sm font-semibold bg-card focus:border-primary resize-none"
+              className="input-refined w-full resize-none text-sm"
             />
-            <div className="flex items-center gap-2">
-              <button onClick={handleSaveAiMemory} disabled={savingAiMemory}
-                className="btn-retro-primary text-xs py-1 px-3 disabled:opacity-50">
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={handleSaveAiMemory} disabled={savingAiMemory}
+                className="btn-refined btn-refined-primary flex-1 px-3 text-xs sm:flex-none">
                 {savingAiMemory ? '저장 중...' : '저장'}
               </button>
-              <button onClick={() => { setEditingAiMemory(false); setAiMemoryInput(aiMemory) }}
-                className="btn-retro text-xs py-1 px-3">
+              <button type="button" onClick={() => { setEditingAiMemory(false); setAiMemoryInput(aiMemory) }}
+                className="btn-refined flex-1 px-3 text-xs sm:flex-none">
                 취소
               </button>
               <span className="ml-auto text-[0.625rem] font-bold text-sub">{aiMemoryInput.length}/500</span>
@@ -421,21 +431,22 @@ export default function MyPage() {
       {statCards.length > 0 && (
         <div>
           <p className="label-retro mx-1 mb-2">정거장 모듈 · 통계</p>
-          <div
+          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex -- 통계 카드의 group 의미를 유지하면서 포인터 드래그와 좌우 화살표 스크롤을 함께 제공한다. */}
+          <div tabIndex={0}
             ref={sliderDrag.ref}
             onPointerDown={sliderDrag.onPointerDown}
             onPointerMove={sliderDrag.onPointerMove}
             onPointerUp={sliderDrag.onPointerUp}
             onPointerLeave={sliderDrag.onPointerUp}
-            tabIndex={0}
             role="group"
             aria-label="통계 카드, 좌우 화살표로 이동"
             onKeyDown={(e) => {
-              if (e.key === 'ArrowRight') { e.preventDefault(); e.currentTarget.scrollBy({ left: 140 }) }
-              if (e.key === 'ArrowLeft') { e.preventDefault(); e.currentTarget.scrollBy({ left: -140 }) }
+              const behavior = reducedMotion ? 'auto' : 'smooth'
+              if (e.key === 'ArrowRight') { e.preventDefault(); e.currentTarget.scrollBy({ left: 140, behavior }) }
+              if (e.key === 'ArrowLeft') { e.preventDefault(); e.currentTarget.scrollBy({ left: -140, behavior }) }
             }}
             className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none select-none cursor-grab"
-            style={{ scrollBehavior: 'smooth' }}
+            style={{ scrollBehavior: reducedMotion ? 'auto' : 'smooth' }}
           >
             {statCards.map(({ theme, label, value, bg, text, sub, icon }) => (
               <div
@@ -458,7 +469,7 @@ export default function MyPage() {
 
       {/* 별빛 로그 — 완료량을 별 밝기로 */}
       {stats && (
-        <div className="card-retro !p-4 space-y-2">
+        <div className="surface-refined space-y-2 p-4">
           <div className="flex items-center justify-between">
             <p className="font-galmuri font-bold text-sm text-dark">별빛 로그 <span className="text-sub font-sans font-bold">· 완료 기록</span></p>
             <span className="text-[0.625rem] font-bold text-sub">최근 28주</span>
@@ -480,7 +491,7 @@ export default function MyPage() {
         </div>
       )}
 
-      <div className="card-retro !p-4 space-y-3">
+      <div className="surface-refined space-y-3 p-4">
         <p className="font-galmuri font-bold text-sm text-dark">완료 태스크 카테고리 별 분포</p>
         {pieData.length === 0 ? (
           <p className="text-xs font-semibold text-sub py-4 text-center">
@@ -492,7 +503,7 @@ export default function MyPage() {
       </div>
 
       {overdue.length > 0 && (
-        <div className="card-retro !p-4 space-y-3">
+        <div className="surface-refined space-y-3 p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-black text-dark">기한 초과 태스크</p>
             <span className="text-[0.625rem] font-black rounded-full px-2 py-0.5 chip-retro text-secondary">
@@ -510,7 +521,7 @@ export default function MyPage() {
                 <button
                   onClick={() => handleCompleteOverdue(task.taskId)}
                   disabled={completingTask === task.taskId}
-                  className="btn-retro-primary text-xs py-1 px-3 flex-shrink-0"
+                  className="btn-refined btn-refined-primary flex-shrink-0 px-3 text-xs"
                 >
                   {completingTask === task.taskId ? '...' : '완료'}
                 </button>
@@ -524,7 +535,7 @@ export default function MyPage() {
       )}
 
       {overdue.length === 0 && stats && (
-        <div className="card-retro !p-6 text-center">
+        <div className="surface-refined p-6 text-center">
           <p className="font-black text-dark">기한 초과 태스크가 없어요</p>
           <p className="mt-1 text-xs font-semibold text-sub">훌륭해요! 모든 일정을 잘 지키고 있어요.</p>
         </div>
@@ -534,7 +545,7 @@ export default function MyPage() {
         <button
           type="button"
           onClick={() => setShowWithdrawModal(true)}
-          className="text-[0.6875rem] font-bold text-sub underline underline-offset-2 hover:text-primary"
+          className="btn-refined btn-refined-danger text-[0.6875rem]"
         >
           회원 탈퇴
         </button>
@@ -545,10 +556,11 @@ export default function MyPage() {
           onClose={() => !withdrawing && setShowWithdrawModal(false)}
           title="회원 탈퇴"
           closeOnBackdrop={!withdrawing}
-          className="w-full max-w-md"
+          className="w-full max-w-md p-5"
+          variant="refined"
         >
           {/* 파괴적 액션 — 테마 카피 없이 조용하고 명확하게 (스펙 7.5) */}
-          <h2 className="text-xl font-bold text-dark">회원 탈퇴</h2>
+          <h2 className="font-galmuri text-xl font-bold text-dark">회원 탈퇴</h2>
           <div className="mt-4 rounded-lg border-2 tone-danger px-4 py-3">
             <p className="text-sm font-black" style={{ color: 'var(--danger-text)' }}>탈퇴 전 확인해주세요.</p>
             <p className="mt-2 text-xs font-semibold leading-relaxed text-sub">
@@ -563,7 +575,7 @@ export default function MyPage() {
               type="button"
               onClick={() => setShowWithdrawModal(false)}
               disabled={withdrawing}
-              className="btn-retro flex-1 py-2 text-sm"
+              className="btn-refined flex-1 text-sm"
             >
               취소
             </button>
@@ -571,8 +583,7 @@ export default function MyPage() {
               type="button"
               onClick={handleWithdraw}
               disabled={withdrawing}
-              className="btn-retro flex-1 py-2 text-sm text-on-accent"
-              style={{ background: 'var(--danger)' }}
+              className="btn-refined btn-refined-danger flex-1 text-sm"
             >
               {withdrawing ? '처리 중...' : '탈퇴'}
             </button>
