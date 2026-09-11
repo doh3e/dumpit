@@ -72,14 +72,14 @@ function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
   const coins = calcCompletionCoins(task)
   return (
     <div
-      className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-colors ${
+      className={`surface-refined flex flex-wrap items-start gap-3 border p-3 transition-colors ${
         overdue ? 'tone-overdue' : 'border-line hover:border-edge'
       } ${isChild ? 'ml-6 border-l-4 border-l-secondary' : ''}`}
     >
       <button
         onClick={(e) => onToggle(task, e)}
         aria-label="완료 처리"
-        className="group -m-0.5 mt-0 w-6 h-6 flex-shrink-0 flex items-center justify-center"
+        className="btn-refined btn-refined-text group !h-11 !w-11 !p-0 flex-shrink-0"
       >
         <span className="block w-5 h-5 rounded bg-card group-hover:bg-primary transition-colors" style={{ border: '1.5px solid var(--edge)' }} />
       </button>
@@ -122,11 +122,11 @@ function TaskRow({ task, overdue = false, onToggle, onEdit, onStickerChange }) {
           )}
         </p>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex basis-full items-center justify-end gap-2 sm:basis-auto sm:flex-shrink-0">
         <StickerPicker current={task.stickerCode} onSelect={(code) => onStickerChange(task, code)} />
         <button
           onClick={() => onEdit(task)}
-          className="mt-0.5 text-xs font-bold text-sub hover:text-primary transition-colors"
+          className="btn-refined btn-refined-text !px-2 text-xs text-sub hover:text-primary"
         >
           수정
         </button>
@@ -140,14 +140,19 @@ function DoneRow({ task, onToggle, onEdit }) {
   const coins = task.coinsGranted ?? calcCompletionCoins(task)
   const doneAt = formatTime(task.completedAt)
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-line opacity-60">
+    <div className="surface-refined flex flex-wrap items-center gap-3 border border-line p-3 opacity-60">
       <button
         onClick={() => onToggle(task)}
         aria-label="완료 취소"
-        className="w-5 h-5 rounded bg-primary flex-shrink-0 flex items-center justify-center"
-        style={{ border: '1.5px solid var(--accent-fill)' }}
+        aria-pressed="true"
+        className="btn-refined btn-refined-text !h-11 !w-11 !p-0 flex-shrink-0"
       >
-        <span className="text-on-accent text-[0.625rem] font-bold">V</span>
+        <span
+          className="flex h-5 w-5 items-center justify-center rounded bg-primary text-[0.625rem] font-bold text-on-accent"
+          style={{ border: '1.5px solid var(--accent-fill)' }}
+        >
+          V
+        </span>
       </button>
       <div className="flex-1 min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
@@ -167,7 +172,7 @@ function DoneRow({ task, onToggle, onEdit }) {
       </div>
       <button
         onClick={() => onEdit(task)}
-        className="text-xs font-bold text-sub hover:text-primary transition-colors flex-shrink-0"
+        className="btn-refined btn-refined-text !px-2 text-xs text-sub hover:text-primary flex-shrink-0"
       >
         수정
       </button>
@@ -208,17 +213,18 @@ export default function TaskListCard({ sections, onToggle, onEdit, onStickerChan
     : overdue.length === 0 && tabTasks.length === 0
 
   return (
-    <div className="card-retro">
+    <div className="surface-refined p-5">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <h3 className="font-galmuri font-bold text-dark">해야 할 일 ({activeCount})</h3>
-        <div className="inline-flex rounded-lg border border-line bg-card p-1">
+        <div className="flex flex-wrap rounded-lg border border-line bg-card p-1">
           {TABS.map(({ id, label }) => (
             <button
               key={id}
               type="button"
               onClick={() => setTab(id)}
-              className={`rounded-md px-2.5 py-1 text-xs font-black transition-colors ${
-                tab === id ? 'bg-primary text-on-accent' : 'text-sub hover:bg-accent'
+              aria-pressed={tab === id}
+              className={`btn-refined !min-w-[44px] !px-2 !py-1 text-xs ${
+                tab === id ? 'btn-refined-selected' : 'btn-refined-text text-sub'
               }`}
             >
               {label}
@@ -266,7 +272,8 @@ export default function TaskListCard({ sections, onToggle, onEdit, onStickerChan
       <button
         type="button"
         onClick={() => setDoneOpen((prev) => !prev)}
-        className="mt-4 flex w-full items-center gap-2 rounded-lg border-2 border-line bg-card px-3 py-2 text-left text-xs font-bold text-sub hover:border-edge transition-colors"
+        aria-expanded={doneOpen}
+        className="btn-refined mt-4 !flex w-full justify-start !px-3 text-left text-xs text-sub"
       >
         <span>{doneOpen ? '▾' : '▸'}</span>
         <span>오늘 완료한 일 ({todayDoneTasks.length})</span>

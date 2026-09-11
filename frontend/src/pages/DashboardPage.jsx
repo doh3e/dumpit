@@ -235,7 +235,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="font-dungeon text-dark text-2xl">대시보드</h1>
+          <h1 className="page-refined-heading">대시보드</h1>
           <p className="mt-2 text-sm font-semibold text-sub">
             오늘의 할 일을 확인하고 시간을 효율적으로 관리해보세요
           </p>
@@ -244,25 +244,25 @@ export default function DashboardPage() {
           <button
             onClick={() => setShowTaskBoard(true)}
             disabled={!sections}
-            className="btn-retro text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-refined text-sm"
           >
             태스크 전체 보기
           </button>
-          <button onClick={() => setShowAddModal(true)} className="btn-retro-secondary text-sm">
+          <button onClick={() => setShowAddModal(true)} className="btn-refined btn-refined-primary text-sm">
             태스크 추가
           </button>
-          <Link to="/brain-dump" className="btn-retro-primary text-sm">
+          <Link to="/brain-dump" className="btn-refined text-sm">
             브레인 덤프
           </Link>
         </div>
       </div>
 
       {loading ? (
-        <div className="card-retro text-center py-12">
+        <div className="surface-refined px-5 py-12 text-center">
           <p className="font-bold text-sub">불러오는 중...</p>
         </div>
       ) : !planning ? (
-        <div className="card-retro text-center py-12">
+        <div className="surface-refined px-5 py-12 text-center">
           <p className="font-extrabold text-dark text-base">할 일을 불러오지 못했어요</p>
           <p className="text-xs text-sub mt-2">잠시 후 새로고침 해주세요</p>
         </div>
@@ -287,7 +287,7 @@ export default function DashboardPage() {
               onStickerChange={handleStickerChange}
             />
 
-            <div className="card-retro">
+            <div className="surface-refined p-5">
               <div className="flex items-baseline gap-2 mb-4">
                 <h3 className="font-galmuri font-bold text-dark">달력</h3>
                 <span className="text-[0.625rem] text-sub font-medium">날짜를 클릭해서 일정을 태스크로 추가해보세요!</span>

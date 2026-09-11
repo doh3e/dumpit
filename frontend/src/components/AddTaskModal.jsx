@@ -94,9 +94,9 @@ export default function AddTaskModal({ onClose, onCreated }) {
   }
 
   return (
-    <Dialog onClose={onClose} title="일정 추가" className="w-full max-w-md" initialFocusRef={titleRef}>
+    <Dialog onClose={onClose} title="일정 추가" className="w-full max-w-md p-5" initialFocusRef={titleRef} variant="refined">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <h3 className="font-dungeon text-dark text-xl">일정 추가</h3>
+        <h3 className="font-galmuri font-bold text-dark text-xl">일정 추가</h3>
 
         <div>
           <label htmlFor={titleId} className="block text-xs font-bold text-sub mb-1">할 일 *</label>
@@ -108,7 +108,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="어떤 일을 해야 하나요?"
             maxLength={200}
-            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
+            className="input-refined font-semibold"
           />
         </div>
 
@@ -121,7 +121,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
             placeholder="추가 정보가 있다면 적어주세요. AI가 더 똑똑하게 분석할 수 있어요."
             rows={2}
             maxLength={1000}
-            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary resize-none"
+            className="input-refined resize-none font-semibold"
           />
         </div>
 
@@ -137,7 +137,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
           />
 
           <div className="flex flex-wrap gap-3">
-            <label className="inline-flex items-center gap-2 text-xs font-bold text-sub">
+            <label className="inline-flex min-h-[max(44px,2.75rem)] items-center gap-2 px-2 text-xs font-bold text-sub">
               <input
                 type="checkbox"
                 checked={useStartTime}
@@ -150,7 +150,7 @@ export default function AddTaskModal({ onClose, onCreated }) {
               />
               시작 시간 입력
             </label>
-            <label className="inline-flex items-center gap-2 text-xs font-bold text-sub">
+            <label className="inline-flex min-h-[max(44px,2.75rem)] items-center gap-2 px-2 text-xs font-bold text-sub">
               <input
                 type="checkbox"
                 checked={useEstimatedMinutes}
@@ -192,11 +192,8 @@ export default function AddTaskModal({ onClose, onCreated }) {
             <button
               type="button"
               onClick={() => setCategory('')}
-              className={`px-2.5 py-1 rounded-full text-xs font-bold border transition-all ${
-                category === ''
-                  ? 'bg-chip text-dark border-edge'
-                  : 'bg-accent text-sub border-line hover:border-edge'
-              }`}
+              aria-pressed={category === ''}
+              className={`btn-refined !rounded-full !px-3 text-xs ${category === '' ? 'btn-refined-selected' : ''}`}
             >
               AI 자동
             </button>
@@ -205,11 +202,8 @@ export default function AddTaskModal({ onClose, onCreated }) {
                 key={c.value}
                 type="button"
                 onClick={() => setCategory(c.value)}
-                className={`px-2.5 py-1 rounded-full text-xs font-bold border transition-all ${
-                  category === c.value
-                    ? 'bg-primary text-on-accent border-edge'
-                    : 'bg-accent text-sub border-line hover:border-edge'
-                }`}
+                aria-pressed={category === c.value}
+                className={`btn-refined !rounded-full !px-3 text-xs ${category === c.value ? 'btn-refined-selected' : ''}`}
               >
                 <span className="inline-flex items-center gap-1">
                   <img {...iconProps(c.icon, 14)} alt="" className="w-3.5 h-3.5 object-contain" />
@@ -226,14 +220,14 @@ export default function AddTaskModal({ onClose, onCreated }) {
           <button
             type="button"
             onClick={onClose}
-            className="btn-retro flex-1 text-sm py-2"
+            className="btn-refined flex-1 text-sm"
           >
             취소
           </button>
           <button
             type="submit"
             disabled={!title.trim() || saving || !aiUsage.hasEnough(1)}
-            className="btn-retro-primary flex-1 text-sm py-2"
+            className="btn-refined btn-refined-primary flex-1 text-sm"
           >
             {saving ? 'AI 분석 중...' : '추가하기'}
           </button>

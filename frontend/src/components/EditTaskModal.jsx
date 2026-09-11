@@ -128,9 +128,9 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   }
 
   return (
-    <Dialog onClose={onClose} title="일정 수정" className="w-full max-w-md" initialFocusRef={titleRef}>
+    <Dialog onClose={onClose} title="일정 수정" className="w-full max-w-md p-5" initialFocusRef={titleRef} variant="refined">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <h3 className="font-dungeon text-dark text-xl">일정 수정</h3>
+        <h3 className="font-galmuri font-bold text-dark text-xl">일정 수정</h3>
 
         <div>
           <label htmlFor={titleId} className="block text-xs font-bold text-sub mb-1">할 일 *</label>
@@ -141,7 +141,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
-            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
+            className="input-refined font-semibold"
           />
         </div>
 
@@ -153,7 +153,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             maxLength={1000}
-            className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary resize-none"
+            className="input-refined resize-none font-semibold"
           />
         </div>
 
@@ -167,7 +167,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           />
 
           <div className="flex flex-wrap gap-3">
-            <label className="inline-flex items-center gap-2 text-xs font-bold text-sub">
+            <label className="inline-flex min-h-[max(44px,2.75rem)] items-center gap-2 px-2 text-xs font-bold text-sub">
               <input
                 type="checkbox"
                 checked={useStartTime}
@@ -176,7 +176,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
               />
               시작 시간 입력
             </label>
-            <label className="inline-flex items-center gap-2 text-xs font-bold text-sub">
+            <label className="inline-flex min-h-[max(44px,2.75rem)] items-center gap-2 px-2 text-xs font-bold text-sub">
               <input
                 type="checkbox"
                 checked={useEstimatedMinutes}
@@ -215,11 +215,8 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
                 key={c.value}
                 type="button"
                 onClick={() => setCategory(c.value)}
-                className={`px-2.5 py-1 rounded-full text-xs font-bold border-2 transition-all ${
-                  category === c.value
-                    ? 'bg-primary text-on-accent border-edge'
-                    : 'bg-accent text-dark border-line hover:border-edge'
-                }`}
+                aria-pressed={category === c.value}
+                className={`btn-refined !rounded-full !px-3 text-xs ${category === c.value ? 'btn-refined-selected' : ''}`}
               >
                 <span className="inline-flex items-center gap-1">
                   <img {...iconProps(c.icon, 14)} alt="" className="w-3.5 h-3.5 object-contain" />
@@ -241,7 +238,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
                   setPriorityDirty(false)
                   setClearOverride(true)
                 }}
-                className="ml-2 text-[0.625rem] text-primary underline"
+                className="btn-refined btn-refined-text ml-2 !px-2 text-[0.625rem] text-primary underline"
               >
                 AI 점수로 초기화
               </button>
@@ -285,7 +282,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
                 setReanalyzing(false)
               }
             }}
-            className="mt-2 w-full text-xs font-bold text-primary border-2 border-primary rounded-lg py-1.5 hover:bg-chip transition-colors disabled:opacity-50"
+            className="btn-refined mt-2 w-full text-xs text-primary !border-primary"
           >
             {reanalyzing ? 'AI 분석 중...' : 'AI 우선순위 재분석'}
           </button>
@@ -299,7 +296,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             type="button"
             onClick={() => setShowSplit(true)}
             disabled={!aiUsage.hasEnough(3)}
-            className="w-full text-xs font-bold text-secondary border-2 border-secondary rounded-lg py-2 hover:bg-chip transition-colors disabled:opacity-50"
+            className="btn-refined w-full text-xs text-secondary !border-secondary"
           >
             {/* 가위는 "아이디어→태스크 전환" 기호로 통일 — 쪼개기는 퍼즐 도트 (2026-08-11 결정) */}
             <span className="inline-flex items-center justify-center gap-1.5">
@@ -313,21 +310,21 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
           <button
             type="button"
             onClick={handleDelete}
-            className="btn-retro bg-primary text-on-accent text-sm py-2"
+            className="btn-refined btn-refined-danger text-sm"
           >
             삭제
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="btn-retro flex-1 text-sm py-2"
+            className="btn-refined flex-1 text-sm"
           >
             취소
           </button>
           <button
             type="submit"
             disabled={!title.trim() || saving}
-            className="btn-retro flex-1 bg-secondary text-on-accent text-sm py-2 disabled:opacity-50"
+            className="btn-refined btn-refined-primary flex-1 text-sm"
           >
             {saving ? '저장 중...' : '저장'}
           </button>

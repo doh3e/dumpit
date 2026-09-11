@@ -177,7 +177,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
         <button
           onClick={prevMonth}
           aria-label="이전 달"
-          className="w-8 h-8 flex items-center justify-center rounded border border-line text-sub font-bold text-xs hover:bg-chip hover:text-dark transition-colors"
+          className="btn-refined btn-refined-text !h-11 !w-11 !p-0 text-xs text-sub"
         >
           &lt;
         </button>
@@ -187,7 +187,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
         <button
           onClick={nextMonth}
           aria-label="다음 달"
-          className="w-8 h-8 flex items-center justify-center rounded border border-line text-sub font-bold text-xs hover:bg-chip hover:text-dark transition-colors"
+          className="btn-refined btn-refined-text !h-11 !w-11 !p-0 text-xs text-sub"
         >
           &gt;
         </button>
@@ -254,7 +254,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
               </button>
 
               {hoveredDay === day && !selectedDay && hasAny && (
-                <div className={`absolute z-50 ${popAlign} top-full mt-1 w-52 card-retro !p-3 space-y-2 pointer-events-none`}>
+                <div className={`surface-refined absolute z-50 ${popAlign} top-full mt-1 w-52 space-y-2 border border-line p-3 pointer-events-none`}>
                   <p className="text-[0.625rem] font-bold text-sub">{month + 1}월 {day}일 · 클릭해서 고정</p>
                   {dayTasks?.map((t) => (
                     <div key={t.taskId} className="flex items-start gap-1.5">
@@ -282,13 +282,13 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
               )}
 
               {selectedDay === day && hasAny && (
-                <div className={`absolute z-50 ${popAlign} top-full mt-1 w-52 card-retro !p-3 space-y-2`}>
+                <div className={`surface-refined absolute z-50 ${popAlign} top-full mt-1 w-52 space-y-2 border border-line p-3`}>
                   <div className="flex items-center justify-between">
                     <p className="text-[0.625rem] font-bold text-sub">{month + 1}월 {day}일</p>
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelectedDay(null) }}
                       aria-label="닫기"
-                      className="text-[0.625rem] text-sub hover:text-dark transition-colors leading-none"
+                      className="btn-refined btn-refined-text !h-11 !w-11 !p-0 text-[0.625rem] leading-none text-sub"
                     >✕</button>
                   </div>
                   {dayTasks?.map((t) => (
@@ -314,7 +314,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
                       <button
                         onClick={(evt) => { evt.stopPropagation(); handleAddFromGoogle(e) }}
                         disabled={addingEventId === e.id}
-                        className="text-[0.625rem] font-bold text-blue-500 hover:text-primary transition-colors flex-shrink-0 mt-0.5"
+                        className="btn-refined btn-refined-text mt-0.5 flex-shrink-0 !px-2 text-[0.625rem] text-secondary"
                       >
                         {addingEventId === e.id ? '...' : '+ 추가'}
                       </button>
@@ -328,8 +328,8 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
       </div>
 
       {calendarActionRequired && (
-        <div className="mt-3 rounded-lg cat-chip cat-work border px-3 py-2">
-          <p className="text-[0.6875rem] font-bold text-blue-900">
+        <div className="surface-refined mt-3 border border-line px-3 py-2">
+          <p className="text-[0.6875rem] font-bold text-dark">
             {calendarActionRequired === 'GOOGLE_CALENDAR_RECONNECT_REQUIRED'
               ? 'Google Calendar 권한 갱신이 필요해요.'
               : 'Google Calendar 일정을 보려면 캘린더 읽기 권한이 필요해요.'}
@@ -337,7 +337,7 @@ export default function MiniCalendar({ tasks = [], onTaskAdded }) {
           <button
             type="button"
             onClick={requestCalendarPermission}
-            className="mt-2 btn-retro px-2.5 py-1 text-[0.625rem] min-h-0 transition-colors"
+            className="btn-refined mt-2 !px-3 text-[0.625rem]"
           >
             {calendarActionRequired === 'GOOGLE_CALENDAR_RECONNECT_REQUIRED' ? '권한 갱신하기' : '권한 허용하기'}
           </button>

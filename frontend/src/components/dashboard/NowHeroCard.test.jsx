@@ -35,12 +35,18 @@ describe('NowHeroCard', () => {
     )
 
     expect(screen.getByText('지금 할 일')).toBeInTheDocument()
+    expect(screen.getByText('지금 할 일').closest('.surface-refined')).toHaveClass('border', 'border-line')
     expect(screen.getByText('다음에 할 일')).toBeInTheDocument()
     expect(screen.getByText('먼저 이 일을 해보세요.')).toBeInTheDocument()
     expect(screen.getByTestId('orbit-progress')).toHaveAttribute('data-done', '1')
     expect(screen.getByTestId('orbit-progress')).toHaveAttribute('data-total', '3')
 
-    fireEvent.click(screen.getByRole('button', { name: '완료하기' }))
+    const completeButton = screen.getByRole('button', { name: '완료하기' })
+    expect(completeButton).toHaveClass('btn-refined', 'btn-refined-primary')
+    expect(screen.getByRole('button', { name: '수정' })).toHaveClass('btn-refined')
+    expect(screen.getByRole('button', { name: /빨래 널기/ })).toHaveClass('btn-refined')
+
+    fireEvent.click(completeButton)
     expect(onComplete.mock.calls[0][0]).toBe(task)
     fireEvent.click(screen.getByRole('button', { name: '수정' }))
     expect(onEdit).toHaveBeenCalledWith(task)

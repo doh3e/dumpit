@@ -31,11 +31,8 @@ export default function DeadlineModeField({ mode, onModeChange, deadline, onDead
             key={m.value}
             type="button"
             onClick={() => onModeChange(m.value)}
-            className={`px-2.5 py-1 rounded-full text-xs font-bold border transition-all ${
-              mode === m.value
-                ? 'bg-primary text-on-accent border-edge'
-                : 'bg-accent text-sub border-line hover:border-edge'
-            }`}
+            aria-pressed={mode === m.value}
+            className={`btn-refined !rounded-full !px-3 text-xs ${mode === m.value ? 'btn-refined-selected' : ''}`}
           >
             {m.icon ? (
               <span className="inline-flex items-center gap-1">

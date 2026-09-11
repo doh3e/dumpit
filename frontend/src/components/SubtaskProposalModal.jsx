@@ -60,10 +60,10 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
   }
 
   return (
-    <Dialog onClose={onClose} title="태스크 쪼개기" className="w-full max-w-lg">
+    <Dialog onClose={onClose} title="태스크 쪼개기" className="w-full max-w-lg p-5" variant="refined">
       <div className="space-y-4">
         <div>
-          <h3 className="font-dungeon text-dark text-xl">태스크 쪼개기</h3>
+          <h3 className="font-galmuri font-bold text-dark text-xl">태스크 쪼개기</h3>
           <p className="mt-1 text-xs font-semibold text-sub truncate">
             원본: {task.title}
           </p>
@@ -89,18 +89,19 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
               {subtasks.map((s, idx) => (
                 <div
                   key={idx}
-                  className={`p-3 rounded-lg border-2 transition-colors ${
+                  className={`surface-refined border p-3 transition-colors ${
                     s.include ? 'border-edge bg-accent' : 'border-line bg-card opacity-50'
                   }`}
                 >
                   <div className="flex items-start gap-2">
-                    <input
-                      type="checkbox"
-                      aria-label="하위 태스크 포함"
-                      checked={s.include}
-                      onChange={(e) => updateField(idx, 'include', e.target.checked)}
-                      className="mt-1.5 w-4 h-4 accent-primary flex-shrink-0"
-                    />
+                    <label className="flex min-h-[max(44px,2.75rem)] min-w-[max(44px,2.75rem)] items-start justify-center" aria-label="하위 태스크 포함">
+                      <input
+                        type="checkbox"
+                        checked={s.include}
+                        onChange={(e) => updateField(idx, 'include', e.target.checked)}
+                        className="mt-1.5 h-4 w-4 flex-shrink-0 accent-primary"
+                      />
+                    </label>
                     <div className="flex-1 min-w-0 space-y-2">
                       <input
                         type="text"
@@ -109,7 +110,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         onChange={(e) => updateField(idx, 'title', e.target.value)}
                         placeholder="서브태스크 제목"
                         maxLength={200}
-                        className="w-full px-2 py-1 border border-line rounded text-sm font-bold bg-card focus:border-primary"
+                        className="input-refined !px-2 !py-1 font-bold"
                         disabled={!s.include}
                       />
                       <textarea
@@ -119,7 +120,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                         rows={1}
                         placeholder="메모 (선택)"
                         maxLength={1000}
-                        className="w-full px-2 py-1 border-2 border-line rounded text-xs font-semibold bg-card focus:border-primary resize-none"
+                        className="input-refined resize-none !px-2 !py-1 text-xs font-semibold"
                         disabled={!s.include}
                       />
                       <div className="flex items-center gap-2">
@@ -131,7 +132,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
                           onChange={(e) => updateField(idx, 'estimatedMinutes', e.target.value)}
                           min="1"
                           placeholder="30"
-                          className="w-20 px-2 py-1 border-2 border-line rounded text-xs font-bold bg-card focus:border-primary"
+                          className="input-refined !w-20 !px-2 !py-1 text-xs font-bold"
                           disabled={!s.include}
                         />
                         <span className="text-[0.625rem] font-bold text-sub">분</span>
@@ -148,7 +149,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
           <button
             type="button"
             onClick={onClose}
-            className="btn-retro flex-1 text-sm py-2"
+            className="btn-refined flex-1 text-sm"
           >
             취소
           </button>
@@ -156,7 +157,7 @@ export default function SubtaskProposalModal({ task, onClose, onCreated }) {
             type="button"
             onClick={handleSubmit}
             disabled={loading || error || saving}
-            className="btn-retro flex-1 bg-secondary text-on-accent text-sm py-2 disabled:opacity-50"
+            className="btn-refined btn-refined-primary flex-1 text-sm"
           >
             {saving ? '저장 중...' : '선택한 항목 저장'}
           </button>

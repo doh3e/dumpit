@@ -123,8 +123,8 @@ export default function StickerPicker({ current, onSelect }) {
         title={currentSprite ? currentSprite.name : '스티커 붙이기'}
         className={
           currentSprite
-            ? 'flex h-5 w-5 items-center justify-center rounded-full flex-shrink-0'
-            : 'flex h-5 w-5 items-center justify-center rounded-full border-2 border-dashed border-line text-sub hover:bg-chip hover:text-dark transition-colors flex-shrink-0'
+            ? 'btn-refined btn-refined-text !h-11 !w-11 !rounded-full !p-0 flex-shrink-0'
+            : 'btn-refined !h-11 !w-11 !rounded-full !border-dashed !p-0 text-sub flex-shrink-0'
         }
       >
         {currentSprite ? (
@@ -147,7 +147,7 @@ export default function StickerPicker({ current, onSelect }) {
           style={popoverPos}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="card-retro !p-3 bg-card">
+          <div className="surface-refined border border-line p-3">
             {loading ? (
               <p className="py-3 text-center text-xs font-bold text-sub">불러오는 중...</p>
             ) : owned.length === 0 ? (
@@ -156,22 +156,23 @@ export default function StickerPicker({ current, onSelect }) {
                 <Link
                   to="/shop"
                   onClick={(event) => { event.stopPropagation(); setOpen(false) }}
-                  className="mt-2 inline-block text-xs font-black text-primary hover:underline"
+                  className="btn-refined btn-refined-text mt-2 !px-2 text-xs text-primary"
                 >
                   상점에서 스티커를 구매해보세요
                 </Link>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-1.5">
                   {owned.map((sticker) => (
                     <button
                       key={sticker.code}
                       type="button"
                       title={sticker.name}
                       onClick={(event) => handleChoose(event, sticker.code)}
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg border-2 transition-colors ${
-                        current === sticker.code ? 'border-primary' : 'border-line hover:border-edge'
+                      aria-pressed={current === sticker.code}
+                      className={`btn-refined !h-11 !w-11 !p-0 ${
+                        current === sticker.code ? 'btn-refined-selected' : ''
                       }`}
                     >
                       <img
@@ -187,7 +188,7 @@ export default function StickerPicker({ current, onSelect }) {
                   <button
                     type="button"
                     onClick={(event) => handleChoose(event, null)}
-                    className="mt-3 w-full rounded-lg border-2 border-line py-1.5 text-xs font-bold text-sub hover:border-edge hover:text-dark transition-colors"
+                    className="btn-refined btn-refined-danger mt-3 w-full text-xs"
                   >
                     떼기
                   </button>
@@ -196,7 +197,7 @@ export default function StickerPicker({ current, onSelect }) {
                   <Link
                     to="/shop"
                     onClick={(event) => { event.stopPropagation(); setOpen(false) }}
-                    className="text-[0.6875rem] text-sub hover:text-dark"
+                    className="btn-refined btn-refined-text !px-2 text-[0.6875rem] text-sub hover:text-dark"
                   >
                     상점에서 더 보기
                   </Link>
