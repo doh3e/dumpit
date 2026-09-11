@@ -38,7 +38,11 @@ export default [
       // 한국어 본문에 따옴표를 그대로 쓰는 코드베이스 관례
       'react/no-unescaped-entities': 'off',
       // 이관이 끝난 규칙부터 error로 올린다
-      ...Object.fromEntries(Object.entries(jsxA11y.configs.recommended.rules).map(([k, v]) => [k, Array.isArray(v) ? ['warn', ...v.slice(1)] : 'warn'])),
+      ...Object.fromEntries(Object.entries(jsxA11y.configs.recommended.rules).map(([name, setting]) => {
+        const values = Array.isArray(setting) ? setting : [setting]
+        const disabled = values[0] === 'off' || values[0] === 0
+        return [name, [disabled ? 'off' : 'warn', ...values.slice(1)]]
+      })),
       'jsx-a11y/alt-text': 'error',
       'jsx-a11y/label-has-associated-control': ['error', { assert: 'either' }],
       'jsx-a11y/click-events-have-key-events': 'error',
