@@ -115,22 +115,22 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
   const isBusy = busyCode === item.code
 
   return (
-    <div className="card-retro flex flex-col gap-3">
-      <div className="flex items-start gap-3">
+    <div className="surface-refined min-w-0 flex flex-col gap-3 p-4">
+      <div className="flex min-w-0 items-start gap-3">
         <ItemPreview item={item} />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="font-galmuri font-bold text-sm text-dark truncate">{item.name}</p>
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <p className="min-w-0 break-words font-galmuri font-bold text-sm leading-snug text-dark">{item.name}</p>
             <TierBadge tier={item.type === 'STICKER' ? null : item.tier} />
           </div>
           {item.description && (
-            <p className="mt-0.5 text-xs font-semibold text-sub leading-snug">{item.description}</p>
+            <p className="mt-0.5 min-w-0 break-words text-xs font-semibold leading-snug text-sub">{item.description}</p>
           )}
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2 mt-auto pt-1">
-        <div className="flex items-center gap-2">
+      <div className="mt-auto flex min-w-0 flex-wrap items-center justify-between gap-2 pt-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <div className="flex items-center gap-1">
             <img {...iconProps('coin', 16)} alt="" className="w-4 h-4 object-contain" />
             {/* 아직 안 산 아이템의 가격은 테마와 무관하게 붉은색 고정 — 지불할 금액이 한눈에 띄게 */}
@@ -146,7 +146,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
               type="button"
               onClick={() => onPreview(item)}
               disabled={previewBusy}
-              className="text-[0.6875rem] font-bold underline text-sub hover:text-dark disabled:opacity-50 disabled:no-underline"
+              className="btn-refined btn-refined-text !px-2 text-[0.6875rem] text-sub disabled:opacity-50"
             >
               미리보기
             </button>
@@ -155,7 +155,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
             <button
               type="button"
               onClick={() => onLivePreviewToggle(item)}
-              className="text-[0.6875rem] font-bold underline text-sub hover:text-dark"
+              className="btn-refined btn-refined-text !px-2 text-[0.6875rem] text-sub"
             >
               {previews?.[item.slot] === item.code ? '미리보기 취소' : '미리보기'}
             </button>
@@ -164,7 +164,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
             <button
               type="button"
               onClick={() => onSpritePreview(item)}
-              className="text-[0.6875rem] font-bold underline text-sub hover:text-dark"
+              className="btn-refined btn-refined-text !px-2 text-[0.6875rem] text-sub"
             >
               미리보기
             </button>
@@ -176,7 +176,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
             <button
               type="button"
               disabled
-              className="btn-retro text-xs px-3 py-2 opacity-50 cursor-not-allowed"
+              className="btn-refined px-3 text-xs opacity-50 cursor-not-allowed"
             >
               코인 부족
             </button>
@@ -184,7 +184,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
             <button
               type="button"
               onClick={() => onBuyClick(item)}
-              className="btn-retro-primary text-xs px-3 py-2"
+              className="btn-refined btn-refined-primary px-3 text-xs"
             >
               구매
             </button>
@@ -196,26 +196,26 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
             type="button"
             onClick={() => onEquip(item)}
             disabled={isBusy}
-            className="btn-retro-outline text-xs px-3 py-2"
+            className="btn-refined px-3 text-xs"
           >
             {isBusy ? '...' : '장착하기'}
           </button>
         )}
 
         {item.owned && item.type === 'THEME' && item.equipped && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
             <button
               type="button"
               onClick={() => onUnequip(item)}
               disabled={isBusy}
-              className="btn-retro text-[0.6875rem] px-2 py-1.5"
+              className="btn-refined btn-refined-text !px-2 text-[0.6875rem]"
             >
               {isBusy ? '...' : '기본으로'}
             </button>
             <button
               type="button"
               disabled
-              className="btn-retro text-xs px-3 py-2 opacity-70 cursor-not-allowed"
+              className="btn-refined btn-refined-selected px-3 text-xs opacity-70 cursor-not-allowed"
             >
               장착중
             </button>
@@ -226,7 +226,7 @@ function ShopItemCard({ item, coinBalance, busyCode, onBuyClick, onEquip, onUneq
           <button
             type="button"
             disabled
-            className="btn-retro text-xs px-3 py-2 opacity-70 cursor-not-allowed"
+            className="btn-refined btn-refined-selected px-3 text-xs opacity-70 cursor-not-allowed"
           >
             보유중
           </button>
@@ -245,16 +245,17 @@ function PurchaseConfirmModal({ item, coinBalance, submitting, error, onConfirm,
       onClose={() => !submitting && onCancel()}
       title={item.name}
       closeOnBackdrop={!submitting}
-      className="w-full max-w-sm"
+      className="w-full max-w-sm p-5"
+      variant="refined"
     >
-      <h2 className="font-dungeon text-dark text-lg">{item.name}</h2>
+      <h2 className="break-words font-galmuri text-lg font-bold text-dark">{item.name}</h2>
       <p className="mt-3 text-sm font-bold text-dark">
         <span className="font-dungeon" style={{ color: 'var(--danger-text)' }}>{item.price}</span>코인으로 구매할까요?
       </p>
       <p className="mt-1 text-xs font-semibold text-sub">구매 후 잔액 {remaining}코인</p>
 
       {error && (
-        <p className="mt-3 text-xs font-bold" style={{ color: 'var(--danger-text)' }}>{error}</p>
+        <p role="alert" className="mt-3 text-xs font-bold" style={{ color: 'var(--danger-text)' }}>{error}</p>
       )}
 
       <div className="mt-5 flex gap-3">
@@ -262,7 +263,7 @@ function PurchaseConfirmModal({ item, coinBalance, submitting, error, onConfirm,
           type="button"
           onClick={onCancel}
           disabled={submitting}
-          className="btn-retro flex-1 py-2 text-sm"
+          className="btn-refined flex-1 text-sm"
         >
           취소
         </button>
@@ -270,7 +271,7 @@ function PurchaseConfirmModal({ item, coinBalance, submitting, error, onConfirm,
           type="button"
           onClick={onConfirm}
           disabled={submitting}
-          className="btn-retro-primary flex-1 py-2 text-sm"
+          className="btn-refined btn-refined-primary flex-1 text-sm"
         >
           {submitting ? '구매 중...' : '구매하기'}
         </button>
@@ -284,17 +285,17 @@ function SpritePreviewModal({ item, onClose }) {
   if (!item) return null
   const sprite = spriteFor(SPRITE_MAP_BY_SLOT[item.slot] || {}, item.code)
   return (
-    <Dialog onClose={onClose} title={item.name} className="w-full max-w-sm">
+    <Dialog onClose={onClose} title={item.name} className="w-full max-w-sm p-5" variant="refined">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-          <h2 className="font-dungeon text-dark text-lg">{item.name}</h2>
+          <h2 className="break-words font-galmuri text-lg font-bold text-dark">{item.name}</h2>
           <TierBadge tier={item.tier} />
         </div>
         <button
           type="button"
           onClick={onClose}
           aria-label="닫기"
-          className="w-7 h-7 flex-shrink-0 rounded-lg border border-line font-black text-sub text-xs hover:bg-chip transition-colors"
+          className="btn-refined btn-refined-text !h-11 !w-11 flex-shrink-0 !p-0 text-xs text-sub"
         >
           X
         </button>
@@ -437,14 +438,14 @@ export default function ShopPage() {
 
   if (loadError) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="card-retro text-center">
+      <div className="mx-auto max-w-2xl">
+        <div className="surface-refined p-5 text-center">
           <p className="font-black text-dark">코인샵을 불러오지 못했어요</p>
           <p className="mt-2 text-xs font-semibold text-sub">{loadError}</p>
           <button
             type="button"
             onClick={() => { setLoading(true); fetchCatalog().finally(() => setLoading(false)) }}
-            className="btn-retro mt-4 text-sm"
+            className="btn-refined mt-4 text-sm"
           >
             다시 시도
           </button>
@@ -479,9 +480,9 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <div className="mx-auto max-w-4xl space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-dungeon text-dark text-2xl">코인샵</h1>
+        <h1 className="page-refined-heading">코인샵</h1>
         <div className="flex items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1.5">
           <img {...iconProps('coin', 20)} alt="" className="w-5 h-5 object-contain" />
           <span className="font-dungeon text-lg text-dark">{coinBalance}</span>
@@ -495,10 +496,8 @@ export default function ShopPage() {
             type="button"
             aria-pressed={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`font-dungeon text-sm px-3.5 py-2 rounded-full border-[1.5px] transition-colors ${
-              activeTab === tab.id
-                ? 'bg-primary text-on-accent border-edge shadow-retro'
-                : 'bg-card text-dark border-line hover:border-edge'
+            className={`btn-refined !rounded-full px-3.5 text-sm ${
+              activeTab === tab.id ? 'btn-refined-selected' : 'btn-refined-text'
             }`}
           >
             {tab.label}
@@ -507,7 +506,7 @@ export default function ShopPage() {
       </div>
 
       {activeTab === 'CELEBRATION' && (
-        <div className={`card-retro !py-3 ${reducedMotion ? 'tone-overdue' : ''}`}>
+        <div className={`surface-refined px-5 py-3 ${reducedMotion ? 'tone-overdue' : ''}`}>
           {reducedMotion ? (
             <>
               <p className="text-sm font-bold text-primary">지금 이 기기에는 '애니메이션 줄이기'가 켜져 있어요.</p>
@@ -539,12 +538,12 @@ export default function ShopPage() {
         <section key={key}>
           {label && (
             <div className="flex items-center gap-2 mb-3">
-              <h3 className="font-dungeon text-sm text-dark">{label}</h3>
+              <h3 className="font-galmuri text-sm font-bold text-dark">{label}</h3>
               <span className="chip-retro">{list.length}</span>
               <span aria-hidden className="flex-1 divider-retro" />
             </div>
           )}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {list.map((item) => (
               <ShopItemCard key={item.code} item={item} {...cardProps} />
             ))}
@@ -558,7 +557,7 @@ export default function ShopPage() {
 
       {Object.keys(previews).length > 0 && (
         <div className="fixed bottom-6 left-4 right-24 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:max-w-lg z-40">
-          <div className="card-retro flex items-center gap-3 px-4 py-2.5">
+          <div className="surface-refined flex min-w-0 items-center gap-3 px-4 py-2.5">
             <img {...iconProps('eye', 16)} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
             <p className="text-xs font-bold text-dark truncate flex-1">
               미리보기 중: {Object.values(previews)
@@ -569,7 +568,7 @@ export default function ShopPage() {
             <button
               type="button"
               onClick={clearAllPreviews}
-              className="btn-retro text-[0.6875rem] px-2.5 py-1.5 flex-shrink-0"
+              className="btn-refined flex-shrink-0 !px-2.5 text-[0.6875rem]"
             >
               전체 해제
             </button>
