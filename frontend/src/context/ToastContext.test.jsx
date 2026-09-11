@@ -20,9 +20,12 @@ describe('ToastProvider', () => {
     render(<ToastProvider><div /></ToastProvider>)
     act(() => notifyToast('상태 변경에 실패했어요.', 'error'))
     expect(screen.getByRole('alert')).toHaveTextContent('상태 변경에 실패했어요.')
+    expect(screen.getByRole('alert')).toHaveClass('surface-refined')
     act(() => vi.advanceTimersByTime(10000))
     expect(screen.getByRole('alert')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
+    const close = screen.getByRole('button', { name: '닫기' })
+    expect(close).toHaveClass('btn-refined', 'btn-refined-text', '!h-11', '!w-11')
+    fireEvent.click(close)
     expect(screen.queryByRole('alert')).toBeNull()
   })
 

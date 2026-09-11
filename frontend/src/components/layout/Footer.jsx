@@ -8,7 +8,7 @@ export default function Footer() {
   return (
     <>
       <footer className="border-t border-line bg-accent">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-6 pb-28 pt-4 text-xs sm:flex-row lg:pb-4">
           <p className="font-bold text-sub">
             &copy; 2026 Dumpit! · 운영자:{' '}
             <a
@@ -19,24 +19,24 @@ export default function Footer() {
             </a>
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 font-bold">
+          <div className="flex flex-wrap items-center justify-center gap-1 font-bold">
             <Link
               to="/privacy"
-              className="text-sub hover:text-primary transition-colors"
+              className="inline-flex min-h-[max(44px,2.75rem)] items-center px-2 text-sub transition-colors hover:text-primary"
             >
               개인정보 처리방침
             </Link>
             <span className="text-line">|</span>
             <Link
               to="/terms"
-              className="text-sub hover:text-primary transition-colors"
+              className="inline-flex min-h-[max(44px,2.75rem)] items-center px-2 text-sub transition-colors hover:text-primary"
             >
               서비스 이용약관
             </Link>
             <span className="text-line">|</span>
             <Link
               to="/account-deletion"
-              className="text-sub hover:text-primary transition-colors"
+              className="inline-flex min-h-[max(44px,2.75rem)] items-center px-2 text-sub transition-colors hover:text-primary"
             >
               계정 삭제
             </Link>
@@ -44,7 +44,7 @@ export default function Footer() {
             <button
               type="button"
               onClick={() => setShowContact(true)}
-              className="text-sub hover:text-primary transition-colors"
+              className="btn-refined btn-refined-text !px-2 text-xs text-sub"
             >
               문의하기
             </button>

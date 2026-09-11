@@ -169,20 +169,20 @@ export default function SettingsModal({ onClose }) {
   }
 
   return (
-    <Dialog onClose={onClose} title="설정" className="w-full max-w-md">
+    <Dialog onClose={onClose} title="설정" variant="refined" className="w-full max-w-md p-5">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="font-dungeon text-dark text-xl">설정</h2>
+        <h2 className="page-refined-heading text-xl">설정</h2>
         <button
           onClick={onClose}
           aria-label="닫기"
-          className="w-8 h-8 rounded-lg border border-line font-black text-sub hover:bg-chip hover:text-dark transition-colors"
+          className="btn-refined btn-refined-text !h-11 !w-11 !p-0 text-sm text-dark"
         >
           X
         </button>
       </div>
 
       {saveError && (
-        <p role="alert" className="mb-4 text-xs font-bold text-primary">{saveError}</p>
+        <p role="alert" className="surface-refined tone-danger mb-4 border p-3 text-xs font-bold text-danger">{saveError}</p>
       )}
 
       <section className="mb-6">
@@ -198,7 +198,7 @@ export default function SettingsModal({ onClose }) {
               type="button"
               aria-pressed={themePref === value}
               onClick={() => { applyTheme(value); setThemePref(value) }}
-              className={`flex-1 text-xs ${themePref === value ? 'btn-retro-primary' : 'btn-retro'}`}
+              className={`btn-refined flex-1 text-xs ${themePref === value ? 'btn-refined-selected' : ''}`}
             >
               {label}
             </button>
@@ -217,7 +217,7 @@ export default function SettingsModal({ onClose }) {
               type="button"
               aria-pressed={fontScale === value}
               onClick={() => { applyFontScale(value); setFontScale(value) }}
-              className={`text-xs ${fontScale === value ? 'btn-retro-primary' : 'btn-retro'}`}
+              className={`btn-refined text-xs ${fontScale === value ? 'btn-refined-selected' : ''}`}
             >
               {label}
             </button>
@@ -237,7 +237,7 @@ export default function SettingsModal({ onClose }) {
               type="button"
               aria-pressed={contrastPref === value}
               onClick={() => { applyContrast(value); setContrastPref(value) }}
-              className={`flex-1 text-xs ${contrastPref === value ? 'btn-retro-primary' : 'btn-retro'}`}
+              className={`btn-refined flex-1 text-xs ${contrastPref === value ? 'btn-refined-selected' : ''}`}
             >
               {label}
             </button>
@@ -247,7 +247,7 @@ export default function SettingsModal({ onClose }) {
           type="button"
           aria-pressed={boldText}
           onClick={() => { applyBoldText(!boldText); setBoldText(!boldText) }}
-          className={`w-full text-xs ${boldText ? 'btn-retro-primary' : 'btn-retro'}`}
+          className={`btn-refined w-full text-xs ${boldText ? 'btn-refined-selected' : ''}`}
         >
           굵은 글자 {boldText ? '켬' : '끔'}
         </button>
@@ -264,28 +264,28 @@ export default function SettingsModal({ onClose }) {
         <p className="text-xs text-sub font-medium mb-3">
           AI 시간 배정과 '지금 뭐할까' 추천이 이 시간대를 기준으로 동작해요
         </p>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+          <div className="flex min-w-0 items-center gap-2">
             <label htmlFor={routineStartId} className="text-xs font-bold text-sub">시작</label>
             <select
               id={routineStartId}
               value={routineStart}
               onChange={(e) => { setRoutineStart(Number(e.target.value)); setConfirmWrap(false) }}
-              className="text-sm font-bold border border-line rounded-lg px-2 py-1.5 bg-card"
+              className="input-refined min-w-0 flex-1 !px-2 !py-2 text-sm font-bold"
             >
               {Array.from({ length: 24 }, (_, h) => (
                 <option key={h} value={h}>{h}시</option>
               ))}
             </select>
           </div>
-          <span className="font-bold text-sub">~</span>
-          <div className="flex items-center gap-2">
+          <span className="hidden font-bold text-sub sm:inline">~</span>
+          <div className="flex min-w-0 items-center gap-2">
             <label htmlFor={routineEndId} className="text-xs font-bold text-sub">종료</label>
             <select
               id={routineEndId}
               value={routineEnd}
               onChange={(e) => { setRoutineEnd(Number(e.target.value)); setConfirmWrap(false) }}
-              className="text-sm font-bold border border-line rounded-lg px-2 py-1.5 bg-card"
+              className="input-refined min-w-0 flex-1 !px-2 !py-2 text-sm font-bold"
             >
               {Array.from({ length: 24 }, (_, h) => (
                 <option key={h} value={h}>{h}시</option>
@@ -297,7 +297,7 @@ export default function SettingsModal({ onClose }) {
           <p role="alert" className="mt-2 text-xs font-bold text-warn">시작과 종료 시각은 서로 달라야 해요.</p>
         )}
         {confirmWrap && (
-          <div className="mt-3 rounded-lg border-2 border-warn bg-chip p-3">
+          <div className="surface-refined tone-urgent-soon mt-3 border p-3">
             <p className="text-xs font-bold text-dark">
               {routineStart}시부터 다음날 새벽 {routineEnd}시까지로 설정돼요.
             </p>
@@ -312,7 +312,7 @@ export default function SettingsModal({ onClose }) {
 
       <section className="mb-6">
         <h3 className="font-galmuri font-bold text-dark text-sm mb-3">알림</h3>
-        <div className="flex items-center justify-between gap-4 rounded-lg border-2 border-line bg-card px-4 py-3">
+        <div className="surface-refined flex items-center justify-between gap-4 border border-line px-4 py-3">
           <div className="min-w-0">
             <p className="text-sm font-bold text-dark">마감 임박 알림</p>
             <p className="mt-0.5 text-xs font-medium text-sub">
@@ -326,20 +326,22 @@ export default function SettingsModal({ onClose }) {
             type="button"
             onClick={handleNotificationToggle}
             disabled={permission === 'unsupported' || permission === 'denied'}
-            className={`relative w-11 h-6 rounded-full border-2 transition-colors flex-shrink-0 ${
-              permission === 'granted' && notificationsEnabled
-                ? 'bg-primary border-primary'
-                : 'bg-chip border-line'
-            } disabled:opacity-40 disabled:cursor-not-allowed`}
+            className="btn-refined btn-refined-text group !h-11 !w-11 flex-shrink-0 !p-0"
             aria-label="마감 임박 알림 토글"
           >
-            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-card border border-line transition-all ${
-              permission === 'granted' && notificationsEnabled ? 'left-[18px]' : 'left-0.5'
-            }`} />
+            <span className={`relative h-6 w-11 rounded-full border-2 transition-colors ${
+              permission === 'granted' && notificationsEnabled
+                ? 'border-primary bg-primary'
+                : 'border-line bg-chip'
+            }`}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full border border-line bg-card transition-all ${
+                permission === 'granted' && notificationsEnabled ? 'left-[18px]' : 'left-0.5'
+              }`} />
+            </span>
           </button>
         </div>
 
-        <div className="mt-3 rounded-lg border-2 border-line bg-card px-4 py-3">
+        <div className="surface-refined mt-3 border border-line px-4 py-3">
           <p className="text-[0.6875rem] font-medium text-sub leading-relaxed">
             {notificationNote}
           </p>
@@ -347,21 +349,21 @@ export default function SettingsModal({ onClose }) {
             type="button"
             onClick={sendTestNotification}
             disabled={permission === 'unsupported' || permission === 'denied'}
-            className="mt-3 w-full rounded-lg border border-line btn-retro w-auto px-3 py-2 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+            className="btn-refined mt-3 w-full px-3 text-xs"
           >
             {testSent ? '테스트 알림을 보냈어요' : '테스트 알림 보내기'}
           </button>
         </div>
 
         {permission !== 'unsupported' && (
-          <div className="mt-3 rounded-lg border-2 border-line bg-card px-4 py-3">
+          <div className="surface-refined mt-3 border border-line px-4 py-3">
             <p className="text-xs font-bold text-dark mb-2">알림 시점</p>
             <p className="text-[0.6875rem] font-medium text-sub mb-3">
               처음 감지 시는 항상 알려드려요. 추가로 받을 시점을 선택하세요.
             </p>
             <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
               {THRESHOLDS.map(({ min, label }) => (
-                <label key={min} className="flex items-center gap-2 cursor-pointer select-none">
+                <label key={min} className="flex min-h-[max(44px,2.75rem)] cursor-pointer select-none items-center gap-2">
                   <input
                     type="checkbox"
                     checked={selectedThresholds.includes(min)}
@@ -383,7 +385,7 @@ export default function SettingsModal({ onClose }) {
           <section className="mb-6">
             <h3 className="font-galmuri font-bold text-dark text-sm mb-3">데스크톱</h3>
             {hasLaunchAtLoginBridge && (
-              <div className="mb-3 flex items-center justify-between gap-4 rounded-lg border-2 border-line bg-card px-4 py-3">
+              <div className="surface-refined mb-3 flex items-center justify-between gap-4 border border-line px-4 py-3">
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-dark">시작프로그램 등록</p>
                   <p className="mt-0.5 text-xs font-medium text-sub">
@@ -396,18 +398,20 @@ export default function SettingsModal({ onClose }) {
                   type="button"
                   onClick={toggleLaunchAtLogin}
                   disabled={launchAtLogin === null}
-                  className={`relative w-11 h-6 rounded-full border-2 transition-colors flex-shrink-0 ${
-                    launchAtLogin ? 'bg-primary border-primary' : 'bg-chip border-line'
-                  } disabled:opacity-40 disabled:cursor-not-allowed`}
+                  className="btn-refined btn-refined-text group !h-11 !w-11 flex-shrink-0 !p-0"
                   aria-label="시작프로그램 등록 토글"
                 >
-                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-card border border-line transition-all ${
-                    launchAtLogin ? 'left-[18px]' : 'left-0.5'
-                  }`} />
+                  <span className={`relative h-6 w-11 rounded-full border-2 transition-colors ${
+                    launchAtLogin ? 'border-primary bg-primary' : 'border-line bg-chip'
+                  }`}>
+                    <span className={`absolute top-0.5 h-4 w-4 rounded-full border border-line bg-card transition-all ${
+                      launchAtLogin ? 'left-[18px]' : 'left-0.5'
+                    }`} />
+                  </span>
                 </button>
               </div>
             )}
-            <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+            <div className="surface-refined border border-line px-4 py-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-black text-dark">덤핏 데스크탑</p>
@@ -419,7 +423,7 @@ export default function SettingsModal({ onClose }) {
                   type="button"
                   onClick={checkForUpdates}
                   disabled={checkingUpdate}
-                  className="rounded-lg border border-line btn-retro w-auto px-3 py-2 text-xs disabled:opacity-50"
+                  className="btn-refined px-3 text-xs"
                 >
                   {checkingUpdate ? '확인 중...' : '업데이트 확인'}
                 </button>
@@ -432,14 +436,14 @@ export default function SettingsModal({ onClose }) {
       <div className="flex gap-3">
         <button
           onClick={onClose}
-          className="btn-retro flex-1 text-sm"
+          className="btn-refined flex-1 text-sm"
         >
           취소
         </button>
         <button
           onClick={saveRoutine}
           disabled={routineStart === routineEnd || savingRoutine}
-          className="btn-retro-primary flex-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-refined btn-refined-primary flex-1 text-sm"
         >
           저장
         </button>

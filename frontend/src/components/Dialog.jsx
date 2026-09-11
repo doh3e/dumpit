@@ -33,7 +33,7 @@ export default function Dialog({
   }
 
   return createPortal(
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 배경 클릭은 포인터 전용, 키보드 동등 경로는 Esc(native cancel → handleCancel)
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- native dialog 배경 클릭은 포인터 전용이며 키보드 동등 경로는 Esc(cancel → handleCancel)다
     <dialog
       ref={ref}
       aria-label={title}

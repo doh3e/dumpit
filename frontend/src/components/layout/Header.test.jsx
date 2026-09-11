@@ -92,6 +92,13 @@ describe('Header', () => {
     })
   })
 
+  it('BETA와 도움말 표시는 배경 스킨에 독립적인 본문 대비 토큰을 사용한다', () => {
+    renderHeader()
+
+    expect(screen.getByText('BETA')).toHaveClass('text-dark')
+    expect(screen.getByRole('button', { name: '도움말' })).toHaveClass('text-dark')
+  })
+
   it('AI 안내를 클릭해 열고 Escape로 닫는다', () => {
     renderHeader()
 

@@ -54,7 +54,7 @@ export function ToastProvider({ children }) {
           <div
             key={toast.id}
             role={isError ? 'alert' : 'status'}
-            className={`rounded-xl px-4 py-3 bg-card shadow-retro flex items-center gap-3 ${isError ? 'text-primary' : 'text-dark'}`}
+            className={`surface-refined flex items-center gap-3 px-4 py-3 ${isError ? 'text-primary' : 'text-dark'}`}
             style={{ border: `1.5px solid ${isError ? 'var(--accent)' : 'var(--accent2)'}` }}
           >
             <p className="text-sm font-bold flex-1">{toast.message}</p>
@@ -63,7 +63,7 @@ export function ToastProvider({ children }) {
                 type="button"
                 onClick={() => setToast(null)}
                 aria-label="닫기"
-                className="w-7 h-7 shrink-0 rounded-lg border border-line font-dungeon text-dark text-sm hover:bg-chip"
+                className="btn-refined btn-refined-text !h-11 !w-11 shrink-0 !p-0 text-sm text-dark"
               >
                 ×
               </button>

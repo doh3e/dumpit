@@ -147,7 +147,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
           onClick={() => { handleNavClick(); onOpenHelp?.() }}
           className="sidebar-refined-menu-item w-full flex items-center gap-2 px-4 py-2 font-galmuri font-bold text-xs text-sub hover:text-dark hover:bg-chip"
         >
-          <span className="w-5 h-5 rounded-full border border-line text-xs font-black flex items-center justify-center flex-shrink-0">?</span>
+          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-line text-xs font-black text-dark">?</span>
           도움말
         </button>
         <button
@@ -210,7 +210,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
       {isDrawerOpen && createPortal(
         <div className="lg:hidden fixed inset-0 z-[60]" role="presentation" onClick={onCloseDrawer}>
           <div className="absolute inset-0 overlay-retro" />
-          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 이 onClick은 stopPropagation 가드일 뿐, 닫기의 키보드 경로는 Escape 리스너 */}
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- 이 onClick은 stopPropagation 가드일 뿐이며 닫기의 키보드 동등 경로는 Escape 리스너다 */}
           <aside
             ref={drawerRef}
             tabIndex={-1}

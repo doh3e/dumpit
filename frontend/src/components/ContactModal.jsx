@@ -34,13 +34,13 @@ export default function ContactModal({ onClose }) {
   }
 
   return (
-    <Dialog onClose={onClose} title="문의하기" className="w-full max-w-md" initialFocusRef={subjectRef}>
+    <Dialog onClose={onClose} title="문의하기" variant="refined" className="w-full max-w-md p-5" initialFocusRef={subjectRef}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-dungeon text-dark text-xl">문의하기</h2>
+        <h2 className="page-refined-heading text-xl">문의하기</h2>
         <button
           onClick={onClose}
           aria-label="닫기"
-          className="w-8 h-8 rounded-lg border border-line font-black text-sub text-sm hover:bg-chip hover:text-dark transition-colors"
+          className="btn-refined btn-refined-text !h-11 !w-11 !p-0 text-sm text-dark"
         >
           X
         </button>
@@ -54,13 +54,13 @@ export default function ContactModal({ onClose }) {
             <br />
             영업일 기준 1~3일 내에 답변드리겠습니다.
           </p>
-          <button type="button" onClick={onClose} className="btn-retro bg-secondary text-on-accent text-sm py-2 px-6 mt-2">
+          <button type="button" onClick={onClose} className="btn-refined btn-refined-primary mt-2 text-sm">
             닫기
           </button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="text-xs text-sub font-semibold p-3 bg-accent rounded-lg border border-line">
+          <div className="surface-refined border border-line p-3 text-xs font-semibold text-sub">
             {user ? (
               <>답변은 <span className="font-bold text-dark">{user.email}</span>로 발송됩니다.</>
             ) : (
@@ -78,7 +78,7 @@ export default function ContactModal({ onClose }) {
               onChange={(e) => setSubject(e.target.value)}
               maxLength={200}
               placeholder="간단한 제목을 입력해주세요"
-              className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary"
+              className="input-refined text-sm font-semibold"
               disabled={!user}
               required
             />
@@ -93,25 +93,25 @@ export default function ContactModal({ onClose }) {
               rows={6}
               maxLength={3000}
               placeholder="문의 내용을 자세히 적어주세요"
-              className="w-full px-3 py-2 border border-line rounded-lg text-sm font-semibold bg-accent focus:border-primary resize-none"
+              className="input-refined resize-none text-sm font-semibold"
               disabled={!user}
               required
             />
             <p className="text-[0.625rem] text-sub font-bold mt-1 text-right">
-              {message.length} / 5000
+              {message.length} / 3000
             </p>
           </div>
 
-          {error && <p role="alert" className="text-xs font-bold text-primary">{error}</p>}
+          {error && <p role="alert" className="text-xs font-bold text-danger">{error}</p>}
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-retro flex-1 text-sm py-2">
+            <button type="button" onClick={onClose} className="btn-refined flex-1 text-sm">
               취소
             </button>
             <button
               type="submit"
               disabled={!user || !subject.trim() || !message.trim() || submitting}
-              className="btn-retro flex-1 bg-secondary text-on-accent text-sm py-2 disabled:opacity-50"
+              className="btn-refined btn-refined-primary flex-1 text-sm"
             >
               {submitting ? '전송 중...' : '문의 보내기'}
             </button>

@@ -125,7 +125,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
               alt="덤핏"
               className="h-9 md:h-12 w-auto"
             />
-            <span className="chip-retro text-secondary shrink-0 hidden md:inline-block">BETA</span>
+            <span className="chip-retro hidden shrink-0 text-dark md:inline-block">BETA</span>
           </Link>
         </div>
 
@@ -137,7 +137,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
           <button
             type="button"
             onClick={() => onOpenHelp?.()}
-            className="btn-refined btn-refined-text header-refined-icon-button hidden lg:flex font-black text-sub"
+            className="btn-refined btn-refined-text header-refined-icon-button hidden font-black text-dark lg:flex"
             aria-label="도움말"
             title="도움말"
           >
@@ -172,7 +172,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
 
             {menuOpen && (
               <div id={accountMenuId} className="header-refined-account-menu">
-                <div className="card-retro py-2 sm:min-w-[160px]">
+                <div className="surface-refined border border-line py-2 sm:min-w-[160px]">
                   <div className="sm:hidden px-3 pb-2 mb-2 border-b border-line">
                     <div>
                       <DeadlineNudgeMenu variant="mobile-card" />
@@ -183,13 +183,13 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
                   <Link
                     to="/mypage"
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2 text-sm font-bold text-dark hover:bg-chip rounded transition-colors"
+                    className="btn-refined btn-refined-text !block w-full !rounded-none !px-4 text-left text-sm font-bold text-dark"
                   >
                     마이페이지
                   </Link>
                   <button
                     onClick={() => { setMenuOpen(false); logout() }}
-                    className="w-full text-left px-4 py-2 text-sm font-bold text-dark hover:bg-chip rounded transition-colors"
+                    className="btn-refined btn-refined-text !block w-full !rounded-none !px-4 text-left text-sm font-bold text-dark"
                   >
                     로그아웃
                   </button>

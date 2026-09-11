@@ -26,20 +26,20 @@ export default function WithdrawalPendingModal() {
   if (!open) return null
 
   return (
-    <Dialog onClose={dismiss} title="탈퇴처리가 진행중인 계정입니다" className="w-full max-w-md">
-      <h2 className="text-xl font-bold text-dark">탈퇴처리가 진행중인 계정입니다</h2>
+    <Dialog onClose={dismiss} title="탈퇴처리가 진행중인 계정입니다" variant="refined" className="w-full max-w-md p-5">
+      <h2 className="page-refined-heading text-xl">탈퇴처리가 진행중인 계정입니다</h2>
       <p className="mt-3 text-sm font-semibold leading-relaxed text-sub">
         복구하시겠습니까?
         <br />
         복구하면 탈퇴 신청이 취소되고 예전 기록이 모두 그대로 돌아옵니다.
       </p>
       <div className="mt-5 flex gap-3">
-        <button type="button" onClick={dismiss} className="btn-retro-outline flex-1 py-2 text-sm">
+        <button type="button" onClick={dismiss} className="btn-refined flex-1 text-sm">
           아니요
         </button>
         <a
           href={`${API_BASE_URL}/oauth2/authorization/google?restore=1`}
-          className="btn-retro-primary flex-1 py-2 text-sm"
+          className="btn-refined btn-refined-primary flex-1 text-sm"
         >
           복구하기
         </a>
