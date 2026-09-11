@@ -195,12 +195,12 @@ export default function RoutinePage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-dungeon text-dark text-2xl">루틴</h1>
+          <h1 className="page-refined-heading">루틴</h1>
           <p className="mt-2 text-sm font-semibold text-sub">
             정해둔 날짜나 요일에 루틴명과 같은 태스크를 자동으로 만들어요.
           </p>
         </div>
-        <div className="card-retro !py-3">
+        <div className="surface-refined px-5 py-3">
           <p className="text-xs font-bold text-sub">활성 루틴</p>
           <p className="text-xl font-black text-primary">
             {routines.filter((routine) => routine.enabled).length}
@@ -209,16 +209,16 @@ export default function RoutinePage() {
       </div>
 
       {error && (
-        <div className="card-retro !py-3 tone-overdue">
+        <div className="surface-refined tone-overdue p-3">
           <p className="text-sm font-bold text-primary">{error}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.9fr)_minmax(22rem,0.7fr)] gap-6">
-        <section className="card-retro">
+        <section className="surface-refined p-5">
           <div className="flex items-center justify-between gap-3 mb-4">
             <h3 className="font-galmuri font-bold text-base text-dark">루틴 목록</h3>
-            <button type="button" onClick={resetForm} className="btn-retro text-xs py-1.5">
+            <button type="button" onClick={resetForm} className="btn-refined text-xs">
               새 루틴
             </button>
           </div>
@@ -235,12 +235,12 @@ export default function RoutinePage() {
               {sortedRoutines.map((routine) => (
                 <div
                   key={routine.routineId}
-                  className={`rounded-lg border-2 p-3 ${
+                  className={`surface-refined border p-3 ${
                     routine.enabled ? 'border-line bg-card' : 'border-line bg-card opacity-70'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <button type="button" onClick={() => editRoutine(routine)} className="min-w-0 flex-1 text-left">
+                  <div className="flex flex-col items-start justify-between gap-3 sm:flex-row">
+                    <button type="button" onClick={() => editRoutine(routine)} className="btn-refined btn-refined-text !block w-full min-w-0 flex-1 !p-0 text-left sm:w-auto">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`rounded-full border px-2 py-0.5 text-[0.625rem] font-black ${
                           routine.enabled ? 'bg-secondary text-on-accent border-secondary' : 'bg-accent text-dark border-line'
@@ -262,18 +262,19 @@ export default function RoutinePage() {
                         {routine.nextRunAt && ` · 다음 ${formatDateTime(routine.nextRunAt)}`}
                       </p>
                     </button>
-                    <div className="flex shrink-0 gap-1">
+                    <div className="flex w-full shrink-0 flex-wrap gap-1 sm:w-auto">
                       <button
                         type="button"
                         onClick={() => toggleEnabled(routine)}
-                        className="rounded border-2 border-line bg-accent px-2 py-1 text-xs font-black text-dark"
+                        aria-pressed={routine.enabled}
+                        className={`btn-refined flex-1 !px-2 text-xs sm:flex-none ${routine.enabled ? 'btn-refined-selected' : ''}`}
                       >
                         {routine.enabled ? '끄기' : '켜기'}
                       </button>
                       <button
                         type="button"
                         onClick={() => deleteRoutine(routine)}
-                        className="rounded border-2 tone-overdue px-2 py-1 text-xs font-black text-primary"
+                        className="btn-refined btn-refined-danger flex-1 !px-2 text-xs sm:flex-none"
                       >
                         삭제
                       </button>
@@ -285,7 +286,7 @@ export default function RoutinePage() {
           )}
         </section>
 
-        <form onSubmit={saveRoutine} className="card-retro space-y-4">
+        <form onSubmit={saveRoutine} className="surface-refined space-y-4 p-5">
           <div>
             <p className="text-[0.625rem] font-bold text-sub">{editingId ? '편집 중' : '새 루틴'}</p>
             <h3 className="mt-1 font-galmuri font-bold text-base text-dark">루틴 설정</h3>
@@ -299,7 +300,7 @@ export default function RoutinePage() {
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
               maxLength={200}
               placeholder="예: 아침 스트레칭"
-              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
+              className="input-refined font-bold"
             />
           </div>
 
@@ -311,11 +312,11 @@ export default function RoutinePage() {
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               rows={3}
               maxLength={1000}
-              className="w-full resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm font-semibold focus:border-primary"
+              className="input-refined resize-none font-semibold"
             />
           </div>
 
-          <label className="flex items-center gap-2 text-sm font-extrabold text-dark">
+          <label className="flex min-h-[max(44px,2.75rem)] items-center gap-2 px-2 text-sm font-extrabold text-dark">
             <input
               type="checkbox"
               checked={form.enabled}
@@ -331,8 +332,9 @@ export default function RoutinePage() {
                 key={type}
                 type="button"
                 onClick={() => setForm((prev) => ({ ...prev, repeatType: type }))}
-                className={`rounded-lg border-2 px-3 py-2 text-xs font-black ${
-                  form.repeatType === type ? 'border-edge bg-primary text-on-accent' : 'border-line bg-accent text-dark'
+                aria-pressed={form.repeatType === type}
+                className={`btn-refined w-full !px-2 text-xs ${
+                  form.repeatType === type ? 'btn-refined-selected' : ''
                 }`}
               >
                 {type === 'DAILY' ? '매일' : type === 'WEEKLY' ? '요일' : type === 'MONTHLY' ? '날짜' : '주차'}
@@ -347,8 +349,9 @@ export default function RoutinePage() {
                   key={day.value}
                   type="button"
                   onClick={() => setForm((prev) => ({ ...prev, daysOfWeek: toggleNumber(prev.daysOfWeek, day.value) }))}
-                  className={`h-9 w-9 rounded-full border-2 text-xs font-black ${
-                    form.daysOfWeek.includes(day.value) ? 'border-edge bg-secondary text-on-accent' : 'border-line bg-accent text-dark'
+                  aria-pressed={form.daysOfWeek.includes(day.value)}
+                  className={`btn-refined !h-11 !w-11 !rounded-full !p-0 text-xs ${
+                    form.daysOfWeek.includes(day.value) ? 'btn-refined-selected' : ''
                   }`}
                 >
                   {day.label}
@@ -365,6 +368,7 @@ export default function RoutinePage() {
                     key={day}
                     type="button"
                     onClick={() => setForm((prev) => ({ ...prev, daysOfMonth: toggleNumber(prev.daysOfMonth, day) }))}
+                    aria-pressed={form.daysOfMonth.includes(day)}
                     className={`h-8 rounded border-2 text-xs font-black ${
                       form.daysOfMonth.includes(day) ? 'border-edge bg-secondary text-on-accent' : 'border-line bg-accent text-dark'
                     }`}
@@ -373,7 +377,7 @@ export default function RoutinePage() {
                   </button>
                 ))}
               </div>
-              <label className="flex items-start gap-2 rounded-lg border-2 border-line bg-accent px-3 py-2 text-xs font-extrabold text-dark">
+              <label className="surface-refined flex min-h-[max(44px,2.75rem)] items-start gap-2 border border-line px-3 py-2 text-xs font-extrabold text-dark">
                 <input
                   type="checkbox"
                   checked={form.runOnLastDayIfMissing}
@@ -389,14 +393,15 @@ export default function RoutinePage() {
             <div className="space-y-3">
               <div>
                 <span className="block text-xs font-bold text-sub mb-1">몇째 주</span>
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="flex flex-wrap gap-1.5">
                   {MONTHLY_ORDINALS.map((ordinal) => (
                     <button
                       key={ordinal.value}
                       type="button"
                       onClick={() => setForm((prev) => ({ ...prev, monthlyWeekOrdinal: ordinal.value }))}
-                      className={`h-9 rounded border-2 text-xs font-black ${
-                        form.monthlyWeekOrdinal === ordinal.value ? 'border-edge bg-secondary text-on-accent' : 'border-line bg-accent text-dark'
+                      aria-pressed={form.monthlyWeekOrdinal === ordinal.value}
+                      className={`btn-refined flex-1 basis-11 !px-1 text-xs ${
+                        form.monthlyWeekOrdinal === ordinal.value ? 'btn-refined-selected' : ''
                       }`}
                     >
                       {ordinal.label}
@@ -412,8 +417,9 @@ export default function RoutinePage() {
                       key={day.value}
                       type="button"
                       onClick={() => setForm((prev) => ({ ...prev, monthlyWeekDay: day.value }))}
-                      className={`h-9 w-9 rounded-full border-2 text-xs font-black ${
-                        form.monthlyWeekDay === day.value ? 'border-edge bg-secondary text-on-accent' : 'border-line bg-accent text-dark'
+                      aria-pressed={form.monthlyWeekDay === day.value}
+                      className={`btn-refined !h-11 !w-11 !rounded-full !p-0 text-xs ${
+                        form.monthlyWeekDay === day.value ? 'btn-refined-selected' : ''
                       }`}
                     >
                       {day.label}
@@ -429,7 +435,7 @@ export default function RoutinePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="flex items-center gap-2 text-xs font-bold text-sub mb-1">
+              <label className="mb-1 flex min-h-[max(44px,2.75rem)] items-center gap-2 px-2 text-xs font-bold text-sub">
                 <input
                   type="checkbox"
                   checked={form.hasStartTime}
@@ -445,9 +451,9 @@ export default function RoutinePage() {
                     aria-label="시작 시간"
                     value={form.startTime}
                     onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
-                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
+                    className="input-refined font-bold"
                   />
-                  <label className="flex items-center gap-2 text-xs font-bold text-sub">
+                  <label className="flex min-h-[max(44px,2.75rem)] items-center gap-2 px-2 text-xs font-bold text-sub">
                     <input
                       type="checkbox"
                       checked={form.hasEndTime}
@@ -462,16 +468,16 @@ export default function RoutinePage() {
                       aria-label="종료 시간"
                       value={form.endTime}
                       onChange={(e) => setForm((prev) => ({ ...prev, endTime: e.target.value }))}
-                      className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
+                      className="input-refined font-bold"
                     />
                   ) : (
-                    <div className="rounded-lg border-2 border-line bg-accent px-3 py-2 text-xs font-extrabold text-sub">
+                    <div className="surface-refined border border-line px-3 py-2 text-xs font-extrabold text-sub">
                       종료 시간 없음 · 일과 끝나는 시각 마감
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="rounded-lg border-2 border-line bg-accent px-3 py-2 text-xs font-extrabold text-sub">
+                <div className="surface-refined border border-line px-3 py-2 text-xs font-extrabold text-sub">
                   오늘 안에 완료 · 일과 끝나는 시각 마감
                 </div>
               )}
@@ -483,7 +489,7 @@ export default function RoutinePage() {
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setForm((prev) => ({ ...prev, startDate: e.target.value }))}
-                className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
+                className="input-refined font-bold"
               />
             </div>
           </div>
@@ -495,7 +501,7 @@ export default function RoutinePage() {
               type="date"
               value={form.endDate}
               onChange={(e) => setForm((prev) => ({ ...prev, endDate: e.target.value }))}
-              className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold"
+              className="input-refined font-bold"
             />
           </div>
 
@@ -503,12 +509,12 @@ export default function RoutinePage() {
             <button
               type="submit"
               disabled={!form.name.trim() || saving}
-              className="btn-retro flex-1 bg-primary text-on-accent text-sm py-2 disabled:opacity-50"
+              className="btn-refined btn-refined-primary flex-1 text-sm"
             >
               {saving ? '저장 중...' : editingId ? '수정' : '추가'}
             </button>
             {editingId && (
-              <button type="button" onClick={resetForm} className="btn-retro text-sm py-2">
+              <button type="button" onClick={resetForm} className="btn-refined text-sm">
                 취소
               </button>
             )}
