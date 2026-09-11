@@ -135,7 +135,7 @@ export default function Layout() {
           isDrawerOpen={drawerOpen}
           onCloseDrawer={closeDrawer}
         />
-        <main id="main" tabIndex={-1} className="flex-1 p-6 max-w-5xl mx-auto w-full">
+        <main id="main" tabIndex={-1} className="flex-1 min-w-0 p-4 sm:p-6 max-w-5xl mx-auto w-full">
           <Outlet />
         </main>
       </div>
@@ -143,7 +143,9 @@ export default function Layout() {
       <Footer />
 
       <button
+        type="button"
         onClick={() => setShowMobileTimer(true)}
+        aria-label="뽀모도로 타이머 열기"
         className="lg:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary text-on-accent font-dungeon text-lg flex items-center justify-center"
         style={{ border: '1.5px solid var(--edge)', boxShadow: '3px 3px 0 var(--shadow-sm)' }}
       >

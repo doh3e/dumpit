@@ -131,6 +131,17 @@ body {
   .sidebar-fade-top { background: linear-gradient(to bottom, var(--chrome-bg) 15%, transparent); }
   .sidebar-fade-bottom { background: linear-gradient(to top, var(--chrome-bg) 15%, transparent); }
 
+  .sidebar-refined-menu-item {
+    min-height: max(44px, 2.75rem);
+    min-width: max(44px, 2.75rem);
+    border-radius: .5rem;
+    transition: background-color 80ms ease, color 80ms ease;
+  }
+  .sidebar-refined-menu-item:focus-visible {
+    outline: var(--focus-w) solid var(--accent2-text);
+    outline-offset: 2px;
+  }
+
   .btn-retro {
     @apply font-dungeon text-sm px-4 py-2.5 rounded-[11px] bg-card text-dark inline-flex items-center justify-center whitespace-nowrap;
     border: 1.5px solid var(--edge);
@@ -565,7 +576,7 @@ body {
 @keyframes blink { 50% { opacity: .2; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn-refined, .input-refined { transition: none; }
+  .btn-refined, .input-refined, .sidebar-refined-menu-item { transition: none; }
   /* 도트 시트 애니는 첫 프레임 고정 (인라인 animation-duration보다 우선하도록 !important) */
   .pixel-sprite-anim { animation: none !important; }
   .pixel-spark { animation: none; opacity: 0; }

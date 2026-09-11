@@ -70,13 +70,13 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
           onClick={handleNavClick}
           className="flex items-center justify-center mb-4 px-2"
         >
-          {/* srcset: h-36(144px) 기준 DPR별 사전 리사이즈본 — 576px 원본의 4배 축소 계단 현상 방지 */}
+          {/* srcset: 80px 표시 크기에서 DPR별 사전 리사이즈본을 선택한다 */}
           <img
             src="/logo.webp"
             srcSet="/logo_144.webp 144w, /logo_180.webp 180w, /logo_216.webp 216w, /logo_288.webp 288w, /logo_432.webp 432w, /logo.webp 576w"
-            sizes="144px"
+            sizes="80px"
             alt="덤핏"
-            className="h-36 w-auto"
+            className="h-20 w-auto"
           />
         </Link>
       )}
@@ -88,7 +88,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
             to={path}
             onClick={handleNavClick}
             className={({ isActive }) =>
-              `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
+              `sidebar-refined-menu-item flex items-center px-4 py-2 font-galmuri font-bold text-sm ${
                 isActive
                   ? 'bg-chip text-dark'
                   : 'text-sub hover:text-dark hover:bg-chip'
@@ -104,7 +104,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
             to="/admin"
             onClick={handleNavClick}
             className={({ isActive }) =>
-              `flex items-center px-4 py-3 rounded-lg font-galmuri font-bold text-sm transition-all ${
+              `sidebar-refined-menu-item flex items-center px-4 py-2 font-galmuri font-bold text-sm ${
                 isActive
                   ? 'bg-chip text-dark'
                   : 'text-secondary hover:bg-chip'
@@ -119,7 +119,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
 
       <div className="mt-4 pt-4 border-t border-line">
         <h4 className="label-retro mx-2 mb-1">
-          Pomodoro
+          뽀모도로
         </h4>
         <PomodoroTimer
           tasks={tasks}
@@ -133,7 +133,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
           to="/notices"
           onClick={handleNavClick}
           className={({ isActive }) =>
-            `w-full flex items-center px-4 py-2.5 rounded-lg font-bold text-xs transition-all ${
+            `sidebar-refined-menu-item w-full flex items-center px-4 py-2 font-galmuri font-bold text-xs ${
               isActive
                 ? 'bg-chip text-dark'
                 : 'text-sub hover:text-dark hover:bg-chip'
@@ -143,15 +143,17 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
           공지사항
         </NavLink>
         <button
+          type="button"
           onClick={() => { handleNavClick(); onOpenHelp?.() }}
-          className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-xs text-sub hover:text-dark hover:bg-chip transition-all"
+          className="sidebar-refined-menu-item w-full flex items-center gap-2 px-4 py-2 font-galmuri font-bold text-xs text-sub hover:text-dark hover:bg-chip"
         >
           <span className="w-5 h-5 rounded-full border border-line text-xs font-black flex items-center justify-center flex-shrink-0">?</span>
           도움말
         </button>
         <button
+          type="button"
           onClick={() => { handleNavClick(); onOpenSettings() }}
-          className="w-full flex items-center px-4 py-2.5 rounded-lg font-bold text-xs text-sub hover:text-dark hover:bg-chip transition-all"
+          className="sidebar-refined-menu-item w-full flex items-center px-4 py-2 font-galmuri font-bold text-xs text-sub hover:text-dark hover:bg-chip"
         >
           설정
         </button>
@@ -163,7 +165,7 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
               target="_blank"
               rel="noreferrer"
               onClick={handleNavClick}
-              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-xs text-sub hover:text-dark hover:bg-chip transition-all"
+              className="sidebar-refined-menu-item w-full flex items-center gap-2 px-4 py-2 font-galmuri font-bold text-xs text-sub hover:text-dark hover:bg-chip"
             >
               <img {...iconProps('download', 16)} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
               데스크탑 앱 다운로드
@@ -222,8 +224,9 @@ export default function Sidebar({ onOpenSettings, onOpenHelp, tasks, focusRecomm
             <div className="flex items-center justify-between mb-2 px-1">
               <span className="label-retro">메뉴</span>
               <button
+                type="button"
                 onClick={onCloseDrawer}
-                className="w-7 h-7 rounded-lg border border-chrome-line font-black text-sub text-xs hover:bg-chrome-line hover:text-dark transition-colors"
+                className="sidebar-refined-menu-item w-11 h-11 flex items-center justify-center border border-chrome-line font-galmuri font-black text-sub text-xs hover:bg-chrome-line hover:text-dark"
                 aria-label="메뉴 닫기"
               >
                 X
