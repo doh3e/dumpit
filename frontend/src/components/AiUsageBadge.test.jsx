@@ -33,6 +33,14 @@ describe('AiUsageBadge', () => {
     expect(screen.getByText(/이 작업은 5점을 사용해요/)).toBeInTheDocument()
   })
 
+  it('기본 card 변형도 잔여량이 비용보다 적으면 현재 작업의 사용량 부족으로 설명한다', () => {
+    render(<AiUsageBadge usage={{ ...usage, used: 99, remaining: 1 }} cost={3} />)
+
+    expect(screen.getByText(/이 작업은 3점을 사용해요/)).toBeInTheDocument()
+    expect(screen.getByText(/이 작업에 필요한 AI 사용량이 부족해요/)).toBeInTheDocument()
+    expect(screen.queryByText(/모두 사용했어요/)).not.toBeInTheDocument()
+  })
+
   it.each([1, 4])('잔여 %s점은 모두 소진이 아니라 현재 작업의 사용량 부족으로 설명한다', (remaining) => {
     render(
       <AiUsageBadge

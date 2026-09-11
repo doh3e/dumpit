@@ -151,7 +151,8 @@ describe('BrainDumpPage', () => {
     await screen.findByRole('heading', { name: '정리한 할 일' })
   })
 
-  it('임의 타이머 없이 첫 분석과 재분석 결과가 커밋된 뒤 제목에 포커스한다', async () => {
+  it('임의 타이머 없이 첫 분석과 재분석 결과가 커밋된 뒤 제목에 포커스하고 재분석 중 결과 조작을 막는다', async () => {
+    const request = deferred()
     vi.useFakeTimers()
     mocks.post.mockResolvedValueOnce({ data: analysis })
     renderPage()
@@ -170,16 +171,32 @@ describe('BrainDumpPage', () => {
     fireEvent.change(input, { target: { value: '수정한 원문' } })
     expect(input).toHaveFocus()
 
-    mocks.post.mockResolvedValueOnce({
-      data: { ...analysis, tasks: [{ ...analysis.tasks[0], title: '재분석 결과' }] },
-    })
+    mocks.post.mockReturnValueOnce(request.promise)
     fireEvent.click(screen.getByRole('button', { name: '다시 분석' }))
 
+    expect(screen.getByRole('button', { name: '지우기' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '전체 선택' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '전체 해제' })).toBeDisabled()
+    expect(screen.getByRole('checkbox', { name: '발표 초안 선택' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '새로 작성' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '분석 중...' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '선택한 2개 추가' })).toBeDisabled()
+
+    request.resolve({
+      data: { ...analysis, tasks: [{ ...analysis.tasks[0], title: '재분석 결과' }] },
+    })
     await act(async () => {
       await Promise.resolve()
     })
 
     expect(screen.getByRole('heading', { name: '정리한 할 일' })).toHaveFocus()
+    expect(screen.getByRole('button', { name: '지우기' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '전체 선택' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '전체 해제' })).toBeEnabled()
+    expect(screen.getByRole('checkbox', { name: '재분석 결과 선택' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '새로 작성' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '다시 분석' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '선택한 1개 추가' })).toBeEnabled()
   })
 
   it('분석 결과를 평평한 목록과 명시적 선택 라벨로 표시하고 일부만 추가한다', async () => {

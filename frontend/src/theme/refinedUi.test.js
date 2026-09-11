@@ -110,6 +110,13 @@ describe('정돈된 레트로 공통 변형', () => {
     })
   })
 
+  it('입력 예시 문구는 전용 선택자에서 본문 의미 토큰과 불투명도를 고정한다', () => {
+    expect(ruleFor('.input-refined::placeholder').declarations).toMatchObject({
+      color: 'var(--fg)',
+      opacity: '1',
+    })
+  })
+
   it('포커스와 굵은 글자 접근성 정책을 새 조작에도 적용한다', () => {
     for (const selector of ['.btn-refined:focus-visible', '.input-refined:focus-visible']) {
       expect(ruleFor(selector).declarations).toMatchObject({

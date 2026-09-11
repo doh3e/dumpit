@@ -204,6 +204,10 @@ body {
     color: var(--fg);
     transition: border-color 80ms ease;
   }
+  .input-refined::placeholder {
+    color: var(--fg);
+    opacity: 1;
+  }
   .input-refined:focus-visible {
     outline: var(--focus-w) solid var(--accent2-text);
     outline-offset: 2px;

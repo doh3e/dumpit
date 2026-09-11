@@ -36,11 +36,14 @@ describe('NowHeroCard', () => {
 
     expect(screen.getByText('지금 할 일')).toBeInTheDocument()
     expect(screen.getByText('다음에 할 일')).toBeInTheDocument()
+    expect(screen.getByText('먼저 이 일을 해보세요.')).toBeInTheDocument()
     expect(screen.getByTestId('orbit-progress')).toHaveAttribute('data-done', '1')
     expect(screen.getByTestId('orbit-progress')).toHaveAttribute('data-total', '3')
 
     fireEvent.click(screen.getByRole('button', { name: '완료하기' }))
     expect(onComplete.mock.calls[0][0]).toBe(task)
+    fireEvent.click(screen.getByRole('button', { name: '수정' }))
+    expect(onEdit).toHaveBeenCalledWith(task)
     fireEvent.click(screen.getByRole('button', { name: /빨래 널기/ }))
     expect(onEdit).toHaveBeenCalledWith(next)
   })
