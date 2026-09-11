@@ -326,6 +326,7 @@ export default function SettingsModal({ onClose }) {
             type="button"
             onClick={handleNotificationToggle}
             disabled={permission === 'unsupported' || permission === 'denied'}
+            aria-pressed={permission === 'granted' && notificationsEnabled}
             className="btn-refined btn-refined-text group !h-11 !w-11 flex-shrink-0 !p-0"
             aria-label="마감 임박 알림 토글"
           >
@@ -398,6 +399,7 @@ export default function SettingsModal({ onClose }) {
                   type="button"
                   onClick={toggleLaunchAtLogin}
                   disabled={launchAtLogin === null}
+                  aria-pressed={launchAtLogin === true}
                   className="btn-refined btn-refined-text group !h-11 !w-11 flex-shrink-0 !p-0"
                   aria-label="시작프로그램 등록 토글"
                 >

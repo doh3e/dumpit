@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import SettingsModal from './SettingsModal'
 
+const notificationState = vi.hoisted(() => ({ permission: 'unsupported' }))
 const applyTheme = vi.fn()
 const applyFontScale = vi.fn()
 const applyContrast = vi.fn()
@@ -11,7 +12,7 @@ const applyBoldText = vi.fn()
 const saveUserSettings = vi.fn()
 
 vi.mock('../utils/notifications', () => ({
-  getNotificationPermission: () => 'unsupported',
+  getNotificationPermission: () => notificationState.permission,
   showBrowserNotification: vi.fn(),
 }))
 vi.mock('../utils/theme', () => ({
@@ -58,6 +59,8 @@ beforeAll(() => {
 
 describe('SettingsModal', () => {
   beforeEach(() => {
+    notificationState.permission = 'unsupported'
+    delete window.dumpitDesktop
     saveUserSettings.mockResolvedValue({ routineStartHour: 10, routineEndHour: 21 })
   })
   afterEach(() => {
@@ -115,5 +118,92 @@ describe('SettingsModal', () => {
     expect(close).toHaveClass('btn-refined', 'btn-refined-text', '!h-11', '!w-11')
     fireEvent.click(close)
     expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('알림 켜짐/꺼짐을 aria-pressed와 서버 저장에 함께 반영한다', async () => {
+    notificationState.permission = 'granted'
+    render(<SettingsModal onClose={() => {}} />)
+    const toggle = screen.getByRole('button', { name: '마감 임박 알림 토글' })
+
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    expect(saveUserSettings).toHaveBeenCalledWith({ notificationsEnabled: false })
+
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    expect(saveUserSettings).toHaveBeenCalledWith({ notificationsEnabled: true })
+    await waitFor(() => expect(saveUserSettings).toHaveBeenCalledTimes(2))
+  })
+
+  it('알림 저장 실패 시 aria-pressed를 이전 켜짐 상태로 롤백한다', async () => {
+    notificationState.permission = 'granted'
+    saveUserSettings.mockRejectedValueOnce({ userMessage: '알림 저장 실패' })
+    render(<SettingsModal onClose={() => {}} />)
+    const toggle = screen.getByRole('button', { name: '마감 임박 알림 토글' })
+
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'))
+    expect(screen.getByRole('alert')).toHaveTextContent('알림 저장 실패')
+  })
+
+  it.each(['unsupported', 'denied'])('%s 알림 권한에서는 비활성 상태 의미를 유지한다', (permission) => {
+    notificationState.permission = permission
+    render(<SettingsModal onClose={() => {}} />)
+
+    const toggle = screen.getByRole('button', { name: '마감 임박 알림 토글' })
+    expect(toggle).toBeDisabled()
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('시작프로그램 켜짐/꺼짐을 aria-pressed와 데스크톱 브리지에 함께 반영한다', async () => {
+    const setLaunchAtLogin = vi.fn().mockResolvedValue(undefined)
+    window.dumpitDesktop = {
+      getAppInfo: vi.fn().mockResolvedValue(null),
+      getLaunchAtLogin: vi.fn().mockResolvedValue({ enabled: true }),
+      setLaunchAtLogin,
+    }
+    render(<SettingsModal onClose={() => {}} />)
+    const toggle = screen.getByRole('button', { name: '시작프로그램 등록 토글' })
+    await waitFor(() => expect(toggle).toBeEnabled())
+
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    expect(setLaunchAtLogin).toHaveBeenCalledWith(false)
+
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    expect(setLaunchAtLogin).toHaveBeenCalledWith(true)
+  })
+
+  it('시작프로그램 브리지 실패 시 aria-pressed를 이전 켜짐 상태로 롤백한다', async () => {
+    window.dumpitDesktop = {
+      getAppInfo: vi.fn().mockResolvedValue(null),
+      getLaunchAtLogin: vi.fn().mockResolvedValue({ enabled: true }),
+      setLaunchAtLogin: vi.fn().mockRejectedValue(new Error('bridge failed')),
+    }
+    render(<SettingsModal onClose={() => {}} />)
+    const toggle = screen.getByRole('button', { name: '시작프로그램 등록 토글' })
+    await waitFor(() => expect(toggle).toBeEnabled())
+
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'))
+    expect(screen.getByRole('alert')).toHaveTextContent('시작프로그램 설정을 바꾸지 못했어요.')
+  })
+
+  it('시작프로그램 초기 확인 중에는 비활성·꺼짐 상태 의미를 유지한다', () => {
+    window.dumpitDesktop = {
+      getAppInfo: vi.fn().mockResolvedValue(null),
+      getLaunchAtLogin: vi.fn(() => new Promise(() => {})),
+      setLaunchAtLogin: vi.fn(),
+    }
+    render(<SettingsModal onClose={() => {}} />)
+
+    const toggle = screen.getByRole('button', { name: '시작프로그램 등록 토글' })
+    expect(toggle).toBeDisabled()
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
   })
 })
