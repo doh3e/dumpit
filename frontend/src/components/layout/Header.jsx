@@ -19,9 +19,13 @@ const AI_COST_ROWS = [
 export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [openResource, setOpenResource] = useState(null)
   const menuRef = useRef(null)
+  const resourcesRef = useRef(null)
   const accountMenuId = useId()
-  const { usage } = useAiUsage()
+  const aiPopoverId = useId()
+  const coinPopoverId = useId()
+  const { usage, loading } = useAiUsage()
 
   // 코인 증가 시 배지 바운스 + 숫자 카운트업 (보상 모션 2)
   const coins = user?.coins ?? 0
@@ -62,22 +66,50 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
     return () => { document.removeEventListener('mousedown', handleClick); document.removeEventListener('keydown', handleKey) }
   }, [menuOpen])
 
-  const aiColor = !usage
+  useEffect(() => {
+    if (!openResource) return
+    const handleClick = (event) => {
+      if (resourcesRef.current && !resourcesRef.current.contains(event.target)) {
+        setOpenResource(null)
+      }
+    }
+    const handleKey = (event) => {
+      if (event.key === 'Escape') setOpenResource(null)
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [openResource])
+
+  const toggleResource = (resource) => {
+    setMenuOpen(false)
+    setOpenResource((current) => current === resource ? null : resource)
+  }
+
+  const aiColor = usage === null
     ? 'text-sub'
     : usage.remaining >= 50
     ? 'text-dark'
     : usage.remaining >= 20
     ? 'text-warn'
     : 'text-primary'
+  const aiLabel = usage
+    ? `AI 잔여량 ${usage.remaining} / ${usage.limit}점 안내`
+    : loading
+      ? 'AI 잔여량 확인 중'
+      : 'AI 잔여량 확인 불가'
 
   return (
     <header className="app-header sticky top-0 z-50 bg-chrome border-b border-chrome-line">
-      {/* 페이지 내비는 사이드바 전담 — 상단바는 로고·배지·도움말·설정·프사만 양끝 정렬 */}
-      <div className="w-full px-6 h-20 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 shrink-0">
+      <div className="header-refined-inner">
+        <div className="header-refined-brand">
           <button
+            type="button"
             onClick={onOpenDrawer}
-            className="lg:hidden w-9 h-9 shrink-0 rounded-lg border border-chrome-line flex items-center justify-center hover:bg-chrome-line transition-colors"
+            className="btn-refined btn-refined-text header-refined-icon-button lg:hidden"
             aria-label="메뉴 열기"
           >
             <img {...iconProps('menu', 20)} alt="" className="h-5 w-5 object-contain" />
@@ -97,84 +129,24 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
           </Link>
         </div>
 
-        {/* 배지들은 shrink-0 — 좁아져도 알약이 찌그러지며 숫자가 새어나오지 않게 */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="hidden sm:block shrink-0">
+        <div className="header-refined-actions">
+          <div className="header-refined-deadline hidden sm:block shrink-0">
             <DeadlineNudgeMenu />
           </div>
 
-          {usage && (
-            <div
-              className="group relative hidden sm:flex shrink-0 items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none"
-              tabIndex={0}
-              aria-label="AI 사용량 안내"
-            >
-              <img {...iconProps('token', 16)} alt="AI" className="w-4 h-4 object-contain" />
-              <span className={`font-dungeon text-sm leading-none ${aiColor}`}>
-                {usage.remaining}
-              </span>
-
-              <div className="pointer-events-none absolute right-0 top-10 z-50 w-72 rounded-lg card-retro p-0 text-left opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
-                <div className="px-3 py-2.5 border-b border-line">
-                  <p className="text-xs font-black text-dark">AI 사용량 (오늘)</p>
-                  <p className="text-[0.6875rem] font-bold text-sub mt-0.5">
-                    남은 사용량:{' '}
-                    <span className={usage.remaining === 0 ? 'text-primary' : 'text-dark'}>
-                      {usage.remaining}
-                    </span>{' '}
-                    / {usage.limit}
-                  </p>
-                </div>
-                <div className="px-3 py-2 border-b border-line">
-                  <p className="text-[0.625rem] font-semibold text-sub leading-relaxed">
-                    Dumpit!은 베타 서비스 중이에요. 모든 활동이 무료인 대신
-                    AI 기능에는 일일 사용량 제한이 있어요.
-                  </p>
-                </div>
-                {AI_COST_ROWS.map(([label, cost, isTotal]) => (
-                  <div
-                    key={label}
-                    className={`flex items-center justify-between px-3 py-1.5 divider-retro last:border-0 ${
-                      isTotal ? 'bg-chip' : ''
-                    }`}
-                  >
-                    <span className={`text-xs ${isTotal ? 'font-black text-dark' : 'font-semibold text-sub'}`}>
-                      {label}
-                    </span>
-                    <span className="text-xs font-black text-dark">{cost}</span>
-                  </div>
-                ))}
-                <div className="px-3 py-2 border-t border-line">
-                  <p className="text-[0.625rem] font-semibold text-sub">매일 자정(KST)에 초기화돼요.</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div
-            className={`group relative hidden sm:flex shrink-0 items-center gap-1.5 bg-chip border border-line rounded-full px-3 py-1 cursor-default select-none ${coinPop ? 'coin-bounce' : ''}`}
-            tabIndex={0}
-            aria-label="보유 코인 안내"
-          >
-            <img {...iconProps('coin', 16)} alt="coin" className="w-4 h-4 object-contain" />
-            <span className="font-dungeon text-sm text-dark leading-none">{displayCoins}</span>
-            <div className="pointer-events-none absolute right-0 top-10 z-50 w-64 rounded-lg card-retro px-3 py-2 text-left text-xs font-bold text-sub opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100">
-              코인샵에서 각종 테마와 꾸미기 용품, 스티커로 교환할 수 있어요.
-            </div>
-          </div>
-
-          {/* 도움말·설정 — lg 미만은 드로어 하단 메뉴가 담당하므로 상단바에선 숨김 (폭 확보) */}
           <button
+            type="button"
             onClick={() => onOpenHelp?.()}
-            className="hidden lg:flex w-9 h-9 shrink-0 rounded-lg border border-line items-center justify-center font-black text-sm text-sub hover:text-dark hover:bg-chip transition-colors"
+            className="btn-refined btn-refined-text header-refined-icon-button hidden lg:flex font-black text-sub"
             aria-label="도움말"
             title="도움말"
           >
             ?
           </button>
           <button
+            type="button"
             onClick={() => onOpenSettings?.()}
-            className="hidden lg:flex w-9 h-9 shrink-0 rounded-lg border border-line items-center justify-center hover:bg-chip transition-colors"
+            className="btn-refined btn-refined-text header-refined-icon-button hidden lg:flex"
             aria-label="설정"
             title="설정"
           >
@@ -184,11 +156,14 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
           <div className="relative shrink-0" ref={menuRef}>
             <button
               type="button"
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() => {
+                setOpenResource(null)
+                setMenuOpen((current) => !current)
+              }}
               aria-controls={menuOpen ? accountMenuId : undefined}
               aria-expanded={menuOpen}
               aria-label="계정 메뉴"
-              className="w-9 h-9 rounded-full border border-line overflow-hidden bg-chip font-bold text-dark text-sm"
+              className="btn-refined header-refined-account-button rounded-full overflow-hidden font-bold text-sm"
             >
               {user?.picture
                 ? <img src={user.picture} alt="" className="w-full h-full object-cover" />
@@ -196,30 +171,12 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             </button>
 
             {menuOpen && (
-              <div id={accountMenuId} className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1rem))] sm:w-auto">
+              <div id={accountMenuId} className="header-refined-account-menu">
                 <div className="card-retro py-2 sm:min-w-[160px]">
                   <div className="sm:hidden px-3 pb-2 mb-2 border-b border-line">
-                    {/* 데스크톱 상단바 배지와 동일한 순서: 마감 → AI → 코인 */}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div>
                       <DeadlineNudgeMenu variant="mobile-card" />
-                      <div className="rounded-lg border border-line bg-chip px-2 py-2 text-center">
-                        <img {...iconProps('token', 20)} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
-                        <p className="text-[0.625rem] font-black text-sub">AI</p>
-                        <p className={`font-dungeon text-sm ${usage?.remaining === 0 ? 'text-primary' : 'text-dark'}`}>
-                          {usage ? usage.remaining : '-'}
-                        </p>
-                      </div>
-                      <div className="rounded-lg border border-line bg-accent px-2 py-2 text-center">
-                        <img {...iconProps('coin', 20)} alt="" className="w-5 h-5 object-contain mx-auto mb-1" />
-                        <p className="text-[0.625rem] font-black text-sub">코인</p>
-                        <p className="font-dungeon text-sm text-dark">{user?.coins ?? 0}</p>
-                      </div>
                     </div>
-                    {usage && (
-                      <p className="mt-2 text-[0.625rem] font-semibold text-sub text-right">
-                        AI {usage.remaining} / {usage.limit} · 자정 초기화
-                      </p>
-                    )}
                   </div>
                   <p className="px-4 py-1 text-xs font-bold text-sub truncate">{user?.email}</p>
                   <hr className="my-1 border-line" />
@@ -240,6 +197,73 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="header-refined-resources" ref={resourcesRef}>
+          <button
+            type="button"
+            className="btn-refined header-refined-resource-button"
+            aria-label={aiLabel}
+            aria-expanded={openResource === 'ai'}
+            aria-controls={aiPopoverId}
+            onClick={() => toggleResource('ai')}
+          >
+            <img {...iconProps('token', 16)} alt="" className="h-4 w-4 shrink-0 object-contain" />
+            <span className="text-xs text-sub">{usage ? 'AI 잔여 ' : 'AI '}</span>
+            <span className={`font-dungeon leading-none ${aiColor}`}>
+              {usage ? `${usage.remaining} / ${usage.limit}` : '—'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={`btn-refined header-refined-resource-button ${coinPop ? 'coin-bounce' : ''}`}
+            aria-label={`보유 코인 ${displayCoins}개 안내`}
+            aria-expanded={openResource === 'coin'}
+            aria-controls={coinPopoverId}
+            onClick={() => toggleResource('coin')}
+          >
+            <img {...iconProps('coin', 16)} alt="" className="h-4 w-4 shrink-0 object-contain" />
+            <span className="text-xs text-sub">코인</span>
+            <span className="font-dungeon text-dark leading-none">{displayCoins}</span>
+          </button>
+
+          {openResource === 'ai' && (
+            <div id={aiPopoverId} className="surface-refined header-refined-popover text-left">
+              <div className="px-3 py-2.5 border-b border-line">
+                <p className="text-xs font-black text-dark">AI 잔여량 (오늘)</p>
+                <p className="mt-0.5 text-[0.6875rem] font-bold text-sub">
+                  {usage
+                    ? <><span className={usage.remaining === 0 ? 'text-primary' : 'text-dark'}>{usage.remaining}</span> / {usage.limit}점</>
+                    : loading ? '확인 중이에요.' : '현재 확인할 수 없어요.'}
+                </p>
+              </div>
+              <div className="px-3 py-2 border-b border-line">
+                <p className="text-[0.625rem] font-semibold text-sub leading-relaxed">
+                  Dumpit!은 베타 서비스 중이에요. 모든 활동이 무료인 대신
+                  AI 기능에는 일일 사용량 제한이 있어요.
+                </p>
+              </div>
+              {AI_COST_ROWS.map(([label, cost, isTotal]) => (
+                <div
+                  key={label}
+                  className={`flex items-center justify-between px-3 py-1.5 divider-retro last:border-0 ${isTotal ? 'bg-chip' : ''}`}
+                >
+                  <span className={`text-xs ${isTotal ? 'font-black text-dark' : 'font-semibold text-sub'}`}>{label}</span>
+                  <span className="text-xs font-black text-dark">{cost}</span>
+                </div>
+              ))}
+              <div className="px-3 py-2 border-t border-line">
+                <p className="text-[0.625rem] font-semibold text-sub">매일 자정(KST)에 초기화돼요.</p>
+              </div>
+            </div>
+          )}
+
+          {openResource === 'coin' && (
+            <div id={coinPopoverId} className="surface-refined header-refined-popover px-3 py-3 text-left text-xs font-bold text-sub">
+              코인샵에서 각종 테마와 꾸미기 용품, 스티커로 교환할 수 있어요.
+            </div>
+          )}
         </div>
       </div>
     </header>

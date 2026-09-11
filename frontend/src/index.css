@@ -206,6 +206,93 @@ body {
     white-space: normal;
   }
 
+  .header-refined-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand actions"
+      "resources resources";
+    gap: .5rem .75rem;
+    width: 100%;
+    padding: .75rem 1rem;
+  }
+  .header-refined-brand {
+    grid-area: brand;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: .5rem;
+  }
+  .header-refined-actions {
+    grid-area: actions;
+    display: flex;
+    align-items: center;
+    justify-self: end;
+    gap: .5rem;
+  }
+  .header-refined-resources {
+    position: relative;
+    grid-area: resources;
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+  }
+  .header-refined-icon-button,
+  .header-refined-account-button {
+    flex: none;
+    width: max(44px, 2.75rem);
+    height: max(44px, 2.75rem);
+    padding: 0;
+  }
+  .header-refined-account-button { border-color: var(--line); }
+  .header-refined-resource-button {
+    flex: none;
+    min-width: 0;
+    max-width: 100%;
+    padding: .5rem .75rem;
+    border-color: var(--line);
+    background: var(--chip);
+    white-space: nowrap;
+  }
+  .header-refined-deadline > div > button {
+    min-height: max(44px, 2.75rem);
+    min-width: max(44px, 2.75rem);
+  }
+  .header-refined-popover {
+    position: absolute;
+    top: calc(100% + .5rem);
+    left: 0;
+    z-index: 50;
+    width: min(18rem, calc(100vw - 2rem));
+    border: 1px solid var(--line);
+  }
+  .header-refined-account-menu {
+    position: absolute;
+    top: calc(100% + .5rem);
+    right: 0;
+    z-index: 50;
+    width: min(18rem, calc(100vw - 2rem));
+  }
+
+  @media (min-width: 640px) {
+    .header-refined-inner {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-areas: "brand resources actions";
+    }
+    .header-refined-resources {
+      justify-self: end;
+      justify-content: flex-end;
+    }
+    .header-refined-popover { right: 0; left: auto; }
+    .header-refined-account-menu { width: auto; }
+  }
+
+  @media (min-width: 1024px) {
+    .header-refined-inner { height: 5rem; }
+  }
+
   .card-retro {
     @apply bg-card rounded-2xl p-5;
     border: 1.5px solid var(--edge);
