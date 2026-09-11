@@ -642,7 +642,7 @@ export default function IdeaDumpPage() {
                   <p className="text-[0.625rem] font-bold text-sub">수정 {formatDate(selectedIdea.updatedAt)}</p>
                   <h3 className="mt-1 font-galmuri font-bold text-lg text-dark">아이디어 상세</h3>
                 </div>
-                <label className="flex items-center gap-2 text-sm font-extrabold text-dark">
+                <label className="flex min-h-[max(44px,2.75rem)] items-center gap-2 px-2 text-sm font-extrabold text-dark">
                   <input
                     type="checkbox"
                     checked={detailForm.pinned}

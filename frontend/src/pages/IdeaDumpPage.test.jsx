@@ -116,6 +116,9 @@ describe('IdeaDumpPage', () => {
     const detailSection = screen.getByRole('heading', { name: '아이디어 상세' }).closest('section')
     expect(detailSection).toHaveClass('surface-refined', 'p-5')
     expect(detailSection).not.toHaveClass('card-retro')
+    const pinnedCheckbox = screen.getByRole('checkbox', { name: '고정' })
+    expect(pinnedCheckbox).toHaveClass('h-4', 'w-4')
+    expect(pinnedCheckbox.closest('label')).toHaveClass('min-h-[max(44px,2.75rem)]', 'px-2')
 
     const firstRow = screen.getByRole('button', { name: /첫 번째 아이디어/ }).parentElement
     expect(firstRow).toHaveClass('surface-refined', 'border', 'border-edge', 'bg-chip')
