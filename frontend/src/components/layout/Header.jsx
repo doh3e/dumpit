@@ -209,7 +209,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             onClick={() => toggleResource('ai')}
           >
             <img {...iconProps('token', 16)} alt="" className="h-4 w-4 shrink-0 object-contain" />
-            <span className="text-xs text-sub">{usage ? 'AI 잔여 ' : 'AI '}</span>
+            <span className="text-xs text-dark">{usage ? 'AI 잔여 ' : 'AI '}</span>
             <span className={`font-dungeon leading-none ${aiColor}`}>
               {usage ? `${usage.remaining} / ${usage.limit}` : '—'}
             </span>
@@ -224,7 +224,7 @@ export default function Header({ onOpenDrawer, onOpenHelp, onOpenSettings }) {
             onClick={() => toggleResource('coin')}
           >
             <img {...iconProps('coin', 16)} alt="" className="h-4 w-4 shrink-0 object-contain" />
-            <span className="text-xs text-sub">코인</span>
+            <span className="text-xs text-dark">코인</span>
             <span className="font-dungeon text-dark leading-none">{displayCoins}</span>
           </button>
 

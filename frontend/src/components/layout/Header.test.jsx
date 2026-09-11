@@ -1,7 +1,7 @@
 /* @vitest-environment jsdom */
 
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import postcss from 'postcss'
@@ -77,6 +77,8 @@ describe('Header', () => {
     expect(coin).not.toHaveClass('hidden')
     expect(ai).toHaveTextContent('AI 잔여 68 / 100')
     expect(coin.textContent).toContain('420')
+    expect(within(ai).getByText('AI 잔여')).toHaveClass('text-dark')
+    expect(within(coin).getByText('코인')).toHaveClass('text-dark')
   })
 
   it('프로필 이미지 크기와 무관하게 헤더 아이콘 및 계정 버튼 크기를 고정한다', () => {
