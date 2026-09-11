@@ -40,16 +40,15 @@ export default function MarkdownEditor({ value, onChange, maxLength = 5000, rows
   }
 
   return (
-    <div className="rounded-lg border border-line bg-card">
+    <div className="surface-refined border border-line">
       <div className="flex flex-wrap items-center gap-1 border-b border-line px-2 py-1.5">
         {[{ key: false, label: '쓰기' }, { key: true, label: '미리보기' }].map(({ key, label }) => (
           <button
             key={label}
             type="button"
             onClick={() => setPreviewing(key)}
-            className={`rounded-full border px-2.5 py-0.5 text-[0.6875rem] font-black transition-colors ${
-              previewing === key ? 'border-edge bg-chip text-dark' : 'border-line text-sub hover:border-edge'
-            }`}
+            aria-pressed={previewing === key}
+            className={`btn-refined !rounded-full !px-3 ${previewing === key ? 'btn-refined-selected' : 'btn-refined-text'}`}
           >
             {label}
           </button>
@@ -64,7 +63,7 @@ export default function MarkdownEditor({ value, onChange, maxLength = 5000, rows
                 aria-label={title}
                 onMouseDown={(e) => e.preventDefault() /* 텍스트에어리어 포커스·선택 유지 */}
                 onClick={() => runAction(action)}
-                className={`min-w-6 min-h-6 rounded px-1.5 py-1 text-[0.6875rem] font-bold text-sub hover:bg-chip hover:text-dark ${className}`}
+                className={`btn-refined btn-refined-text !p-2 ${className}`}
               >
                 {label}
               </button>
@@ -89,7 +88,7 @@ export default function MarkdownEditor({ value, onChange, maxLength = 5000, rows
           maxLength={maxLength}
           rows={rows}
           placeholder={placeholder}
-          className="w-full resize-none bg-transparent px-3 py-2 text-sm font-semibold leading-relaxed text-dark placeholder:text-sub"
+          className="input-refined !resize-none !rounded-none !border-0"
         />
       )}
       <p className="border-t border-line px-3 py-1 text-right text-[0.625rem] font-bold text-sub">
