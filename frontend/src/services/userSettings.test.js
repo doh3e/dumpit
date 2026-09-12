@@ -10,8 +10,15 @@ import {
   loadUserSettings,
   resetUserSettings,
   saveUserSettings,
+  startUserSettingsSession,
   subscribeUserSettings,
 } from './userSettings'
+
+function deferred() {
+  let resolve
+  const promise = new Promise((resolvePromise) => { resolve = resolvePromise })
+  return { promise, resolve }
+}
 
 describe('userSettings store', () => {
   beforeEach(() => {
@@ -80,5 +87,50 @@ describe('userSettings store', () => {
 
     await expect(saveUserSettings({ routineStartHour: 24 })).rejects.toThrow()
     expect(getUserSettings()).toEqual(DEFAULT_SETTINGS)
+  })
+
+  it('A 설정 로드가 늦게 끝나도 B 계정 설정을 덮지 않는다', async () => {
+    const accountA = deferred()
+    api.get.mockReturnValueOnce(accountA.promise)
+    startUserSettingsSession('a@example.com')
+    const loadA = loadUserSettings()
+
+    startUserSettingsSession('b@example.com')
+    api.get.mockResolvedValueOnce({ data: { ...DEFAULT_SETTINGS, routineStartHour: 7 } })
+    await loadUserSettings()
+    accountA.resolve({ data: { ...DEFAULT_SETTINGS, routineStartHour: 23 } })
+    await loadA
+
+    expect(getUserSettings().routineStartHour).toBe(7)
+  })
+
+  it('A→B→A에서도 첫 A 세대의 늦은 저장 응답을 현재 A에 반영하지 않는다', async () => {
+    const oldAccountA = deferred()
+    api.patch.mockReturnValueOnce(oldAccountA.promise)
+    startUserSettingsSession('a@example.com')
+    const saveOldA = saveUserSettings({ routineStartHour: 23 })
+
+    startUserSettingsSession('b@example.com')
+    startUserSettingsSession('a@example.com')
+    api.patch.mockResolvedValueOnce({ data: { ...DEFAULT_SETTINGS, routineStartHour: 8 } })
+    await saveUserSettings({ routineStartHour: 8 })
+    oldAccountA.resolve({ data: { ...DEFAULT_SETTINGS, routineStartHour: 23 } })
+    await saveOldA
+
+    expect(getUserSettings().routineStartHour).toBe(8)
+  })
+
+  it('같은 계정에서도 최신 저장 뒤 늦은 로드 응답을 반영하지 않는다', async () => {
+    const oldLoad = deferred()
+    startUserSettingsSession('a@example.com')
+    api.get.mockReturnValueOnce(oldLoad.promise)
+    const loading = loadUserSettings()
+    api.patch.mockResolvedValueOnce({ data: { ...DEFAULT_SETTINGS, routineStartHour: 8 } })
+    await saveUserSettings({ routineStartHour: 8 })
+
+    oldLoad.resolve({ data: { ...DEFAULT_SETTINGS, routineStartHour: 23 } })
+    await loading
+
+    expect(getUserSettings().routineStartHour).toBe(8)
   })
 })

@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import AiUsageBadge from '../components/AiUsageBadge'
+import Dialog from '../components/Dialog'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
+import { useAuth } from '../hooks/useAuth'
+import { clearDraft, readDraft, writeDraft } from '../services/brainDumpDraft'
+import { notifyToast } from '../services/notifyToast'
 import { announce } from '../utils/announce'
 
 const PLACEHOLDER = `예) 내일까지 기획서 초안 써야 하고, 이번 주 금요일 팀 발표 준비도 해야 해. 오늘 점심 약속 있고 오후엔 헬스장도 가야 함. 아, 이메일 답장도 밀려있어...`
@@ -34,15 +38,37 @@ function formatDeadline(value) {
 }
 
 export default function BrainDumpPage() {
+  const { user } = useAuth()
+  const accountKey = user?.email ?? null
+  return <AccountBrainDumpPage key={accountKey ?? 'anonymous'} accountKey={accountKey} />
+}
+
+function AccountBrainDumpPage({ accountKey }) {
   const aiUsage = useAiUsage()
-  const [text, setText] = useState('')
+  const [initialDraft] = useState(() => {
+    if (!accountKey) return { rawText: '', status: 'idle' }
+    try {
+      const draft = readDraft(accountKey)
+      return { rawText: draft?.rawText ?? '', status: draft ? 'saved' : 'idle' }
+    } catch {
+      return { rawText: '', status: 'error' }
+    }
+  })
+  const [text, setText] = useState(initialDraft.rawText)
+  const [draftStatus, setDraftStatus] = useState(initialDraft.status)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [result, setResult] = useState(null)
   const [selected, setSelected] = useState([])
   const [error, setError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [showClearDialog, setShowClearDialog] = useState(false)
   const navigate = useNavigate()
   const resultHeadingRef = useRef(null)
+  const analyzePendingRef = useRef(false)
+  const confirmPendingRef = useRef(false)
+  const confirmGenerationRef = useRef(0)
+  const writeGenerationRef = useRef(0)
+  const mountedRef = useRef(true)
   const isBusy = isAnalyzing || isSaving
   const resultTasks = result?.tasks ?? []
   const selectedCount = selected.filter(Boolean).length
@@ -51,31 +77,82 @@ export default function BrainDumpPage() {
     if (result) resultHeadingRef.current?.focus()
   }, [result])
 
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      confirmGenerationRef.current += 1
+    }
+  }, [])
+
+  const handleTextChange = (event) => {
+    if (!mountedRef.current || !accountKey || confirmPendingRef.current) return
+    const nextText = event.target.value
+    const writeGeneration = ++writeGenerationRef.current
+    setText(nextText)
+    setDraftStatus('saving')
+    try {
+      writeDraft(accountKey, nextText)
+      if (mountedRef.current && writeGenerationRef.current === writeGeneration) {
+        setDraftStatus(nextText ? 'saved' : 'idle')
+      }
+    } catch {
+      if (mountedRef.current && writeGenerationRef.current === writeGeneration) {
+        setDraftStatus('error')
+      }
+    }
+  }
+
   const handleAnalyze = async () => {
-    if (isBusy || !text.trim() || !aiUsage.hasEnough(5)) return
+    if (isBusy || analyzePendingRef.current || !text.trim() || !aiUsage.hasEnough(5)) return
+    if (!accountKey) return
+    analyzePendingRef.current = true
     setIsAnalyzing(true)
     setError(null)
 
     try {
       const response = await api.post('/brain-dump', { rawText: text.trim() })
+      if (!mountedRef.current) return
       const tasks = Array.isArray(response.data.tasks) ? response.data.tasks : []
       setResult({ ...response.data, tasks })
       setSelected(tasks.map(() => true))
       announce(`분석이 끝났어요. 후보 ${tasks.length}개`)
       dispatchAiUsed()
     } catch (requestError) {
+      if (!mountedRef.current) return
       setError(getApiErrorMessage(requestError, 'AI 분석에 실패했어요. 다시 시도해주세요.'))
     } finally {
-      setIsAnalyzing(false)
+      if (mountedRef.current) {
+        analyzePendingRef.current = false
+        setIsAnalyzing(false)
+      }
     }
   }
 
   const handleClear = () => {
     if (isBusy) return
-    setText('')
-    setResult(null)
-    setError(null)
-    setSelected([])
+    setShowClearDialog(true)
+  }
+
+  const confirmClear = () => {
+    if (!mountedRef.current || !accountKey) return
+    writeGenerationRef.current += 1
+    try {
+      clearDraft(accountKey)
+      if (!mountedRef.current) return
+      setText('')
+      setResult(null)
+      setError(null)
+      setSelected([])
+      setDraftStatus('idle')
+    } catch {
+      if (mountedRef.current) {
+        setDraftStatus('error')
+        setError('원문 초안을 지우지 못했어요. 다시 시도해주세요.')
+      }
+    } finally {
+      if (mountedRef.current) setShowClearDialog(false)
+    }
   }
 
   const toggleAll = (value) => {
@@ -84,7 +161,8 @@ export default function BrainDumpPage() {
   }
 
   const handleConfirm = async () => {
-    if (isBusy || !result || resultTasks.length === 0 || selectedCount === 0) return
+    if (isBusy || confirmPendingRef.current || !result || resultTasks.length === 0 || selectedCount === 0) return
+    if (!accountKey) return
     const tasks = resultTasks
       .filter((_, index) => selected[index])
       .map((task) => ({
@@ -96,16 +174,34 @@ export default function BrainDumpPage() {
         estimatedMinutes: task.estimatedMinutes || null,
       }))
 
+    const confirmGeneration = ++confirmGenerationRef.current
+    const isCurrentConfirm = () => (
+      mountedRef.current && confirmGenerationRef.current === confirmGeneration
+    )
+    confirmPendingRef.current = true
     setIsSaving(true)
     setError(null)
     try {
       await api.post(`/brain-dump/${result.dumpId}/confirm`, { tasks })
-      navigate('/dashboard')
     } catch (requestError) {
+      if (!isCurrentConfirm()) return
       setError(getApiErrorMessage(requestError, '태스크 등록에 실패했어요.'))
-    } finally {
+      confirmPendingRef.current = false
       setIsSaving(false)
+      return
     }
+
+    if (!isCurrentConfirm()) return
+    try {
+      clearDraft(accountKey)
+    } catch {
+      if (isCurrentConfirm()) {
+        notifyToast('할 일은 등록했지만 원문 초안을 지우지 못했어요.')
+      }
+    }
+    if (!isCurrentConfirm()) return
+    writeGenerationRef.current += 1
+    navigate('/dashboard')
   }
 
   return (
@@ -121,7 +217,8 @@ export default function BrainDumpPage() {
         <textarea
           aria-label="브레인 덤프 입력"
           value={text}
-          onChange={(event) => setText(event.target.value)}
+          onChange={handleTextChange}
+          disabled={isSaving}
           placeholder={PLACEHOLDER}
           rows={7}
           maxLength={3000}
@@ -149,6 +246,25 @@ export default function BrainDumpPage() {
               </button>
             )}
           </div>
+        </div>
+        <div className="space-y-1" aria-live="polite">
+          <p className="text-xs font-semibold text-dark" role="status">
+            {draftStatus === 'saving' && '저장 중...'}
+            {draftStatus === 'saved' && '원문 초안 저장됨'}
+            {draftStatus === 'error' && '이 기기에 저장하지 못했어요'}
+            {draftStatus === 'idle' && '원문 초안 · 입력하면 이 기기에 저장돼요'}
+          </p>
+          <p className="text-xs font-semibold text-sub">
+            원문 초안은 같은 기기의 현재 브라우저/앱에서 계정별로 마지막 수정부터 7일간 복구돼요.
+          </p>
+          <details className="text-xs font-semibold text-sub">
+            <summary className="btn-refined btn-refined-text !min-h-11 !w-full cursor-pointer !justify-start !px-3 text-xs">
+              초안 저장 범위 자세히
+            </summary>
+            <p className="px-3 pb-2 leading-relaxed">
+              웹·데스크톱·Android 사이에는 동기화되지 않아요. 화면 이동·새로고침·자동 세션 만료에는 남아 있어요. 지우기·등록 완료·직접 로그아웃·탈퇴 때 이 브라우저/앱 초안이 삭제돼요.
+            </p>
+          </details>
         </div>
         <AiUsageBadge usage={aiUsage.usage} cost={5} variant="inline" />
       </section>
@@ -217,9 +333,12 @@ export default function BrainDumpPage() {
                           aria-label={`${item.title} 선택`}
                           checked={isChecked}
                           disabled={isBusy}
-                          onChange={(event) => setSelected((previous) => previous.map(
-                            (value, itemIndex) => itemIndex === index ? event.target.checked : value,
-                          ))}
+                          onChange={(event) => {
+                            const checked = event.target.checked
+                            setSelected((previous) => previous.map(
+                              (value, itemIndex) => itemIndex === index ? checked : value,
+                            ))
+                          }}
                           className="brain-dump-checkbox"
                         />
                       </span>
@@ -278,6 +397,28 @@ export default function BrainDumpPage() {
             </button>
           </div>
         </section>
+      )}
+
+      {showClearDialog && (
+        <Dialog
+          onClose={() => setShowClearDialog(false)}
+          title="원문과 결과 지우기"
+          className="w-full max-w-md p-5"
+          variant="refined"
+        >
+          <h2 className="font-galmuri text-xl font-bold text-dark">원문과 결과 지우기</h2>
+          <p className="mt-3 text-sm font-semibold text-sub">
+            원문과 AI 분석 결과가 모두 사라져요. 지울까요?
+          </p>
+          <div className="mt-5 flex gap-3">
+            <button type="button" onClick={() => setShowClearDialog(false)} className="btn-refined flex-1">
+              취소
+            </button>
+            <button type="button" onClick={confirmClear} className="btn-refined btn-refined-danger flex-1">
+              지우기
+            </button>
+          </div>
+        </Dialog>
       )}
     </div>
   )

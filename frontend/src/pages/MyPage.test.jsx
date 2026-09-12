@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   get: vi.fn(),
   patch: vi.fn(),
   delete: vi.fn(),
+  clearDraft: vi.fn(),
   refreshCoins: vi.fn(),
   reducedMotion: false,
 }))
@@ -23,7 +24,14 @@ vi.mock('../services/api', async (importOriginal) => {
 })
 
 vi.mock('../hooks/useAuth', () => ({
-  useAuth: () => ({ refreshCoins: mocks.refreshCoins }),
+  useAuth: () => ({
+    refreshCoins: mocks.refreshCoins,
+    user: { email: 'tester@example.com' },
+  }),
+}))
+
+vi.mock('../services/brainDumpDraft', () => ({
+  clearDraft: (...args) => mocks.clearDraft(...args),
 }))
 
 vi.mock('../hooks/useReducedMotion', () => ({
@@ -80,6 +88,7 @@ describe('MyPage', () => {
       return Promise.resolve({ data: {} })
     })
     mocks.delete.mockReset().mockResolvedValue({ data: {} })
+    mocks.clearDraft.mockReset()
     mocks.refreshCoins.mockReset()
     vi.spyOn(window, 'alert').mockImplementation(() => {})
   })
@@ -176,5 +185,18 @@ describe('MyPage', () => {
     expect(within(dialog).getByRole('heading', { level: 2, name: '회원 탈퇴' })).toHaveClass('font-galmuri')
     expect(within(dialog).getByRole('button', { name: '취소' })).toHaveClass('btn-refined')
     expect(within(dialog).getByRole('button', { name: '탈퇴' })).toHaveClass('btn-refined', 'btn-refined-danger')
+  })
+
+  it('탈퇴 성공 뒤 해당 계정 초안을 지우고 삭제 실패도 탈퇴 실패로 바꾸지 않는다', async () => {
+    mocks.clearDraft.mockImplementationOnce(() => { throw new Error('민감한 삭제 오류') })
+    renderPage()
+    await screen.findByRole('heading', { name: '마이페이지' })
+    fireEvent.click(screen.getByRole('button', { name: '회원 탈퇴' }))
+    fireEvent.click(within(screen.getByRole('dialog', { name: '회원 탈퇴' })).getByRole('button', { name: '탈퇴' }))
+
+    await waitFor(() => expect(mocks.delete).toHaveBeenCalledWith('/me/account'))
+    expect(mocks.clearDraft).toHaveBeenCalledWith('tester@example.com')
+    expect(window.alert).toHaveBeenCalledWith('탈퇴했지만 이 기기의 원문 초안을 지우지 못했어요.')
+    expect(window.alert.mock.calls.flat().join(' ')).not.toContain('민감한 삭제 오류')
   })
 })

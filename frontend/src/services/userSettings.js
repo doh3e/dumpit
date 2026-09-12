@@ -17,6 +17,8 @@ const LEGACY_KEYS = [
 ]
 
 let settings = { ...DEFAULT_SETTINGS }
+let sessionGeneration = 0
+let operationGeneration = 0
 const listeners = new Set()
 
 function emit() {
@@ -32,10 +34,20 @@ export function subscribeUserSettings(listener) {
   return () => listeners.delete(listener)
 }
 
+export function startUserSettingsSession() {
+  sessionGeneration += 1
+  operationGeneration += 1
+  settings = { ...DEFAULT_SETTINGS }
+  emit()
+}
+
 /** 로그인 직후 호출 — 실패해도 기본값으로 동작한다 */
 export async function loadUserSettings() {
+  const generation = sessionGeneration
+  const operation = ++operationGeneration
   try {
     const res = await api.get('/me/settings')
+    if (generation !== sessionGeneration || operation !== operationGeneration) return settings
     settings = { ...DEFAULT_SETTINGS, ...res.data }
     LEGACY_KEYS.forEach((key) => localStorage.removeItem(key))
     emit()
@@ -46,13 +58,18 @@ export async function loadUserSettings() {
 }
 
 export async function saveUserSettings(patch) {
+  const generation = sessionGeneration
+  const operation = ++operationGeneration
   const res = await api.patch('/me/settings', patch)
+  if (generation !== sessionGeneration || operation !== operationGeneration) return settings
   settings = { ...DEFAULT_SETTINGS, ...res.data }
   emit()
   return settings
 }
 
 export function resetUserSettings() {
+  sessionGeneration += 1
+  operationGeneration += 1
   settings = { ...DEFAULT_SETTINGS }
   emit()
 }
