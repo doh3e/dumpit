@@ -7,7 +7,6 @@ import { calcCompletionCoins } from '../../tasks/rewards';
 import { useTheme } from '../../theme/useTheme';
 import { CoinIcon } from '../common/CoinIcon';
 import { RetroCard } from '../retro/RetroCard';
-import { Chip } from '../retro/Chip';
 import { TaskRow, type TogglePos } from './TaskRow';
 
 const TABS = [
@@ -99,7 +98,34 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
         {TABS.map((t) => (
-          <Chip appearance="refined" key={t.id} label={t.label} selected={tab === t.id} onPress={() => setTab(t.id)} />
+          <Pressable
+            key={t.id}
+            accessibilityRole="tab"
+            accessibilityLabel={t.label}
+            accessibilityState={{ selected: tab === t.id }}
+            onPress={() => setTab(t.id)}
+            style={({ pressed }) => [
+              styles.filterTab,
+              { backgroundColor: pressed ? colors.chip : 'transparent' },
+            ]}
+          >
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.filterLabel,
+                { color: tab === t.id ? colors.fg : colors.subOnChip, fontFamily: fonts.chrome },
+              ]}
+            >
+              {t.label}
+            </Text>
+            <View
+              accessible={false}
+              style={[
+                styles.filterMarker,
+                { backgroundColor: tab === t.id ? colors.accent2Text : 'transparent' },
+              ]}
+            />
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -185,7 +211,21 @@ const styles = StyleSheet.create({
   title: { fontSize: 16 },
   boardLink: { minWidth: 0, minHeight: 48, paddingHorizontal: 8, justifyContent: 'center', flexShrink: 1, borderRadius: 8 },
   boardLinkText: { fontSize: 12, textAlign: 'right' },
-  tabs: { gap: 6, paddingBottom: 10 },
+  tabs: { gap: 4, paddingBottom: 10, flexGrow: 1 },
+  filterTab: {
+    minWidth: 48,
+    minHeight: 48,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    flexGrow: 1,
+    flexShrink: 0,
+    borderRadius: 8,
+  },
+  filterLabel: { fontSize: 12 },
+  filterMarker: { width: 18, height: 2 },
   section: { marginBottom: 4 },
   sectionTitle: { fontSize: 11, marginTop: 6, marginBottom: 2 },
   empty: { fontSize: 13, paddingVertical: 18, textAlign: 'center' },

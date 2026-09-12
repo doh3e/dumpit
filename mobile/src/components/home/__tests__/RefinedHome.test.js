@@ -444,6 +444,111 @@ describe('뽀모도로 진입 카드', () => {
 });
 
 describe('할 일 목록 카드', () => {
+  it('오늘·내일·일주일·언젠가·전부를 48dp 밑줄 탭으로 표시하고 실제 목록을 전환한다', async () => {
+    const todayTask = task({ taskId: 'today-task', title: '오늘 목록' });
+    const tomorrowTask = task({ taskId: 'tomorrow-task', title: '내일 목록' });
+    const weekTask = task({ taskId: 'week-task', title: '일주일 목록' });
+    const laterTask = task({ taskId: 'later-task', title: '그 외 목록' });
+    const somedayTask = task({ taskId: 'someday-task', title: '언젠가 목록' });
+    const tree = await render(
+      <TaskListCard
+        sections={{
+          overdue: [],
+          today: [todayTask],
+          tomorrow: [tomorrowTask],
+          next7Days: [weekTask],
+          later: [laterTask],
+          someday: [somedayTask],
+          recentDone: [],
+        }}
+        onToggle={() => {}}
+        onPressTask={() => {}}
+        onPressBoard={() => {}}
+      />,
+    );
+
+    for (const [label, selected] of [['오늘', true], ['내일', false], ['일주일', false], ['언젠가', false], ['전부', false]]) {
+      const filter = byLabel(tree, label);
+      const labelText = filter.find((node) => node.type === Text && node.props.children === label);
+      const marker = filter.find(
+        (node) => node.type === View
+          && node.props.accessible === false
+          && StyleSheet.flatten(node.props.style)?.width === 18
+          && StyleSheet.flatten(node.props.style)?.height === 2,
+      );
+      const resting = pressableStyle(filter);
+      const pressed = pressableStyle(filter, true);
+      const labelStyle = StyleSheet.flatten(labelText.props.style);
+      const markerStyle = StyleSheet.flatten(marker.props.style);
+
+      expect(filter.props.accessibilityRole).toBe('tab');
+      expect(filter.props.accessibilityState).toEqual({ selected });
+      expect(actualHeight(filter)).toBeGreaterThanOrEqual(48);
+      expect(resting.borderWidth ?? 0).toBe(0);
+      expect(resting.backgroundColor).toBe('transparent');
+      expect(pressed.backgroundColor).toBe(mockTheme.colors.chip);
+      expect(labelText.props.numberOfLines).toBe(1);
+      expect(labelStyle.color).toBe(selected ? mockTheme.colors.fg : mockTheme.colors.subOnChip);
+      expect(markerStyle.backgroundColor).toBe(selected ? mockTheme.colors.accent2Text : 'transparent');
+    }
+
+    expect(tree.root.findAll((node) => node.type === Text && node.props.children === '오늘 목록')).not.toHaveLength(0);
+    await act(async () => byLabel(tree, '내일').props.onPress());
+    expect(byLabel(tree, '오늘').props.accessibilityState).toEqual({ selected: false });
+    expect(byLabel(tree, '내일').props.accessibilityState).toEqual({ selected: true });
+    expect(tree.root.findAll((node) => node.type === Text && node.props.children === '오늘 목록')).toHaveLength(0);
+    expect(tree.root.findAll((node) => node.type === Text && node.props.children === '내일 목록')).not.toHaveLength(0);
+    await unmount(tree);
+  });
+
+  it.each(['light', 'dark'])('%s 기본·고대비와 스킨에서 필터 라벨·밑줄 대비를 지킨다', async (scheme) => {
+    const equipmentCases = [
+      null,
+      ...Object.keys(BG_SKINS).map((skin) => ({ BACKGROUND: `bg.${skin}` })),
+      ...Object.keys(CHROME_SKINS).map((skin) => ({ CHROME: `chrome.${skin}` })),
+      { BACKGROUND: 'bg.galaxy', CHROME: 'chrome.candy' },
+      { BACKGROUND: 'bg.candy', CHROME: 'chrome.galaxy' },
+    ];
+    const sections = {
+      overdue: [], today: [], tomorrow: [], next7Days: [], later: [], someday: [], recentDone: [],
+    };
+
+    for (const equipments of equipmentCases) {
+      for (const highContrast of [false, true]) {
+        setTheme(scheme, equipments, highContrast);
+        const tree = await render(
+          <TaskListCard
+            sections={sections}
+            onToggle={() => {}}
+            onPressTask={() => {}}
+            onPressBoard={() => {}}
+          />,
+        );
+
+        for (const label of ['오늘', '내일', '일주일', '언젠가', '전부']) {
+          const filter = byLabel(tree, label);
+          const labelText = filter.find((node) => node.type === Text && node.props.children === label);
+          const labelStyle = StyleSheet.flatten(labelText.props.style);
+          const pressed = pressableStyle(filter, true);
+
+          expect(contrastRatio(labelStyle.color, mockTheme.colors.card)).toBeGreaterThanOrEqual(4.5);
+          expect(contrastRatio(labelStyle.color, pressed.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+        }
+
+        const marker = byLabel(tree, '오늘').find(
+          (node) => node.type === View
+            && node.props.accessible === false
+            && StyleSheet.flatten(node.props.style)?.width === 18
+            && StyleSheet.flatten(node.props.style)?.height === 2,
+        );
+        const markerStyle = StyleSheet.flatten(marker.props.style);
+        expect(contrastRatio(markerStyle.backgroundColor, mockTheme.colors.card)).toBeGreaterThanOrEqual(3);
+        expect(contrastRatio(markerStyle.backgroundColor, mockTheme.colors.chip)).toBeGreaterThanOrEqual(3);
+        await unmount(tree);
+      }
+    }
+  });
+
   it('태스크 전체 보기를 테마 대비의 48dp 무테두리 이동 링크로 제공한다', async () => {
     const todayTask = task();
     const onToggle = jest.fn();
