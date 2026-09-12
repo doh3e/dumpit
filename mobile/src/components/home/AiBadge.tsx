@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { AiUsage } from '../../api/types';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
@@ -16,23 +16,33 @@ export function AiBadge({ usage }: { usage: AiUsage | undefined }) {
       onPress={() => toast.show(`오늘 AI ${usage.used}/${usage.limit}점 사용 · 자정에 초기화돼요`)}
       accessibilityRole="button"
       accessibilityLabel={`AI 잔여 ${usage.remaining}점${usage.remaining < 10 ? ', 거의 소진' : ''}`}
-      style={({ pressed }) => [
-        styles.badge,
-        { backgroundColor: colors.card, borderColor: pressed ? colors.fg : colors.sub },
-      ]}
+      style={styles.target}
     >
       {/* 웹 Header의 token 도트와 동일 기호 — AI 포인트 화폐 표기 통일 (도트 통일 Phase A) */}
-      <PixelIcon name="token" size={12} />
-      <Text style={[styles.text, { color: toneText, fontFamily: fonts.chrome }]}>{usage.remaining}</Text>
+      {({ pressed }) => (
+        <View
+          style={[
+            styles.badge,
+            { backgroundColor: colors.card, borderColor: pressed ? colors.fg : colors.sub },
+          ]}
+        >
+          <PixelIcon name="token" size={12} />
+          <Text style={[styles.text, { color: toneText, fontFamily: fonts.chrome }]}>{usage.remaining}</Text>
+        </View>
+      )}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  target: {
+    minHeight: 48, minWidth: 48,
+    alignItems: 'center', justifyContent: 'center',
+  },
   badge: {
     flexDirection: 'row', gap: 4,
     borderWidth: 1.5, borderRadius: 8,
-    paddingHorizontal: 12, minHeight: 48, minWidth: 48,
+    paddingHorizontal: 9, paddingVertical: 5,
     alignItems: 'center', justifyContent: 'center',
   },
   text: { fontSize: 12 },

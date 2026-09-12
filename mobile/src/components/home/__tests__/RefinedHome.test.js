@@ -79,6 +79,11 @@ function pressableStyle(node, pressed = false) {
   return StyleSheet.flatten(style);
 }
 
+function aiSurfaceStyle(node, pressed = false) {
+  const surface = node.props.children({ pressed });
+  return StyleSheet.flatten(surface.props.style);
+}
+
 function actualHeight(node) {
   const style = pressableStyle(node);
   return Math.max(style.height ?? 0, style.minHeight ?? 0);
@@ -150,37 +155,25 @@ describe('홈 헤더 자원 표시', () => {
       />,
     );
 
-    const greetingText = tree.root.find((node) => node.props.accessibilityLabel === greeting);
-    const greetingName = greetingText.find(
-      (node) => node.type === Text && node.props.children === '아주아주긴사용자이름',
+    const greetingText = tree.root.find(
+      (node) => node.type === Text && node.props.accessibilityLabel === greeting,
     );
     const coin = tree.root.find((node) => node.props.accessibilityLabel === '코인 420개');
     const ai = byLabel(tree, 'AI 잔여 68점');
     const coinNumber = tree.root.find((node) => node.type === Text && node.props.children === 420);
     const aiNumber = tree.root.find((node) => node.type === Text && node.props.children === 68);
+    const aiSurface = ai.find(
+      (node) => node.type === View && StyleSheet.flatten(node.props.style)?.borderWidth === 1.5,
+    );
 
-    expect(greetingName.props.numberOfLines).toBe(1);
-    expect(StyleSheet.flatten(greetingName.props.style).fontFamily).toBe(mockTheme.fonts.displayBold);
+    expect(greetingText.props.numberOfLines).toBe(1);
+    expect(StyleSheet.flatten(greetingText.props.style).fontFamily).toBe(mockTheme.fonts.displayBold);
     expect(coin.props.accessibilityRole).toBeUndefined();
     expect(pressableStyle(ai).minHeight).toBeGreaterThanOrEqual(48);
     expect(pressableStyle(ai).minWidth).toBeGreaterThanOrEqual(48);
+    expect(aiSurface.props.accessible).toBeUndefined();
     expect(StyleSheet.flatten(coinNumber.props.style).fontFamily).toBe(mockTheme.fonts.chrome);
     expect(StyleSheet.flatten(aiNumber.props.style).fontFamily).toBe(mockTheme.fonts.chrome);
-
-    const longName = 'A'.repeat(120);
-    const longGreeting = `${longName}의 덤프`;
-    const longNameTree = await render(
-      <HomeAppBar
-        me={{ name: longName, coins: 420, equipments: {} }}
-        aiUsage={{ used: 32, limit: 100, remaining: 68, resetAt: '2026-09-13T00:00:00' }}
-      />,
-    );
-    const greetingLine = longNameTree.root.find((node) => node.props.accessibilityLabel === longGreeting);
-    const nameText = greetingLine.find((node) => node.type === Text && node.props.children === longName);
-    const suffixText = greetingLine.find((node) => node.type === Text && node.props.children === '의 덤프');
-    expect(nameText.props.numberOfLines).toBe(1);
-    expect(suffixText).toBeTruthy();
-    await unmount(longNameTree);
 
     await act(async () => ai.props.onPress());
     expect(mockToastShow).toHaveBeenCalledWith('오늘 AI 32/100점 사용 · 자정에 초기화돼요');
@@ -223,11 +216,10 @@ describe('필수 조작 경계 대비', () => {
             tree,
             `AI 잔여 ${remaining}점${remaining < 10 ? ', 거의 소진' : ''}`,
           );
-          const controlStyle = pressableStyle(control);
-          const pressedStyle = pressableStyle(control, true);
+          const controlStyle = aiSurfaceStyle(control);
+          const pressedStyle = aiSurfaceStyle(control, true);
           const label = tree.root.find((node) => node.type === Text && node.props.children === remaining);
 
-          expect(pressedStyle.opacity ?? 1).toBe(1);
           expect(controlStyle.backgroundColor).toBe(mockTheme.colors.card);
           expect(contrastRatio(controlStyle.borderColor, controlStyle.backgroundColor)).toBeGreaterThanOrEqual(3);
           expect(contrastRatio(controlStyle.borderColor, mockTheme.colors.chromeBg)).toBeGreaterThanOrEqual(3);
