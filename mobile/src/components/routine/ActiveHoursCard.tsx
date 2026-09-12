@@ -1,6 +1,7 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
 import { useSaveSettings, useUserSettings } from '../../query/routineHooks';
@@ -17,6 +18,7 @@ const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
 /** 활동시간(일과) 카드 — 서버 /me/settings 소비, AI 시각 배치·추천 개인화에 쓰인다 */
 export function ActiveHoursCard() {
   const { colors, fonts } = useTheme();
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const settings = useUserSettings();
   const save = useSaveSettings();
@@ -68,11 +70,17 @@ export function ActiveHoursCard() {
       <BottomSheetModal
         ref={sheet}
         enableDynamicSizing
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
         onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
-        <BottomSheetView accessibilityViewIsModal style={styles.sheetBody}>
+        <BottomSheetScrollView
+          accessibilityViewIsModal
+          contentContainerStyle={[styles.sheetBody, { paddingBottom: insets.bottom + 24 }]}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text ref={headingRef} accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 시작 시각</Text>
           <View style={styles.grid}>
             {/* 24칸 격자가 둘이라 "09:00"만으로는 시작·끝을 가릴 수 없다 */}
@@ -103,7 +111,7 @@ export function ActiveHoursCard() {
             disabled={draftStart === draftEnd}
             style={styles.saveBtn}
           />
-        </BottomSheetView>
+        </BottomSheetScrollView>
       </BottomSheetModal>
     </RetroCard>
   );
@@ -116,7 +124,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 15 },
   value: { fontSize: 14 },
   hint: { fontSize: 11 },
-  sheetBody: { padding: 20, paddingBottom: 32, gap: 10 },
+  sheetBody: { padding: 20, gap: 10 },
   sheetTitle: { fontSize: 14, marginTop: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   wrapNote: { fontSize: 12, lineHeight: 18 },

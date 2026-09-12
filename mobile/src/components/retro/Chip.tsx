@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 7,
     minHeight: 34, alignItems: 'center', justifyContent: 'center',
   },
-  refinedSize: { minHeight: 48, minWidth: 48 },
+  refinedSize: { minHeight: 48, minWidth: 48, borderRadius: 8 },
   iconRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   text: { fontSize: 12 },
 });

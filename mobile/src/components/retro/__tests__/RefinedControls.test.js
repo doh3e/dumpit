@@ -185,6 +185,7 @@ describe('Chip appearance', () => {
 
     expect(style.minHeight).toBeGreaterThanOrEqual(48);
     expect(style.minWidth).toBeGreaterThanOrEqual(48);
+    expect(style.borderRadius).toBe(8);
     expect(style.backgroundColor).toBe(mockTheme.colors.chip);
     expect(style.borderColor).toBe(mockTheme.colors.fg);
     expect(style.opacity).toBe(1);

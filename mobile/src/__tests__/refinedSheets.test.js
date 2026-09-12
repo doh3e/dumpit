@@ -13,20 +13,30 @@ const mockDeleteTask = jest.fn();
 const mockSetSticker = jest.fn();
 const mockPatchTask = jest.fn();
 const mockToastError = jest.fn();
+const mockSaveSettings = jest.fn();
+const mockStartSession = jest.fn();
+const mockPauseSession = jest.fn();
+const mockResumeSession = jest.fn();
 
 jest.mock('@react-native-community/datetimepicker', () => 'DateTimePicker');
 jest.mock('@gorhom/bottom-sheet', () => {
   const React = require('react');
   const { TextInput, View } = require('react-native');
-  const Modal = React.forwardRef(function Modal({ children }, ref) {
-    React.useImperativeHandle(ref, () => ({ dismiss: mockDismiss, present: jest.fn() }));
-    return <View>{children}</View>;
+  const Modal = React.forwardRef(function Modal({ children, onChange, onDismiss, ...props }, ref) {
+    const [open, setOpen] = React.useState(false);
+    React.useImperativeHandle(ref, () => ({
+      present: () => { setOpen(true); onChange?.(0); },
+      dismiss: () => { setOpen(false); onChange?.(-1); onDismiss?.(); mockDismiss(); },
+    }));
+    return <View testID="bottom-sheet-modal" accessibilityState={{ expanded: open }} {...props}>{children}</View>;
   });
-  return { BottomSheetModal: Modal, BottomSheetView: View, BottomSheetScrollView: View, BottomSheetTextInput: TextInput };
+  function Scroll({ children, contentContainerStyle, ...props }) {
+    return <View testID="bottom-sheet-scroll-content" style={contentContainerStyle} {...props}>{children}</View>;
+  }
+  return { BottomSheetModal: Modal, BottomSheetView: View, BottomSheetScrollView: Scroll, BottomSheetTextInput: TextInput };
 });
 jest.mock('../theme/useTheme', () => ({ useTheme: () => mockTheme }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 12 }) }));
-jest.mock('../a11y/useSheetFocus', () => ({ useSheetFocus: () => ({ headingRef: { current: null }, onChange: jest.fn() }) }));
 jest.mock('@tanstack/react-query', () => ({
   useQuery: () => ({ data: ['sticker.star'], isLoading: false }),
   useQueryClient: () => ({ cancelQueries: jest.fn(), getQueryData: jest.fn(), setQueryData: jest.fn(), invalidateQueries: jest.fn() }),
@@ -47,9 +57,28 @@ jest.mock('../api/tasks', () => ({
 jest.mock('../api/shop', () => ({ fetchOwnedStickers: jest.fn() }));
 jest.mock('../query/routineHooks', () => ({
   useUserSettings: () => ({ data: { routineStartHour: 9, routineEndHour: 22, notificationsEnabled: true, notificationThresholds: [60], briefingEnabled: true } }),
-  useSaveSettings: () => ({ mutate: jest.fn(), isPending: false }),
+  useSaveSettings: () => ({ mutate: (...args) => mockSaveSettings(...args), isPending: false }),
 }));
 jest.mock('../components/retro/ToastProvider', () => ({ useToast: () => ({ show: jest.fn(), error: mockToastError }) }));
+jest.mock('expo-router', () => ({ useFocusEffect: (effect) => effect() }));
+jest.mock('../components/shell/ScreenHeader', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return { ScreenHeader: ({ title }) => <Text accessibilityRole="header">{title}</Text> };
+});
+jest.mock('../components/pomodoro/TimerRing', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return { TimerRing: () => <View testID="timer-ring" /> };
+});
+jest.mock('../pomodoro/notifications', () => ({ requestNotificationPermission: jest.fn(async () => true), checkExactAlarm: jest.fn(async () => true), openAlarmSettings: jest.fn() }));
+jest.mock('../pomodoro/persistence', () => ({ loadSettings: jest.fn(async () => ({ focusMin: 25, breakMin: 5, longBreakMin: 15, longBreakEvery: 4, setsTarget: 4 })), saveSettings: jest.fn() }));
+jest.mock('../pomodoro/store', () => ({
+  getSession: () => null,
+  subscribe: () => () => {}, reconcile: jest.fn(), resetSession: jest.fn(async () => true),
+  pauseSession: (...args) => mockPauseSession(...args), resumeSession: (...args) => mockResumeSession(...args),
+  startSession: (...args) => mockStartSession(...args),
+}));
 
 const { composeTheme } = require('../theme/compose');
 const { resolveFonts } = require('../theme/typography');
@@ -63,6 +92,7 @@ const { AddTaskSheet } = require('../components/task/AddTaskSheet');
 const { SubtaskProposalSheet } = require('../components/task/SubtaskProposalSheet');
 const { StickerPicker } = require('../components/task/StickerPicker');
 const { TaskDetailSheet } = require('../components/task/TaskDetailSheet');
+const PomodoroScreen = require('../../app/pomodoro').default;
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -101,11 +131,16 @@ beforeEach(() => {
   mockSetSticker.mockReset();
   mockPatchTask.mockReset();
   mockToastError.mockReset();
+  mockSaveSettings.mockReset();
+  mockStartSession.mockReset();
+  mockPauseSession.mockReset();
+  mockResumeSession.mockReset();
   mockCreateTask.mockResolvedValue({});
   mockProposeSplit.mockResolvedValue({ subtasks: [] });
   mockConfirmSplit.mockResolvedValue({});
   mockSetSticker.mockResolvedValue({ taskId: 'task-1' });
   mockPatchTask.mockResolvedValue({ taskId: 'task-1' });
+  mockStartSession.mockResolvedValue();
   Alert.alert = jest.fn();
 });
 
@@ -149,14 +184,22 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
   it('태스크 추가 시트는 uncontrolled 제목 입력을 유지하고 취소가 선택 상태를 바꾸지 않는다', async () => {
     const ref = React.createRef();
     const tree = await render(<AddTaskSheet ref={ref} />);
+    await act(async () => ref.current.present());
     const title = tree.root.find((node) => node.props.accessibilityLabel === '할 일 제목');
     expect(title.props.value).toBeUndefined();
     expect(title.props.defaultValue).toBe('');
     await act(async () => title.props.onChangeText('한글 조합 중인 태스크'));
+    await act(async () => control(tree, '오늘까지').props.onPress());
     await act(async () => control(tree, '취소').props.onPress());
     expect(mockDismiss).toHaveBeenCalledTimes(1);
     expect(control(tree, 'AI가 알아서').props.accessibilityState.selected).toBe(true);
     expect(control(tree, '오늘까지').props.accessibilityState.selected).toBe(false);
+    const modal = tree.root.find((node) => node.props.testID === 'bottom-sheet-modal');
+    const scroll = tree.root.find((node) => node.props.testID === 'bottom-sheet-scroll-content');
+    expect(modal.props.keyboardBehavior).toBe('interactive');
+    expect(modal.props.keyboardBlurBehavior).toBe('restore');
+    expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
+    expect(style(scroll).paddingBottom).toBeGreaterThanOrEqual(24);
     await act(async () => tree.unmount());
   });
 
@@ -177,8 +220,13 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     expect(mockToastError).toHaveBeenCalledWith(expect.stringContaining('저장에 실패했어요.'));
     await act(async () => control(tree, '삭제').props.onPress());
     expect(Alert.alert).toHaveBeenCalledWith('삭제', '이 할 일을 삭제할까요?', expect.any(Array));
+    const deleteAction = Alert.alert.mock.calls[0][2].find((action) => action.style === 'destructive');
+    await act(async () => deleteAction.onPress());
+    expect(mockDeleteTask).toHaveBeenCalledWith('task-1');
+    const savedBeforeClose = mockPatchTask.mock.calls.length;
     await act(async () => control(tree, '태스크 상세 닫기').props.onPress());
     expect(mockDismiss).toHaveBeenCalled();
+    expect(mockPatchTask).toHaveBeenCalledTimes(savedBeforeClose);
     await act(async () => tree.unmount());
   });
 
@@ -236,21 +284,51 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     expect(tree.root.find((node) => node.type === Text && node.props.children === 30)).toBeTruthy();
     await act(async () => control(tree, '타이머 설정 취소').props.onPress());
     expect(mockDismiss).toHaveBeenCalledTimes(1);
+    await act(async () => ref.current.present());
     await act(async () => control(tree, '적용').props.onPress());
-    expect(onApply).toHaveBeenCalledWith(expect.objectContaining({ focusMin: 30 }));
+    expect(onApply).toHaveBeenCalledWith(expect.objectContaining({ focusMin: 25 }));
     await act(async () => tree.unmount());
   });
 });
 
 describe('활동·알림 카드의 refined 시각 조작', () => {
-  it('서버 저장 의미는 바꾸지 않고 카드와 선택 조작만 refined 48dp로 표시한다', async () => {
+  it('서버 저장 의미는 바꾸지 않고 카드와 선택 조작만 refined 48dp·8dp로 표시하며 실제 저장 핸들러를 호출한다', async () => {
     const tree = await render(<View><ActiveHoursCard /><NotificationSettingsCard /></View>);
     const change = control(tree, '변경');
     const threshold = control(tree, '1시간 전');
 
     expect(style(change).minHeight).toBeGreaterThanOrEqual(48);
     expect(style(threshold).minHeight).toBeGreaterThanOrEqual(48);
+    expect(style(threshold).borderRadius).toBe(8);
     expect(style(threshold).opacity ?? 1).toBe(1);
+    const activeModal = tree.root.find((node) => node.props.testID === 'bottom-sheet-modal' && node.props.keyboardBehavior === 'interactive');
+    expect(activeModal.props.keyboardBlurBehavior).toBe('restore');
+    expect(tree.root.findAll((node) => node.props.testID === 'bottom-sheet-scroll-content')
+      .some((node) => style(node).paddingBottom >= 24 && node.props.keyboardShouldPersistTaps === 'handled')).toBe(true);
+    await act(async () => change.props.onPress());
+    await act(async () => control(tree, '시작 10시').props.onPress());
+    await act(async () => control(tree, '저장').props.onPress());
+    expect(mockSaveSettings).toHaveBeenCalledWith(
+      { routineStartHour: 10, routineEndHour: 22 }, expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+    await act(async () => threshold.props.onPress());
+    expect(mockSaveSettings).toHaveBeenCalledWith(
+      { notificationThresholds: [] }, expect.objectContaining({ onSettled: expect.any(Function) }),
+    );
+    await act(async () => tree.unmount());
+  });
+});
+
+describe('뽀모도로 일반 조작', () => {
+  it('실제 화면에서 태스크 선택과 집중 시작이 refined 48dp 조작으로 동작한다', async () => {
+    const tree = await render(<PomodoroScreen />);
+    const picker = control(tree, '집중할 태스크 고르기');
+    const start = control(tree, '집중 시작');
+
+    expect(style(picker).minHeight).toBeGreaterThanOrEqual(48);
+    expect(style(start).minHeight).toBeGreaterThanOrEqual(48);
+    await act(async () => start.props.onPress());
+    expect(mockStartSession).toHaveBeenCalledWith(expect.objectContaining({ focusMin: 25 }), null);
     await act(async () => tree.unmount());
   });
 });
