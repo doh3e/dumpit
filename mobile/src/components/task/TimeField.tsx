@@ -36,7 +36,7 @@ export function TimeField({ value, onChange, accessibilityLabel }: Props) {
         accessibilityLabel={accessibilityLabel ?? `시간 선택, 현재 ${value}`}
         style={({ pressed }) => [
           styles.field,
-          { borderColor: colors.line, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 },
+          { borderColor: pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : colors.card },
         ]}
       >
         <Text style={[styles.text, { color: colors.fg, fontFamily: fonts.chrome }]}>
@@ -50,8 +50,8 @@ export function TimeField({ value, onChange, accessibilityLabel }: Props) {
 
 const styles = StyleSheet.create({
   field: {
-    borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
-    minHeight: 44, alignItems: 'flex-start', justifyContent: 'center',
+    borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
+    minHeight: 48, alignItems: 'flex-start', justifyContent: 'center',
   },
   text: { fontSize: 12 },
 });

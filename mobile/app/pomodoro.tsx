@@ -154,20 +154,20 @@ export default function PomodoroScreen() {
             </Text>
 
             {derived.phase === 'DONE' ? (
-              <RetroCard style={styles.doneCard}>
+              <RetroCard appearance="refined" style={styles.doneCard}>
                 <Text style={[styles.doneText, { color: colors.fg, fontFamily: fonts.display }]}>
                   <PixelIcon name="party" size={13} /> 모든 세트 완료! 정산이 안 됐다면 네트워크 연결 후 다시 열어주세요.
                 </Text>
-                <RetroButton label="타이머 정리" onPress={() => { doReset(); }} />
+                <RetroButton appearance="refined" label="타이머 정리" onPress={() => { doReset(); }} />
               </RetroCard>
             ) : (
               <View style={styles.controls}>
                 {session.pausedAt != null ? (
-                  <RetroButton label="▶ 재개" onPress={() => resumeSession()} style={styles.controlBtn} />
+                  <RetroButton appearance="refined" label="▶ 재개" onPress={() => resumeSession()} style={styles.controlBtn} />
                 ) : (
-                  <RetroButton label="⏸ 일시정지" variant="ghost" onPress={() => pauseSession()} style={styles.controlBtn} />
+                  <RetroButton appearance="refined" label="⏸ 일시정지" variant="ghost" onPress={() => pauseSession()} style={styles.controlBtn} />
                 )}
-                <RetroButton label="리셋" variant="danger" size="sm" onPress={onReset} />
+                <RetroButton appearance="refined" label="리셋" variant="danger" size="sm" onPress={onReset} />
               </View>
             )}
           </>
@@ -177,7 +177,8 @@ export default function PomodoroScreen() {
             <Pressable
               onPress={() => pickerSheet.current?.present()}
               accessibilityRole="button"
-              style={({ pressed }) => [styles.taskPickBtn, { borderColor: colors.line, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 }]}
+              accessibilityLabel="집중할 태스크 고르기"
+              style={({ pressed }) => [styles.taskPickBtn, { borderColor: pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : colors.card }]}
             >
               <Text numberOfLines={1} style={[styles.taskPickText, { color: picked ? colors.fg : colors.sub, fontFamily: fonts.body }]}>
                 <PixelIcon name="target" size={12} /> {picked ? picked.title : '집중할 태스크 고르기 (선택)'}
@@ -186,8 +187,8 @@ export default function PomodoroScreen() {
             <Text style={[styles.summary, { color: colors.sub, fontFamily: fonts.chrome }]}>
               집중 {settings.focusMin}분 · 휴식 {settings.breakMin}분 · {settings.setsTarget === 0 ? '∞' : settings.setsTarget}세트
             </Text>
-            <RetroButton label="집중 시작" onPress={onStart} busy={starting} style={styles.startBtn} />
-            <RetroButton label="타이머 설정" variant="ghost" size="sm" onPress={() => settingsSheet.current?.present()} />
+            <RetroButton appearance="refined" label="집중 시작" onPress={onStart} busy={starting} style={styles.startBtn} />
+            <RetroButton appearance="refined" label="타이머 설정" variant="ghost" size="sm" onPress={() => settingsSheet.current?.present()} />
           </>
         )}
       </ScrollView>
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
   controlBtn: { minWidth: 160 },
   doneCard: { gap: 12, marginTop: 8 },
   doneText: { fontSize: 14, lineHeight: 22 },
-  taskPickBtn: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 12, minHeight: 46 },
+  taskPickBtn: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 12, minHeight: 48 },
   taskPickText: { fontSize: 14 },
   summary: { fontSize: 12, textAlign: 'center' },
   startBtn: { marginTop: 4 },

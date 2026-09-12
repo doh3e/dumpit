@@ -25,13 +25,13 @@ function StepperRow({ label, value, display, onDelta }: RowProps) {
     <View style={styles.row}>
       <Text style={[styles.rowLabel, { color: colors.fg, fontFamily: fonts.body }]}>{label}</Text>
       <View style={styles.stepper}>
-        <Pressable onPress={() => onDelta(-1)} hitSlop={8} accessibilityLabel={`${label} 줄이기`}
-          style={[styles.stepBtn, { borderColor: colors.line, backgroundColor: colors.chip }]}>
+        <Pressable onPress={() => onDelta(-1)} accessibilityRole="button" accessibilityLabel={`${label} 줄이기`}
+          style={({ pressed }) => [styles.stepBtn, { borderColor: pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : colors.card }]}>
           <Text style={[styles.stepText, { color: colors.fg, fontFamily: fonts.chrome }]}>−</Text>
         </Pressable>
         <Text style={[styles.value, { color: colors.fg, fontFamily: fonts.chrome }]}>{display ?? value}</Text>
-        <Pressable onPress={() => onDelta(1)} hitSlop={8} accessibilityLabel={`${label} 늘리기`}
-          style={[styles.stepBtn, { borderColor: colors.line, backgroundColor: colors.chip }]}>
+        <Pressable onPress={() => onDelta(1)} accessibilityRole="button" accessibilityLabel={`${label} 늘리기`}
+          style={({ pressed }) => [styles.stepBtn, { borderColor: pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : colors.card }]}>
           <Text style={[styles.stepText, { color: colors.fg, fontFamily: fonts.chrome }]}>＋</Text>
         </Pressable>
       </View>
@@ -65,12 +65,17 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
         enableDynamicSizing
         onDismiss={() => setDraft(initial)}
         onChange={onChange}
-        backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
+        backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 적용 버튼이 OS 내비 바에 가려진다 */}
         <BottomSheetView accessibilityViewIsModal style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-          <Text ref={headingRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>타이머 설정</Text>
+          <View style={styles.headingRow}>
+            <Text ref={headingRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>타이머 설정</Text>
+            <Pressable onPress={() => (ref as React.RefObject<BottomSheetModal | null>)?.current?.dismiss()} accessibilityRole="button" accessibilityLabel="타이머 설정 취소" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>
+              <Text style={{ color: colors.fg, fontFamily: fonts.chrome }}>취소</Text>
+            </Pressable>
+          </View>
           <StepperRow label="집중 (분)" value={draft.focusMin} onDelta={(d) => patch({ focusMin: step5(draft.focusMin, d) })} />
           <StepperRow label="휴식 (분)" value={draft.breakMin} onDelta={(d) => patch({ breakMin: draft.breakMin + d })} />
           <StepperRow label="세트 수" value={draft.setsTarget} display={draft.setsTarget === 0 ? '∞' : String(draft.setsTarget)}
@@ -81,7 +86,7 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
               <StepperRow label="긴 휴식 주기 (세트)" value={draft.longBreakEvery} onDelta={(d) => patch({ longBreakEvery: draft.longBreakEvery + d })} />
             </>
           )}
-          <RetroButton label="적용" onPress={() => onApply(draft)} style={styles.apply} />
+          <RetroButton appearance="refined" label="적용" onPress={() => onApply(draft)} style={styles.apply} />
         </BottomSheetView>
       </BottomSheetModal>
     );
@@ -90,11 +95,13 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
 
 const styles = StyleSheet.create({
   body: { padding: 20, paddingBottom: 32, gap: 12 },
+  headingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontSize: 16, marginBottom: 4 },
+  close: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   rowLabel: { fontSize: 14 },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  stepBtn: { width: 34, height: 34, borderWidth: 1.5, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  stepBtn: { width: 48, height: 48, borderWidth: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   stepText: { fontSize: 16 },
   value: { fontSize: 14, minWidth: 32, textAlign: 'center' },
   apply: { marginTop: 8 },

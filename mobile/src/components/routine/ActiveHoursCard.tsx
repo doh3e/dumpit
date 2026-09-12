@@ -49,7 +49,7 @@ export function ActiveHoursCard() {
   };
 
   return (
-    <RetroCard style={styles.card}>
+    <RetroCard appearance="refined" style={styles.card}>
       <View style={styles.row}>
         <View style={styles.textCol}>
           <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
@@ -62,14 +62,14 @@ export function ActiveHoursCard() {
             AI가 이 시간 안에서 일정·추천을 배치해요
           </Text>
         </View>
-        <RetroButton label="변경" size="sm" variant="ghost" onPress={openEditor} />
+        <RetroButton appearance="refined" label="변경" size="sm" variant="ghost" onPress={openEditor} />
       </View>
 
       <BottomSheetModal
         ref={sheet}
         enableDynamicSizing
         onChange={onChange}
-        backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
+        backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         <BottomSheetView accessibilityViewIsModal style={styles.sheetBody}>
@@ -77,13 +77,13 @@ export function ActiveHoursCard() {
           <View style={styles.grid}>
             {/* 24칸 격자가 둘이라 "09:00"만으로는 시작·끝을 가릴 수 없다 */}
             {HOURS.map((h) => (
-              <Chip key={`s${h}`} label={hh(h)} accessibilityLabel={`시작 ${h}시`} selected={h === draftStart} onPress={() => setDraftStart(h)} />
+              <Chip appearance="refined" key={`s${h}`} label={hh(h)} accessibilityLabel={`시작 ${h}시`} selected={h === draftStart} onPress={() => setDraftStart(h)} />
             ))}
           </View>
           <Text accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 끝 시각</Text>
           <View style={styles.grid}>
             {HOURS.map((h) => (
-              <Chip key={`e${h}`} label={hh(h)} accessibilityLabel={`끝 ${h}시`} selected={h === draftEnd} onPress={() => setDraftEnd(h)} />
+              <Chip appearance="refined" key={`e${h}`} label={hh(h)} accessibilityLabel={`끝 ${h}시`} selected={h === draftEnd} onPress={() => setDraftEnd(h)} />
             ))}
           </View>
           {wraps && (
@@ -97,7 +97,7 @@ export function ActiveHoursCard() {
             </Text>
           )}
           <RetroButton
-            label="저장"
+            appearance="refined" label="저장"
             onPress={onSave}
             busy={save.isPending}
             disabled={draftStart === draftEnd}

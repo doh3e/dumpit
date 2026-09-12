@@ -100,7 +100,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
         ref={sheetRef}
         snapPoints={['65%']}
         onChange={onChange}
-        backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
+        backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 확정 버튼이 OS 내비 바에 가려진다 */}
@@ -110,6 +110,9 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
             <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>
               AI로 쪼개기 <Text style={{ color: colors.sub, fontSize: 11, fontFamily: fonts.chrome }}><PixelIcon name="token" size={11} /> {AI_COSTS.SUBTASK_PROPOSAL}점</Text>
             </Text>
+            <Pressable onPress={() => sheetRef.current?.dismiss()} accessibilityRole="button" accessibilityLabel="서브태스크 제안 닫기" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>
+              <Text style={{ color: colors.fg, fontFamily: fonts.chrome }}>✕</Text>
+            </Pressable>
           </View>
           {task && (
             <Text style={[styles.parent, { color: colors.sub, fontFamily: fonts.body }]} numberOfLines={1}>
@@ -134,10 +137,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
                 accessibilityState={{ checked: item.include }}
                 accessibilityLabel={`${item.title} 포함`}
                 hitSlop={8}
-                style={[
-                  styles.checkbox,
-                  { borderColor: colors.edge, backgroundColor: item.include ? colors.accent2 : colors.card },
-                ]}
+                style={({ pressed }) => [styles.checkbox, { borderColor: item.include || pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : item.include ? colors.accent2Fill : colors.card }]}
               >
                 {item.include && <Text style={{ color: colors.onAccent, fontSize: 11, fontFamily: fonts.chrome }}>✓</Text>}
               </Pressable>
@@ -171,7 +171,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
 
           {!loading && items.length > 0 && (
             <RetroButton
-              label={`${selected.length}개 만들기`}
+              appearance="refined" label={`${selected.length}개 만들기`}
               onPress={create}
               busy={saving}
               disabled={selected.length === 0 || saving}
@@ -187,11 +187,12 @@ const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 32, gap: 10 },
   heading: { fontSize: 16 },
   headingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  close: { marginLeft: 'auto', minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   parent: { fontSize: 12 },
   loading: { alignItems: 'center', gap: 8, paddingVertical: 28 },
   loadingText: { fontSize: 13 },
   item: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', borderWidth: 1.5, borderRadius: 8, padding: 10 },
-  checkbox: { width: 20, height: 20, borderWidth: 2, borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
+  checkbox: { width: 48, height: 48, borderWidth: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
   itemBody: { flex: 1, gap: 4 },
   itemInput: { borderWidth: 1.5, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 6, fontSize: 13 },
   itemDesc: { fontSize: 11 },

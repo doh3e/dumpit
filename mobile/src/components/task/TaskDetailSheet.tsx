@@ -2,12 +2,12 @@ import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput } from '@
 import Slider from '@react-native-community/slider';
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
 import { deleteTask, patchTask, reanalyzeTask, setSticker } from '../../api/tasks';
-import type { Category, TaskResponse } from '../../api/types';
+import type { Category, PlanningResponse, TaskResponse } from '../../api/types';
 import { invalidateAfterAi, useAiUsage } from '../../query/hooks';
 import { keys } from '../../query/keys';
 import { AI_COSTS, TASK_CATEGORIES } from '../../tasks/constants';
@@ -16,7 +16,6 @@ import { buildPriorityPatch } from '../../tasks/priorityPatch';
 import { parseDate } from '../../tasks/dates';
 import { buildDeadlinePayload, type DeadlineMode } from '../../tasks/deadlineMode';
 import { updateTaskInPlanning } from '../../tasks/planningCache';
-import type { PlanningResponse } from '../../api/types';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { Chip } from '../retro/Chip';
@@ -228,12 +227,17 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
         onChange={onChange}
-        backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
+        backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마지막 버튼이 OS 내비 바에 가려진다 */}
         <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-          <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 상세</Text>
+          <View style={styles.headingRow}>
+            <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 상세</Text>
+            <Pressable onPress={() => sheetRef.current?.dismiss()} accessibilityRole="button" accessibilityLabel="태스크 상세 닫기" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>
+              <Text style={{ color: colors.fg, fontFamily: fonts.chrome }}>✕</Text>
+            </Pressable>
+          </View>
 
           {/* 한글 IME 조합 보호 — uncontrolled, 태스크 바뀌면 key로 리마운트 */}
           <BottomSheetTextInput
@@ -263,7 +267,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
                 key={m.id}
                 label={m.label}
                 icon={m.icon ? <PixelIcon name={m.icon} size={12} /> : undefined}
-                selected={deadlineMode === m.id}
+                appearance="refined" selected={deadlineMode === m.id}
                 onPress={() => setDeadlineMode(m.id)}
               />
             ))}
@@ -275,7 +279,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
           <View style={styles.optionRow}>
             <Chip
               label="시작 시간"
-              selected={useStart}
+              appearance="refined" selected={useStart}
               onPress={() => {
                 const next = !useStart;
                 setUseStart(next);
@@ -293,7 +297,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
           )}
 
           <View style={styles.optionRow}>
-            <Chip label="예상(분)" selected={estimate !== ''} onPress={() => setEstimate(estimate === '' ? '30' : '')} />
+            <Chip appearance="refined" label="예상(분)" selected={estimate !== ''} onPress={() => setEstimate(estimate === '' ? '30' : '')} />
             {estimate !== '' && (
               <BottomSheetTextInput
                 value={estimate}
@@ -308,7 +312,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
 
           <View style={styles.chipRow}>
             {TASK_CATEGORIES.map((c) => (
-              <Chip key={c.value} label={c.label} icon={<PixelIcon name={c.icon} size={12} />} selected={category === c.value} onPress={() => setCategory(c.value)} />
+              <Chip appearance="refined" key={c.value} label={c.label} icon={<PixelIcon name={c.icon} size={12} />} selected={category === c.value} onPress={() => setCategory(c.value)} />
             ))}
           </View>
 
@@ -340,7 +344,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
           <View style={styles.chipRow}>
             {isUserOverridden && !clearOverride && (
               <Chip
-                label="자동 조정으로 되돌리기"
+                appearance="refined" label="자동 조정으로 되돌리기"
                 onPress={() => {
                   // 지정 해제 예약 — 저장 시 userPriorityScore: null 전송 → 자동 조정 복귀.
                   // 슬라이더는 편집 대상인 AI 중요도로, 실효값은 힌트 줄이 보여준다
@@ -351,7 +355,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
               />
             )}
             <Chip
-              label={reanalyzing ? '재분석 중…' : `AI 재분석 (${AI_COSTS.TASK_REANALYZE}점)`}
+              appearance="refined" label={reanalyzing ? '재분석 중…' : `AI 재분석 (${AI_COSTS.TASK_REANALYZE}점)`}
               icon={reanalyzing ? undefined : <PixelIcon name="sparkle" size={12} />}
               onPress={confirmReanalyze}
               disabled={reanalyzing || remaining < AI_COSTS.TASK_REANALYZE}
@@ -363,7 +367,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
 
           {task && !task.parentTaskId && (
             <RetroButton
-              label={`AI로 쪼개기 (${AI_COSTS.SUBTASK_PROPOSAL}점)`}
+              appearance="refined" label={`AI로 쪼개기 (${AI_COSTS.SUBTASK_PROPOSAL}점)`}
               icon={<PixelIcon name="puzzle" size={14} />}
               variant="ghost"
               onPress={() => {
@@ -377,9 +381,9 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
           )}
 
           <View style={styles.footer}>
-            <RetroButton label="삭제" variant="danger" size="sm" onPress={confirmDelete} />
+            <RetroButton appearance="refined" label="삭제" variant="danger" size="sm" onPress={confirmDelete} />
             <RetroButton
-              label="저장"
+              appearance="refined" label="저장"
               onPress={save}
               busy={saving}
               disabled={!title.trim() || saving || (deadlineMode === 'CUSTOM' && !customDeadline) || startAfterDeadline}
@@ -396,6 +400,8 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
 const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 36, gap: 10 },
   heading: { fontSize: 16 },
+  headingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  close: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   input: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
   memo: { minHeight: 56, textAlignVertical: 'top' },
   label: { fontSize: 11, marginTop: 4 },

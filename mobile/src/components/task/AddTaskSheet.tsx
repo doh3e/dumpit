@@ -1,7 +1,7 @@
 import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { getApiErrorMessage } from '../../api/client';
@@ -76,6 +76,9 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
     setMoreOpen(false); setStartTime(null); setEstimate(''); setCategory(null);
     setFormKey((k) => k + 1);   // uncontrolled 입력 리마운트
   }, []);
+  const dismiss = useCallback(() => {
+    (ref as React.RefObject<BottomSheetModal | null>)?.current?.dismiss();
+  }, [ref]);
 
   const submit = useCallback(async () => {
     setSaving(true);
@@ -108,13 +111,18 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
       keyboardBlurBehavior="restore"
       onDismiss={reset}
       onChange={onChange}
-      backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
+      backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
       handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
     >
       {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마감·시작시간 필드를 펼쳤을 때
           시트가 길어지며 추가 버튼이 OS 내비 바에 가려진다 */}
       <BottomSheetView accessibilityViewIsModal style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-        <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 추가</Text>
+        <View style={styles.headingRow}>
+          <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 추가</Text>
+          <Pressable onPress={dismiss} accessibilityRole="button" accessibilityLabel="태스크 추가 닫기" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>
+            <Text style={{ color: colors.fg, fontFamily: fonts.chrome }}>✕</Text>
+          </Pressable>
+        </View>
 
         <BottomSheetTextInput
           key={`title-${formKey}`}
@@ -147,7 +155,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
               label={m.label}
               icon={m.icon ? <PixelIcon name={m.icon} size={12} /> : undefined}
               selected={deadlineMode === m.id}
-              onPress={() => setDeadlineMode(m.id)}
+              appearance="refined" onPress={() => setDeadlineMode(m.id)}
             />
           ))}
         </View>
@@ -157,7 +165,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
 
         <Chip
           label={moreOpen ? '옵션 접기 ▲' : '옵션 더보기 ▼'}
-          onPress={() => setMoreOpen((v) => !v)}
+          appearance="refined" onPress={() => setMoreOpen((v) => !v)}
         />
         {moreOpen && (
           <View style={styles.more}>
@@ -165,7 +173,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
               <Chip
                 label="시작 시간"
                 selected={startTime != null}
-                onPress={() => setStartTime(startTime == null ? next30() : null)}
+                appearance="refined" onPress={() => setStartTime(startTime == null ? next30() : null)}
               />
               {startTime != null && (
                 <View style={styles.optionField}>
@@ -177,7 +185,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
               <Chip
                 label="예상 시간(분)"
                 selected={estimate !== ''}
-                onPress={() => setEstimate(estimate === '' ? '30' : '')}
+                appearance="refined" onPress={() => setEstimate(estimate === '' ? '30' : '')}
               />
               {estimate !== '' && (
                 <BottomSheetTextInput
@@ -192,13 +200,13 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
             </View>
             {/* 시트 안 가로 ScrollView는 팬 제스처에 먹혀 스와이프 불가 — 칩 행은 wrap으로 */}
             <View style={styles.chipRow}>
-              <Chip label="AI 자동" icon={<PixelIcon name="sparkle" size={12} />} selected={category === null} onPress={() => setCategory(null)} />
+              <Chip appearance="refined" label="AI 자동" icon={<PixelIcon name="sparkle" size={12} />} selected={category === null} onPress={() => setCategory(null)} />
               {TASK_CATEGORIES.map((c) => (
                 <Chip
                   key={c.value}
                   label={c.label}
                   icon={<PixelIcon name={c.icon} size={12} />}
-                  selected={category === c.value}
+                  appearance="refined" selected={category === c.value}
                   onPress={() => setCategory(c.value)}
                 />
               ))}
@@ -223,7 +231,10 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
               </>
             )}
           </Text>
-          <RetroButton label="추가" onPress={submit} busy={saving} disabled={blocked} />
+          <View style={styles.actions}>
+            <RetroButton appearance="refined" label="취소" variant="ghost" onPress={dismiss} />
+            <RetroButton appearance="refined" label="추가" onPress={submit} busy={saving} disabled={blocked} />
+          </View>
         </View>
       </BottomSheetView>
     </BottomSheetModal>
@@ -233,6 +244,8 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
 const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 28, gap: 10 },
   heading: { fontSize: 16, marginBottom: 2 },
+  headingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  close: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   input: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
   memo: { minHeight: 56, textAlignVertical: 'top' },
   chipRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
@@ -241,6 +254,7 @@ const styles = StyleSheet.create({
   optionField: { flex: 1 },
   estimate: { width: 90, textAlign: 'center' },
   warnText: { fontSize: 12 },
-  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 4 },
+  actions: { flexDirection: 'row', gap: 8 },
   cost: { fontSize: 11 },
 });

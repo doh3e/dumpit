@@ -28,7 +28,7 @@ export function NotificationSettingsCard() {
   };
 
   return (
-    <RetroCard style={styles.card}>
+    <RetroCard appearance="refined" style={styles.card}>
       <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
         <PixelIcon name="bell" size={13} /> 알림
       </Text>
@@ -51,7 +51,7 @@ export function NotificationSettingsCard() {
           <View style={styles.chipRow}>
             {NOTIFICATION_THRESHOLDS.map((t) => (
               <Chip
-                key={t.min}
+                appearance="refined" key={t.min}
                 label={t.label}
                 selected={settings.notificationThresholds.includes(t.min)}
                 disabled={pending}
