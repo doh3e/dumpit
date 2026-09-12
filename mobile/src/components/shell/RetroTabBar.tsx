@@ -29,6 +29,7 @@ type Props = TabBarProps & {
 export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
   const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
+  const addLabel = fabOpen ? '닫기' : '추가';
 
   const renderTab = (routeName: string) => {
     const route = state.routes.find((r) => r.name === routeName);
@@ -70,7 +71,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
       <Pressable
         onPress={onFabPress}
         accessibilityRole="button"
-        accessibilityLabel={fabOpen ? '닫기' : '추가'}
+        accessibilityLabel={addLabel}
         accessibilityState={{ expanded: fabOpen }}
         style={({ pressed }) => [
           styles.tab,
@@ -78,8 +79,11 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
           { backgroundColor: pressed ? colors.card : colors.chip, borderColor: colors.accent2Text },
         ]}
       >
-        <PixelIcon name="sparkle" size={20} style={{ opacity: 1 }} />
-        <Text style={[styles.label, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>추가</Text>
+        <View style={styles.addGlyph} accessible={false}>
+          <View style={[styles.addGlyphLine, fabOpen ? styles.addGlyphCloseFirst : styles.addGlyphPlusFirst, { backgroundColor: colors.accent2Text }]} />
+          <View style={[styles.addGlyphLine, fabOpen ? styles.addGlyphCloseSecond : styles.addGlyphPlusSecond, { backgroundColor: colors.accent2Text }]} />
+        </View>
+        <Text style={[styles.label, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>{addLabel}</Text>
       </Pressable>
       {renderTab('ideas')}
       {renderTab('my')}
@@ -92,4 +96,10 @@ const styles = StyleSheet.create({
   tab: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 4, minHeight: 48 },
   label: { fontSize: 10 },
   addTab: { borderWidth: 1, borderRadius: 8 },
+  addGlyph: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  addGlyphLine: { position: 'absolute', width: 14, height: 2 },
+  addGlyphPlusFirst: { transform: [{ rotate: '0deg' }] },
+  addGlyphPlusSecond: { transform: [{ rotate: '90deg' }] },
+  addGlyphCloseFirst: { transform: [{ rotate: '45deg' }] },
+  addGlyphCloseSecond: { transform: [{ rotate: '-45deg' }] },
 });

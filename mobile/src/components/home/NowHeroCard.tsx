@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   eyebrow: { fontSize: 11 },
   titleRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: 4 },
   title: { fontSize: 20, lineHeight: 27 },
-  titleCopy: { flexBasis: '100%', flexShrink: 1 },
+  titleCopy: { flexBasis: '100%', flexGrow: 1, flexShrink: 1, minWidth: 0 },
   titleEdit: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, minHeight: 48, minWidth: 48, borderRadius: 8 },
   editText: { fontSize: 10 },
   time: { fontSize: 11 },

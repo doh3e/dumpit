@@ -1,7 +1,7 @@
 const { beforeEach, describe, expect, it, jest } = require('@jest/globals');
 const React = require('react');
 const { act, create } = require('react-test-renderer');
-const { StyleSheet, Text } = require('react-native');
+const { StyleSheet, Text, View } = require('react-native');
 
 let mockTheme;
 const mockBack = jest.fn();
@@ -61,16 +61,69 @@ describe('하단 탐색', () => {
 
     const add = tree.root.find((node) => node.props.accessibilityLabel === '추가');
     const addLabel = add.find((node) => node.type === Text && node.props.children === '추가');
-    const addIcon = add.find((node) => node.props.name === 'sparkle');
+    const indexIcon = tree.root.find((node) => node.props.name === 'home');
+    let index = indexIcon.parent;
+    while (typeof index.props.style !== 'function') index = index.parent;
+    const addIcon = add.find(
+      (node) => node.type === View
+        && StyleSheet.flatten(node.props.style)?.width === 20
+        && StyleSheet.flatten(node.props.style)?.height === 20,
+    );
+    const addLines = addIcon.findAll(
+      (node) => node.type === View && StyleSheet.flatten(node.props.style)?.width === 14,
+    );
     const routine = tree.root.find((node) => node.props.accessibilityRole === 'tab' && node.props.accessibilityLabel === '루틴');
 
     expect(addLabel).toBeTruthy();
-    expect(addIcon).toBeTruthy();
+    expect(indexIcon.props.size).toBe(20);
+    expect(addLines).toHaveLength(2);
+    expect(StyleSheet.flatten(addLines[0].props.style).transform).toEqual([{ rotate: '0deg' }]);
+    expect(StyleSheet.flatten(addLines[1].props.style).transform).toEqual([{ rotate: '90deg' }]);
+    expect(StyleSheet.flatten(add.props.style({ pressed: false })).minHeight)
+      .toBe(StyleSheet.flatten(index.props.style({ pressed: false })).minHeight);
+    expect(StyleSheet.flatten(add.props.style({ pressed: false })).paddingVertical)
+      .toBe(StyleSheet.flatten(index.props.style({ pressed: false })).paddingVertical);
+    expect(add.props.accessibilityState).toEqual({ expanded: false });
     await act(async () => add.props.onPress());
     await act(async () => routine.props.onPress());
     expect(mockFabPress).toHaveBeenCalledTimes(1);
     expect(mockEmit).toHaveBeenCalledWith({ type: 'tabPress', target: 'routine-key', canPreventDefault: true });
     expect(mockNavigate).toHaveBeenCalledWith('routine');
+    await act(async () => {
+      tree.update(
+        <RetroTabBar
+          state={{
+            index: 0,
+            routes: [
+              { key: 'index-key', name: 'index' },
+              { key: 'routine-key', name: 'routine' },
+              { key: 'ideas-key', name: 'ideas' },
+              { key: 'my-key', name: 'my' },
+            ],
+          }}
+          navigation={{ emit: mockEmit, navigate: mockNavigate }}
+          onFabPress={mockFabPress}
+          fabOpen
+        />,
+      );
+    });
+    const close = tree.root.find((node) => node.props.accessibilityLabel === '닫기');
+    const closeLabel = close.find((node) => node.type === Text && node.props.children === '닫기');
+    const closeIcon = close.find(
+      (node) => node.type === View
+        && StyleSheet.flatten(node.props.style)?.width === 20
+        && StyleSheet.flatten(node.props.style)?.height === 20,
+    );
+    const closeLines = closeIcon.findAll(
+      (node) => node.type === View && StyleSheet.flatten(node.props.style)?.width === 14,
+    );
+    expect(closeLabel).toBeTruthy();
+    expect(closeLines).toHaveLength(2);
+    expect(StyleSheet.flatten(closeLines[0].props.style).transform).toEqual([{ rotate: '45deg' }]);
+    expect(StyleSheet.flatten(closeLines[1].props.style).transform).toEqual([{ rotate: '-45deg' }]);
+    expect(close.props.accessibilityState).toEqual({ expanded: true });
+    await act(async () => close.props.onPress());
+    expect(mockFabPress).toHaveBeenCalledTimes(2);
     await act(async () => tree.unmount());
   });
 });
