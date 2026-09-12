@@ -2,7 +2,8 @@
 import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { ToastProvider, notifyToast } from './ToastContext'
+import { ToastProvider } from './ToastContext'
+import { notifyToast } from '../services/notifyToast'
 
 beforeAll(() => {
   // jsdom은 Popover API가 없으면서 UA 스타일로 [popover]를 display:none 처리한다 — 표시 여부만 흉내 낸다

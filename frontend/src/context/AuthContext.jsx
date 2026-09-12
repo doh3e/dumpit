@@ -1,9 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import api from '../services/api'
 import { applySkins, clearSkins } from '../shop/applySkins.js'
 import { loadUserSettings, resetUserSettings } from '../services/userSettings'
+import { AuthContext } from './authState'
 
-const AuthContext = createContext(null)
 const INACTIVE_LOGOUT_MS = 60 * 60 * 1000
 
 export function AuthProvider({ children }) {
@@ -120,8 +120,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  return useContext(AuthContext)
 }

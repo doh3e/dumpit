@@ -1,6 +1,6 @@
 import { useId, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import api from '../services/api'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { setPomodoroFocus, clearPomodoroFocus } from '../services/pomodoroFocus'
 import { nextAfterFocus, autoStartNextFocus } from '../utils/pomodoroCycle'
 import { iconProps } from '../assets/icons'

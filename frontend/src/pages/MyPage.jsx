@@ -5,7 +5,7 @@ import { saveUserSettings } from '../services/userSettings'
 import { iconProps } from '../assets/icons'
 import PixelStation from '../components/PixelStation'
 import Dialog from '../components/Dialog'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import useReducedMotion from '../hooks/useReducedMotion'
 
 function useDragScroll() {

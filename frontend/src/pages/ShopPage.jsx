@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
 import { iconProps } from '../assets/icons'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import RocketLaunch from '../components/RocketLaunch'
 import PixelSprite from '../components/PixelSprite'
 import Dialog from '../components/Dialog'

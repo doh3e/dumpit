@@ -26,7 +26,7 @@ vi.mock('../services/api', async (importOriginal) => {
   }
 })
 
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../hooks/useAuth', () => ({
   useAuth: () => ({
     user: { email: 'tester@example.com', equipments: { BACKGROUND: 'bg.candy' } },
     refreshCoins: mocks.refreshCoins,

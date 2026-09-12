@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { CELEBRATION_SPRITES, spriteFor } from '../shop/registry'
 import { buildParticles } from '../shop/celebrationMotions'
 

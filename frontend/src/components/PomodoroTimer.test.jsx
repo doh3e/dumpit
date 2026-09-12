@@ -7,7 +7,7 @@ import PomodoroTimer from './PomodoroTimer'
 vi.mock('../services/api', () => ({
   default: { post: vi.fn().mockResolvedValue({ data: { coins: 1 } }) },
 }))
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../hooks/useAuth', () => ({
   useAuth: () => ({ refreshCoins: vi.fn() }),
 }))
 

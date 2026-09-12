@@ -22,7 +22,7 @@ vi.mock('../services/api', async (importOriginal) => {
   }
 })
 
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../hooks/useAuth', () => ({
   useAuth: () => ({ refreshCoins: mocks.refreshCoins }),
 }))
 
