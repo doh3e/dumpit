@@ -159,7 +159,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
               label={m.label}
               icon={m.icon ? <PixelIcon name={m.icon} size={12} /> : undefined}
               selected={deadlineMode === m.id}
-              appearance="refined" insetTarget style={styles.deadlineChip} onPress={() => setDeadlineMode(m.id)}
+              appearance="refined" insetTarget targetStyle={styles.deadlineTarget} surfaceStyle={styles.deadlineSurface} onPress={() => setDeadlineMode(m.id)}
             />
           ))}
         </View>
@@ -167,10 +167,16 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
           <DateTimeField value={customDeadline} onChange={setCustomDeadline} minimumDate={new Date()} placeholder="마감 일시 선택" />
         )}
 
-        <Chip
-          label={moreOpen ? '옵션 접기 ▲' : '옵션 더보기 ▼'}
-          appearance="refined" insetTarget onPress={() => setMoreOpen((v) => !v)}
-        />
+        <Pressable
+          onPress={() => setMoreOpen((v) => !v)}
+          accessibilityRole="button"
+          accessibilityLabel={moreOpen ? '옵션 접기 ▲' : '옵션 더보기 ▼'}
+          accessibilityState={{ expanded: moreOpen }}
+          style={({ pressed }) => [styles.moreToggle, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
+        >
+          <Text style={[styles.moreToggleText, { color: colors.sub, fontFamily: fonts.chrome }]}>{moreOpen ? '옵션 접기' : '옵션 더보기'}</Text>
+          <Text style={[styles.moreToggleArrow, { color: colors.sub, fontFamily: fonts.chrome }]}>{moreOpen ? '▲' : '▼'}</Text>
+        </Pressable>
         {moreOpen && (
           <View style={styles.more}>
             <View style={styles.optionRow}>
@@ -254,7 +260,11 @@ const styles = StyleSheet.create({
   memo: { minHeight: 56, textAlignVertical: 'top' },
   chipRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   deadlineGrid: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
-  deadlineChip: { width: '48%', flexGrow: 1 },
+  deadlineTarget: { flexBasis: '48%', flexGrow: 1, minWidth: 0 },
+  deadlineSurface: { alignSelf: 'stretch', width: '100%' },
+  moreToggle: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 4 },
+  moreToggleText: { fontSize: 12 },
+  moreToggleArrow: { fontSize: 10 },
   more: { gap: 10 },
   optionRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   optionField: { flex: 1 },

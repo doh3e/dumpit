@@ -289,9 +289,11 @@ describe('지금 할 일 히어로', () => {
     const complete = byLabel(tree, '완료하기');
     const queue = byLabel(tree, '오늘, 다음 할 일');
     const titleEditIcon = titleEdit.find((node) => node.props.name === 'pencil');
+    const title = titleEdit.parent.find((node) => node.type === Text && node.props.children === heroTask.title);
 
     expect(refinedCards(tree)).not.toHaveLength(0);
     expect(titleEditIcon).toBeTruthy();
+    expect(title.props.numberOfLines).toBe(3);
     for (const control of [titleEdit, complete, queue]) {
       expect(pressableStyle(control).minHeight).toBeGreaterThanOrEqual(48);
       expect(accessibleAncestors(control)).toHaveLength(0);

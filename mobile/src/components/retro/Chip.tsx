@@ -16,12 +16,14 @@ type Props = {
   accessibilityHint?: string;
   insetTarget?: boolean;
   style?: StyleProp<ViewStyle>;
+  targetStyle?: StyleProp<ViewStyle>;
+  surfaceStyle?: StyleProp<ViewStyle>;
 };
 
 /** 선택형 칩 — 카테고리·마감모드·리스트 탭 공용. 기본 retro는 선택 시 틸 채움이다. */
 export function Chip({
   label, appearance = 'retro', selected = false, onPress, emoji, icon, disabled,
-  accessibilityLabel, accessibilityHint, insetTarget = false, style,
+  accessibilityLabel, accessibilityHint, insetTarget = false, style, targetStyle, surfaceStyle,
 }: Props) {
   const { colors, fonts } = useTheme();
   const refined = appearance === 'refined';
@@ -36,7 +38,7 @@ export function Chip({
       {!icon && emoji ? `${emoji} ${label}` : label}
     </Text>
   );
-  const surfaceStyle = (pressed: boolean) => [
+  const visualStyle = (pressed: boolean) => [
     styles.chip,
     refined && (insetTarget ? styles.refinedVisual : styles.refinedSize),
     selected
@@ -46,7 +48,7 @@ export function Chip({
       backgroundColor: selected ? colors.card : colors.chip,
       borderColor: colors.fg,
     },
-    style,
+    surfaceStyle ?? style,
     { opacity: disabled ? 0.45 : !refined && pressed ? 0.8 : 1 },
   ];
   const content = (
@@ -71,9 +73,9 @@ export function Chip({
       accessibilityHint={accessibilityHint}
       accessibilityState={{ selected, disabled: !!disabled }}
       hitSlop={refined ? undefined : 6}
-      style={({ pressed }) => (insetTarget ? styles.target : surfaceStyle(pressed))}
+      style={({ pressed }) => (insetTarget ? [styles.target, targetStyle] : visualStyle(pressed))}
     >
-      {insetTarget ? ({ pressed }) => <View style={surfaceStyle(pressed)}>{content}</View> : content}
+      {insetTarget ? ({ pressed }) => <View style={visualStyle(pressed)}>{content}</View> : content}
     </Pressable>
   );
 }

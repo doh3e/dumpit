@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
@@ -30,10 +29,6 @@ type Props = TabBarProps & {
 export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
   const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
-
-  const fabIconStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: withTiming(fabOpen ? '45deg' : '0deg', { duration: 160 }) }],
-  }));
 
   const renderTab = (routeName: string) => {
     const route = state.routes.find((r) => r.name === routeName);
@@ -72,24 +67,20 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
       {chromeDeco && <TiledImage source={chromeDeco} />}
       {renderTab('index')}
       {renderTab('routine')}
-      <View style={styles.fabSlot}>
-        <Pressable
-          onPress={onFabPress}
-          accessibilityRole="button"
-          accessibilityLabel={fabOpen ? '닫기' : '추가'}
-          accessibilityState={{ expanded: fabOpen }}
-          style={({ pressed }) => [
-            styles.fab,
-            { backgroundColor: colors.chip, borderColor: colors.accent2Text },
-            pressed && { backgroundColor: colors.card, borderColor: colors.fg },
-          ]}
-        >
-          <Animated.Text style={[styles.fabIcon, { color: colors.accent2Text, fontFamily: fonts.displayBold }, fabIconStyle]}>
-            ＋
-          </Animated.Text>
-          <Text style={[styles.label, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>추가</Text>
-        </Pressable>
-      </View>
+      <Pressable
+        onPress={onFabPress}
+        accessibilityRole="button"
+        accessibilityLabel={fabOpen ? '닫기' : '추가'}
+        accessibilityState={{ expanded: fabOpen }}
+        style={({ pressed }) => [
+          styles.tab,
+          styles.addTab,
+          { backgroundColor: pressed ? colors.card : colors.chip, borderColor: colors.accent2Text },
+        ]}
+      >
+        <PixelIcon name="sparkle" size={20} style={{ opacity: 1 }} />
+        <Text style={[styles.label, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>추가</Text>
+      </Pressable>
       {renderTab('ideas')}
       {renderTab('my')}
     </View>
@@ -100,11 +91,5 @@ const styles = StyleSheet.create({
   bar: { flexDirection: 'row', borderTopWidth: 1, paddingTop: 8, paddingHorizontal: 4 },
   tab: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 4, minHeight: 48 },
   label: { fontSize: 10 },
-  fabSlot: { flex: 1, alignItems: 'center' },
-  fab: {
-    minWidth: 48, minHeight: 48, gap: 2,
-    borderRadius: 8, borderWidth: 1,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  fabIcon: { fontSize: 20, lineHeight: 22 },
+  addTab: { borderWidth: 1, borderRadius: 8 },
 });

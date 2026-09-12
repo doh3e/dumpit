@@ -61,9 +61,11 @@ describe('하단 탐색', () => {
 
     const add = tree.root.find((node) => node.props.accessibilityLabel === '추가');
     const addLabel = add.find((node) => node.type === Text && node.props.children === '추가');
+    const addIcon = add.find((node) => node.props.name === 'sparkle');
     const routine = tree.root.find((node) => node.props.accessibilityRole === 'tab' && node.props.accessibilityLabel === '루틴');
 
     expect(addLabel).toBeTruthy();
+    expect(addIcon).toBeTruthy();
     await act(async () => add.props.onPress());
     await act(async () => routine.props.onPress());
     expect(mockFabPress).toHaveBeenCalledTimes(1);

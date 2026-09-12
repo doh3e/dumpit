@@ -195,7 +195,10 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
       (node) => node.type === View && StyleSheet.flatten(node.props.style)?.borderWidth === 1.5 && node.props.accessible !== true,
     );
     expect(style(deadline).minHeight).toBeGreaterThanOrEqual(48);
+    expect(style(deadline).flexBasis).toBe('48%');
     expect(deadlineSurface).toBeTruthy();
+    const more = control(tree, '옵션 더보기 ▼');
+    expect(style(more).borderWidth).toBeUndefined();
     await act(async () => control(tree, '취소').props.onPress());
     expect(mockDismiss).toHaveBeenCalledTimes(1);
     expect(control(tree, 'AI가 알아서').props.accessibilityState.selected).toBe(true);
