@@ -71,7 +71,7 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
         accessibilityRole="button"
         accessibilityLabel={a11yParts}
         accessibilityHint="상세 보기"
-        style={({ pressed }) => [styles.body, { opacity: pressed ? 0.7 : 1 }]}
+        style={({ pressed }) => [styles.body, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
       >
         <View style={styles.titleRow}>
           {child && <RetroBadge text="↳ 서브" tone="accent2" />}
@@ -98,16 +98,16 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
         </Text>
         <View style={styles.meta}>
           {deadlineLabel && (
-            <Text style={[styles.metaText, { color: colors.sub, fontFamily: fonts.chrome }]}>
+            <Text style={[styles.metaText, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>
               {deadlineLabel}
             </Text>
           )}
           {task.estimatedMinutes != null && (
-            <Text style={[styles.metaText, { color: colors.sub, fontFamily: fonts.chrome }]}>
+            <Text style={[styles.metaText, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>
               {task.estimatedMinutes}분
             </Text>
           )}
-          <Text style={[styles.metaText, { color: colors.sub, fontFamily: fonts.chrome }]}>
+          <Text style={[styles.metaText, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>
             P {Math.round((task.effectivePriority ?? 0) * 100)}
           </Text>
           {coins > 0 && !done && (
@@ -115,7 +115,7 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
               <CoinIcon size={10} /> +{coins}
             </Text>
           )}
-          <Text style={[styles.metaText, { color: colors.sub, fontFamily: fonts.body }]}>
+          <Text style={[styles.metaText, { color: colors.subOnChip, fontFamily: fonts.body }]}>
             <PixelIcon name={category.icon} size={10} /> {category.label}
           </Text>
         </View>

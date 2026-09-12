@@ -39,7 +39,7 @@ export function AiMemoryCard() {
   };
 
   return (
-    <RetroCard style={styles.card}>
+    <RetroCard appearance="refined" style={styles.card}>
       <View style={styles.titleRow}>
         <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
           <PixelIcon name="sparkle" size={13} /> AI 메모리
@@ -70,8 +70,8 @@ export function AiMemoryCard() {
             <Text style={[styles.counter, { color: colors.sub, fontFamily: fonts.chrome }]}>
               {draft.length}/{MAX_LENGTH}
             </Text>
-            <RetroButton label="취소" variant="ghost" size="sm" onPress={() => setEditing(false)} />
-            <RetroButton label="저장" size="sm" onPress={saveMemory} busy={saving} />
+            <RetroButton appearance="refined" label="취소" variant="ghost" size="sm" onPress={() => setEditing(false)} />
+            <RetroButton appearance="refined" label="저장" size="sm" onPress={saveMemory} busy={saving} />
           </View>
         </>
       ) : (

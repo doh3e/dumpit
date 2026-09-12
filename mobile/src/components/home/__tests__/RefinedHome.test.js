@@ -479,4 +479,24 @@ describe('할 일 목록 카드', () => {
     expect(contrastRatio(markStyle.borderColor, pressedTarget.backgroundColor)).toBeGreaterThanOrEqual(3);
     await unmount(tree);
   });
+
+  it('본문 상세 조작은 불투명한 눌림 표면과 chip 대비 메타를 유지한다', async () => {
+    setTheme('dark');
+    const currentTask = task();
+    const tree = await render(<TaskRow task={currentTask} onToggle={() => {}} onPress={() => {}} />);
+    const detail = tree.root.find(
+      (node) => node.props.accessibilityRole === 'button' && node.props.accessibilityHint === '상세 보기',
+    );
+    const [meta] = detail.findAll(
+      (node) => node.type === Text && StyleSheet.flatten(node.props.style)?.fontSize === 10,
+    );
+    const resting = pressableStyle(detail);
+    const pressed = pressableStyle(detail, true);
+
+    expect(resting.opacity ?? 1).toBe(1);
+    expect(pressed.opacity ?? 1).toBe(1);
+    expect(pressed.backgroundColor).toBe(mockTheme.colors.chip);
+    expect(contrastRatio(StyleSheet.flatten(meta.props.style).color, pressed.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+    await unmount(tree);
+  });
 });

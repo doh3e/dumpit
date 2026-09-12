@@ -84,13 +84,13 @@ export default function SettingsScreen() {
       <ScreenHeader title="설정" icon={<PixelIcon name="gear" size={16} />} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="palette" size={13} /> 테마
           </Text>
           <View style={styles.chipRow}>
             {THEME_MODES.map((m) => (
-              <Chip key={m.id} label={m.label} icon={<PixelIcon name={m.icon} size={12} />} selected={mode === m.id} onPress={() => setMode(m.id)} />
+              <Chip appearance="refined" key={m.id} label={m.label} icon={<PixelIcon name={m.icon} size={12} />} selected={mode === m.id} onPress={() => setMode(m.id)} />
             ))}
           </View>
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
@@ -100,12 +100,12 @@ export default function SettingsScreen() {
           <View style={styles.chipRow}>
             {CONTRAST_MODES.map((m) => (
               // 테마 그리드에도 '시스템' 칩이 있어 라벨만으로는 어느 그룹인지 갈린다
-              <Chip key={m.id} label={m.label} accessibilityLabel={`대비 ${m.label}`} selected={contrastMode === m.id} onPress={() => setContrastMode(m.id)} />
+              <Chip appearance="refined" key={m.id} label={m.label} accessibilityLabel={`대비 ${m.label}`} selected={contrastMode === m.id} onPress={() => setContrastMode(m.id)} />
             ))}
           </View>
           <Text accessibilityRole="header" style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>굵은 글자</Text>
           <View style={styles.chipRow}>
-            <Chip label={boldLabel} accessibilityLabel={`굵은 글자 ${boldLabel}`} selected={boldText} onPress={() => setBoldText(!boldText)} />
+            <Chip appearance="refined" label={boldLabel} accessibilityLabel={`굵은 글자 ${boldLabel}`} selected={boldText} onPress={() => setBoldText(!boldText)} />
           </View>
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
             &apos;시스템&apos;은 휴대폰의 고대비 텍스트 설정을 따라요. 이 설정은 이 기기에만 저장돼요.
@@ -116,11 +116,11 @@ export default function SettingsScreen() {
 
         <NotificationSettingsCard />
 
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="user" size={13} /> 계정
           </Text>
-          <RetroButton label="로그아웃" variant="ghost" onPress={confirmSignOut} />
+          <RetroButton appearance="refined" label="로그아웃" variant="ghost" onPress={confirmSignOut} />
           {withdrawStage ? (
             <>
               <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>
@@ -136,8 +136,8 @@ export default function SettingsScreen() {
                 accessibilityLabel="탈퇴 확인 입력"
               />
               <View style={styles.withdrawActions}>
-                <RetroButton label="취소" variant="ghost" size="sm" onPress={() => { setWithdrawStage(false); setConfirmText(''); }} />
-                <RetroButton
+                <RetroButton appearance="refined" label="취소" variant="ghost" size="sm" onPress={() => { setWithdrawStage(false); setConfirmText(''); }} />
+                <RetroButton appearance="refined"
                   label="영구 탈퇴"
                   variant="danger"
                   size="sm"
@@ -148,7 +148,7 @@ export default function SettingsScreen() {
               </View>
             </>
           ) : (
-            <RetroButton label="회원 탈퇴" variant="danger" size="sm" onPress={startWithdraw} />
+            <RetroButton appearance="refined" label="회원 탈퇴" variant="danger" size="sm" onPress={startWithdraw} />
           )}
         </RetroCard>
 

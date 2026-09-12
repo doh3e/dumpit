@@ -67,14 +67,14 @@ export default function TaskBoardScreen() {
           accessibilityRole="button"
           accessibilityLabel="뒤로"
           hitSlop={8}
-          style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }, styles.back]}
+          style={({ pressed }) => [styles.back, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
         >
           <Text style={[styles.backText, { color: colors.fg, fontFamily: fonts.displayBold }]}>←</Text>
         </Pressable>
         <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 전체</Text>
         <View style={styles.sort}>
-          <Chip label="중요도순" selected={sortMode === 'priority'} onPress={() => setSortMode('priority')} />
-          <Chip label="마감순" selected={sortMode === 'deadline'} onPress={() => setSortMode('deadline')} />
+          <Chip appearance="refined" label="중요도순" selected={sortMode === 'priority'} onPress={() => setSortMode('priority')} />
+          <Chip appearance="refined" label="마감순" selected={sortMode === 'deadline'} onPress={() => setSortMode('deadline')} />
         </View>
       </View>
 
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingHorizontal: 16, paddingVertical: 10,
   },
-  back: { minWidth: 34, minHeight: 34, alignItems: 'center', justifyContent: 'center' },
+  back: { minWidth: 48, minHeight: 48, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   backText: { fontSize: 20 },
   title: { fontSize: 17, flex: 1 },
   sort: { flexDirection: 'row', gap: 6 },

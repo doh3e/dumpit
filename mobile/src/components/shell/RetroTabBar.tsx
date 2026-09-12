@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { retroShadow } from '../../theme/tokens';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { TiledImage } from '../common/TiledImage';
@@ -52,7 +51,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
         accessibilityRole="tab"
         accessibilityLabel={meta.label}
         accessibilityState={{ selected: focused }}
-        style={({ pressed }) => [styles.tab, { transform: [{ translateY: pressed ? 1 : 0 }] }]}
+        style={({ pressed }) => [styles.tab, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
       >
         <PixelIcon name={meta.icon} size={20} style={{ opacity: focused ? 1 : 0.55 }} />
         <Text style={[styles.label, { fontFamily: fonts.chrome, color: focused ? colors.accentText : colors.sub }]}>
@@ -66,7 +65,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
     <View
       style={[
         styles.bar,
-        { backgroundColor: colors.chromeBg, borderTopColor: colors.edge, paddingBottom: insets.bottom },
+        { backgroundColor: colors.chromeBg, borderTopColor: colors.chromeLine, paddingBottom: insets.bottom },
       ]}
     >
       {/* CHROME 스킨 장식 타일 — 웹 .app-sidebar background-image 대응 */}
@@ -81,10 +80,8 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
           accessibilityState={{ expanded: fabOpen }}
           style={({ pressed }) => [
             styles.fab,
-            { backgroundColor: colors.accent, borderColor: colors.edge },
-            pressed
-              ? { transform: [{ translateY: -14 }], boxShadow: `0px 0px 0px ${colors.shadowSm}` }
-              : [{ transform: [{ translateY: -18 }] }, retroShadow(3, colors.shadowSm)],
+            { backgroundColor: colors.accentFill, borderColor: colors.accentFill, transform: [{ translateY: -18 }] },
+            pressed && { backgroundColor: colors.accent2Fill, borderColor: colors.accent2Fill },
           ]}
         >
           <Animated.Text style={[styles.fabIcon, { color: colors.onAccent, fontFamily: fonts.displayBold }, fabIconStyle]}>
@@ -99,12 +96,12 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
 }
 
 const styles = StyleSheet.create({
-  bar: { flexDirection: 'row', borderTopWidth: 2, paddingTop: 8, paddingHorizontal: 4 },
+  bar: { flexDirection: 'row', borderTopWidth: 1, paddingTop: 8, paddingHorizontal: 4 },
   tab: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 4, minHeight: 48 },
   label: { fontSize: 10 },
   fabSlot: { flex: 1, alignItems: 'center' },
   fab: {
-    width: 56, height: 56, borderRadius: 14, borderWidth: 2,
+    width: 56, height: 56, borderRadius: 8, borderWidth: 1,
     alignItems: 'center', justifyContent: 'center',
   },
   fabIcon: { fontSize: 26, lineHeight: 30 },

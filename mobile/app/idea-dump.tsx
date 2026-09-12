@@ -145,7 +145,7 @@ export default function IdeaDumpScreen() {
               {/* AI 포인트 화폐 기호 — 웹 token 도트와 통일 (Text 내 인라인 이미지) */}
               {text.length}/{MAX_SCRATCH} · <PixelIcon name="token" size={11} /> 남은 AI {Number.isFinite(remaining) ? remaining : '-'}점
             </Text>
-            <RetroButton
+            <RetroButton appearance="refined"
               label={`AI로 정리 (${AI_COSTS.IDEA_EXTRACT}점)`}
               icon={<PixelIcon name="sparkle" size={14} />}
               onPress={runExtract}
@@ -168,7 +168,7 @@ export default function IdeaDumpScreen() {
               return (
                 <Pressable key={i} onPress={() => toggleRoot(i)} accessibilityRole="button"
                   accessibilityState={{ selected: !off }}>
-                  <RetroCard style={StyleSheet.flatten([styles.rootCard, off && styles.rootOff])}>
+                  <RetroCard appearance="refined" style={StyleSheet.flatten([styles.rootCard, off && styles.rootOff])}>
                     <Text style={[styles.rootMark, { color: off ? colors.sub : colors.accent2Text, fontFamily: fonts.chrome }]}>
                       <PixelIcon name={off ? 'checkboxOff' : 'checkboxOn'} size={12} /> {off ? '제외됨' : '저장'}
                     </Text>
@@ -177,8 +177,8 @@ export default function IdeaDumpScreen() {
                 </Pressable>
               );
             })}
-            <RetroButton label={`저장하기 (${nodes.length - excluded.size}개 묶음)`} onPress={saveSelected} busy={busy} />
-            <RetroButton label="다시 쓰기" variant="ghost" size="sm" onPress={() => setStage('input')} />
+            <RetroButton appearance="refined" label={`저장하기 (${nodes.length - excluded.size}개 묶음)`} onPress={saveSelected} busy={busy} />
+            <RetroButton appearance="refined" label="다시 쓰기" variant="ghost" size="sm" onPress={() => setStage('input')} />
           </>
         )}
       </ScrollView>

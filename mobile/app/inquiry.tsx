@@ -48,7 +48,7 @@ export default function InquiryScreen() {
           contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}
           keyboardShouldPersistTaps="handled"
         >
-          <RetroCard style={styles.card}>
+          <RetroCard appearance="refined" style={styles.card}>
             <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.displayBold }]}>제목</Text>
             <TextInput
               defaultValue=""
@@ -79,10 +79,10 @@ export default function InquiryScreen() {
               에 따라 처리 완료 후 1년간 보관됩니다.
             </Text>
 
-            <RetroButton label="문의 보내기" onPress={onSubmit} busy={sending} disabled={!canSend} />
+            <RetroButton appearance="refined" label="문의 보내기" onPress={onSubmit} busy={sending} disabled={!canSend} />
           </RetroCard>
 
-          <RetroCard style={styles.card}>
+          <RetroCard appearance="refined" style={styles.card}>
             <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.displayBold }]}>이메일로 문의</Text>
             <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
               앱에서 보내기 어려우면 아래 주소로 직접 보내주셔도 됩니다.

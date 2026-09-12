@@ -36,7 +36,7 @@ export default function HelpScreen() {
       <ScreenHeader title="도움말" icon={<PixelIcon name="question" size={16} />} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
-        <RetroCard style={[styles.card, { backgroundColor: colors.chip }] as never}>
+        <RetroCard appearance="refined" style={[styles.card, { backgroundColor: colors.chip }] as never}>
           <Text style={[styles.betaTitle, { color: colors.accentText, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="party" size={13} /> 베타 서비스 안내
           </Text>
@@ -47,7 +47,7 @@ export default function HelpScreen() {
 
         <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>주요 기능</Text>
         {FEATURES.map((f) => (
-          <RetroCard key={f.title} style={styles.featureCard}>
+          <RetroCard appearance="refined" key={f.title} style={styles.featureCard}>
             <PixelIcon name={f.icon} size={18} />
             <View style={styles.featureText}>
               <Text style={[styles.featureTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>{f.title}</Text>
@@ -59,7 +59,7 @@ export default function HelpScreen() {
         <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
           <PixelIcon name="token" size={14} /> 일일 AI 사용량 안내
         </Text>
-        <RetroCard style={styles.tableCard}>
+        <RetroCard appearance="refined" style={styles.tableCard}>
           {AI_COST_ROWS.map((row, i) => (
             <View
               key={row.label}
@@ -78,7 +78,7 @@ export default function HelpScreen() {
         </RetroCard>
         <Text style={[styles.footnote, { color: colors.sub, fontFamily: fonts.body }]}>매일 자정(KST)에 초기화돼요.</Text>
 
-        <RetroButton label="확인했어요!" onPress={() => router.back()} />
+        <RetroButton appearance="refined" label="확인했어요!" onPress={() => router.back()} />
       </ScrollView>
     </View>
   );

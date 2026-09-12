@@ -43,7 +43,7 @@ export default function NoticesScreen() {
       <ScreenHeader title="공지사항" icon={<PixelIcon name="megaphone" size={16} />} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
-        <RetroCard style={styles.listCard}>
+        <RetroCard appearance="refined" style={styles.listCard}>
           {allRows.length === 0 && !current.isLoading && (
             <Text style={[styles.empty, { color: colors.sub, fontFamily: fonts.body }]}>아직 공지가 없어요.</Text>
           )}
@@ -55,7 +55,7 @@ export default function NoticesScreen() {
                   onPress={() => setOpenId(open ? null : n.noticeId)}
                   accessibilityRole="button"
                   accessibilityState={{ expanded: open }}
-                  style={({ pressed }) => [styles.rowHead, { opacity: pressed ? 0.7 : 1 }]}
+                  style={({ pressed }) => [styles.rowHead, { backgroundColor: pressed ? colors.chip : colors.card }]}
                 >
                   {n.pinned && <RetroBadge text="고정" tone="sub" icon={<PixelIcon name="pin" size={10} />} />}
                   <Text numberOfLines={open ? undefined : 1} style={[styles.rowTitle, { color: colors.fg, fontFamily: fonts.display }]}>
@@ -73,7 +73,7 @@ export default function NoticesScreen() {
           })}
         </RetroCard>
         {hasMore && (
-          <RetroButton label="더 보기" variant="ghost" size="sm" onPress={() => setPage((p) => p + 1)} busy={current.isFetching} />
+          <RetroButton appearance="refined" label="더 보기" variant="ghost" size="sm" onPress={() => setPage((p) => p + 1)} busy={current.isFetching} />
         )}
       </ScrollView>
     </View>

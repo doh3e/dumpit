@@ -42,7 +42,7 @@ export default function IdeaEditScreen() {
         ) : (
           <>
             <Text style={[styles.notFound, { color: colors.sub, fontFamily: fonts.body }]}>아이디어를 찾지 못했어요.</Text>
-            <RetroButton label="돌아가기" size="sm" onPress={() => router.back()} />
+            <RetroButton appearance="refined" label="돌아가기" size="sm" onPress={() => router.back()} />
           </>
         )}
       </View>
@@ -207,7 +207,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
       <ScreenHeader title={editing ? '아이디어 수정' : '새 아이디어'} />
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           {/* 한글 IME 조합 보호 — uncontrolled */}
           <TextInput
             defaultValue={editing?.title ?? ''}
@@ -219,8 +219,8 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
             accessibilityLabel="아이디어 제목"
           />
           <View style={styles.previewRow}>
-            <Chip label="작성" selected={!preview} onPress={() => setPreview(false)} />
-            <Chip label="미리보기" selected={preview} onPress={() => setPreview(true)} />
+            <Chip appearance="refined" label="작성" selected={!preview} onPress={() => setPreview(false)} />
+            <Chip appearance="refined" label="미리보기" selected={preview} onPress={() => setPreview(true)} />
           </View>
           {preview ? (
             <View style={[styles.previewBox, { borderColor: colors.line }]}>
@@ -243,11 +243,11 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
           )}
         </RetroCard>
 
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           <View style={styles.chipRow}>
-            <Chip label="미지정" selected={category == null} onPress={() => setCategory(null)} />
+            <Chip appearance="refined" label="미지정" selected={category == null} onPress={() => setCategory(null)} />
             {TASK_CATEGORIES.map((c) => (
-              <Chip key={c.value} label={c.label} icon={<PixelIcon name={c.icon} size={12} />} selected={category === c.value} onPress={() => setCategory(c.value)} />
+              <Chip appearance="refined" key={c.value} label={c.label} icon={<PixelIcon name={c.icon} size={12} />} selected={category === c.value} onPress={() => setCategory(c.value)} />
             ))}
           </View>
           <View style={styles.switchRow}>
@@ -260,7 +260,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
           <Pressable
             onPress={() => parentSheet.current?.present()}
             accessibilityRole="button"
-            style={({ pressed }) => [styles.parentBtn, { borderColor: colors.line, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 }]}
+            style={({ pressed }) => [styles.parentBtn, { borderColor: pressed ? colors.fg : colors.line, backgroundColor: colors.chip }]}
           >
             <Text numberOfLines={1} style={[styles.parentText, { color: parentTitle ? colors.fg : colors.sub, fontFamily: fonts.body }]}>
               <PixelIcon name="tree" size={12} /> 상위: {parentTitle ?? '없음 (최상위)'}
@@ -269,23 +269,23 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
         </RetroCard>
 
         {editing && (
-          <RetroCard style={styles.card}>
+          <RetroCard appearance="refined" style={styles.card}>
             <Text style={[styles.sectionLabel, { color: colors.sub, fontFamily: fonts.chrome }]}>스티커 (바로 저장돼요)</Text>
             <StickerPicker current={stickerCode} onSelect={applySticker} disabled={busy} />
           </RetroCard>
         )}
 
-        <RetroButton label={editing ? '저장' : '아이디어 추가'} onPress={save} busy={saving} />
+        <RetroButton appearance="refined" label={editing ? '저장' : '아이디어 추가'} onPress={save} busy={saving} />
         {editing && (
           <>
-            <RetroButton
+            <RetroButton appearance="refined"
               label={editing.convertedTaskId ? '✓ 이미 태스크로 전환됨' : `태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
               icon={editing.convertedTaskId ? undefined : <PixelIcon name="scissors" size={14} />}
               variant="ghost"
               onPress={confirmConvert}
               disabled={!!editing.convertedTaskId || busy || remaining < AI_COSTS.IDEA_CONVERT}
             />
-            <RetroButton
+            <RetroButton appearance="refined"
               label={childCount > 0 ? '하위 아이디어를 먼저 정리해주세요' : '삭제'}
               variant="danger"
               size="sm"
@@ -310,7 +310,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
           <Pressable
             onPress={() => { setParentId(null); parentSheet.current?.dismiss(); }}
             accessibilityRole="button"
-            style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
+            style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, backgroundColor: pressed ? colors.chip : colors.card }]}
           >
             <Text style={[styles.sheetRowText, { color: colors.sub, fontFamily: fonts.body }]}>없음 (최상위)</Text>
           </Pressable>
@@ -319,7 +319,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
               key={i.ideaId}
               onPress={() => { setParentId(i.ideaId); parentSheet.current?.dismiss(); }}
               accessibilityRole="button"
-              style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
+              style={({ pressed }) => [styles.sheetRow, { borderBottomColor: colors.line, backgroundColor: pressed ? colors.chip : colors.card }]}
             >
               <Text numberOfLines={1} style={[styles.sheetRowText, { color: colors.fg, fontFamily: fonts.body }]}>{i.title}</Text>
             </Pressable>

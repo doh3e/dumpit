@@ -40,9 +40,12 @@ export function ScreenHeader({
       {chromeDeco && <TiledImage source={chromeDeco} />}
       <Pressable
         onPress={onBack ?? (() => router.back())}
-        hitSlop={12}
         accessibilityRole="button"
         accessibilityLabel="뒤로"
+        style={({ pressed }) => [
+          styles.backButton,
+          { backgroundColor: pressed ? colors.chip : 'transparent' },
+        ]}
       >
         <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
       </Pressable>
@@ -64,6 +67,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 10,
     borderBottomWidth: 1.5, gap: 8,
   },
+  backButton: { minWidth: 48, minHeight: 48, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   back: { fontSize: 22 },
   titleRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   title: { fontSize: 18, textAlign: 'center', flexShrink: 1 },

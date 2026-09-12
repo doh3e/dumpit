@@ -54,8 +54,8 @@ export default function IdeasScreen() {
           <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>아이디어</Text>
           <View style={styles.headerActions}>
             {/* 아이디어 계열 기호는 전구로 통일 — 말풍선은 브레인덤프 전용 */}
-            <RetroButton label="덤프하기" icon={<PixelIcon name="bulb" size={13} />} size="sm" variant="ghost" onPress={() => router.push('/idea-dump' as Href)} />
-            <RetroButton label="＋ 새 아이디어" size="sm" onPress={() => router.push('/idea-edit' as Href)} />
+            <RetroButton appearance="refined" label="덤프하기" icon={<PixelIcon name="bulb" size={13} />} size="sm" variant="ghost" onPress={() => router.push('/idea-dump' as Href)} />
+            <RetroButton appearance="refined" label="＋ 새 아이디어" size="sm" onPress={() => router.push('/idea-edit' as Href)} />
           </View>
         </View>
 
@@ -69,7 +69,7 @@ export default function IdeasScreen() {
           accessibilityLabel="아이디어 검색"
         />
 
-        <RetroCard style={styles.listCard}>
+        <RetroCard appearance="refined" style={styles.listCard}>
           {rows.length === 0 && (
             <Text style={[styles.empty, { color: colors.sub, fontFamily: fonts.body }]}>
               {query ? '검색 결과가 없어요.' : '떠오른 생각을 아이디어로 붙잡아두세요.\n덤프하기로 쏟아내면 AI가 정리해줘요.'}
@@ -89,7 +89,7 @@ export default function IdeasScreen() {
                     accessibilityLabel={isExpanded ? '하위 접기' : `하위 ${childCount}개 펼치기`}
                     style={({ pressed }) => [
                       styles.caretBtn,
-                      { borderColor: colors.accent2, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 },
+                      { borderColor: pressed ? colors.fg : colors.accent2, backgroundColor: colors.chip },
                     ]}
                   >
                     <Text style={[styles.caretText, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>
@@ -100,7 +100,7 @@ export default function IdeasScreen() {
                   <View style={styles.caretSpacer} />
                 )}
                 <Pressable
-                  style={({ pressed }) => [styles.rowMain, { opacity: pressed ? 0.7 : 1 }]}
+                  style={({ pressed }) => [styles.rowMain, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
                   onPress={() => router.push({ pathname: '/idea-view', params: { ideaId: idea.ideaId } } as never)}
                   accessibilityRole="button"
                   accessibilityLabel={`${idea.title} 열기`}

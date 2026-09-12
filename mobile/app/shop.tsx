@@ -184,7 +184,7 @@ export default function ShopScreen() {
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar} contentContainerStyle={styles.tabRow}>
         {TABS.map((t) => (
-          <Chip key={t.key} label={t.label} selected={tab === t.key} onPress={() => setTab(t.key)} />
+          <Chip appearance="refined" key={t.key} label={t.label} selected={tab === t.key} onPress={() => setTab(t.key)} />
         ))}
       </ScrollView>
 
@@ -197,14 +197,14 @@ export default function ShopScreen() {
         {items.map((item) => {
           const isPreviewed = !!item.slot && preview?.[item.slot] === item.code;
           return (
-          <RetroCard key={item.code} style={[styles.itemCard, isPreviewed && { borderColor: colors.accent2 }] as never}>
+          <RetroCard appearance="refined" key={item.code} style={[styles.itemCard, isPreviewed && { borderColor: colors.accent2 }] as never}>
             <Pressable
               onPress={() => onPreview(item)}
               accessibilityRole="button"
               accessibilityLabel={`${item.name} 미리보기`}
               style={({ pressed }) => [
                 styles.previewBox,
-                { backgroundColor: colors.chip, borderColor: isPreviewed ? colors.accent2 : colors.line, opacity: pressed ? 0.7 : 1 },
+                { backgroundColor: colors.chip, borderColor: pressed ? colors.fg : isPreviewed ? colors.accent2 : colors.line },
               ]}
             >
               <ItemPreview item={item} scheme={scheme} />
@@ -224,7 +224,7 @@ export default function ShopScreen() {
             </View>
             <View style={styles.itemAction}>
               {!item.owned ? (
-                <RetroButton
+                <RetroButton appearance="refined"
                   label={String(item.price)}
                   icon={<CoinIcon size={12} />}
                   size="sm"
@@ -233,7 +233,7 @@ export default function ShopScreen() {
                   disabled={coin < item.price}
                 />
               ) : item.type === 'THEME' ? (
-                <RetroButton
+                <RetroButton appearance="refined"
                   label={item.equipped ? '해제' : '장착'}
                   size="sm"
                   variant={item.equipped ? 'ghost' : 'focus'}
@@ -257,7 +257,7 @@ export default function ShopScreen() {
           <Text style={[styles.previewBarText, { color: colors.fg, fontFamily: fonts.body }]}>
             <PixelIcon name="eye" size={12} /> 미리보기 중 — 아직 장착되지 않았어요
           </Text>
-          <RetroButton label="원래대로" size="sm" variant="ghost" onPress={() => setPreview(null)} />
+          <RetroButton appearance="refined" label="원래대로" size="sm" variant="ghost" onPress={() => setPreview(null)} />
         </View>
       )}
 
