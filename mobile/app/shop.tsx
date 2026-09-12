@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
@@ -21,6 +21,7 @@ import { keys } from '../src/query/keys';
 import { PLANET_SPRITES, STATION_SPRITES } from '../src/shop/spriteRegistry';
 import { STICKER_SPRITES } from '../src/tasks/stickers';
 import { useSkinPreview } from '../src/theme/ThemeProvider';
+import type { Equipments } from '../src/theme/compose';
 import { BG_SKINS, CHROME_SKINS, POMO_SKINS, skinKey } from '../src/theme/skins';
 import { useTheme } from '../src/theme/useTheme';
 
@@ -85,6 +86,24 @@ function ItemPreview({ item, scheme }: { item: CatalogItem; scheme: 'light' | 'd
 /** 테마 미리보기를 지원하는 슬롯 — 화면 전체가 즉시 바뀐다 */
 const PREVIEWABLE = new Set(['BACKGROUND', 'CHROME', 'POMODORO']);
 
+type EquipmentAcknowledgement = {
+  mutationId: number;
+  accountKey: string;
+  accountRevision: number;
+  previewRevision: number;
+  slot: string;
+  expectedCode: string | null;
+  refreshCompleted: boolean;
+  resolve: (confirmed: boolean) => void;
+};
+
+function withoutPreviewSlot(current: Equipments, slot: string): Equipments {
+  if (!current?.[slot]) return current;
+  const next = { ...current };
+  delete next[slot];
+  return Object.keys(next).length > 0 ? next : null;
+}
+
 export default function ShopScreen() {
   const { colors, fonts, scheme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -97,9 +116,65 @@ export default function ShopScreen() {
   const [tab, setTab] = useState<TabKey>('BACKGROUND');
   const [busyCode, setBusyCode] = useState<string | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+  const mutationInFlightRef = useRef(false);
+  const mutationSequenceRef = useRef(0);
+  const previewRevisionRef = useRef(0);
+  const accountRef = useRef({ key: me?.email ?? null, revision: 0 });
+  const actualEquipmentsRef = useRef(me?.equipments ?? {});
+  const acknowledgementRef = useRef<EquipmentAcknowledgement | null>(null);
+
+  const resolveAcknowledgementFromActual = useCallback(() => {
+    const acknowledgement = acknowledgementRef.current;
+    if (!acknowledgement?.refreshCompleted) return;
+    const account = accountRef.current;
+    const sameMutation = acknowledgement.mutationId === mutationSequenceRef.current;
+    const sameAccount = account.key === acknowledgement.accountKey
+      && account.revision === acknowledgement.accountRevision;
+    const actualCode = actualEquipmentsRef.current[acknowledgement.slot] ?? null;
+    if (!sameMutation || !sameAccount || actualCode !== acknowledgement.expectedCode) return;
+    acknowledgementRef.current = null;
+    acknowledgement.resolve(true);
+  }, []);
+
+  const cancelAcknowledgement = useCallback((mutationId?: number) => {
+    const acknowledgement = acknowledgementRef.current;
+    if (!acknowledgement || (mutationId !== undefined && acknowledgement.mutationId !== mutationId)) return;
+    acknowledgementRef.current = null;
+    acknowledgement.resolve(false);
+  }, []);
+
+  useLayoutEffect(() => {
+    const key = me?.email ?? null;
+    if (accountRef.current.key !== key) {
+      accountRef.current = { key, revision: accountRef.current.revision + 1 };
+    }
+    actualEquipmentsRef.current = me?.equipments ?? {};
+    const acknowledgement = acknowledgementRef.current;
+    if (acknowledgement) {
+      const account = accountRef.current;
+      if (account.key !== acknowledgement.accountKey || account.revision !== acknowledgement.accountRevision) {
+        cancelAcknowledgement();
+      } else {
+        resolveAcknowledgementFromActual();
+      }
+    }
+  }, [cancelAcknowledgement, me, resolveAcknowledgementFromActual]);
+
+  const updatePreview = useCallback((next: React.SetStateAction<Equipments>) => {
+    previewRevisionRef.current += 1;
+    setPreview(next);
+  }, [setPreview]);
 
   // 화면을 벗어나면 실제 장착으로 되돌린다 (웹 applySkinsTransient와 같은 취지)
-  useEffect(() => () => setPreview(null), [setPreview]);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      cancelAcknowledgement();
+      updatePreview(null);
+    };
+  }, [cancelAcknowledgement, updatePreview]);
 
   const items = useMemo(() => {
     const all = catalog.data?.items ?? [];
@@ -116,9 +191,79 @@ export default function ShopScreen() {
   }, [catalog.data, tab]);
 
   const coin = catalog.data?.coinBalance ?? 0;
-  const afterChange = () => {
-    qc.invalidateQueries({ queryKey: keys.catalog });
-    refresh();   // 코인·equipments 전 앱 반영
+  const runMutation = async ({
+    item,
+    operation,
+    expectedCode,
+    errorMessage,
+    onSuccess,
+  }: {
+    item: CatalogItem;
+    operation: () => Promise<unknown>;
+    expectedCode: string | null;
+    errorMessage: string;
+    onSuccess?: () => void;
+  }) => {
+    if (mutationInFlightRef.current) return;
+
+    const account = accountRef.current;
+    const accountKey = account.key;
+    if (!accountKey) return;
+    mutationInFlightRef.current = true;
+    const mutationId = ++mutationSequenceRef.current;
+    const previewRevision = previewRevisionRef.current;
+    cancelAcknowledgement();
+    setBusyCode(item.code);
+
+    const isCurrent = () => {
+      const currentAccount = accountRef.current;
+      return mountedRef.current
+        && mutationId === mutationSequenceRef.current
+        && currentAccount.key === account.key
+        && currentAccount.revision === account.revision;
+    };
+
+    try {
+      await operation();
+      if (!isCurrent()) return;
+      onSuccess?.();
+      void qc.invalidateQueries({ queryKey: keys.catalog });
+      const confirmation = new Promise<boolean>((resolve) => {
+        if (!item.slot) {
+          resolve(false);
+          return;
+        }
+        acknowledgementRef.current = {
+          mutationId,
+          accountKey,
+          accountRevision: account.revision,
+          previewRevision,
+          slot: item.slot,
+          expectedCode,
+          refreshCompleted: false,
+          resolve,
+        };
+      });
+      void confirmation.then((confirmed) => {
+        if (!confirmed || !isCurrent() || previewRevisionRef.current !== previewRevision || !item.slot) return;
+        updatePreview((current) => withoutPreviewSlot(current, item.slot!));
+      });
+      await refresh();
+      if (!isCurrent()) {
+        cancelAcknowledgement(mutationId);
+        return;
+      }
+      const acknowledgement = acknowledgementRef.current;
+      if (acknowledgement?.mutationId === mutationId) acknowledgement.refreshCompleted = true;
+      resolveAcknowledgementFromActual();
+    } catch (error) {
+      if (isCurrent()) toast.error(getApiErrorMessage(error, errorMessage));
+    } finally {
+      if (mutationId === mutationSequenceRef.current) {
+        mutationInFlightRef.current = false;
+        if (mountedRef.current) setBusyCode(null);
+      }
+    }
   };
 
   const confirmPurchase = (item: CatalogItem) => {
@@ -127,32 +272,25 @@ export default function ShopScreen() {
       {
         text: '구매',
         onPress: async () => {
-          setBusyCode(item.code);
-          try {
-            await purchaseItem(item.code);
-            toast.show(`구매 완료! ${item.type === 'THEME' ? '바로 장착했어요.' : ''}`);
-            afterChange();
-          } catch (e) {
-            toast.error(getApiErrorMessage(e, '구매에 실패했어요.'));
-          } finally {
-            setBusyCode(null);
-          }
+          await runMutation({
+            item,
+            operation: () => purchaseItem(item.code),
+            expectedCode: item.type === 'THEME' ? item.code : null,
+            errorMessage: '구매에 실패했어요.',
+            onSuccess: () => toast.show(`구매 완료! ${item.type === 'THEME' ? '바로 장착했어요.' : ''}`),
+          });
         },
       },
     ]);
   };
 
   const toggleEquip = async (item: CatalogItem) => {
-    setBusyCode(item.code);
-    try {
-      if (item.equipped) await unequipSlot(item.slot!);
-      else await equipItem(item.code);
-      afterChange();
-    } catch (e) {
-      toast.error(getApiErrorMessage(e, '장착을 바꾸지 못했어요.'));
-    } finally {
-      setBusyCode(null);
-    }
+    await runMutation({
+      item,
+      operation: () => item.equipped ? unequipSlot(item.slot!) : equipItem(item.code),
+      expectedCode: item.equipped ? null : item.code,
+      errorMessage: '장착을 바꾸지 못했어요.',
+    });
   };
 
   /** 카드를 누르면 미리보기 — 테마는 화면 전체에 임시 적용, 축하는 연출 재생 */
@@ -162,9 +300,10 @@ export default function ShopScreen() {
       return;
     }
     if (!item.slot || !PREVIEWABLE.has(item.slot)) return;
-    const base = me?.equipments ?? {};
-    const already = preview?.[item.slot] === item.code;
-    setPreview(already ? null : { ...base, ...preview, [item.slot]: item.code });
+    updatePreview((current) => {
+      if (current?.[item.slot!] === item.code) return withoutPreviewSlot(current, item.slot!);
+      return { ...(current ?? {}), [item.slot!]: item.code };
+    });
   };
 
   const previewing = !!preview;
@@ -230,7 +369,7 @@ export default function ShopScreen() {
                   size="sm"
                   onPress={() => confirmPurchase(item)}
                   busy={busyCode === item.code}
-                  disabled={coin < item.price}
+                  disabled={busyCode !== null || coin < item.price}
                 />
               ) : item.type === 'THEME' ? (
                 <RetroButton appearance="refined"
@@ -239,6 +378,7 @@ export default function ShopScreen() {
                   variant={item.equipped ? 'ghost' : 'focus'}
                   onPress={() => toggleEquip(item)}
                   busy={busyCode === item.code}
+                  disabled={busyCode !== null}
                 />
               ) : (
                 <Text style={[styles.ownedText, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>보유중</Text>
@@ -257,7 +397,7 @@ export default function ShopScreen() {
           <Text style={[styles.previewBarText, { color: colors.fg, fontFamily: fonts.body }]}>
             <PixelIcon name="eye" size={12} /> 미리보기 중 — 아직 장착되지 않았어요
           </Text>
-          <RetroButton appearance="refined" label="원래대로" size="sm" variant="ghost" onPress={() => setPreview(null)} />
+          <RetroButton appearance="refined" label="원래대로" size="sm" variant="ghost" onPress={() => updatePreview(null)} />
         </View>
       )}
 

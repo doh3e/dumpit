@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode, type SetStateAction } from 'react';
 import { AccessibilityInfo, useColorScheme } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
 import { mirrorTheme } from '../widget/mirror';
@@ -20,9 +20,13 @@ const BOLD_KEY = 'dumpit_bold_text';
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme() === 'dark' ? 'dark' : 'light';
   const { me } = useAuth();
+  const accountKey = me?.email ?? null;
   const [mode, setModeState] = useState<ThemeMode>('system');
   const [cachedEquip, setCachedEquip] = useState<Equipments>(null);
-  const [previewEquipments, setPreviewEquipments] = useState<Equipments>(null);
+  const [previewState, setPreviewState] = useState<{ accountKey: string | null; equipments: Equipments }>({
+    accountKey,
+    equipments: null,
+  });
   const [contrastMode, setContrastModeState] = useState<ContrastMode>('system');
   const [boldText, setBoldTextState] = useState(false);
   const [systemHighContrast, setSystemHighContrast] = useState(false);
@@ -59,6 +63,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [me]);
 
+  if (previewState.accountKey !== accountKey) {
+    setPreviewState({ accountKey, equipments: null });
+  }
+
+  const previewEquipments = previewState.accountKey === accountKey ? previewState.equipments : null;
+  const setPreviewEquipments = useCallback((update: SetStateAction<Equipments>) => {
+    setPreviewState((current) => {
+      const currentEquipments = current.accountKey === accountKey ? current.equipments : null;
+      return {
+        accountKey,
+        equipments: typeof update === 'function' ? update(currentEquipments) : update,
+      };
+    });
+  }, [accountKey]);
+
   const setMode = (m: ThemeMode) => {
     setModeState(m);
     AsyncStorage.setItem(MODE_KEY, m).catch(() => {});
@@ -73,11 +92,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const scheme = mode === 'system' ? system : mode;
-  const equipments = previewEquipments ?? me?.equipments ?? cachedEquip;
   const highContrastOn = contrastMode === 'high' || (contrastMode === 'system' && systemHighContrast);
   const composed = useMemo(
-    () => composeTheme(scheme, equipments, { highContrast: highContrastOn }),
-    [scheme, equipments, highContrastOn],
+    () => {
+      const actual = me?.equipments ?? cachedEquip ?? {};
+      const equipments = previewEquipments ? { ...actual, ...previewEquipments } : actual;
+      return composeTheme(scheme, equipments, { highContrast: highContrastOn });
+    },
+    [scheme, me?.equipments, cachedEquip, previewEquipments, highContrastOn],
   );
   const fonts = useMemo(() => resolveFonts(boldText), [boldText]);
 
@@ -89,7 +111,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({ ...composed, fonts, scheme, mode, setMode, contrastMode, setContrastMode, boldText, setBoldText, previewEquipments, setPreviewEquipments }),
     // 세터들은 매 렌더 새로 만들어지지만 상태만 건드리므로 의존성에서 제외
-    [composed, fonts, scheme, mode, contrastMode, boldText, previewEquipments],
+    [composed, fonts, scheme, mode, contrastMode, boldText, previewEquipments, setPreviewEquipments],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

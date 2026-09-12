@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, type Dispatch, type SetStateAction } from 'react';
 import type { ComposedTheme, Equipments } from './compose';
 import type { PomoColors } from './skins';
 import type { Palette } from './tokens';
@@ -20,7 +20,7 @@ export type ThemeContextValue = ComposedTheme & {
   setBoldText: (on: boolean) => void;
   /** 상점 미리보기 — 실제 장착을 바꾸지 않고 화면만 임시로 입힌다. null이면 해제 */
   previewEquipments: Equipments;
-  setPreviewEquipments: (eq: Equipments) => void;
+  setPreviewEquipments: Dispatch<SetStateAction<Equipments>>;
 };
 
 /**
@@ -35,7 +35,10 @@ export function useThemeMode(): { mode: ThemeMode; setMode: (m: ThemeMode) => vo
 }
 
 /** 상점 미리보기 제어 — Provider 밖에서는 무동작 */
-export function useSkinPreview(): { preview: Equipments; setPreview: (eq: Equipments) => void } {
+export function useSkinPreview(): {
+  preview: Equipments;
+  setPreview: Dispatch<SetStateAction<Equipments>>;
+} {
   const ctx = useContext(ThemeContext);
   return ctx
     ? { preview: ctx.previewEquipments, setPreview: ctx.setPreviewEquipments }
