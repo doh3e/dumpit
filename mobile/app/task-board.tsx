@@ -1,10 +1,9 @@
 import { Stack, router } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { getApiErrorMessage } from '../src/api/client';
 import type { PlanningSections, TaskResponse, TaskStatus } from '../src/api/types';
 import { TaskRow } from '../src/components/home/TaskRow';
-import { Chip } from '../src/components/retro/Chip';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { TaskDetailSheet, type TaskDetailSheetHandle } from '../src/components/task/TaskDetailSheet';
@@ -24,6 +23,11 @@ const BOARD_SECTIONS: { key: keyof PlanningSections; title: string }[] = [
 ];
 
 type SortMode = 'priority' | 'deadline';
+
+const SORT_OPTIONS: { id: SortMode; label: string }[] = [
+  { id: 'priority', label: '중요도순' },
+  { id: 'deadline', label: '마감순' },
+];
 
 /** 태스크 전체 보드 — 7개 버킷 조망 (웹 TaskBoardModal 대응) */
 export default function TaskBoardScreen() {
@@ -62,20 +66,61 @@ export default function TaskBoardScreen() {
     <View style={{ flex: 1, paddingTop: insets.top }}>
       <Stack.Screen options={{ animation: 'slide_from_right' }} />
       <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="뒤로"
-          hitSlop={8}
-          style={({ pressed }) => [styles.back, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
-        >
-          <Text style={[styles.backText, { color: colors.fg, fontFamily: fonts.displayBold }]}>←</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 전체</Text>
-        <View style={styles.sort}>
-          <Chip appearance="refined" label="중요도순" selected={sortMode === 'priority'} onPress={() => setSortMode('priority')} />
-          <Chip appearance="refined" label="마감순" selected={sortMode === 'deadline'} onPress={() => setSortMode('deadline')} />
+        <View style={styles.titleRow}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="뒤로"
+            hitSlop={8}
+            style={({ pressed }) => [styles.back, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
+          >
+            <Text style={[styles.backText, { color: colors.fg, fontFamily: fonts.displayBold }]}>←</Text>
+          </Pressable>
+          <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 전체</Text>
         </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ flexGrow: 0, flexShrink: 0 }}
+          contentContainerStyle={styles.sort}
+        >
+          {SORT_OPTIONS.map((option) => (
+            <Pressable
+              key={option.id}
+              accessibilityRole="button"
+              accessibilityLabel={option.label}
+              accessibilityState={{ selected: sortMode === option.id }}
+              onPress={() => setSortMode(option.id)}
+              style={({ pressed }) => [
+                styles.sortOption,
+                { backgroundColor: pressed ? colors.chip : 'transparent' },
+              ]}
+            >
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.sortLabel,
+                  {
+                    fontFamily: fonts.chrome,
+                    color: sortMode === option.id ? colors.fg : colors.subOnChip,
+                  },
+                ]}
+              >
+                {option.label}
+              </Text>
+              <View
+                accessible={false}
+                style={[
+                  styles.sortMarker,
+                  {
+                    backgroundColor: sortMode === option.id ? colors.accent2Text : 'transparent',
+                  },
+                ]}
+              />
+            </Pressable>
+          ))}
+        </ScrollView>
       </View>
 
       <SectionList
@@ -116,13 +161,29 @@ export default function TaskBoardScreen() {
 
 const styles = StyleSheet.create({
   header: {
+    paddingVertical: 10,
+  },
+  titleRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 16, paddingVertical: 10,
+    paddingHorizontal: 16,
   },
   back: { minWidth: 48, minHeight: 48, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   backText: { fontSize: 20 },
-  title: { fontSize: 17, flex: 1 },
-  sort: { flexDirection: 'row', gap: 6 },
+  title: { fontSize: 17, flex: 1, minWidth: 0 },
+  sort: { gap: 4, paddingHorizontal: 16 },
+  sortOption: {
+    minWidth: 48,
+    minHeight: 48,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    gap: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    borderRadius: 8,
+  },
+  sortLabel: { fontSize: 12 },
+  sortMarker: { width: 18, height: 2 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14, marginBottom: 4 },
   sectionTitle: { fontSize: 14 },
   emptyBox: {
