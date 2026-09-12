@@ -141,6 +141,8 @@ describe('RetroButton appearance', () => {
     expect(disabled.props.disabled).toBe(true);
     expect(disabled.props.accessibilityState).toEqual({ disabled: true, busy: false });
     expect(pressableStyle(disabled).opacity).toBeLessThan(1);
+    expect(pressableStyle(busy, true)).toEqual(pressableStyle(busy));
+    expect(pressableStyle(disabled, true)).toEqual(pressableStyle(disabled));
     await unmount(tree);
   });
 });
@@ -209,6 +211,7 @@ describe('Chip appearance', () => {
     expect(idle.props.accessibilityState).toEqual({ selected: false, disabled: false });
     expect(pressableStyle(disabled).opacity).toBeLessThan(1);
     expect(disabled.props.accessibilityState).toEqual({ selected: false, disabled: true });
+    expect(pressableStyle(disabled, true)).toEqual(pressableStyle(disabled));
     await unmount(tree);
   });
 
@@ -241,19 +244,28 @@ describe('refined 테마 조합', () => {
             <RetroButton appearance="refined" label="danger" variant="danger" onPress={() => {}} />
             <RetroButton appearance="refined" label="focus" variant="focus" onPress={() => {}} />
             <Chip appearance="refined" label="selected" selected onPress={() => {}} />
+            <Chip appearance="refined" label="unselected" onPress={() => {}} />
             <RetroCard appearance="refined"><Text>card</Text></RetroCard>
           </View>,
         );
 
-        for (const label of ['primary', 'ghost', 'danger', 'focus', 'selected']) {
+        for (const label of ['primary', 'ghost', 'danger', 'focus', 'selected', 'unselected']) {
           const control = buttonByLabel(tree, label);
           const controlStyle = pressableStyle(control);
+          const pressedStyle = pressableStyle(control, true);
           const labelStyle = textStyle(tree, label);
+          expect(pressedStyle.opacity ?? 1).toBe(1);
+          expect([pressedStyle.backgroundColor, pressedStyle.borderColor])
+            .not.toEqual([controlStyle.backgroundColor, controlStyle.borderColor]);
           expect(contrastRatio(labelStyle.color, controlStyle.backgroundColor)).toBeGreaterThanOrEqual(4.5);
           expect(contrastRatio(controlStyle.borderColor, mockTheme.colors.card)).toBeGreaterThanOrEqual(3);
+          expect(contrastRatio(labelStyle.color, pressedStyle.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+          expect(contrastRatio(pressedStyle.borderColor, mockTheme.colors.card)).toBeGreaterThanOrEqual(3);
           expect(controlStyle.minHeight).toBeGreaterThanOrEqual(48);
           expect(controlStyle.minWidth).toBeGreaterThanOrEqual(48);
           expect(controlStyle.boxShadow ?? 'none').toBe('none');
+          expect(pressedStyle.boxShadow ?? 'none').toBe('none');
+          expect(pressedStyle.transform ?? []).toEqual([]);
         }
         await unmount(tree);
       }

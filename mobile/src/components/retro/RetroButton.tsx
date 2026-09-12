@@ -59,6 +59,10 @@ export function RetroButton({
         size === 'sm' ? styles.sm : styles.md,
         refined && styles.refinedSize,
         { backgroundColor: palette.bg, borderColor: palette.border, opacity: blocked && !busy ? 0.45 : 1 },
+        refined && pressed && !blocked && {
+          backgroundColor: variant === 'ghost' ? colors.chip : palette.bg,
+          borderColor: colors.fg,
+        },
         !refined && (pressed && !blocked
           ? { transform: [{ translateX: 3 }, { translateY: 3 }], boxShadow: `0px 0px 0px ${colors.shadowSm}` }
           : retroShadow(3, colors.shadowSm)),

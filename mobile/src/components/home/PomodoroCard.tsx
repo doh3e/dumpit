@@ -69,12 +69,15 @@ export function PomodoroCard() {
         onPress={goTimer}
         accessibilityRole="button"
         accessibilityLabel="뽀모도로 타이머 열기"
-        style={({ pressed }) => [styles.openArea, { opacity: pressed ? 0.7 : 1 }]}
+        style={({ pressed }) => [
+          styles.openArea,
+          { backgroundColor: pressed ? colors.chip : colors.card, opacity: 1 },
+        ]}
       >
         <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
           <PixelIcon name="tomato" size={14} /> 뽀모도로
         </Text>
-        <Text numberOfLines={2} style={[styles.sub, { color: paused ? colors.sub : colors.fg, fontFamily: fonts.chrome }]}>
+        <Text numberOfLines={2} style={[styles.sub, { color: paused ? colors.subOnChip : colors.fg, fontFamily: fonts.chrome }]}>
           {statusLine}
         </Text>
       </Pressable>
@@ -94,7 +97,7 @@ export function PomodoroCard() {
 const styles = StyleSheet.create({
   card: { gap: 12 },
   idleText: { gap: 3 },
-  openArea: { minHeight: 48, justifyContent: 'center', gap: 3 },
+  openArea: { minHeight: 48, borderRadius: 8, justifyContent: 'center', gap: 3 },
   action: { alignSelf: 'stretch' },
   title: { fontSize: 15 },
   sub: { fontSize: 12 },

@@ -49,7 +49,11 @@ export function Chip({
         selected
           ? { backgroundColor: selectedColors.bg, borderColor: selectedColors.border }
           : { backgroundColor: idleColors.bg, borderColor: idleColors.border },
-        { opacity: disabled ? 0.45 : pressed ? 0.8 : 1 },
+        refined && pressed && !disabled && !!onPress && {
+          backgroundColor: selected ? colors.card : colors.chip,
+          borderColor: colors.fg,
+        },
+        { opacity: disabled ? 0.45 : !refined && pressed ? 0.8 : 1 },
       ]}
     >
       {icon ? (

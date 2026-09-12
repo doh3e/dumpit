@@ -330,6 +330,48 @@ describe('지금 할 일 히어로', () => {
 });
 
 describe('뽀모도로 진입 카드', () => {
+  it.each(['light', 'dark'])('%s 기본·고대비와 배경 스킨에서 실행·일시정지 상태의 불투명 pressed 대비를 지킨다', async (scheme) => {
+    for (const skin of [null, ...Object.keys(BG_SKINS)]) {
+      for (const highContrast of [false, true]) {
+        for (const paused of [false, true]) {
+          setTheme(scheme, skin ? { BACKGROUND: `bg.${skin}` } : null, highContrast);
+          const anchor = Date.now() - 60_000;
+          mockSession = {
+            settings: DEFAULT_SETTINGS,
+            anchor,
+            pausedAt: paused ? anchor + 30_000 : null,
+            taskId: 'task-1',
+            taskTitle: '발표 자료 검토',
+            lastSettled: 0,
+          };
+          const tree = await render(<PomodoroCard />);
+          const openCard = byLabel(tree, '뽀모도로 타이머 열기');
+          const resting = pressableStyle(openCard);
+          const pressed = pressableStyle(openCard, true);
+          const title = openCard.find(
+            (node) => node.type === Text && StyleSheet.flatten(node.props.style)?.fontSize === 15,
+          );
+          const status = openCard.find(
+            (node) => node.type === Text && StyleSheet.flatten(node.props.style)?.fontSize === 12,
+          );
+          const titleStyle = StyleSheet.flatten(title.props.style);
+          const statusStyle = StyleSheet.flatten(status.props.style);
+
+          expect(resting.backgroundColor).toBe(mockTheme.colors.card);
+          expect(pressed.backgroundColor).toBe(mockTheme.colors.chip);
+          expect(resting.borderRadius).toBe(8);
+          expect(pressed.borderRadius).toBe(8);
+          expect(pressed.opacity ?? 1).toBe(1);
+          expect(contrastRatio(titleStyle.color, resting.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+          expect(contrastRatio(titleStyle.color, pressed.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+          expect(contrastRatio(statusStyle.color, resting.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+          expect(contrastRatio(statusStyle.color, pressed.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+          await unmount(tree);
+        }
+      }
+    }
+  });
+
   it('실행 중 다시 열기 조작을 독립된 48dp refined 버튼으로 유지한다', async () => {
     mockSession = {
       settings: DEFAULT_SETTINGS,
