@@ -13,6 +13,8 @@
       --shadow-sm: #DCC5A0;
       /* 뽀모 색 — 웹이 state 페이로드 colors로 덮어씀 (미수신 시 기본 토큰) */
       --pomo-focus: var(--accent); --pomo-break: var(--accent2); --pomo-ring: var(--line);
+      --pomo-focus-text: #000000; --pomo-break-text: #000000;
+      --control-border: var(--edge); --widget-title-text: var(--fg);
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -20,6 +22,8 @@
         --line: #413966; --edge: #141021; --chip: #3A3156;
         --accent: #F09355; --accent2: #5FC4B4; --on-accent: #241E14;
         --shadow-sm: #141021;
+        --pomo-focus-text: var(--on-accent); --pomo-break-text: var(--on-accent);
+        --control-border: var(--fg);
       }
     }
 
@@ -53,22 +57,22 @@
     .widget {
       width: 100%;
       height: 100%;
-      border: 1.5px solid var(--edge);
+      border: 1px solid var(--edge);
       border-radius: 12px;
       background: var(--bg);
       padding: 12px 10px 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 9px;
+      gap: 8px;
       -webkit-app-region: drag;
     }
 
     .title {
       width: 100%;
-      border-bottom: 2px dotted var(--accent2);
+      border-bottom: 1px solid var(--line);
       padding-bottom: 8px;
-      color: var(--sub);
+      color: var(--widget-title-text);
       font-family: 'DGM', monospace;
       font-size: 9px;
       letter-spacing: 0.06em;
@@ -90,42 +94,46 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border: 1.5px solid var(--edge);
+      border: 1px solid var(--control-border);
       border-radius: 999px;
       background: var(--pomo-focus);
-      color: var(--on-accent);
+      color: var(--pomo-focus-text);
       font-family: 'DGM', monospace;
       font-size: 10px;
       letter-spacing: 0;
     }
 
     .icon-button {
-      width: 25px;
-      height: 25px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--control-border);
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
       background: var(--card);
-      color: var(--sub);
+      color: var(--fg);
       font-size: 13px;
       font-weight: 950;
       line-height: 1;
       cursor: pointer;
+      -webkit-app-region: no-drag;
     }
 
     #open {
       padding: 4px;
     }
 
-    #open img {
-      width: 15px;
-      height: 15px;
-      display: block;
-      object-fit: contain;
-      pointer-events: none;
+    #open img { display: none; }
+
+    #open::before {
+      content: '';
+      width: 18px;
+      height: 18px;
+      background: currentColor;
+      -webkit-mask: url('./arrowheads.png') center / contain no-repeat;
+      mask: url('./arrowheads.png') center / contain no-repeat;
     }
 
     .icon-button:hover {
@@ -134,8 +142,8 @@
     }
 
     #close:hover {
-      background: var(--accent);
-      color: var(--on-accent);
+      background: var(--pomo-focus);
+      color: var(--pomo-focus-text);
     }
 
     .timer {
@@ -182,9 +190,9 @@
 
     .task {
       width: 100%;
-      height: 28px;
-      border: 1px solid var(--line);
-      border-radius: 7px;
+      height: 44px;
+      border: 1px solid var(--control-border);
+      border-radius: 8px;
       background: var(--card);
       padding: 0 8px;
       /* 태스크 제목 = 디스플레이 층 → 갈무리11 (11px = 그리드 1배수라 도트 선명) */
@@ -197,23 +205,18 @@
       cursor: pointer;
     }
 
-    .task:focus {
-      outline: 2px solid var(--accent2);
-      outline-offset: 1px;
-    }
-
     .controls {
       width: 100%;
       display: grid;
-      grid-template-columns: 1fr 58px;
-      gap: 7px;
+      grid-template-columns: minmax(0, 1fr) 64px;
+      gap: 8px;
       -webkit-app-region: no-drag;
     }
 
     .action {
-      height: 34px;
-      border: 1.5px solid var(--edge);
-      border-radius: 7px;
+      min-height: 44px;
+      border: 1px solid var(--control-border);
+      border-radius: 8px;
       /* 버튼 = 크롬 → 웹 btn-retro와 동일하게 둥근모 */
       font-family: 'DGM', monospace;
       -webkit-font-smoothing: none;
@@ -222,29 +225,41 @@
       color: var(--fg);
       background: var(--card);
       cursor: pointer;
-      box-shadow: 3px 3px 0 var(--shadow-sm);
-      transition: transform .08s ease, box-shadow .08s ease;
+      box-shadow: none;
+      transition: background-color .08s ease, color .08s ease;
+      -webkit-app-region: no-drag;
     }
 
     .action.primary {
       background: var(--pomo-focus);
-      color: var(--on-accent);
+      color: var(--pomo-focus-text);
     }
 
-    .action:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 4px 4px 0 var(--shadow-sm);
-    }
-
+    .action:hover,
     .action:active {
-      transform: translate(3px, 3px);
-      box-shadow: 0 0 0 var(--shadow-sm);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .action:focus-visible,
+    .icon-button:focus-visible,
+    .task:focus-visible {
+      outline: 2px solid var(--fg);
+      outline-offset: -3px;
+    }
+
+    .action.primary:focus-visible {
+      outline-color: var(--pomo-focus-text);
     }
 
     body.break .mode,
     body.break .action.primary {
       background: var(--pomo-break);
-      color: var(--on-accent);
+      color: var(--pomo-break-text);
+    }
+
+    body.break .action.primary:focus-visible {
+      outline-color: var(--pomo-break-text);
     }
 
     body.break .progress {
@@ -253,7 +268,7 @@
 
     body.idle .mode {
       background: var(--chip);
-      color: var(--sub);
+      color: var(--fg);
     }
 
     body.idle .progress {
@@ -266,6 +281,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .action, .progress { transition: none; }
+      .action:hover, .action:active { transform: none; }
     }
   </style>
 </head>

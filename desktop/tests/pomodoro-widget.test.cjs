@@ -169,6 +169,20 @@ function sendState(harness, payload) {
   listener({}, payload)
 }
 
+function luminance(hex) {
+  const channels = hex.slice(1).match(/../g).map((value) => Number.parseInt(value, 16) / 255)
+  const [red, green, blue] = channels.map((value) =>
+    value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+  return red * 0.2126 + green * 0.7152 + blue * 0.0722
+}
+
+function contrastRatio(first, second) {
+  const firstLuminance = luminance(first)
+  const secondLuminance = luminance(second)
+  return (Math.max(firstLuminance, secondLuminance) + 0.05)
+    / (Math.min(firstLuminance, secondLuminance) + 0.05)
+}
+
 test('contextBridge API가 기존 IPC 채널과 상태 구독 해제를 유지한다', () => {
   const harness = loadWidgetPreload()
   const api = harness.exposed.get('dumpitPomodoroWidget')
@@ -254,6 +268,80 @@ test('위젯 상태가 모드, 시간 의미, 스킨 색상과 선택된 태스�
   assert.equal(rootVariables.get('--chip'), '#F0DFBB')
   assert.equal(rootVariables.get('--shadow-sm'), '#DCC5A0')
   assert.equal(rootVariables.get('--on-accent'), '#FFFBF0')
+})
+
+test('밝기가 비슷한 뽀모도로 스킨도 focus와 break 글자 대비를 각각 4.5:1로 파생한다', () => {
+  const harness = loadWidgetPreload()
+  const colors = {
+    focus: '#A8763E',
+    break: '#5C8A6E',
+    ring: '#E0D2B6',
+    bg: '#F7E7EE',
+    card: '#FEFAFC',
+    fg: '#33271E',
+    sub: '#726553',
+    line: '#E5BCCE',
+    edge: '#46243A',
+    chip: '#F2D7E2',
+    shadowSm: '#F0D2DE',
+    onAccent: '#FFF6FA',
+  }
+
+  sendState(harness, { colors })
+
+  const focusText = harness.rootVariables.get('--pomo-focus-text')
+  const breakText = harness.rootVariables.get('--pomo-break-text')
+  assert.match(String(focusText), /^#[0-9A-F]{6}$/i)
+  assert.match(String(breakText), /^#[0-9A-F]{6}$/i)
+  assert.ok(contrastRatio(focusText, colors.focus) >= 4.5)
+  assert.ok(contrastRatio(breakText, colors.break) >= 4.5)
+  assert.equal(harness.rootVariables.get('--pomo-focus'), colors.focus)
+  assert.equal(harness.rootVariables.get('--pomo-break'), colors.break)
+  assert.equal(harness.rootVariables.get('--on-accent'), colors.onAccent)
+})
+
+test('낮은 대비의 스킨 chrome 색은 원본 payload를 보존하고 조작 경계와 제목색만 파생한다', () => {
+  const harness = loadWidgetPreload()
+  const colors = {
+    focus: '#6D74C9',
+    break: '#C9922E',
+    ring: '#413966',
+    bg: '#151329',
+    card: '#201D3D',
+    fg: '#F2E9D8',
+    sub: '#9D93A8',
+    line: '#413966',
+    edge: '#0A0918',
+    chip: '#302A54',
+    shadowSm: '#0A0918',
+    onAccent: '#241E14',
+  }
+
+  sendState(harness, { colors })
+
+  const controlBorder = harness.rootVariables.get('--control-border')
+  const titleText = harness.rootVariables.get('--widget-title-text')
+  assert.ok(contrastRatio(controlBorder, colors.bg) >= 3)
+  assert.ok(contrastRatio(titleText, colors.bg) >= 4.5)
+  assert.equal(harness.rootVariables.get('--edge'), colors.edge)
+  assert.equal(harness.rootVariables.get('--sub'), colors.sub)
+})
+
+test('현대 rgb 알파 표기의 실제 합성색을 기준으로 안전한 글자색을 선택한다', () => {
+  const harness = loadWidgetPreload()
+
+  sendState(harness, {
+    colors: {
+      focus: 'rgb(255 255 255 / 50%)',
+      break: 'rgb(168 118 62 / 100%)',
+      bg: '#000000',
+      fg: 'rgba(255, 255, 255, 1)',
+      onAccent: '#FFFFFF',
+    },
+  })
+
+  assert.equal(harness.rootVariables.get('--pomo-focus-text'), '#000000')
+  assert.equal(harness.rootVariables.get('--pomo-break-text'), '#000000')
 })
 
 test('태스크 목록은 내용이 바뀔 때만 교체하고 선택 상태는 매 상태마다 유지한다', () => {
