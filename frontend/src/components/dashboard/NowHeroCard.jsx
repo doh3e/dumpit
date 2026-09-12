@@ -48,14 +48,12 @@ export default function NowHeroCard({
             </>
           ) : task ? (
             <>
-              <button
-                type="button"
-                onClick={() => onEdit(task)}
-                className="btn-refined btn-refined-text !flex w-full max-w-full justify-start !p-0 truncate text-left font-galmuri font-bold text-[1.5rem] max-sm:text-[1.1875rem] leading-tight text-dark hover:text-primary"
+              <p
+                className="min-w-0 break-words font-galmuri font-bold text-[1.5rem] max-sm:text-[1.1875rem] leading-tight text-dark"
                 title={task.title}
               >
                 {task.title}
-              </button>
+              </p>
               {heroTime && (
                 <p className="font-dungeon text-[1.1875rem] text-primary mt-1">{heroTime} 마감</p>
               )}
@@ -63,9 +61,6 @@ export default function NowHeroCard({
               <div className="mt-3 flex gap-2">
                 <button type="button" onClick={(e) => onComplete(task, e)} className="btn-refined btn-refined-primary text-xs">
                   완료하기
-                </button>
-                <button type="button" onClick={() => onEdit(task)} className="btn-refined text-xs">
-                  수정
                 </button>
               </div>
             </>

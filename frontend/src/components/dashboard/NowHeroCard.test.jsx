@@ -43,15 +43,17 @@ describe('NowHeroCard', () => {
 
     const completeButton = screen.getByRole('button', { name: '완료하기' })
     expect(completeButton).toHaveClass('btn-refined', 'btn-refined-primary')
-    expect(screen.getByRole('button', { name: '수정' })).toHaveClass('btn-refined')
     expect(screen.getByRole('button', { name: /빨래 널기/ })).toHaveClass('btn-refined')
+
+    expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: task.title })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByText(task.title))
+    expect(onEdit).not.toHaveBeenCalled()
 
     fireEvent.click(completeButton)
     expect(onComplete.mock.calls[0][0]).toBe(task)
-    fireEvent.click(screen.getByRole('button', { name: '수정' }))
-    expect(onEdit).toHaveBeenCalledWith(task)
     fireEvent.click(screen.getByRole('button', { name: /빨래 널기/ }))
-    expect(onEdit).toHaveBeenCalledWith(next)
+    expect(onEdit).toHaveBeenCalledExactlyOnceWith(next)
   })
 
   it('오늘 할 일을 다 비운 일과시간에는 보너스 큐를 미리 보여준다', () => {
