@@ -174,8 +174,8 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
           accessibilityState={{ expanded: moreOpen }}
           style={({ pressed }) => [styles.moreToggle, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
         >
-          <Text style={[styles.moreToggleText, { color: colors.sub, fontFamily: fonts.chrome }]}>{moreOpen ? '옵션 접기' : '옵션 더보기'}</Text>
-          <Text style={[styles.moreToggleArrow, { color: colors.sub, fontFamily: fonts.chrome }]}>{moreOpen ? '▲' : '▼'}</Text>
+          <Text style={[styles.moreToggleText, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>{moreOpen ? '옵션 접기' : '옵션 더보기'}</Text>
+          <Text style={[styles.moreToggleArrow, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>{moreOpen ? '▲' : '▼'}</Text>
         </Pressable>
         {moreOpen && (
           <View style={styles.more}>

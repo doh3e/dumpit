@@ -23,14 +23,47 @@ jest.mock('react-native-reanimated', () => {
 });
 
 const { composeTheme } = require('../../../theme/compose');
+const { contrastRatio } = require('../../../theme/contrast');
+const { BG_SKINS, CHROME_SKINS } = require('../../../theme/skins');
 const { resolveFonts } = require('../../../theme/typography');
 const { ScreenHeader } = require('../ScreenHeader');
 const { RetroTabBar } = require('../RetroTabBar');
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
+function setTheme(scheme = 'light', equipments = null, highContrast = false) {
+  mockTheme = { ...composeTheme(scheme, equipments, { highContrast }), fonts: resolveFonts(false), scheme };
+}
+
+function tabState() {
+  return {
+    index: 0,
+    routes: [
+      { key: 'index-key', name: 'index' },
+      { key: 'routine-key', name: 'routine' },
+      { key: 'ideas-key', name: 'ideas' },
+      { key: 'my-key', name: 'my' },
+    ],
+  };
+}
+
+async function renderTabBar(fabOpen) {
+  let tree;
+  await act(async () => {
+    tree = create(
+      <RetroTabBar
+        state={tabState()}
+        navigation={{ emit: mockEmit, navigate: mockNavigate }}
+        onFabPress={mockFabPress}
+        fabOpen={fabOpen}
+      />,
+    );
+  });
+  return tree;
+}
+
 beforeEach(() => {
-  mockTheme = { ...composeTheme('light', null, { highContrast: false }), fonts: resolveFonts(false), scheme: 'light' };
+  setTheme();
   mockBack.mockReset();
   mockFabPress.mockReset();
   mockEmit.mockClear();
@@ -125,6 +158,36 @@ describe('하단 탐색', () => {
     await act(async () => close.props.onPress());
     expect(mockFabPress).toHaveBeenCalledTimes(2);
     await act(async () => tree.unmount());
+  });
+
+  it.each(['light', 'dark'])('%s 기본·고대비와 기존 스킨에서 추가·닫기 라벨은 모든 표면에서 4.5:1을 지킨다', async (scheme) => {
+    const equipmentCases = [
+      null,
+      ...Object.keys(BG_SKINS).map((skin) => ({ BACKGROUND: `bg.${skin}` })),
+      ...Object.keys(CHROME_SKINS).map((skin) => ({ CHROME: `chrome.${skin}` })),
+      { BACKGROUND: 'bg.galaxy', CHROME: 'chrome.candy' },
+    ];
+
+    for (const equipments of equipmentCases) {
+      for (const highContrast of [false, true]) {
+        setTheme(scheme, equipments, highContrast);
+        for (const fabOpen of [false, true]) {
+          const label = fabOpen ? '닫기' : '추가';
+          const tree = await renderTabBar(fabOpen);
+          const control = tree.root.find((node) => node.props.accessibilityLabel === label);
+          const text = control.find((node) => node.type === Text && node.props.children === label);
+          const idle = StyleSheet.flatten(control.props.style({ pressed: false }));
+          const pressed = StyleSheet.flatten(control.props.style({ pressed: true }));
+          const textStyle = StyleSheet.flatten(text.props.style);
+
+          expect(idle.backgroundColor).toBe(mockTheme.colors.chip);
+          expect(pressed.backgroundColor).toBe(mockTheme.colors.card);
+          expect(contrastRatio(textStyle.color, idle.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+          expect(contrastRatio(textStyle.color, pressed.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+          await act(async () => tree.unmount());
+        }
+      }
+    }
   });
 });
 

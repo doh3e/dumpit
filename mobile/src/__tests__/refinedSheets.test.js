@@ -81,6 +81,8 @@ jest.mock('../pomodoro/store', () => ({
 }));
 
 const { composeTheme } = require('../theme/compose');
+const { contrastRatio } = require('../theme/contrast');
+const { BG_SKINS } = require('../theme/skins');
 const { resolveFonts } = require('../theme/typography');
 const { DateTimeField } = require('../components/task/DateTimeField');
 const { TimeField } = require('../components/task/TimeField');
@@ -96,8 +98,8 @@ const PomodoroScreen = require('../../app/pomodoro').default;
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
-function setTheme() {
-  mockTheme = { ...composeTheme('light', null, { highContrast: false }), fonts: resolveFonts(false), scheme: 'light' };
+function setTheme(scheme = 'light', equipments = null, highContrast = false) {
+  mockTheme = { ...composeTheme(scheme, equipments, { highContrast }), fonts: resolveFonts(false), scheme };
 }
 
 async function render(element) {
@@ -210,6 +212,41 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
     expect(style(scroll).paddingBottom).toBeGreaterThanOrEqual(24);
     await act(async () => tree.unmount());
+  });
+
+  it.each(['light', 'dark'])('%s 기본·고대비와 기존 스킨에서 옵션 라벨·화살표는 resting·pressed 표면 모두 4.5:1을 지킨다', async (scheme) => {
+    for (const skin of [null, ...Object.keys(BG_SKINS)]) {
+      for (const highContrast of [false, true]) {
+        setTheme(scheme, skin ? { BACKGROUND: `bg.${skin}` } : null, highContrast);
+        const ref = React.createRef();
+        const tree = await render(<AddTaskSheet ref={ref} />);
+        await act(async () => ref.current.present());
+        const more = control(tree, '옵션 더보기 ▼');
+        const text = more.find((node) => node.type === Text && node.props.children === '옵션 더보기');
+        const arrow = more.find((node) => node.type === Text && node.props.children === '▼');
+        const resting = style(more);
+        const pressed = style(more, true);
+
+        expect(resting.backgroundColor).toBe('transparent');
+        expect(pressed.backgroundColor).toBe(mockTheme.colors.chip);
+        for (const node of [text, arrow]) {
+          const textStyle = StyleSheet.flatten(node.props.style);
+          expect(contrastRatio(textStyle.color, mockTheme.colors.card)).toBeGreaterThanOrEqual(4.5);
+          expect(contrastRatio(textStyle.color, pressed.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+        }
+
+        await act(async () => more.props.onPress());
+        const close = control(tree, '옵션 접기 ▲');
+        const closeText = close.find((node) => node.type === Text && node.props.children === '옵션 접기');
+        const closeArrow = close.find((node) => node.type === Text && node.props.children === '▲');
+        for (const node of [closeText, closeArrow]) {
+          const textStyle = StyleSheet.flatten(node.props.style);
+          expect(contrastRatio(textStyle.color, mockTheme.colors.card)).toBeGreaterThanOrEqual(4.5);
+          expect(contrastRatio(textStyle.color, style(close, true).backgroundColor)).toBeGreaterThanOrEqual(4.5);
+        }
+        await act(async () => tree.unmount());
+      }
+    }
   });
 
   it('태스크 상세 저장 실패는 실제 오류 경로를 보이고, 닫기는 저장하지 않는다', async () => {

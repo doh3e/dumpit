@@ -341,6 +341,37 @@ describe('지금 할 일 히어로', () => {
     expect(progress).not.toHaveLength(0);
     await unmount(tree);
   });
+
+  it.each(['light', 'dark'])('%s 기본·고대비와 기존 스킨에서 수정 라벨은 resting·pressed 표면 모두 4.5:1을 지킨다', async (scheme) => {
+    for (const skin of [null, ...Object.keys(BG_SKINS)]) {
+      for (const highContrast of [false, true]) {
+        setTheme(scheme, skin ? { BACKGROUND: `bg.${skin}` } : null, highContrast);
+        const heroTask = task();
+        const tree = await render(
+          <NowHeroCard
+            nowSuggestion={{ type: 'OPEN_SLOT', title: '집중할 시간', message: '가장 중요한 일부터 시작해요.', task: heroTask, focusMinutes: 30 }}
+            queue={[]}
+            todayDone={1}
+            todayTotal={3}
+            allDone={false}
+            onComplete={() => {}}
+            onEdit={() => {}}
+          />,
+        );
+        const edit = byLabel(tree, `${heroTask.title} 수정`);
+        const label = edit.find((node) => node.type === Text && node.props.children === '수정');
+        const resting = pressableStyle(edit);
+        const pressed = pressableStyle(edit, true);
+        const labelStyle = StyleSheet.flatten(label.props.style);
+
+        expect(resting.backgroundColor).toBe('transparent');
+        expect(pressed.backgroundColor).toBe(mockTheme.colors.chip);
+        expect(contrastRatio(labelStyle.color, mockTheme.colors.card)).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(labelStyle.color, pressed.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+        await unmount(tree);
+      }
+    }
+  });
 });
 
 describe('뽀모도로 진입 카드', () => {

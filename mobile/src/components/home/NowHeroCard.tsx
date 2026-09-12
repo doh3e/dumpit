@@ -90,7 +90,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
                   style={({ pressed }) => [styles.titleEdit, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
                 >
                   <PixelIcon name="pencil" size={14} />
-                  <Text style={[styles.editText, { color: colors.sub, fontFamily: fonts.chrome }]}>수정</Text>
+                  <Text style={[styles.editText, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>수정</Text>
                 </Pressable>
               </View>
               {heroTime && (

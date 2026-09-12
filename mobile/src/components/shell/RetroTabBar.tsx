@@ -83,7 +83,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
           <View style={[styles.addGlyphLine, fabOpen ? styles.addGlyphCloseFirst : styles.addGlyphPlusFirst, { backgroundColor: colors.accent2Text }]} />
           <View style={[styles.addGlyphLine, fabOpen ? styles.addGlyphCloseSecond : styles.addGlyphPlusSecond, { backgroundColor: colors.accent2Text }]} />
         </View>
-        <Text style={[styles.label, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>{addLabel}</Text>
+        <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.chrome }]}>{addLabel}</Text>
       </Pressable>
       {renderTab('ideas')}
       {renderTab('my')}
