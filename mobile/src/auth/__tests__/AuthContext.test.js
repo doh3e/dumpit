@@ -2,6 +2,7 @@ const { afterEach, beforeEach, describe, expect, it, jest } = require('@jest/glo
 const React = require('react');
 const { act, create } = require('react-test-renderer');
 const { Text } = require('react-native');
+const { useQuery, useQueryClient } = require('@tanstack/react-query');
 
 const mockFetchMe = jest.fn();
 const mockLoginWithRestoreConfirm = jest.fn();
@@ -42,6 +43,8 @@ jest.mock('@react-native-google-signin/google-signin', () => ({
 }));
 
 const { AuthProvider, useAuth } = require('../AuthContext');
+const { AccountQueryProvider } = require('../../query/AccountQueryProvider');
+const { keys } = require('../../query/keys');
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -63,12 +66,28 @@ const ME_B = {
   equipments: { BACKGROUND: 'bg.rose' },
 };
 
+const ME_OTHER = {
+  ...ME_A,
+  email: 'b@example.com',
+  name: 'B',
+};
+
 let authRef;
 let tree;
 
 const AuthProbe = React.forwardRef(function AuthProbe(_props, ref) {
   const auth = useAuth();
-  React.useImperativeHandle(ref, () => auth, [auth]);
+  const queryClient = useQueryClient();
+  const accountQuery = useQuery({
+    queryKey: ['auth-account-observer'],
+    queryFn: async () => auth.me?.email ?? 'anonymous',
+    enabled: false,
+  });
+  React.useImperativeHandle(ref, () => ({
+    ...auth,
+    queryClient,
+    refetchAccountQuery: accountQuery.refetch,
+  }), [accountQuery.refetch, auth, queryClient]);
   return (
     <Text testID="auth-state">
       {JSON.stringify({ me: auth.me, loading: auth.loading })}
@@ -94,7 +113,9 @@ async function renderProvider({ strictMode = false } = {}) {
   await act(async () => {
     tree = create(
       <AuthProvider>
-        <AuthProbe ref={authRef} />
+        <AccountQueryProvider>
+          <AuthProbe ref={authRef} />
+        </AccountQueryProvider>
       </AuthProvider>,
       strictMode ? { unstable_strictMode: true } : undefined,
     );
@@ -218,6 +239,25 @@ describe('AuthProvider refresh 세대', () => {
 });
 
 describe('AuthProvider 인증 경계', () => {
+  it('명시적 로그아웃 뒤 다른 계정 로그인은 이전 planning cache를 읽지 않는다', async () => {
+    mockFetchMe.mockResolvedValue(ME_A);
+    mockLoginWithRestoreConfirm.mockResolvedValue({ ...ME_OTHER, restored: false });
+    await renderProvider();
+    const accountAClient = authRef.current.queryClient;
+    accountAClient.setQueryData(keys.planning, { tasks: [{ title: 'A 작업' }] });
+
+    await act(async () => authRef.current.signOut());
+    await act(async () => authRef.current.signInWithGoogle());
+    await act(async () => authRef.current.refetchAccountQuery());
+
+    expect(authState().me.email).toBe(ME_OTHER.email);
+    expect(authRef.current.queryClient).not.toBe(accountAClient);
+    expect(authRef.current.queryClient.getQueryData(keys.planning)).toBeUndefined();
+    expect(authRef.current.queryClient.getQueryData(['auth-account-observer'])).toBe(ME_OTHER.email);
+    expect(accountAClient.getQueryData(['auth-account-observer'])).toBeUndefined();
+    expect(accountAClient.getQueryCache().getAll()).toHaveLength(0);
+  });
+
   it('로그인 성공은 이전 refresh를 무효화해 늦은 사용자와 push 등록을 막는다', async () => {
     const startup = deferred();
     mockFetchMe.mockReturnValue(startup.promise);
