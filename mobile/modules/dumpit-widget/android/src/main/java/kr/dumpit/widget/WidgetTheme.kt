@@ -3,7 +3,9 @@
 package kr.dumpit.widget
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import org.json.JSONObject
+import kotlin.math.pow
 
 data class WPalette(
     val bg: Color, val card: Color, val fg: Color, val sub: Color,
@@ -14,6 +16,52 @@ data class WPalette(
 data class WPomo(val focus: Color, val rest: Color, val ring: Color, val soft: Color)
 data class WTheme(val palette: WPalette, val pomo: WPomo, val dark: Boolean,
                   val patternRes: String?, val planetSuffix: String)
+
+/** Android 색상 API 없이 단위 검사 가능한 sRGB 대비 계산. */
+object WidgetContrast {
+    private const val OPAQUE_BLACK = 0xFF000000L
+    private const val OPAQUE_WHITE = 0xFFFFFFFFL
+
+    fun contrastRatio(foreground: Long, background: Long): Double {
+        val lighter = maxOf(luminance(foreground), luminance(background))
+        val darker = minOf(luminance(foreground), luminance(background))
+        return (lighter + 0.05) / (darker + 0.05)
+    }
+
+    fun ensureMinimumContrast(foreground: Long, background: Long, minimum: Double = 4.5): Long {
+        if (contrastRatio(foreground, background) >= minimum) return foreground
+        val target = if (contrastRatio(OPAQUE_BLACK, background) >= contrastRatio(OPAQUE_WHITE, background)) OPAQUE_BLACK else OPAQUE_WHITE
+        for (step in 1..100) {
+            val candidate = blend(foreground, target, step / 100.0)
+            if (contrastRatio(candidate, background) >= minimum) return candidate
+        }
+        return target
+    }
+
+    private fun luminance(color: Long): Double {
+        fun channel(shift: Int): Double {
+            val srgb = ((color shr shift) and 0xFF).toDouble() / 255.0
+            return if (srgb <= 0.04045) srgb / 12.92 else ((srgb + 0.055) / 1.055).pow(2.4)
+        }
+        return 0.2126 * channel(16) + 0.7152 * channel(8) + 0.0722 * channel(0)
+    }
+
+    private fun blend(from: Long, to: Long, amount: Double): Long {
+        fun channel(shift: Int): Long {
+            val start = (from shr shift) and 0xFF
+            val end = (to shr shift) and 0xFF
+            return (start + ((end - start) * amount)).toLong() shl shift
+        }
+        return OPAQUE_BLACK or channel(16) or channel(8) or channel(0)
+    }
+}
+
+fun readableWidgetText(foreground: Color, background: Color): Color = Color(
+    WidgetContrast.ensureMinimumContrast(
+        foreground.toArgb().toLong() and 0xFFFFFFFFL,
+        background.toArgb().toLong() and 0xFFFFFFFFL,
+    ).toInt(),
+)
 
 object WidgetTheme {
     private fun c(hex: String) = Color(android.graphics.Color.parseColor(hex))
@@ -81,10 +129,15 @@ object WidgetTheme {
         val planet = o.optString("planet").takeIf { it.isNotEmpty() && it != "null" } ?: "default"
 
         val ov = bgSkin?.let { BG_SKINS[it] }?.let { if (dark) it.second else it.first }
-        val palette = if (ov == null) base else base.copy(
+        val rawPalette = if (ov == null) base else base.copy(
             bg = c(ov.bg), card = c(ov.card), chip = c(ov.chip), line = c(ov.line), edge = c(ov.edge),
             accent = c(ov.accent), accent2 = c(ov.accent2), onAccent = c(ov.onAccent),
             shadowHero = c(ov.shadowHero), shadowSm = c(ov.shadowSm),
+        )
+        val palette = rawPalette.copy(
+            sub = readableWidgetText(readableWidgetText(rawPalette.sub, rawPalette.bg), rawPalette.chip),
+            warn = readableWidgetText(rawPalette.warn, rawPalette.bg),
+            accent2 = readableWidgetText(rawPalette.accent2, rawPalette.bg),
         )
         val po = pomoSkin?.let { POMO_SKINS[it] }?.let { if (dark) it.second else it.first }
         val pomo = if (po == null)
