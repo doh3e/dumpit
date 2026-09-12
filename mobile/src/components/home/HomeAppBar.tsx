@@ -34,14 +34,23 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
         <View style={styles.leftText}>
           <Text style={[styles.date, { color: colors.sub, fontFamily: fonts.chrome }]}>{dateLabel}</Text>
           {/* 안드로이드는 중첩 Text를 평탄화해 자식의 숨김 속성이 먹지 않는다 — 부모 라벨로 ★을 뺀다 */}
-          <Text
-            style={[styles.greeting, { color: colors.fg, fontFamily: fonts.displayBold }]}
-            numberOfLines={1}
-            accessibilityLabel={greeting}
-          >
-            {greeting}
+          <View style={styles.greetingLine} accessible accessibilityLabel={greeting}>
+            {me?.name ? (
+              <>
+                <Text
+                  style={[styles.greeting, styles.greetingName, { color: colors.fg, fontFamily: fonts.displayBold }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {me.name}
+                </Text>
+                <Text style={[styles.greeting, { color: colors.fg, fontFamily: fonts.displayBold }]}>의 덤프</Text>
+              </>
+            ) : (
+              <Text style={[styles.greeting, { color: colors.fg, fontFamily: fonts.displayBold }]}>DUMPIT!</Text>
+            )}
             <Text style={{ color: colors.starlight }}> ★</Text>
-          </Text>
+          </View>
         </View>
       </View>
       <View style={styles.resources}>
@@ -54,11 +63,14 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
 
 const styles = StyleSheet.create({
   bar: {
-    gap: 8, paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1.5,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1.5,
   },
   left: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
-  leftText: { flex: 1, gap: 2, flexShrink: 1 },
+  leftText: { flex: 1, minWidth: 0, gap: 2, flexShrink: 1 },
   date: { fontSize: 11 },
+  greetingLine: { flexDirection: 'row', alignItems: 'center', minWidth: 0 },
   greeting: { fontSize: 20 },
-  resources: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  greetingName: { flexShrink: 1 },
+  resources: { flexDirection: 'row', gap: 8, alignItems: 'center', flexShrink: 0 },
 });

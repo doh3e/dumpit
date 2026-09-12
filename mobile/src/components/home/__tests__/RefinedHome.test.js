@@ -150,29 +150,37 @@ describe('홈 헤더 자원 표시', () => {
       />,
     );
 
-    const greetingText = tree.root.find(
-      (node) => node.type === Text && node.props.accessibilityLabel === greeting,
+    const greetingText = tree.root.find((node) => node.props.accessibilityLabel === greeting);
+    const greetingName = greetingText.find(
+      (node) => node.type === Text && node.props.children === '아주아주긴사용자이름',
     );
     const coin = tree.root.find((node) => node.props.accessibilityLabel === '코인 420개');
     const ai = byLabel(tree, 'AI 잔여 68점');
-    const bar = tree.root.find(
-      (node) => node.type === View && StyleSheet.flatten(node.props.style)?.borderBottomWidth === 1.5,
-    );
-    const resourceRow = tree.root.find(
-      (node) => node.type === View && StyleSheet.flatten(node.props.style)?.flexWrap === 'wrap',
-    );
     const coinNumber = tree.root.find((node) => node.type === Text && node.props.children === 420);
     const aiNumber = tree.root.find((node) => node.type === Text && node.props.children === 68);
 
-    expect(greetingText.props.numberOfLines).toBe(1);
-    expect(StyleSheet.flatten(greetingText.props.style).fontFamily).toBe(mockTheme.fonts.displayBold);
+    expect(greetingName.props.numberOfLines).toBe(1);
+    expect(StyleSheet.flatten(greetingName.props.style).fontFamily).toBe(mockTheme.fonts.displayBold);
     expect(coin.props.accessibilityRole).toBeUndefined();
     expect(pressableStyle(ai).minHeight).toBeGreaterThanOrEqual(48);
     expect(pressableStyle(ai).minWidth).toBeGreaterThanOrEqual(48);
-    expect(StyleSheet.flatten(bar.props.style).gap).toBe(8);
-    expect(StyleSheet.flatten(resourceRow.props.style).gap).toBe(8);
     expect(StyleSheet.flatten(coinNumber.props.style).fontFamily).toBe(mockTheme.fonts.chrome);
     expect(StyleSheet.flatten(aiNumber.props.style).fontFamily).toBe(mockTheme.fonts.chrome);
+
+    const longName = 'A'.repeat(120);
+    const longGreeting = `${longName}의 덤프`;
+    const longNameTree = await render(
+      <HomeAppBar
+        me={{ name: longName, coins: 420, equipments: {} }}
+        aiUsage={{ used: 32, limit: 100, remaining: 68, resetAt: '2026-09-13T00:00:00' }}
+      />,
+    );
+    const greetingLine = longNameTree.root.find((node) => node.props.accessibilityLabel === longGreeting);
+    const nameText = greetingLine.find((node) => node.type === Text && node.props.children === longName);
+    const suffixText = greetingLine.find((node) => node.type === Text && node.props.children === '의 덤프');
+    expect(nameText.props.numberOfLines).toBe(1);
+    expect(suffixText).toBeTruthy();
+    await unmount(longNameTree);
 
     await act(async () => ai.props.onPress());
     expect(mockToastShow).toHaveBeenCalledWith('오늘 AI 32/100점 사용 · 자정에 초기화돼요');
