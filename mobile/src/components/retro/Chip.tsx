@@ -4,6 +4,7 @@ import { useTheme } from '../../theme/useTheme';
 
 type Props = {
   label: string;
+  appearance?: 'retro' | 'refined';
   selected?: boolean;
   onPress?: () => void;
   emoji?: string;
@@ -15,14 +16,21 @@ type Props = {
   accessibilityHint?: string;
 };
 
-/** 선택형 칩 — 카테고리·마감모드·리스트 탭 공용. 선택 시 틸(accent2) 채움 */
+/** 선택형 칩 — 카테고리·마감모드·리스트 탭 공용. 기본 retro는 선택 시 틸 채움이다. */
 export function Chip({
-  label, selected = false, onPress, emoji, icon, disabled,
+  label, appearance = 'retro', selected = false, onPress, emoji, icon, disabled,
   accessibilityLabel, accessibilityHint,
 }: Props) {
   const { colors, fonts } = useTheme();
+  const refined = appearance === 'refined';
+  const selectedColors = refined
+    ? { bg: colors.chip, border: colors.fg, fg: colors.fg }
+    : { bg: colors.accent2Fill, border: colors.edge, fg: colors.onAccent };
+  const idleColors = refined
+    ? { bg: colors.card, border: colors.sub }
+    : { bg: colors.chip, border: colors.line };
   const text = (
-    <Text style={[styles.text, { color: selected ? colors.onAccent : colors.fg, fontFamily: fonts.chrome }]}>
+    <Text style={[styles.text, { color: selected ? selectedColors.fg : colors.fg, fontFamily: fonts.chrome }]}>
       {!icon && emoji ? `${emoji} ${label}` : label}
     </Text>
   );
@@ -34,12 +42,13 @@ export function Chip({
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ selected, disabled: !!disabled }}
-      hitSlop={6}
+      hitSlop={refined ? undefined : 6}
       style={({ pressed }) => [
         styles.chip,
+        refined && styles.refinedSize,
         selected
-          ? { backgroundColor: colors.accent2Fill, borderColor: colors.edge }
-          : { backgroundColor: colors.chip, borderColor: colors.line },
+          ? { backgroundColor: selectedColors.bg, borderColor: selectedColors.border }
+          : { backgroundColor: idleColors.bg, borderColor: idleColors.border },
         { opacity: disabled ? 0.45 : pressed ? 0.8 : 1 },
       ]}
     >
@@ -61,6 +70,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 7,
     minHeight: 34, alignItems: 'center', justifyContent: 'center',
   },
+  refinedSize: { minHeight: 48, minWidth: 48 },
   iconRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   text: { fontSize: 12 },
 });
