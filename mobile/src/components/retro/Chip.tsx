@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '../../theme/useTheme';
 
 type Props = {
@@ -14,12 +14,14 @@ type Props = {
   /** 화면 글자만으로 뜻이 서지 않을 때, 읽히는 라벨만 바꾼다 */
   accessibilityLabel?: string;
   accessibilityHint?: string;
+  insetTarget?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 /** 선택형 칩 — 카테고리·마감모드·리스트 탭 공용. 기본 retro는 선택 시 틸 채움이다. */
 export function Chip({
   label, appearance = 'retro', selected = false, onPress, emoji, icon, disabled,
-  accessibilityLabel, accessibilityHint,
+  accessibilityLabel, accessibilityHint, insetTarget = false, style,
 }: Props) {
   const { colors, fonts } = useTheme();
   const refined = appearance === 'refined';
@@ -34,6 +36,32 @@ export function Chip({
       {!icon && emoji ? `${emoji} ${label}` : label}
     </Text>
   );
+  const surfaceStyle = (pressed: boolean) => [
+    styles.chip,
+    refined && (insetTarget ? styles.refinedVisual : styles.refinedSize),
+    selected
+      ? { backgroundColor: selectedColors.bg, borderColor: selectedColors.border }
+      : { backgroundColor: idleColors.bg, borderColor: idleColors.border },
+    refined && pressed && !disabled && !!onPress && {
+      backgroundColor: selected ? colors.card : colors.chip,
+      borderColor: colors.fg,
+    },
+    style,
+    { opacity: disabled ? 0.45 : !refined && pressed ? 0.8 : 1 },
+  ];
+  const content = (
+    <>
+      {icon ? (
+        <View style={styles.iconRow}>
+          {icon}
+          {text}
+        </View>
+      ) : (
+        text
+      )}
+    </>
+  );
+
   return (
     <Pressable
       onPress={onPress}
@@ -43,27 +71,9 @@ export function Chip({
       accessibilityHint={accessibilityHint}
       accessibilityState={{ selected, disabled: !!disabled }}
       hitSlop={refined ? undefined : 6}
-      style={({ pressed }) => [
-        styles.chip,
-        refined && styles.refinedSize,
-        selected
-          ? { backgroundColor: selectedColors.bg, borderColor: selectedColors.border }
-          : { backgroundColor: idleColors.bg, borderColor: idleColors.border },
-        refined && pressed && !disabled && !!onPress && {
-          backgroundColor: selected ? colors.card : colors.chip,
-          borderColor: colors.fg,
-        },
-        { opacity: disabled ? 0.45 : !refined && pressed ? 0.8 : 1 },
-      ]}
+      style={({ pressed }) => (insetTarget ? styles.target : surfaceStyle(pressed))}
     >
-      {icon ? (
-        <View style={styles.iconRow}>
-          {icon}
-          {text}
-        </View>
-      ) : (
-        text
-      )}
+      {insetTarget ? ({ pressed }) => <View style={surfaceStyle(pressed)}>{content}</View> : content}
     </Pressable>
   );
 }
@@ -75,6 +85,8 @@ const styles = StyleSheet.create({
     minHeight: 34, alignItems: 'center', justifyContent: 'center',
   },
   refinedSize: { minHeight: 48, minWidth: 48, borderRadius: 8 },
+  target: { minHeight: 48, minWidth: 48, alignItems: 'center', justifyContent: 'center' },
+  refinedVisual: { minHeight: 34, minWidth: 34, borderRadius: 8 },
   iconRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   text: { fontSize: 12 },
 });

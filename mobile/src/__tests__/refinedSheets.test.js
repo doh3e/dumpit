@@ -190,6 +190,12 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     expect(title.props.defaultValue).toBe('');
     await act(async () => title.props.onChangeText('한글 조합 중인 태스크'));
     await act(async () => control(tree, '오늘까지').props.onPress());
+    const deadline = control(tree, '오늘까지');
+    const deadlineSurface = deadline.find(
+      (node) => node.type === View && StyleSheet.flatten(node.props.style)?.borderWidth === 1.5 && node.props.accessible !== true,
+    );
+    expect(style(deadline).minHeight).toBeGreaterThanOrEqual(48);
+    expect(deadlineSurface).toBeTruthy();
     await act(async () => control(tree, '취소').props.onPress());
     expect(mockDismiss).toHaveBeenCalledTimes(1);
     expect(control(tree, 'AI가 알아서').props.accessibilityState.selected).toBe(true);

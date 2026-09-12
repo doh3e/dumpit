@@ -152,14 +152,14 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
           accessibilityLabel="메모"
         />
 
-        <View style={styles.chipRow}>
+        <View style={styles.deadlineGrid}>
           {DEADLINE_MODES.map((m) => (
             <Chip
               key={m.id}
               label={m.label}
               icon={m.icon ? <PixelIcon name={m.icon} size={12} /> : undefined}
               selected={deadlineMode === m.id}
-              appearance="refined" onPress={() => setDeadlineMode(m.id)}
+              appearance="refined" insetTarget style={styles.deadlineChip} onPress={() => setDeadlineMode(m.id)}
             />
           ))}
         </View>
@@ -169,7 +169,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
 
         <Chip
           label={moreOpen ? '옵션 접기 ▲' : '옵션 더보기 ▼'}
-          appearance="refined" onPress={() => setMoreOpen((v) => !v)}
+          appearance="refined" insetTarget onPress={() => setMoreOpen((v) => !v)}
         />
         {moreOpen && (
           <View style={styles.more}>
@@ -177,7 +177,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
               <Chip
                 label="시작 시간"
                 selected={startTime != null}
-                appearance="refined" onPress={() => setStartTime(startTime == null ? next30() : null)}
+                appearance="refined" insetTarget onPress={() => setStartTime(startTime == null ? next30() : null)}
               />
               {startTime != null && (
                 <View style={styles.optionField}>
@@ -189,7 +189,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
               <Chip
                 label="예상 시간(분)"
                 selected={estimate !== ''}
-                appearance="refined" onPress={() => setEstimate(estimate === '' ? '30' : '')}
+                appearance="refined" insetTarget onPress={() => setEstimate(estimate === '' ? '30' : '')}
               />
               {estimate !== '' && (
                 <BottomSheetTextInput
@@ -204,13 +204,13 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
             </View>
             {/* 시트 안 가로 ScrollView는 팬 제스처에 먹혀 스와이프 불가 — 칩 행은 wrap으로 */}
             <View style={styles.chipRow}>
-              <Chip appearance="refined" label="AI 자동" icon={<PixelIcon name="sparkle" size={12} />} selected={category === null} onPress={() => setCategory(null)} />
+              <Chip appearance="refined" insetTarget label="AI 자동" icon={<PixelIcon name="sparkle" size={12} />} selected={category === null} onPress={() => setCategory(null)} />
               {TASK_CATEGORIES.map((c) => (
                 <Chip
                   key={c.value}
                   label={c.label}
                   icon={<PixelIcon name={c.icon} size={12} />}
-                  appearance="refined" selected={category === c.value}
+                  appearance="refined" insetTarget selected={category === c.value}
                   onPress={() => setCategory(c.value)}
                 />
               ))}
@@ -253,6 +253,8 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
   memo: { minHeight: 56, textAlignVertical: 'top' },
   chipRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  deadlineGrid: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  deadlineChip: { width: '48%', flexGrow: 1 },
   more: { gap: 10 },
   optionRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   optionField: { flex: 1 },
