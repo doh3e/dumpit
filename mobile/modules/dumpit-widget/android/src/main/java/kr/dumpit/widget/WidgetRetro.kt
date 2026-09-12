@@ -59,6 +59,25 @@ fun PixelText(res: String, tint: Color, height: Dp, width: Dp? = null, modifier:
     )
 }
 
+internal data class PixelButtonLayoutModifiers(
+    val frame: GlanceModifier,
+    val secondarySurface: GlanceModifier?,
+)
+
+internal fun pixelButtonLayoutModifiers(
+    modifier: GlanceModifier,
+    primary: Boolean,
+    border: Color,
+    background: Color,
+) = PixelButtonLayoutModifiers(
+    frame = modifier.height(48.dp).background(border).cornerRadius(8.dp).let {
+        if (primary) it else it.padding(2.dp)
+    },
+    secondarySurface = if (primary) null else {
+        GlanceModifier.fillMaxSize().background(background).cornerRadius(6.dp)
+    },
+)
+
 @Composable
 fun PixelIcon(res: String, tint: Color, size: Dp, onClick: Action? = null, actionLabel: String? = null) {
     if (onClick == null) {
@@ -88,17 +107,28 @@ fun PixelButton(
 ) {
     val bg = if (primary) (accentOverride ?: theme.palette.accent) else theme.palette.card
     val fg = if (primary) readableWidgetText(theme.palette.onAccent, bg) else theme.palette.fg
+    val border = if (primary) bg else readableWidgetBorder(theme.palette.line, bg)
     val labelWidth = when (labelRes) {
         "w_t_complete", "w_t_pause" -> 60.dp
         "w_t_resume" -> 31.dp
         "w_t_reset" -> 46.dp
         else -> 60.dp
     }
+    val layoutModifiers = pixelButtonLayoutModifiers(modifier, primary, border, bg)
     Box(
-        modifier = modifier.height(48.dp).background(bg).cornerRadius(8.dp)
+        modifier = layoutModifiers.frame
             .semantics { contentDescription = actionLabel }.clickable(onClick),
         contentAlignment = Alignment.Center,
     ) {
-        PixelText(labelRes, fg, 14.dp, width = labelWidth)
+        if (primary) {
+            PixelText(labelRes, fg, 14.dp, width = labelWidth)
+        } else {
+            Box(
+                modifier = checkNotNull(layoutModifiers.secondarySurface),
+                contentAlignment = Alignment.Center,
+            ) {
+                PixelText(labelRes, fg, 14.dp, width = labelWidth)
+            }
+        }
     }
 }

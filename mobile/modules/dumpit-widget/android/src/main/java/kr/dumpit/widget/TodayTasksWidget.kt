@@ -132,6 +132,20 @@ private fun HeroContent(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: Stri
     }
 }
 
+internal sealed interface WideHeroPresentation {
+    data object Login : WideHeroPresentation
+    data class Focus(val title: String) : WideHeroPresentation
+    data object AllDone : WideHeroPresentation
+    data class Suggestion(val snapshot: HeroSnapshot) : WideHeroPresentation
+}
+
+internal fun wideHeroPresentation(snapshot: HeroSnapshot?, focusTitle: String?): WideHeroPresentation = when {
+    snapshot == null -> WideHeroPresentation.Login
+    focusTitle != null -> WideHeroPresentation.Focus(focusTitle)
+    snapshot.allDone -> WideHeroPresentation.AllDone
+    else -> WideHeroPresentation.Suggestion(snapshot)
+}
+
 @Composable
 private fun HeroCompact(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?) {
     val p = theme.palette
@@ -259,19 +273,25 @@ private fun RefreshPlanet(theme: WTheme, snapshot: HeroSnapshot?, size: Dp, refr
 @Composable
 private fun WideSingleInfo(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?, modifier: GlanceModifier) {
     val p = theme.palette
+    val presentation = wideHeroPresentation(snapshot, focusTitle)
+    if (presentation is WideHeroPresentation.Suggestion) {
+        WideSuggestion(presentation.snapshot, p, modifier)
+        return
+    }
     Box(
         modifier = modifier
-            .semantics { contentDescription = if (focusTitle != null) "뽀모도로 열기" else "오늘 할 일 열기" }
-            .clickable(actionStartActivity(deepLinkIntent(if (focusTitle != null) DEEPLINK_POMODORO else DEEPLINK_HOME))),
+            .semantics { contentDescription = if (presentation is WideHeroPresentation.Focus) "뽀모도로 열기" else "오늘 할 일 열기" }
+            .clickable(actionStartActivity(deepLinkIntent(if (presentation is WideHeroPresentation.Focus) DEEPLINK_POMODORO else DEEPLINK_HOME))),
     ) {
         Column {
-            PixelText(if (focusTitle != null) "w_t_focus_time" else "w_t_now", p.accent2, 13.dp, width = 60.dp)
+            PixelText(if (presentation is WideHeroPresentation.Focus) "w_t_focus_time" else "w_t_now", p.accent2, 13.dp, width = 60.dp)
             Spacer(GlanceModifier.height(4.dp))
-            when {
-                snapshot == null -> PixelText("w_t_login", p.sub, 14.dp)
-                focusTitle != null -> Text("「$focusTitle」 집중 중", maxLines = 3,
+            when (presentation) {
+                WideHeroPresentation.Login -> PixelText("w_t_login", p.sub, 14.dp)
+                is WideHeroPresentation.Focus -> Text("「${presentation.title}」 집중 중", maxLines = 3,
                     style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)))
-                else -> PixelText("w_t_done_all", p.fg, 16.dp)
+                WideHeroPresentation.AllDone -> PixelText("w_t_done_all", p.fg, 16.dp)
+                is WideHeroPresentation.Suggestion -> Unit
             }
         }
     }
@@ -283,7 +303,7 @@ private fun HeroTall(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?
     val queue = if (focusTitle == null && snapshot != null && !snapshot.allDone) snapshot.queue.take(queueRows) else emptyList()
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Row(modifier = GlanceModifier.fillMaxWidth().height(110.dp)) {
-            RefreshPlanet(theme, snapshot, 88.dp, refreshable = snapshot?.hero == null || focusTitle != null)
+            RefreshPlanet(theme, snapshot, 64.dp, refreshable = snapshot?.hero == null || focusTitle != null)
             Spacer(GlanceModifier.width(2.dp))
             when {
                 snapshot?.hero != null && focusTitle == null -> {

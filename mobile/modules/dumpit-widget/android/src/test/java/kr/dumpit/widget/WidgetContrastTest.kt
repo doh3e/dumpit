@@ -40,4 +40,14 @@ class WidgetContrastTest {
 
         assertEquals(foreground, WidgetContrast.ensureMinimumContrast(foreground, background))
     }
+
+    @Test
+    fun `낮은 대비의 보조 버튼 경계는 카드에서 3 대 1 이상이 된다`() {
+        val original = 0xFFE0D2B6L
+        val background = 0xFFFFFDF6L
+        val adjusted = WidgetContrast.secondaryButtonBorder(original, background)
+
+        assertTrue(WidgetContrast.contrastRatio(original, background) < 3.0)
+        assertTrue(WidgetContrast.contrastRatio(adjusted, background) >= 3.0)
+    }
 }

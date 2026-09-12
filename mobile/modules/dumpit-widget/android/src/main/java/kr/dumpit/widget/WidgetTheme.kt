@@ -38,6 +38,9 @@ object WidgetContrast {
         return target
     }
 
+    fun secondaryButtonBorder(border: Long, background: Long): Long =
+        ensureMinimumContrast(border, background, 3.0)
+
     private fun luminance(color: Long): Double {
         fun channel(shift: Int): Double {
             val srgb = ((color shr shift) and 0xFF).toDouble() / 255.0
@@ -59,6 +62,13 @@ object WidgetContrast {
 fun readableWidgetText(foreground: Color, background: Color): Color = Color(
     WidgetContrast.ensureMinimumContrast(
         foreground.toArgb().toLong() and 0xFFFFFFFFL,
+        background.toArgb().toLong() and 0xFFFFFFFFL,
+    ).toInt(),
+)
+
+fun readableWidgetBorder(border: Color, background: Color): Color = Color(
+    WidgetContrast.secondaryButtonBorder(
+        border.toArgb().toLong() and 0xFFFFFFFFL,
         background.toArgb().toLong() and 0xFFFFFFFFL,
     ).toInt(),
 )

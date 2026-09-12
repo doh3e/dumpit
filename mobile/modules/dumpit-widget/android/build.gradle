@@ -29,16 +29,16 @@ group = 'kr.dumpit.widget'
 version = '0.1.0'
 
 android {
-  namespace "kr.dumpit.widget"
+  namespace = "kr.dumpit.widget"
   defaultConfig {
     versionCode 1
     versionName "0.1.0"
   }
   lintOptions {
-    abortOnError false
+    abortOnError = false
   }
   buildFeatures {
-    compose true
+    compose = true
   }
 }
 
