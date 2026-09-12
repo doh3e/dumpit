@@ -80,13 +80,14 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
           accessibilityState={{ expanded: fabOpen }}
           style={({ pressed }) => [
             styles.fab,
-            { backgroundColor: colors.accentFill, borderColor: colors.accentFill, transform: [{ translateY: -18 }] },
-            pressed && { backgroundColor: colors.accent2Fill, borderColor: colors.accent2Fill },
+            { backgroundColor: colors.chip, borderColor: colors.accent2Text },
+            pressed && { backgroundColor: colors.card, borderColor: colors.fg },
           ]}
         >
-          <Animated.Text style={[styles.fabIcon, { color: colors.onAccent, fontFamily: fonts.displayBold }, fabIconStyle]}>
+          <Animated.Text style={[styles.fabIcon, { color: colors.accent2Text, fontFamily: fonts.displayBold }, fabIconStyle]}>
             ＋
           </Animated.Text>
+          <Text style={[styles.label, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>추가</Text>
         </Pressable>
       </View>
       {renderTab('ideas')}
@@ -101,8 +102,9 @@ const styles = StyleSheet.create({
   label: { fontSize: 10 },
   fabSlot: { flex: 1, alignItems: 'center' },
   fab: {
-    width: 56, height: 56, borderRadius: 8, borderWidth: 1,
+    minWidth: 48, minHeight: 48, gap: 2,
+    borderRadius: 8, borderWidth: 1,
     alignItems: 'center', justifyContent: 'center',
   },
-  fabIcon: { fontSize: 26, lineHeight: 30 },
+  fabIcon: { fontSize: 20, lineHeight: 22 },
 });

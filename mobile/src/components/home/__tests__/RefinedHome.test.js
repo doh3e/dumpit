@@ -287,17 +287,18 @@ describe('지금 할 일 히어로', () => {
 
     const titleEdit = byLabel(tree, `${heroTask.title} 수정`);
     const complete = byLabel(tree, '완료하기');
-    const edit = byLabel(tree, '수정');
     const queue = byLabel(tree, '오늘, 다음 할 일');
+    const titleEditIcon = titleEdit.find((node) => node.props.name === 'pencil');
 
     expect(refinedCards(tree)).not.toHaveLength(0);
-    for (const control of [titleEdit, complete, edit, queue]) {
+    expect(titleEditIcon).toBeTruthy();
+    for (const control of [titleEdit, complete, queue]) {
       expect(pressableStyle(control).minHeight).toBeGreaterThanOrEqual(48);
       expect(accessibleAncestors(control)).toHaveLength(0);
     }
 
     await act(async () => complete.props.onPress());
-    await act(async () => edit.props.onPress());
+    await act(async () => titleEdit.props.onPress());
     await act(async () => queue.props.onPress());
     expect(onComplete).toHaveBeenCalledWith(heroTask);
     expect(onEdit).toHaveBeenNthCalledWith(1, heroTask);

@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   card: { gap: 12 },
   idleText: { gap: 3 },
   openArea: { minHeight: 48, borderRadius: 8, justifyContent: 'center', gap: 3 },
-  action: { alignSelf: 'stretch' },
+  action: { alignSelf: 'flex-end' },
   title: { fontSize: 15 },
   sub: { fontSize: 12 },
 });

@@ -38,7 +38,7 @@ export function SpeedDial({ open, onClose, actions }: Props) {
           accessibilityLabel="닫기"
         />
       </Animated.View>
-      <View style={[styles.stack, { bottom: insets.bottom + 108 }]} pointerEvents="box-none">
+      <View style={[styles.stack, { bottom: insets.bottom + 72 }]} pointerEvents="box-none">
         {actions.map((a, i) => (
           <Animated.View
             key={a.label}

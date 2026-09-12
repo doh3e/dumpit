@@ -79,16 +79,20 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
             </>
           ) : task ? (
             <>
-              <Pressable
-                onPress={() => onEdit(task)}
-                accessibilityRole="button"
-                accessibilityLabel={`${task.title} 수정`}
-                style={({ pressed }) => [styles.titleButton, { opacity: pressed ? 0.7 : 1 }]}
-              >
-                <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={2}>
+              <View style={styles.titleRow}>
+                <Text style={[styles.title, styles.titleCopy, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={2}>
                   {task.title}
                 </Text>
-              </Pressable>
+                <Pressable
+                  onPress={() => onEdit(task)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${task.title} 수정`}
+                  style={({ pressed }) => [styles.titleEdit, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
+                >
+                  <PixelIcon name="pencil" size={14} />
+                  <Text style={[styles.editText, { color: colors.sub, fontFamily: fonts.chrome }]}>수정</Text>
+                </Pressable>
+              </View>
               {heroTime && (
                 <Text style={[styles.time, { color: colors.warnText, fontFamily: fonts.chrome }]}>{heroTime}</Text>
               )}
@@ -114,8 +118,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
 
       {task && (
         <View style={styles.actions}>
-          <RetroButton appearance="refined" label="완료하기" size="sm" style={styles.action} onPress={() => onComplete(task)} />
-          <RetroButton appearance="refined" label="수정" size="sm" style={styles.action} variant="ghost" onPress={() => onEdit(task)} />
+          <RetroButton appearance="refined" label="완료하기" size="sm" onPress={() => onComplete(task)} />
         </View>
       )}
 
@@ -149,12 +152,14 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   main: { flex: 1, gap: 5 },
   eyebrow: { fontSize: 11 },
-  titleButton: { minHeight: 48, justifyContent: 'center' },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   title: { fontSize: 20, lineHeight: 27 },
+  titleCopy: { flex: 1, flexShrink: 1 },
+  titleEdit: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, minHeight: 48, minWidth: 48, borderRadius: 8 },
+  editText: { fontSize: 10 },
   time: { fontSize: 11 },
   message: { fontSize: 13, lineHeight: 19 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
-  action: { flexGrow: 1 },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 14 },
   queue: { borderTopWidth: 1.5, marginTop: 14, paddingTop: 10, gap: 7 },
   queueTitle: { fontSize: 11 },
   queueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48 },
