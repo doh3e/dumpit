@@ -193,6 +193,27 @@ body {
     outline-offset: 2px;
   }
   .btn-refined:disabled { cursor: not-allowed; opacity: .5; }
+  .btn-refined-underline {
+    position: relative;
+    flex-shrink: 0;
+    padding: .625rem .5rem;
+    border-color: transparent;
+    background: transparent;
+    color: var(--sub);
+    white-space: nowrap;
+  }
+  .btn-refined-underline::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 2px;
+    background: transparent;
+  }
+  .btn-refined-underline[aria-pressed="true"] { color: var(--fg); }
+  .btn-refined-underline[aria-pressed="true"]::after { background: var(--accent2-text); }
 
   .surface-refined {
     background: var(--card);

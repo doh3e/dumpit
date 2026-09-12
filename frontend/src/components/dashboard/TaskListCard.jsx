@@ -214,18 +214,20 @@ export default function TaskListCard({ sections, onToggle, onEdit, onStickerChan
 
   return (
     <div className="surface-refined p-5">
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+      <div className="mb-4">
         <h3 className="font-galmuri font-bold text-dark">해야 할 일 ({activeCount})</h3>
-        <div className="flex flex-wrap rounded-lg border border-line bg-card p-1">
+        <div
+          role="group"
+          aria-label="할 일 날짜 필터"
+          className="flex min-w-0 max-w-full gap-1 overflow-x-auto p-1.5"
+        >
           {TABS.map(({ id, label }) => (
             <button
               key={id}
               type="button"
               onClick={() => setTab(id)}
               aria-pressed={tab === id}
-              className={`btn-refined !min-w-[44px] !px-2 !py-1 text-xs ${
-                tab === id ? 'btn-refined-selected' : 'btn-refined-text text-sub'
-              }`}
+              className="btn-refined btn-refined-underline text-xs"
             >
               {label}
             </button>

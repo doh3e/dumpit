@@ -74,6 +74,16 @@ describe('정돈된 레트로 공통 변형', () => {
     })
   })
 
+  it('밑줄 선택 버튼은 중립 표면과 선택 강조선을 사용한다', () => {
+    expect(ruleFor('.btn-refined-underline').declarations).toMatchObject({
+      background: 'transparent',
+      'border-color': 'transparent',
+      'white-space': 'nowrap',
+    })
+    expect(ruleFor('.btn-refined-underline[aria-pressed="true"]::after').declarations)
+      .toMatchObject({ background: 'var(--accent2-text)' })
+  })
+
   it('Dialog의 refined 표면도 기존 패널의 정렬·높이·스크롤 계약을 유지한다', () => {
     expect(ruleFor('.dialog-retro > .surface-refined').declarations).toMatchObject({
       margin: '0 auto',
