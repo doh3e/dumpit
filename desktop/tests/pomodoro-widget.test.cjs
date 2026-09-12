@@ -82,6 +82,7 @@ class FakeElement {
   replaceChildren(...children) {
     this.replaceChildrenCalls += 1
     this.children = [...children]
+    if (this.tagName === 'SELECT') this.value = ''
   }
 
   setAttribute(name, value) {
@@ -266,7 +267,13 @@ test('태스크 목록은 내용이 바뀔 때만 교체하고 선택 상태는 
   assert.equal(harness.elements.task.replaceChildrenCalls, 1)
   assert.equal(harness.elements.task.value, 'task-1')
 
-  sendState(harness, { tasks, selectedTaskId: 'task-2' })
+  sendState(harness, {
+    tasks: [
+      { id: 'task-1', title: '발표 초안 작성' },
+      { id: 'task-2', title: '빨래 완료' },
+    ],
+    selectedTaskId: 'task-2',
+  })
   assert.equal(harness.elements.task.replaceChildrenCalls, 1)
   assert.equal(harness.elements.task.value, 'task-2')
 
@@ -276,6 +283,7 @@ test('태스크 목록은 내용이 바뀔 때만 교체하고 선택 상태는 
   })
   assert.equal(harness.elements.task.replaceChildrenCalls, 2)
   assert.equal(harness.elements.task.options[1].textContent, '수정된 발표 초안')
+  assert.equal(harness.elements.task.value, 'task-1')
 })
 
 test('휴식과 대기 상태가 모드, 시간 라벨과 연결 태스크 제목을 구분한다', () => {
