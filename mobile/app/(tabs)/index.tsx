@@ -164,11 +164,11 @@ export default function HomeScreen() {
           </View>
         )}
         {planning.isError && (
-          <RetroCard style={{ alignItems: 'center', gap: 10 }}>
+          <RetroCard appearance="refined" style={{ alignItems: 'center', gap: 10 }}>
             <Text style={{ color: colors.fg, fontFamily: fonts.body, fontSize: 13, textAlign: 'center' }}>
               {getApiErrorMessage(planning.error, '할 일을 불러오지 못했어요.')}
             </Text>
-            <RetroButton label="다시 시도" size="sm" onPress={() => planning.refetch()} />
+            <RetroButton appearance="refined" label="다시 시도" size="sm" onPress={() => planning.refetch()} />
           </RetroCard>
         )}
         {planning.data && (

@@ -44,7 +44,7 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
           </Text>
         </View>
       </View>
-      <View style={styles.right}>
+      <View style={styles.resources}>
         <CoinBadge coins={me?.coins ?? 0} />
         <AiBadge usage={aiUsage} />
       </View>
@@ -54,12 +54,11 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
 
 const styles = StyleSheet.create({
   bar: {
-    flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1.5,
+    gap: 8, paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1.5,
   },
   left: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
-  leftText: { gap: 2, flexShrink: 1 },
+  leftText: { flex: 1, gap: 2, flexShrink: 1 },
   date: { fontSize: 11 },
   greeting: { fontSize: 20 },
-  right: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  resources: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
 });

@@ -6,7 +6,6 @@ import { groupByParent, sortByDeadline } from '../../tasks/grouping';
 import { calcCompletionCoins } from '../../tasks/rewards';
 import { useTheme } from '../../theme/useTheme';
 import { CoinIcon } from '../common/CoinIcon';
-import { RetroBadge } from '../retro/RetroBadge';
 import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
 import { Chip } from '../retro/Chip';
@@ -79,17 +78,17 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
   };
 
   return (
-    <RetroCard style={{ paddingBottom: 10 }}>
+    <RetroCard appearance="refined" style={{ paddingBottom: 10 }}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
           해야 할 일 <Text style={{ color: colors.accent2Text }}>({activeCount})</Text>
         </Text>
-        <RetroButton label="전체 보드" size="sm" variant="ghost" onPress={onPressBoard} />
+        <RetroButton appearance="refined" label="전체 보드" size="sm" variant="ghost" onPress={onPressBoard} />
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
         {TABS.map((t) => (
-          <Chip key={t.id} label={t.label} selected={tab === t.id} onPress={() => setTab(t.id)} />
+          <Chip appearance="refined" key={t.id} label={t.label} selected={tab === t.id} onPress={() => setTab(t.id)} />
         ))}
       </ScrollView>
 
@@ -139,14 +138,14 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
                   accessibilityRole="checkbox"
                   accessibilityLabel={`${t.title} 완료 해제`}
                   accessibilityState={{ checked: true }}
-                  hitSlop={14}
                   style={({ pressed }) => [
-                    styles.doneCheckbox,
-                    { borderColor: colors.edge, backgroundColor: colors.accentFill },
-                    pressed && { transform: [{ scale: 0.9 }] },
+                    styles.doneCheckboxTarget,
+                    { backgroundColor: pressed ? colors.chip : 'transparent' },
                   ]}
                 >
-                  <Text style={{ color: colors.onAccent, fontSize: 11, fontFamily: fonts.chrome }}>✓</Text>
+                  <View style={[styles.doneCheckbox, { borderColor: colors.sub, backgroundColor: colors.accentFill }]}>
+                    <Text style={{ color: colors.onAccent, fontSize: 11, fontFamily: fonts.chrome }}>✓</Text>
+                  </View>
                 </Pressable>
                 <Text
                   style={[styles.doneTitle, { color: colors.sub, fontFamily: fonts.body }]}
@@ -171,15 +170,16 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  header: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   title: { fontSize: 16 },
   tabs: { gap: 6, paddingBottom: 10 },
   section: { marginBottom: 4 },
   sectionTitle: { fontSize: 11, marginTop: 6, marginBottom: 2 },
   empty: { fontSize: 13, paddingVertical: 18, textAlign: 'center' },
   doneWrap: { borderTopWidth: 1.5, marginTop: 8, paddingTop: 8 },
-  doneHeader: { minHeight: 32, justifyContent: 'center' },
+  doneHeader: { minHeight: 48, justifyContent: 'center' },
   doneRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5 },
+  doneCheckboxTarget: { width: 48, height: 48, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   doneCheckbox: {
     width: 20, height: 20, borderWidth: 2, borderRadius: 4,
     alignItems: 'center', justifyContent: 'center',

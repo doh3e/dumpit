@@ -31,7 +31,7 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
 
   if (focus) {
     return (
-      <RetroCard hero>
+      <RetroCard appearance="refined" hero>
         <View style={styles.top}>
           <View style={styles.main}>
             <Text style={[styles.eyebrow, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>집중 타임</Text>
@@ -42,7 +42,9 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
               타이머가 끝날 때까지 이 일에만 몰입해요.
             </Text>
           </View>
-          <OrbitProgress done={todayDone} total={todayTotal} />
+          <View accessible accessibilityLabel={orbitProgressLabel(todayDone, todayTotal)}>
+            <OrbitProgress done={todayDone} total={todayTotal} />
+          </View>
         </View>
       </RetroCard>
     );
@@ -50,23 +52,21 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
   const heroTime = task?.deadline
     ? (isToday(task.deadline) ? `${formatTime(task.deadline)} 마감` : `${formatDeadline(task.deadline)} 마감`)
     : null;
-  // 그룹 라벨은 상단 View에만 — 카드 전체를 accessible로 묶으면 액션 버튼·큐 행이 TalkBack 스톱에서 사라진다.
-  // 상단에 든 OrbitProgress도 함께 삼켜지므로 그 문장을 라벨 끝에 붙인다.
   const progressLabel = orbitProgressLabel(todayDone, todayTotal);
   const allDoneTitle = '오늘 다 비웠어요';
   const allDoneMessage = bonusTime
     ? '아직 일과시간이네요. 여유가 되면 다음 일을 미리 당겨볼까요?'
     : '머릿속이 가벼워졌네요. 내일 또 만나요.';
   const heroLabel = allDone
-    ? [allDoneTitle, allDoneMessage, progressLabel].join(', ')
+    ? [allDoneTitle, allDoneMessage].join(', ')
     : task
-      ? [`지금 할 일, ${task.title}`, heroTime, nowSuggestion?.message, progressLabel].filter(Boolean).join(', ')
-      : null;
+      ? null
+      : [nowSuggestion?.title ?? '지금은 비어 있는 시간이에요.', nowSuggestion?.message ?? '가벼운 일부터 하나 시작해볼까요?'].join(', ');
 
   return (
-    <RetroCard hero>
-      <View style={styles.top} accessible={heroLabel != null} accessibilityLabel={heroLabel ?? undefined}>
-        <View style={styles.main}>
+    <RetroCard appearance="refined" hero>
+      <View style={styles.top}>
+        <View style={styles.main} accessible={heroLabel != null} accessibilityLabel={heroLabel ?? undefined}>
           <Text style={[styles.eyebrow, { color: colors.accent2Text, fontFamily: fonts.chrome }]}>지금 할 일</Text>
           {allDone ? (
             <>
@@ -79,7 +79,12 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
             </>
           ) : task ? (
             <>
-              <Pressable onPress={() => onEdit(task)} accessibilityRole="button" accessibilityLabel={`${task.title} 수정`}>
+              <Pressable
+                onPress={() => onEdit(task)}
+                accessibilityRole="button"
+                accessibilityLabel={`${task.title} 수정`}
+                style={({ pressed }) => [styles.titleButton, { opacity: pressed ? 0.7 : 1 }]}
+              >
                 <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={2}>
                   {task.title}
                 </Text>
@@ -102,13 +107,15 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
             </>
           )}
         </View>
-        <OrbitProgress done={todayDone} total={todayTotal} />
+        <View accessible accessibilityLabel={progressLabel}>
+          <OrbitProgress done={todayDone} total={todayTotal} />
+        </View>
       </View>
 
       {task && (
         <View style={styles.actions}>
-          <RetroButton label="완료하기" size="sm" onPress={() => onComplete(task)} />
-          <RetroButton label="수정" size="sm" variant="ghost" onPress={() => onEdit(task)} />
+          <RetroButton appearance="refined" label="완료하기" size="sm" style={styles.action} onPress={() => onComplete(task)} />
+          <RetroButton appearance="refined" label="수정" size="sm" style={styles.action} variant="ghost" onPress={() => onEdit(task)} />
         </View>
       )}
 
@@ -124,7 +131,6 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
               accessible
               accessibilityRole="button"
               accessibilityLabel={`${QUEUE_BUCKET_LABEL[r.bucket] ?? '추천'}, ${r.task.title}`}
-              hitSlop={{ top: 8, bottom: 8, left: 0, right: 0 }}
               style={({ pressed }) => [styles.queueRow, { opacity: pressed ? 0.7 : 1 }]}
             >
               <RetroBadge text={QUEUE_BUCKET_LABEL[r.bucket] ?? '추천'} tone="sub" />
@@ -143,12 +149,14 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   main: { flex: 1, gap: 5 },
   eyebrow: { fontSize: 11 },
+  titleButton: { minHeight: 48, justifyContent: 'center' },
   title: { fontSize: 20, lineHeight: 27 },
   time: { fontSize: 11 },
   message: { fontSize: 13, lineHeight: 19 },
-  actions: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
+  action: { flexGrow: 1 },
   queue: { borderTopWidth: 1.5, marginTop: 14, paddingTop: 10, gap: 7 },
   queueTitle: { fontSize: 11 },
-  queueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 32 },
+  queueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48 },
   queueText: { fontSize: 13, flexShrink: 1 },
 });

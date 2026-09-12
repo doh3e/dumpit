@@ -55,14 +55,14 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
         accessibilityRole="checkbox"
         accessibilityLabel={`${task.title} ${done ? '완료 해제' : '완료'}`}
         accessibilityState={{ checked: done }}
-        hitSlop={13}
         style={({ pressed }) => [
-          styles.checkbox,
-          { borderColor: colors.edge, backgroundColor: done ? colors.accentFill : colors.card },
-          pressed && { transform: [{ scale: 0.9 }] },
+          styles.checkboxTarget,
+          { backgroundColor: pressed ? colors.chip : 'transparent' },
         ]}
       >
-        {done && <Text style={[styles.check, { color: colors.onAccent, fontFamily: fonts.chrome }]}>✓</Text>}
+        <View style={[styles.checkbox, { borderColor: colors.sub, backgroundColor: done ? colors.accentFill : colors.card }]}>
+          {done && <Text style={[styles.check, { color: colors.onAccent, fontFamily: fonts.chrome }]}>✓</Text>}
+        </View>
       </Pressable>
 
       <Pressable
@@ -126,12 +126,17 @@ export const TaskRow = memo(function TaskRow({ task, overdue = false, child = fa
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 10, paddingVertical: 8, alignItems: 'flex-start' },
+  checkboxTarget: {
+    width: 48, height: 48,
+    borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
+  },
   checkbox: {
-    width: 22, height: 22, borderWidth: 2, borderRadius: 4, marginTop: 2,
+    width: 22, height: 22, borderWidth: 2, borderRadius: 4,
     alignItems: 'center', justifyContent: 'center',
   },
   check: { fontSize: 13, lineHeight: 15 },
-  body: { flex: 1, gap: 3 },
+  body: { flex: 1, minHeight: 48, gap: 3, justifyContent: 'center' },
   titleRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap', alignItems: 'center' },
   sticker: { width: 16, height: 16 },
   title: { fontSize: 15, lineHeight: 21 },

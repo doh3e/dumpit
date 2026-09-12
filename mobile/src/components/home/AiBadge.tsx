@@ -9,7 +9,6 @@ export function AiBadge({ usage }: { usage: AiUsage | undefined }) {
   const toast = useToast();
   if (!usage) return null;
 
-  const tone = usage.remaining >= 50 ? colors.accent2 : usage.remaining >= 10 ? colors.warn : colors.accent;
   const toneText = usage.remaining >= 50 ? colors.accent2Text : usage.remaining >= 10 ? colors.warnText : colors.accentText;
 
   return (
@@ -17,10 +16,9 @@ export function AiBadge({ usage }: { usage: AiUsage | undefined }) {
       onPress={() => toast.show(`오늘 AI ${usage.used}/${usage.limit}점 사용 · 자정에 초기화돼요`)}
       accessibilityRole="button"
       accessibilityLabel={`AI 잔여 ${usage.remaining}점${usage.remaining < 10 ? ', 거의 소진' : ''}`}
-      hitSlop={8}
       style={({ pressed }) => [
         styles.badge,
-        { borderColor: tone, opacity: pressed ? 0.7 : 1 },
+        { backgroundColor: colors.card, borderColor: pressed ? colors.fg : colors.sub },
       ]}
     >
       {/* 웹 Header의 token 도트와 동일 기호 — AI 포인트 화폐 표기 통일 (도트 통일 Phase A) */}
@@ -34,7 +32,7 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row', gap: 4,
     borderWidth: 1.5, borderRadius: 8,
-    paddingHorizontal: 9, paddingVertical: 5, minHeight: 32,
+    paddingHorizontal: 12, minHeight: 48, minWidth: 48,
     alignItems: 'center', justifyContent: 'center',
   },
   text: { fontSize: 12 },
