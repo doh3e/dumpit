@@ -146,7 +146,7 @@ beforeEach(() => {
 });
 
 describe('홈 헤더 자원 표시', () => {
-  it('긴 인사와 코인 420·AI 잔여 68을 별도 줄바꿈 행에 함께 유지한다', async () => {
+  it('긴 인사와 코인 420·AI 잔여 68을 한 행에 유지한다', async () => {
     const greeting = '아주아주긴사용자이름의 덤프';
     const tree = await render(
       <HomeAppBar
