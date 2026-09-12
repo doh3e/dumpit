@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -24,6 +24,8 @@ import {
 import { getApiErrorMessage } from '../src/api/client';
 import type { DumpResponse, DumpTaskItem } from '../src/api/types';
 import { announce } from '../src/a11y/announce';
+import { useAuth } from '../src/auth/AuthContext';
+import { clearDraft, readDraft, writeDraft } from '../src/brainDump/draft';
 import { Chip } from '../src/components/retro/Chip';
 import { PixelIcon } from '../src/components/common/PixelIcon';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
@@ -148,6 +150,12 @@ function ResultItem({
 
 /** 머릿속 할 일을 AI로 구조화하고 골라 등록하는 3단계 풀스크린 플로우 */
 export default function BrainDumpScreen() {
+  const { me } = useAuth();
+  const accountKey = me?.email ?? null;
+  return <AccountBrainDumpScreen key={accountKey ?? 'anonymous'} accountKey={accountKey} />;
+}
+
+function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
@@ -155,9 +163,20 @@ export default function BrainDumpScreen() {
   const aiUsage = useAiUsage();
   const [stage, setStage] = useState<Stage>('input');
   const [text, setText] = useState('');
+  const [draftStatus, setDraftStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [hydrated, setHydrated] = useState(accountKey === null);
   const [result, setResult] = useState<DumpResponse | null>(null);
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [showDraftDetails, setShowDraftDetails] = useState(false);
+  const [editorGeneration, setEditorGeneration] = useState(0);
+  const writeGenerationRef = useRef(0);
+  const analyzePendingRef = useRef(false);
+  const confirmPendingRef = useRef(false);
+  const confirmGenerationRef = useRef(0);
+  const clearPendingRef = useRef(false);
+  const mountedRef = useRef(true);
 
   const tasks = result?.tasks ?? EMPTY_TASKS;
   const selectedCount = tasks.reduce(
@@ -169,22 +188,40 @@ export default function BrainDumpScreen() {
     && aiUsage.data.remaining < AI_COSTS.BRAIN_DUMP;
   // usage 조회 실패 시엔 막지 않는다 — 한도는 서버(429)가 최종 판정
   const analysisDisabled = !text.trim() || insufficient;
+  const draftStatusText = {
+    idle: '원문 초안 · 입력하면 이 기기에 저장돼요',
+    saving: '저장 중...',
+    saved: '원문 초안 저장됨',
+    error: '이 기기에 저장하지 못했어요',
+  }[draftStatus];
 
-  const requestExit = useCallback(() => {
-    if (text.length === 0) {
-      router.back();
-      return;
-    }
+  const requestExit = useCallback(() => router.back(), []);
 
-    Alert.alert(
-      '나가기',
-      '작성 중인 내용이 사라져요. 나갈까요?',
-      [
-        { text: '취소', style: 'cancel' },
-        { text: '나가기', style: 'destructive', onPress: () => router.back() },
-      ],
-    );
-  }, [text]);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      confirmGenerationRef.current += 1;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!accountKey) return undefined;
+
+    void readDraft(accountKey)
+      .then((draft) => {
+        if (!mountedRef.current) return;
+        setText(draft?.rawText ?? '');
+        setDraftStatus(draft ? 'saved' : 'idle');
+      })
+      .catch(() => {
+        if (mountedRef.current) setDraftStatus('error');
+      })
+      .finally(() => {
+        if (mountedRef.current) setHydrated(true);
+      });
+    return undefined;
+  }, [accountKey]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -194,23 +231,86 @@ export default function BrainDumpScreen() {
     return () => subscription.remove();
   }, [requestExit]);
 
+  const handleTextChange = useCallback((nextText: string) => {
+    if (!mountedRef.current || !accountKey || !hydrated || clearPendingRef.current || confirmPendingRef.current) return;
+    const writeGeneration = ++writeGenerationRef.current;
+    setText(nextText);
+    setDraftStatus('saving');
+    void writeDraft(accountKey, nextText)
+      .then(() => {
+        if (mountedRef.current && writeGenerationRef.current === writeGeneration) {
+          setDraftStatus(nextText ? 'saved' : 'idle');
+        }
+      })
+      .catch(() => {
+        if (mountedRef.current && writeGenerationRef.current === writeGeneration) {
+          setDraftStatus('error');
+        }
+      });
+  }, [accountKey, hydrated]);
+
   const handleAnalyze = useCallback(async () => {
     const rawText = text.trim();
-    if (!rawText || analysisDisabled) return;
+    if (!rawText || analysisDisabled || analyzePendingRef.current || !hydrated) return;
 
+    analyzePendingRef.current = true;
+    const returnStage: Stage = result ? 'select' : 'input';
     setStage('loading');
     try {
       const response = await submitBrainDump(rawText);
+      if (!mountedRef.current) return;
       setResult(response);
       announce(`분석이 끝났어요. 후보 ${response.tasks.length}개`);
       setSelectedIndexes(new Set(response.tasks.map((_task, index) => index)));
       invalidateAfterAi(qc);
       setStage('select');
     } catch (error) {
+      if (!mountedRef.current) return;
       toast.error(getApiErrorMessage(error));
-      setStage('input');
+      setStage(returnStage);
+    } finally {
+      if (mountedRef.current) analyzePendingRef.current = false;
     }
-  }, [analysisDisabled, qc, text, toast]);
+  }, [analysisDisabled, hydrated, qc, result, text, toast]);
+
+  const performClear = useCallback(async () => {
+    if (!mountedRef.current || !accountKey || clearPendingRef.current || !hydrated) return;
+    clearPendingRef.current = true;
+    writeGenerationRef.current += 1;
+    setIsClearing(true);
+    try {
+      await clearDraft(accountKey);
+      if (!mountedRef.current) return;
+      setText('');
+      setResult(null);
+      setSelectedIndexes(new Set());
+      setDraftStatus('idle');
+      setStage('input');
+      setEditorGeneration((value) => value + 1);
+    } catch {
+      if (mountedRef.current) {
+        setDraftStatus('error');
+        toast.error('원문 초안을 지우지 못했어요. 다시 시도해주세요.');
+      }
+    } finally {
+      if (mountedRef.current) {
+        clearPendingRef.current = false;
+        setIsClearing(false);
+      }
+    }
+  }, [accountKey, hydrated, toast]);
+
+  const requestClear = useCallback(() => {
+    if (isClearing) return;
+    Alert.alert(
+      '원문과 결과 지우기',
+      '원문과 AI 분석 결과가 모두 사라져요. 지울까요?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '지우기', style: 'destructive', onPress: () => { void performClear(); } },
+      ],
+    );
+  }, [isClearing, performClear]);
 
   const toggleItem = useCallback((index: number) => {
     setSelectedIndexes((current) => {
@@ -230,7 +330,7 @@ export default function BrainDumpScreen() {
   }, [allSelected, tasks]);
 
   const handleConfirm = useCallback(async () => {
-    if (!result || selectedCount === 0 || isSaving) return;
+    if (!result || selectedCount === 0 || isSaving || confirmPendingRef.current || !accountKey) return;
 
     const selected: DumpConfirmTask[] = result.tasks
       .filter((_task, index) => selectedIndexes.has(index))
@@ -243,18 +343,46 @@ export default function BrainDumpScreen() {
         estimatedMinutes: task.estimatedMinutes,
       }));
 
+    const confirmGeneration = ++confirmGenerationRef.current;
+    const isCurrentConfirm = () => (
+      mountedRef.current && confirmGenerationRef.current === confirmGeneration
+    );
+    confirmPendingRef.current = true;
     setIsSaving(true);
     try {
       await confirmBrainDump(result.dumpId, selected);
-      await qc.invalidateQueries({ queryKey: keys.planning });
-      toast.show(`${selected.length}개를 할 일에 등록했어요!`);
-      router.back();
     } catch (error) {
+      if (!isCurrentConfirm()) return;
       toast.error(getApiErrorMessage(error));
-    } finally {
+      confirmPendingRef.current = false;
       setIsSaving(false);
+      return;
     }
-  }, [isSaving, qc, result, selectedCount, selectedIndexes, toast]);
+
+    if (!isCurrentConfirm()) return;
+    try {
+      await clearDraft(accountKey);
+    } catch {
+      if (isCurrentConfirm()) {
+        toast.error('할 일은 등록했지만 원문 초안을 지우지 못했어요.');
+      }
+    }
+    if (!isCurrentConfirm()) return;
+    writeGenerationRef.current += 1;
+    try { await qc.invalidateQueries({ queryKey: keys.planning }); } catch { /* 다음 화면 조회로 복구 */ }
+    if (!isCurrentConfirm()) return;
+    toast.show(`${selected.length}개를 할 일에 등록했어요!`);
+    router.back();
+  }, [accountKey, isSaving, qc, result, selectedCount, selectedIndexes, toast]);
+
+  if (!hydrated) {
+    return (
+      <View style={[styles.screen, styles.loadingContent, { paddingTop: insets.top }]}>
+        <ActivityIndicator color={colors.accent2Text} accessibilityLabel="원문 초안 불러오는 중" />
+        <Text style={[styles.guide, { color: colors.sub, fontFamily: fonts.bodyBold }]}>원문 초안을 불러오는 중...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -290,8 +418,10 @@ export default function BrainDumpScreen() {
             <RetroCard appearance="refined" style={styles.inputCard}>
               {/* 한글 IME 조합 보호 — uncontrolled, 분석 실패 복귀 시 defaultValue로 드래프트 복원 */}
               <TextInput
+                key={editorGeneration}
                 defaultValue={text}
-                onChangeText={setText}
+                onChangeText={handleTextChange}
+                editable={!isClearing}
                 multiline
                 maxLength={MAX_LENGTH}
                 placeholder={PLACEHOLDER}
@@ -311,14 +441,51 @@ export default function BrainDumpScreen() {
                 </Text>
               </View>
             </RetroCard>
-            <RetroButton
-              appearance="refined"
-              label="AI 분석"
-              icon={<PixelIcon name="sparkle" size={14} />}
-              onPress={handleAnalyze}
-              disabled={analysisDisabled}
-              style={styles.analyzeButton}
-            />
+            <View style={styles.inputActions}>
+              <RetroButton
+                appearance="refined"
+                label="지우기"
+                variant="ghost"
+                onPress={requestClear}
+                disabled={isClearing || text.length === 0}
+                style={styles.inputAction}
+              />
+              <RetroButton
+                appearance="refined"
+                label="AI 분석"
+                icon={<PixelIcon name="sparkle" size={14} />}
+                onPress={handleAnalyze}
+                disabled={analysisDisabled || isClearing}
+                style={styles.inputAction}
+              />
+            </View>
+            <View style={styles.draftInfo}>
+              <Text accessibilityRole="text" style={[styles.draftStatus, { color: draftStatus === 'error' ? colors.warnText : colors.fg, fontFamily: fonts.bodyBold }]}>
+                {draftStatusText}
+              </Text>
+              <Text style={[styles.draftHint, { color: colors.sub, fontFamily: fonts.body }]}>
+                원문 초안은 같은 기기의 이 앱에서 계정별로 마지막 수정부터 7일간 복구돼요.
+              </Text>
+              <Pressable
+                onPress={() => setShowDraftDetails((visible) => !visible)}
+                accessibilityRole="button"
+                accessibilityLabel={showDraftDetails ? '초안 저장 범위 접기' : '초안 저장 범위 자세히'}
+                accessibilityState={{ expanded: showDraftDetails }}
+                style={({ pressed }) => [
+                  styles.draftDisclosure,
+                  { backgroundColor: pressed ? colors.chip : 'transparent' },
+                ]}
+              >
+                <Text style={[styles.draftDisclosureText, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>
+                  {showDraftDetails ? '저장 범위 접기 ▲' : '저장 범위 자세히 ▼'}
+                </Text>
+              </Pressable>
+              {showDraftDetails ? (
+                <Text style={[styles.draftDetails, { color: colors.sub, fontFamily: fonts.body }]}>
+                  웹·데스크톱·Android 사이에는 동기화되지 않아요. 화면 이동·앱 재시작·자동 세션 만료에는 남아 있어요. 지우기·등록 완료·직접 로그아웃·탈퇴 때 이 앱 초안이 삭제돼요.
+                </Text>
+              ) : null}
+            </View>
             {insufficient ? (
               <Text
                 accessibilityRole="alert"
@@ -383,11 +550,29 @@ export default function BrainDumpScreen() {
               },
             ]}
           >
+            <View style={styles.resultSecondaryActions}>
+              <RetroButton
+                appearance="refined"
+                label="지우기"
+                variant="ghost"
+                onPress={requestClear}
+                disabled={isSaving || isClearing}
+                style={styles.resultSecondaryAction}
+              />
+              <RetroButton
+                appearance="refined"
+                label="다시 분석"
+                variant="ghost"
+                onPress={handleAnalyze}
+                disabled={isSaving || isClearing || analysisDisabled}
+                style={styles.resultSecondaryAction}
+              />
+            </View>
             <RetroButton
               appearance="refined"
               label={`선택한 ${selectedCount}개 등록`}
               onPress={handleConfirm}
-              disabled={selectedCount === 0}
+              disabled={selectedCount === 0 || isClearing}
               busy={isSaving}
             />
           </View>
@@ -427,7 +612,20 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   counter: { fontSize: 12 },
-  analyzeButton: { marginTop: 16 },
+  inputActions: { flexDirection: 'row', gap: 8, marginTop: 16 },
+  inputAction: { flex: 1, minHeight: 48 },
+  draftInfo: { gap: 4, marginTop: 12 },
+  draftStatus: { fontSize: 12, lineHeight: 18 },
+  draftHint: { fontSize: 11, lineHeight: 17 },
+  draftDisclosure: {
+    minHeight: 48,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+  draftDisclosureText: { fontSize: 11 },
+  draftDetails: { fontSize: 11, lineHeight: 17, paddingHorizontal: 8, paddingBottom: 4 },
   insufficient: { marginTop: 10, textAlign: 'center', fontSize: 12 },
   loadingContent: {
     flex: 1,
@@ -498,4 +696,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
   },
+  resultSecondaryActions: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  resultSecondaryAction: { flex: 1, minHeight: 48 },
 });

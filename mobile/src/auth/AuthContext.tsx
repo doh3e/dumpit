@@ -12,6 +12,7 @@ import {
 import { api } from '../api/client';
 import { AppError, GoogleSignInError } from '../api/errors';
 import { bypassReauth, installSilentReauth } from '../api/reauth';
+import { clearDraft, pruneExpiredDrafts } from '../brainDump/draft';
 import { registerPushDevice, unregisterPushDevice } from '../push/fcm';
 import { clearWidgetMirrors } from '../widget/mirror';
 
@@ -96,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     mountedRef.current = true;
+    void pruneExpiredDrafts().catch(() => undefined);
     refresh();
     return () => {
       mountedRef.current = false;
@@ -137,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    *   비활성이라, 기기 토큰 해제 요청은 어차피 401로 막힌다. 헛되이 보내지 않는다.
    */
   const signOut = useCallback(async ({ afterWithdrawal = false } = {}) => {
+    const accountKey = me?.email ?? null;
     invalidateRefreshes();
     // 세션이 살아있는 동안 서버에서 기기 토큰을 지운다
     if (!afterWithdrawal) await unregisterPushDevice();
@@ -144,10 +147,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try { await logout(); } catch { /* 서버 실패해도 로컬은 정리 */ }
     try { await GoogleSignin.signOut(); } catch { /* noop */ }
     invalidateRefreshes();
-    if (!mountedRef.current) return;
-    setMe(null);
-    setLoading(false);
-  }, [invalidateRefreshes]);
+    if (mountedRef.current) {
+      setMe(null);
+      setLoading(false);
+    }
+    if (accountKey) {
+      try {
+        await clearDraft(accountKey);
+      } catch {
+        if (mountedRef.current) {
+          Alert.alert('초안 삭제 실패', '로그아웃했지만 이 기기의 원문 초안을 지우지 못했어요.');
+        }
+      }
+    }
+  }, [invalidateRefreshes, me?.email]);
 
   const value = useMemo(
     () => ({ me, loading, signInWithGoogle, signOut, refresh }),

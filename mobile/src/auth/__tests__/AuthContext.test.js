@@ -1,7 +1,7 @@
 const { afterEach, beforeEach, describe, expect, it, jest } = require('@jest/globals');
 const React = require('react');
 const { act, create } = require('react-test-renderer');
-const { Text } = require('react-native');
+const { Alert, Text } = require('react-native');
 const { useQuery, useQueryClient } = require('@tanstack/react-query');
 
 const mockFetchMe = jest.fn();
@@ -12,6 +12,8 @@ const mockUnregisterPushDevice = jest.fn();
 const mockClearWidgetMirrors = jest.fn();
 const mockGoogleSignIn = jest.fn();
 const mockGoogleSignOut = jest.fn();
+const mockClearDraft = jest.fn();
+const mockPruneExpiredDrafts = jest.fn();
 
 jest.mock('../../api/auth', () => ({
   fetchMe: (...args) => mockFetchMe(...args),
@@ -30,6 +32,10 @@ jest.mock('../../push/fcm', () => ({
 }));
 jest.mock('../../widget/mirror', () => ({
   clearWidgetMirrors: (...args) => mockClearWidgetMirrors(...args),
+}));
+jest.mock('../../brainDump/draft', () => ({
+  clearDraft: (...args) => mockClearDraft(...args),
+  pruneExpiredDrafts: (...args) => mockPruneExpiredDrafts(...args),
 }));
 jest.mock('@react-native-google-signin/google-signin', () => ({
   GoogleSignin: {
@@ -163,10 +169,14 @@ beforeEach(() => {
   mockClearWidgetMirrors.mockReset().mockResolvedValue(undefined);
   mockGoogleSignIn.mockReset().mockResolvedValue({ type: 'success', data: { idToken: 'native-id-token' } });
   mockGoogleSignOut.mockReset().mockResolvedValue(undefined);
+  mockClearDraft.mockReset().mockResolvedValue(undefined);
+  mockPruneExpiredDrafts.mockReset().mockResolvedValue(undefined);
+  jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 });
 
 afterEach(async () => {
   if (tree) await act(async () => tree.unmount());
+  jest.restoreAllMocks();
 });
 
 describe('AuthProvider refresh 세대', () => {
@@ -239,6 +249,15 @@ describe('AuthProvider refresh 세대', () => {
 });
 
 describe('AuthProvider 인증 경계', () => {
+  it('startup 정리를 현재 시각 인자 없이 실행하고 자동 인증 거부는 초안을 보존한다', async () => {
+    mockFetchMe.mockRejectedValue(authError(401));
+    await renderProvider();
+
+    expect(mockPruneExpiredDrafts).toHaveBeenCalledWith();
+    expect(authState()).toEqual({ me: null, loading: false });
+    expect(mockClearDraft).not.toHaveBeenCalled();
+  });
+
   it('명시적 로그아웃 뒤 다른 계정 로그인은 이전 planning cache를 읽지 않는다', async () => {
     mockFetchMe.mockResolvedValue(ME_A);
     mockLoginWithRestoreConfirm.mockResolvedValue({ ...ME_OTHER, restored: false });
@@ -287,6 +306,56 @@ describe('AuthProvider 인증 경계', () => {
     expect(mockUnregisterPushDevice).toHaveBeenCalledTimes(1);
     expect(mockLogout).toHaveBeenCalledTimes(1);
     expect(mockGoogleSignOut).toHaveBeenCalledTimes(1);
+    expect(mockClearDraft).not.toHaveBeenCalled();
+  });
+
+  it('로그인된 계정의 명시적 로그아웃과 탈퇴 후 로그아웃은 해당 초안만 지운다', async () => {
+    mockFetchMe.mockResolvedValueOnce(ME_A);
+    await renderProvider();
+
+    await act(async () => authRef.current.signOut({ afterWithdrawal: true }));
+
+    expect(mockUnregisterPushDevice).not.toHaveBeenCalled();
+    expect(mockClearDraft).toHaveBeenCalledWith(ME_A.email);
+    expect(authState()).toEqual({ me: null, loading: false });
+  });
+
+  it('초안 삭제 실패는 로그아웃을 실패시키지 않고 정제된 안내만 표시한다', async () => {
+    mockFetchMe.mockResolvedValueOnce(ME_A);
+    mockClearDraft.mockRejectedValueOnce(new Error(`민감한 오류 ${ME_A.email}`));
+    await renderProvider();
+
+    await act(async () => {
+      await expect(authRef.current.signOut()).resolves.toBeUndefined();
+    });
+
+    expect(authState()).toEqual({ me: null, loading: false });
+    expect(Alert.alert).toHaveBeenCalledWith(
+      '초안 삭제 실패',
+      '로그아웃했지만 이 기기의 원문 초안을 지우지 못했어요.',
+    );
+    expect(Alert.alert.mock.calls.flat().join(' ')).not.toContain(ME_A.email);
+  });
+
+  it('A 로그아웃의 늦은 초안 삭제 완료가 그사이 로그인한 B를 바꾸지 않는다', async () => {
+    const clearingA = deferred();
+    mockFetchMe.mockResolvedValueOnce(ME_A);
+    mockClearDraft.mockReturnValueOnce(clearingA.promise);
+    mockLoginWithRestoreConfirm.mockResolvedValue({ ...ME_OTHER, restored: false });
+    await renderProvider();
+
+    let signingOut;
+    await act(async () => {
+      signingOut = authRef.current.signOut();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await act(async () => authRef.current.signInWithGoogle());
+    expect(authState().me.email).toBe(ME_OTHER.email);
+
+    await settle(clearingA, undefined, signingOut);
+    expect(mockClearDraft).toHaveBeenCalledWith(ME_A.email);
+    expect(authState().me.email).toBe(ME_OTHER.email);
   });
 
   it('로그아웃 처리 중 시작된 refresh도 최종 로그아웃 상태를 덮지 않는다', async () => {
