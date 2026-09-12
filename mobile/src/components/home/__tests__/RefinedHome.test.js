@@ -413,7 +413,7 @@ describe('뽀모도로 진입 카드', () => {
 });
 
 describe('할 일 목록 카드', () => {
-  it('refined 카드·탭·버튼과 실제 48dp 행 조작을 사용한다', async () => {
+  it('태스크 전체 보기를 테마 대비의 48dp 무테두리 이동 링크로 제공한다', async () => {
     const todayTask = task();
     const onToggle = jest.fn();
     const onPressTask = jest.fn();
@@ -435,7 +435,10 @@ describe('할 일 목록 카드', () => {
       />,
     );
 
-    const board = byLabel(tree, '전체 보드');
+    const board = byLabel(tree, '태스크 전체 보기');
+    const boardText = board.find(
+      (node) => node.type === Text && node.props.children === '태스크 전체 보기 →',
+    );
     const todayTab = byLabel(tree, '오늘');
     const checkbox = tree.root.find(
       (node) => node.props.accessibilityRole === 'checkbox'
@@ -451,6 +454,16 @@ describe('할 일 목록 카드', () => {
       expect(actualHeight(control)).toBeGreaterThanOrEqual(48);
       expect(accessibleAncestors(control)).toHaveLength(0);
     }
+    const boardResting = pressableStyle(board);
+    const boardPressed = pressableStyle(board, true);
+    const boardTextStyle = StyleSheet.flatten(boardText.props.style);
+    expect(boardResting.borderWidth ?? 0).toBe(0);
+    expect(boardResting.flexShrink).toBe(1);
+    expect(boardResting.opacity ?? 1).toBe(1);
+    expect(boardPressed.opacity ?? 1).toBe(1);
+    expect(boardPressed.backgroundColor).toBe(mockTheme.colors.chip);
+    expect(contrastRatio(boardTextStyle.color, mockTheme.colors.card)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(boardTextStyle.color, boardPressed.backgroundColor)).toBeGreaterThanOrEqual(4.5);
 
     await act(async () => board.props.onPress());
     await act(async () => detail.props.onPress());
@@ -459,6 +472,34 @@ describe('할 일 목록 카드', () => {
     expect(onPressTask).toHaveBeenCalledWith(todayTask);
     expect(onToggle).toHaveBeenCalledWith(todayTask, 'DONE', { x: 12, y: 34 });
     await unmount(tree);
+  });
+
+  it('태스크 전체 보기 링크는 밝음·어두움 고대비 테마에서도 읽힌다', async () => {
+    const sections = {
+      overdue: [], today: [], tomorrow: [], next7Days: [], later: [], someday: [], recentDone: [],
+    };
+
+    for (const [scheme, highContrast] of [['light', false], ['light', true], ['dark', false], ['dark', true]]) {
+      setTheme(scheme, null, highContrast);
+      const tree = await render(
+        <TaskListCard
+          sections={sections}
+          onToggle={() => {}}
+          onPressTask={() => {}}
+          onPressBoard={() => {}}
+        />,
+      );
+      const board = byLabel(tree, '태스크 전체 보기');
+      const boardText = board.find(
+        (node) => node.type === Text && node.props.children === '태스크 전체 보기 →',
+      );
+      const boardTextStyle = StyleSheet.flatten(boardText.props.style);
+      const boardPressed = pressableStyle(board, true);
+
+      expect(contrastRatio(boardTextStyle.color, mockTheme.colors.card)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(boardTextStyle.color, boardPressed.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+      await unmount(tree);
+    }
   });
 
   it('완료 해제 glyph를 작은 크기로 유지하면서 실제 조작과 경계를 구분한다', async () => {

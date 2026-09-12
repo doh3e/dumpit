@@ -6,7 +6,6 @@ import { groupByParent, sortByDeadline } from '../../tasks/grouping';
 import { calcCompletionCoins } from '../../tasks/rewards';
 import { useTheme } from '../../theme/useTheme';
 import { CoinIcon } from '../common/CoinIcon';
-import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
 import { Chip } from '../retro/Chip';
 import { TaskRow, type TogglePos } from './TaskRow';
@@ -83,7 +82,19 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
         <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
           해야 할 일 <Text style={{ color: colors.accent2Text }}>({activeCount})</Text>
         </Text>
-        <RetroButton appearance="refined" label="전체 보드" size="sm" variant="ghost" onPress={onPressBoard} />
+        <Pressable
+          onPress={onPressBoard}
+          accessibilityRole="button"
+          accessibilityLabel="태스크 전체 보기"
+          style={({ pressed }) => [
+            styles.boardLink,
+            { backgroundColor: pressed ? colors.chip : 'transparent' },
+          ]}
+        >
+          <Text style={[styles.boardLinkText, { color: colors.fg, fontFamily: fonts.chrome }]}>
+            태스크 전체 보기 →
+          </Text>
+        </Pressable>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
@@ -172,6 +183,8 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   title: { fontSize: 16 },
+  boardLink: { minWidth: 0, minHeight: 48, paddingHorizontal: 8, justifyContent: 'center', flexShrink: 1, borderRadius: 8 },
+  boardLinkText: { fontSize: 12, textAlign: 'right' },
   tabs: { gap: 6, paddingBottom: 10 },
   section: { marginBottom: 4 },
   sectionTitle: { fontSize: 11, marginTop: 6, marginBottom: 2 },
