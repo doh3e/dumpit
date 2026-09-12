@@ -79,20 +79,9 @@ export function NowHeroCard({ nowSuggestion, queue, todayDone, todayTotal, allDo
             </>
           ) : task ? (
             <>
-              <View style={styles.titleRow}>
-                <Text style={[styles.title, styles.titleCopy, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={3}>
-                  {task.title}
-                </Text>
-                <Pressable
-                  onPress={() => onEdit(task)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${task.title} 수정`}
-                  style={({ pressed }) => [styles.titleEdit, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
-                >
-                  <PixelIcon name="pencil" size={14} />
-                  <Text style={[styles.editText, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>수정</Text>
-                </Pressable>
-              </View>
+              <Text style={[styles.title, styles.titleCopy, { color: colors.fg, fontFamily: fonts.displayBold }]} numberOfLines={3}>
+                {task.title}
+              </Text>
               {heroTime && (
                 <Text style={[styles.time, { color: colors.warnText, fontFamily: fonts.chrome }]}>{heroTime}</Text>
               )}
@@ -152,11 +141,8 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   main: { flex: 1, gap: 5 },
   eyebrow: { fontSize: 11 },
-  titleRow: { flexDirection: 'column', alignItems: 'stretch', gap: 4 },
   title: { fontSize: 20, lineHeight: 27 },
   titleCopy: { alignSelf: 'stretch', minWidth: 0 },
-  titleEdit: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, minHeight: 48, minWidth: 48, borderRadius: 8 },
-  editText: { fontSize: 10 },
   time: { fontSize: 11 },
   message: { fontSize: 13, lineHeight: 19 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 14 },

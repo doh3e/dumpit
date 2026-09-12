@@ -262,7 +262,7 @@ describe('필수 조작 경계 대비', () => {
 });
 
 describe('지금 할 일 히어로', () => {
-  it('refined 표면과 48dp 조작을 쓰며 실제 task 객체와 큐를 보존한다', async () => {
+  it('현재 태스크 수정 조작 없이 제목·완료와 실제 큐 편집 경로를 보존한다', async () => {
     const heroTask = task();
     const queueTask = task({ taskId: 'task-2', title: '다음 할 일' });
     const onComplete = jest.fn();
@@ -285,37 +285,27 @@ describe('지금 할 일 히어로', () => {
       />,
     );
 
-    const titleEdit = byLabel(tree, `${heroTask.title} 수정`);
     const complete = byLabel(tree, '완료하기');
     const queue = byLabel(tree, '오늘, 다음 할 일');
-    const titleEditIcon = titleEdit.find((node) => node.props.name === 'pencil');
-    const title = titleEdit.parent.find((node) => node.type === Text && node.props.children === heroTask.title);
-    const titleRow = title.parent;
-    const titleRowStyle = StyleSheet.flatten(titleRow.props.style);
+    const title = tree.root.find((node) => node.type === Text && node.props.children === heroTask.title);
     const titleStyle = StyleSheet.flatten(title.props.style);
-    const titleEditStyle = pressableStyle(titleEdit);
 
     expect(refinedCards(tree)).not.toHaveLength(0);
-    expect(titleEditIcon).toBeTruthy();
+    expect(tree.root.findAll((node) => node.props.accessibilityLabel === `${heroTask.title} 수정`)).toHaveLength(0);
+    expect(tree.root.findAll((node) => node.type === Text && node.props.children === '수정')).toHaveLength(0);
     expect(title.props.numberOfLines).toBe(3);
-    expect(titleRow.children[0]).toBe(title);
-    expect(titleRow.children[1]).toBe(titleEdit);
-    expect(titleRowStyle.flexDirection).toBe('column');
-    expect(titleRowStyle.alignItems).toBe('stretch');
-    expect(titleStyle.alignSelf).toBe('stretch');
     expect(titleStyle.minWidth).toBe(0);
-    expect(titleEditStyle.alignSelf).toBe('flex-start');
-    for (const control of [titleEdit, complete, queue]) {
+    for (const control of [complete, queue]) {
       expect(pressableStyle(control).minHeight).toBeGreaterThanOrEqual(48);
       expect(accessibleAncestors(control)).toHaveLength(0);
     }
 
     await act(async () => complete.props.onPress());
-    await act(async () => titleEdit.props.onPress());
-    await act(async () => queue.props.onPress());
     expect(onComplete).toHaveBeenCalledWith(heroTask);
-    expect(onEdit).toHaveBeenNthCalledWith(1, heroTask);
-    expect(onEdit).toHaveBeenNthCalledWith(2, queueTask);
+    expect(onEdit).not.toHaveBeenCalled();
+    await act(async () => queue.props.onPress());
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    expect(onEdit).toHaveBeenCalledWith(queueTask);
     await unmount(tree);
   });
 
@@ -342,7 +332,7 @@ describe('지금 할 일 히어로', () => {
     await unmount(tree);
   });
 
-  it.each(['light', 'dark'])('%s 기본·고대비와 기존 스킨에서 수정 라벨은 resting·pressed 표면 모두 4.5:1을 지킨다', async (scheme) => {
+  it.each(['light', 'dark'])('%s 기본·고대비와 기존 스킨에서 수정 UI 없이 제목 대비와 완료 조작을 지킨다', async (scheme) => {
     for (const skin of [null, ...Object.keys(BG_SKINS)]) {
       for (const highContrast of [false, true]) {
         setTheme(scheme, skin ? { BACKGROUND: `bg.${skin}` } : null, highContrast);
@@ -358,16 +348,13 @@ describe('지금 할 일 히어로', () => {
             onEdit={() => {}}
           />,
         );
-        const edit = byLabel(tree, `${heroTask.title} 수정`);
-        const label = edit.find((node) => node.type === Text && node.props.children === '수정');
-        const resting = pressableStyle(edit);
-        const pressed = pressableStyle(edit, true);
-        const labelStyle = StyleSheet.flatten(label.props.style);
+        const title = tree.root.find((node) => node.type === Text && node.props.children === heroTask.title);
+        const complete = byLabel(tree, '완료하기');
 
-        expect(resting.backgroundColor).toBe('transparent');
-        expect(pressed.backgroundColor).toBe(mockTheme.colors.chip);
-        expect(contrastRatio(labelStyle.color, mockTheme.colors.card)).toBeGreaterThanOrEqual(4.5);
-        expect(contrastRatio(labelStyle.color, pressed.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+        expect(tree.root.findAll((node) => node.props.accessibilityLabel === `${heroTask.title} 수정`)).toHaveLength(0);
+        expect(tree.root.findAll((node) => node.type === Text && node.props.children === '수정')).toHaveLength(0);
+        expect(contrastRatio(StyleSheet.flatten(title.props.style).color, mockTheme.colors.card)).toBeGreaterThanOrEqual(4.5);
+        expect(complete).toBeTruthy();
         await unmount(tree);
       }
     }
