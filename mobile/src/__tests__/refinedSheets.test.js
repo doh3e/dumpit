@@ -325,8 +325,12 @@ describe('뽀모도로 일반 조작', () => {
     const picker = control(tree, '집중할 태스크 고르기');
     const start = control(tree, '집중 시작');
 
+    expect(tree.root.find((node) => node.type === Text && node.props.accessibilityRole === 'header' && node.props.children === '뽀모도로')).toBeTruthy();
     expect(style(picker).minHeight).toBeGreaterThanOrEqual(48);
     expect(style(start).minHeight).toBeGreaterThanOrEqual(48);
+    await act(async () => picker.props.onPress());
+    const pickerSheet = tree.root.find((node) => node.props.testID === 'bottom-sheet-modal' && node.props.maxDynamicContentSize != null);
+    expect(pickerSheet.props.accessibilityState.expanded).toBe(true);
     await act(async () => start.props.onPress());
     expect(mockStartSession).toHaveBeenCalledWith(expect.objectContaining({ focusMin: 25 }), null);
     await act(async () => tree.unmount());
