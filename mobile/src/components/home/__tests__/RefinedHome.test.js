@@ -484,6 +484,7 @@ describe('할 일 목록 카드', () => {
       expect(filter.props.accessibilityRole).toBe('tab');
       expect(filter.props.accessibilityState).toEqual({ selected });
       expect(actualHeight(filter)).toBeGreaterThanOrEqual(48);
+      expect(resting.minWidth).toBeGreaterThanOrEqual(48);
       expect(resting.borderWidth ?? 0).toBe(0);
       expect(resting.backgroundColor).toBe('transparent');
       expect(pressed.backgroundColor).toBe(mockTheme.colors.chip);
