@@ -2,27 +2,19 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   BackHandler,
   FlatList,
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import Animated, {
-  Easing,
-  cancelAnimation,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   confirmBrainDump,
@@ -46,19 +38,10 @@ import { useTheme } from '../src/theme/useTheme';
 
 const MAX_LENGTH = 3000;
 const PLACEHOLDER = `예) 내일까지 기획서 초안 써야 하고, 이번 주 금요일 팀 발표 준비도 해야 해. 오늘 점심 약속 있고 오후엔 헬스장도 가야 함. 아, 이메일 답장도 밀려있어...`;
+const EMPTY_TASKS: DumpTaskItem[] = [];
 
 type Stage = 'input' | 'loading' | 'select';
 type PriorityTone = 'accent' | 'warn' | 'sub';
-
-const PIXELS = [
-  { left: 6, size: 11, delay: 0, duration: 1250, color: 'accent' },
-  { left: 19, size: 8, delay: 420, duration: 1500, color: 'accent2' },
-  { left: 34, size: 14, delay: 170, duration: 1380, color: 'warn' },
-  { left: 49, size: 9, delay: 710, duration: 1320, color: 'starlight' },
-  { left: 63, size: 12, delay: 310, duration: 1580, color: 'accent2' },
-  { left: 77, size: 8, delay: 860, duration: 1420, color: 'accent' },
-  { left: 90, size: 13, delay: 560, duration: 1640, color: 'warn' },
-] as const;
 
 function getPriority(score: number | null): { label: string; tone: PriorityTone } {
   if ((score ?? 0) >= 0.7) return { label: '높음', tone: 'accent' };
@@ -66,88 +49,29 @@ function getPriority(score: number | null): { label: string; tone: PriorityTone 
   return { label: '낮음', tone: 'sub' };
 }
 
-function FallingPixel({
-  left,
-  size,
-  delay,
-  duration,
-  color,
-  reducedMotion,
-}: {
-  left: number;
-  size: number;
-  delay: number;
-  duration: number;
-  color: string;
-  reducedMotion: boolean;
-}) {
+function AnalysisProgress() {
   const { colors } = useTheme();
-  const progress = useSharedValue(reducedMotion ? 0.35 : 0);
-
-  useEffect(() => {
-    if (reducedMotion) {
-      progress.value = 0.35;
-      return;
-    }
-
-    progress.value = withDelay(
-      delay,
-      withRepeat(withTiming(1, { duration, easing: Easing.linear }), -1, false),
-    );
-    return () => cancelAnimation(progress);
-  }, [delay, duration, progress, reducedMotion]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    const fadeIn = Math.min(1, progress.value * 5);
-    const fadeOut = Math.min(1, (1 - progress.value) * 5);
-    return {
-      opacity: reducedMotion ? 0.78 : Math.min(fadeIn, fadeOut),
-      transform: [{ translateY: progress.value * 244 }],
-    };
-  });
 
   return (
-    <Animated.View
-      style={[
-        styles.pixel,
-        {
-          left: `${left}%` as `${number}%`,
-          width: size,
-          height: size,
-          backgroundColor: color,
-          borderColor: colors.edge,
-        },
-        animatedStyle,
-      ]}
-    />
-  );
-}
-
-function PixelRain() {
-  const { colors } = useTheme();
-  const reducedMotion = useReducedMotion();
-  const pixelColors = {
-    accent: colors.accent,
-    accent2: colors.accent2,
-    warn: colors.warn,
-    starlight: colors.starlight,
-  };
-
-  return (
-    <RetroCard style={styles.loadingCard} hero>
+    <RetroCard appearance="refined" style={styles.loadingCard}>
       <View
-        style={styles.rainArea}
+        style={styles.progressContent}
         accessibilityRole="progressbar"
         accessibilityLabel="브레인 덤프 분석 중"
+        accessibilityValue={{ text: '분석 중' }}
       >
-        {PIXELS.map((pixel) => (
-          <FallingPixel
-            key={`${pixel.left}-${pixel.delay}`}
-            {...pixel}
-            color={pixelColors[pixel.color]}
-            reducedMotion={reducedMotion}
-          />
-        ))}
+        <View
+          testID="brain-dump-loading-token"
+          style={[styles.loadingToken, { backgroundColor: colors.card, borderColor: colors.sub }]}
+        >
+          <PixelIcon name="token" size={32} />
+        </View>
+        <ActivityIndicator
+          testID="brain-dump-progress-indicator"
+          color={colors.accent2Text}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
       </View>
     </RetroCard>
   );
@@ -155,12 +79,10 @@ function PixelRain() {
 
 function ResultItem({
   item,
-  index,
   selected,
   onToggle,
 }: {
   item: DumpTaskItem;
-  index: number;
   selected: boolean;
   onToggle: () => void;
 }) {
@@ -182,16 +104,25 @@ function ResultItem({
       accessibilityState={{ checked: selected }}
       style={({ pressed }) => [
         styles.resultPressable,
-        { opacity: pressed ? 0.72 : selected ? 1 : 0.5 },
+        { backgroundColor: pressed ? colors.chip : colors.card, opacity: 1 },
       ]}
     >
-      <RetroCard style={styles.resultCard}>
+      <RetroCard
+        appearance="refined"
+        style={[
+          styles.resultCard,
+          {
+            backgroundColor: 'transparent',
+            borderColor: selected ? colors.fg : colors.sub,
+          },
+        ]}
+      >
         <View
           style={[
             styles.checkbox,
             {
-              backgroundColor: selected ? colors.accent2 : colors.card,
-              borderColor: selected ? colors.edge : colors.line,
+              backgroundColor: selected ? colors.accent2Fill : colors.card,
+              borderColor: selected ? colors.fg : colors.sub,
             },
           ]}
         >
@@ -201,18 +132,15 @@ function ResultItem({
         </View>
         <View style={styles.resultBody}>
           <View style={styles.resultTitleRow}>
-            <Text style={[styles.resultTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+            <Text style={[styles.resultTitle, { color: colors.fg, fontFamily: fonts.bodyBold }]}>
               {item.title}
             </Text>
             <RetroBadge text={priority.label} tone={priority.tone} />
           </View>
-          <Text style={[styles.metadata, { color: colors.sub, fontFamily: fonts.body }]}>
+          <Text style={[styles.metadata, { color: colors.fg, fontFamily: fonts.body }]}>
             {metadata.join(' · ')}
           </Text>
         </View>
-        <Text style={[styles.itemNumber, { color: colors.sub, fontFamily: fonts.chrome }]}>
-          {String(index + 1).padStart(2, '0')}
-        </Text>
       </RetroCard>
     </Pressable>
   );
@@ -231,7 +159,7 @@ export default function BrainDumpScreen() {
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
 
-  const tasks = result?.tasks ?? [];
+  const tasks = result?.tasks ?? EMPTY_TASKS;
   const selectedCount = tasks.reduce(
     (count, _task, index) => count + (selectedIndexes.has(index) ? 1 : 0),
     0,
@@ -337,7 +265,6 @@ export default function BrainDumpScreen() {
           onPress={requestExit}
           accessibilityRole="button"
           accessibilityLabel="뒤로"
-          hitSlop={8}
           style={({ pressed }) => [styles.back, { opacity: pressed ? 0.6 : 1 }]}
         >
           <Text style={[styles.backText, { color: colors.fg, fontFamily: fonts.displayBold }]}>←</Text>
@@ -353,11 +280,14 @@ export default function BrainDumpScreen() {
           style={styles.stage}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={[styles.inputContent, { paddingBottom: insets.bottom + 16 }]}>
+          <ScrollView
+            contentContainerStyle={[styles.inputContent, { paddingBottom: insets.bottom + 16 }]}
+            keyboardShouldPersistTaps="handled"
+          >
             <Text style={[styles.guide, { color: colors.sub, fontFamily: fonts.bodyBold }]}>
               머릿속 할 일을 형식 없이 자유롭게 쏟아내세요.
             </Text>
-            <RetroCard style={styles.inputCard} hero>
+            <RetroCard appearance="refined" style={styles.inputCard}>
               {/* 한글 IME 조합 보호 — uncontrolled, 분석 실패 복귀 시 defaultValue로 드래프트 복원 */}
               <TextInput
                 defaultValue={text}
@@ -365,7 +295,7 @@ export default function BrainDumpScreen() {
                 multiline
                 maxLength={MAX_LENGTH}
                 placeholder={PLACEHOLDER}
-                placeholderTextColor={colors.sub}
+                placeholderTextColor={colors.subOnChip}
                 selectionColor={colors.accent}
                 textAlignVertical="top"
                 autoFocus
@@ -376,12 +306,13 @@ export default function BrainDumpScreen() {
                 ]}
               />
               <View style={[styles.counterRow, { borderTopColor: colors.line }]}>
-                <Text style={[styles.counter, { color: colors.sub, fontFamily: fonts.chrome }]}>
+                <Text style={[styles.counter, { color: colors.fg, fontFamily: fonts.chrome }]}>
                   {text.length} / {MAX_LENGTH}자
                 </Text>
               </View>
             </RetroCard>
             <RetroButton
+              appearance="refined"
               label="AI 분석"
               icon={<PixelIcon name="sparkle" size={14} />}
               onPress={handleAnalyze}
@@ -396,14 +327,14 @@ export default function BrainDumpScreen() {
                 오늘 AI 점수가 부족해요
               </Text>
             ) : null}
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       ) : null}
 
       {stage === 'loading' ? (
         <View style={[styles.loadingContent, { paddingBottom: insets.bottom + 24 }]}>
-          <PixelRain />
-          <Text style={[styles.loadingText, { color: colors.fg, fontFamily: fonts.display }]}>
+          <AnalysisProgress />
+          <Text style={[styles.loadingText, { color: colors.fg, fontFamily: fonts.bodyBold }]}>
             생각을 정리하는 중…
           </Text>
         </View>
@@ -426,6 +357,7 @@ export default function BrainDumpScreen() {
                   </Text>
                 </View>
                 <Chip
+                  appearance="refined"
                   label={allSelected ? '전체 해제' : '전체 선택'}
                   selected={allSelected}
                   onPress={toggleAll}
@@ -435,7 +367,6 @@ export default function BrainDumpScreen() {
             renderItem={({ item, index }) => (
               <ResultItem
                 item={item}
-                index={index}
                 selected={selectedIndexes.has(index)}
                 onToggle={() => toggleItem(index)}
               />
@@ -453,6 +384,7 @@ export default function BrainDumpScreen() {
             ]}
           >
             <RetroButton
+              appearance="refined"
               label={`선택한 ${selectedCount}개 등록`}
               onPress={handleConfirm}
               disabled={selectedCount === 0}
@@ -476,14 +408,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   back: {
-    minWidth: 34,
-    minHeight: 34,
+    minWidth: 48,
+    minHeight: 48,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backText: { fontSize: 20 },
   title: { flex: 1, fontSize: 17 },
-  inputContent: { flex: 1, paddingHorizontal: 16, paddingTop: 8 },
+  inputContent: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 8 },
   guide: { fontSize: 13, lineHeight: 19, marginBottom: 12 },
   inputCard: { flex: 1, minHeight: 280 },
   textInput: { flex: 1, padding: 0, fontSize: 15, lineHeight: 23 },
@@ -503,22 +436,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     gap: 28,
   },
-  loadingCard: { width: '100%', maxWidth: 360, padding: 0, overflow: 'hidden' },
-  rainArea: { height: 244, position: 'relative', overflow: 'hidden' },
-  pixel: { position: 'absolute', top: -16, borderWidth: 1 },
+  loadingCard: { width: '100%', maxWidth: 240, padding: 24 },
+  progressContent: { alignItems: 'center', gap: 16 },
+  loadingToken: {
+    width: 56,
+    height: 56,
+    borderWidth: 1,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   loadingText: { fontSize: 18, textAlign: 'center' },
   resultList: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 18 },
   selectHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
     marginBottom: 14,
   },
-  selectHeading: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+  selectHeading: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 160,
+    minWidth: 160,
+  },
   selectTitle: { fontSize: 16 },
   selectCount: { fontSize: 11 },
-  resultPressable: { marginBottom: 11 },
+  resultPressable: { minHeight: 48, marginBottom: 11, borderRadius: 12, overflow: 'hidden' },
   resultCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -543,7 +493,6 @@ const styles = StyleSheet.create({
   },
   resultTitle: { flex: 1, fontSize: 14, lineHeight: 20 },
   metadata: { marginTop: 6, fontSize: 11, lineHeight: 16 },
-  itemNumber: { fontSize: 9, marginTop: 4 },
   confirmBar: {
     borderTopWidth: 1.5,
     paddingHorizontal: 16,
