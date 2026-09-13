@@ -4,6 +4,7 @@ import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from '
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
+import { useContentFrame } from '../../layout/useContentFrame';
 import { getApiErrorMessage } from '../../api/client';
 import { confirmSplit, proposeSplit } from '../../api/tasks';
 import type { TaskResponse } from '../../api/types';
@@ -26,6 +27,8 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
   function SubtaskProposalSheet({ onCreated }, ref) {
     const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
+    const frame = useContentFrame();
+    const topInset = insets.top + 12;
     const toast = useToast();
     const qc = useQueryClient();
     const sheetRef = useRef<BottomSheetModal>(null);
@@ -99,12 +102,17 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
       <BottomSheetModal
         ref={sheetRef}
         snapPoints={['65%']}
+        topInset={topInset}
         onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 확정 버튼이 OS 내비 바에 가려진다 */}
-        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+        <BottomSheetScrollView
+          accessibilityViewIsModal
+          contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 }])}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.headingRow}>
             <PixelIcon name="puzzle" size={16} />
             <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>

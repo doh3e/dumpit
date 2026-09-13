@@ -4,6 +4,9 @@ const { act, create } = require('react-test-renderer');
 const {
   Alert,
   BackHandler,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +18,7 @@ let mockAiUsage;
 let mockHardwareBackHandler;
 let mockUserEmail;
 let mockWindowWidth = 320;
+let mockWindowHeight = 800;
 const mockSubmitBrainDump = jest.fn();
 const mockConfirmBrainDump = jest.fn();
 const mockToastShow = jest.fn();
@@ -29,7 +33,7 @@ const mockClearDraft = jest.fn();
 
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
   __esModule: true,
-  default: () => ({ width: mockWindowWidth, height: 800, scale: 1, fontScale: 1 }),
+  default: () => ({ width: mockWindowWidth, height: mockWindowHeight, scale: 1, fontScale: 1 }),
 }));
 
 jest.mock('../theme/useTheme', () => ({
@@ -99,6 +103,7 @@ const BrainDumpScreen = require('../../app/brain-dump').default;
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 jest.useFakeTimers();
+Object.defineProperty(Platform, 'OS', { value: 'android', configurable: true });
 
 const RESULT = {
   dumpId: 'local-dump',
@@ -109,7 +114,7 @@ const RESULT = {
       description: '슬라이드 초안',
       aiPriorityScore: 0.8,
       category: 'WORK',
-      deadline: '2026-09-13T16:00:00',
+      deadline: '2030-09-13T16:00:00',
       estimatedMinutes: 90,
     },
     {
@@ -127,7 +132,7 @@ const RESULT = {
       description: null,
       aiPriorityScore: 0.2,
       category: 'CHORE',
-      deadline: '2026-09-12T22:00:00',
+      deadline: '2030-09-12T22:00:00',
       estimatedMinutes: 30,
     },
   ],
@@ -203,6 +208,8 @@ beforeEach(() => {
   mockInvalidateQueries.mockReset().mockResolvedValue(undefined);
   mockUserEmail = 'a@example.com';
   mockWindowWidth = 320;
+  mockWindowHeight = 800;
+  jest.setSystemTime(new Date('2026-09-14T00:00:00.000Z'));
   mockReadDraft.mockReset().mockResolvedValue(null);
   mockWriteDraft.mockReset().mockImplementation(async (_account, rawText) => (
     rawText ? { version: 1, rawText, updatedAt: 1 } : null
@@ -384,6 +391,7 @@ describe('브레인 덤프 입력·분석', () => {
     expect(card.props.appearance).toBe('refined');
     expect(button.props.appearance).toBe('refined');
     expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
+    expect(tree.root.findByType(KeyboardAvoidingView).props.behavior).toBe('height');
     expect(StyleSheet.flatten(scroll.props.contentContainerStyle).flexGrow).toBe(1);
     expect(controlStyle(back).minWidth).toBeGreaterThanOrEqual(48);
     expect(controlStyle(back).minHeight).toBeGreaterThanOrEqual(48);
@@ -449,11 +457,13 @@ describe('브레인 덤프 선택·등록', () => {
     await act(async () => control(tree, '발표 준비 수정').props.onPress());
     const title = tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '할 일 제목');
     const minutes = tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '예상 시간(분)');
+    expect(tree.root.findByType(FlatList).props.ListFooterComponent).not.toBeNull();
     await act(async () => title.props.onChangeText('  편집된 발표  '));
     await act(async () => control(tree, '일시 지우기').props.onPress());
     await act(async () => minutes.props.onChangeText('45'));
 
     mockWindowWidth = 1200;
+    mockWindowHeight = 600;
     await act(async () => tree.update(screen()));
     expect(tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '할 일 제목')).toBe(title);
     expect(control(tree, '발표 준비 선택', 'checkbox').props.accessibilityState.checked).toBe(true);
@@ -464,6 +474,7 @@ describe('브레인 덤프 선택·등록', () => {
     expect(mockSubmitBrainDump).toHaveBeenCalledTimes(1);
 
     mockWindowWidth = 600;
+    mockWindowHeight = 400;
     await act(async () => tree.update(screen()));
     expect(tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '할 일 제목')).toBe(title);
     expect(control(tree, '발표 준비 선택', 'checkbox').props.accessibilityState.checked).toBe(true);
@@ -471,9 +482,34 @@ describe('브레인 덤프 선택·등록', () => {
     expect(control(tree, '빨래 선택', 'checkbox').props.accessibilityState.checked).toBe(false);
     expect(mockSubmitBrainDump).toHaveBeenCalledTimes(1);
     expect(mockConfirmBrainDump).not.toHaveBeenCalled();
+    const resultStage = tree.root.findByType(KeyboardAvoidingView);
+    const resultList = tree.root.findByType(FlatList);
+    expect(resultStage.props.behavior).toBe('height');
+    expect(resultList.props.removeClippedSubviews).toBe(false);
+    expect(typeof resultStage.props.onLayout).toBe('function');
+    await act(async () => tree.root.findByProps({ testID: 'brain-dump-confirm-bar' }).props.onLayout({
+      nativeEvent: { layout: { height: 100 } },
+    }));
+    await act(async () => resultStage.props.onLayout({
+      nativeEvent: { layout: { height: 180 } },
+    }));
+    expect(tree.root.findByType(FlatList)).toBe(resultList);
+    expect(tree.root.findByType(FlatList).props.ListFooterComponent).not.toBeNull();
+    expect(tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '할 일 제목')).toBe(title);
+    expect(control(tree, '발표 준비 선택', 'checkbox').props.accessibilityState.checked).toBe(true);
+    expect(control(tree, '장보기 선택', 'checkbox').props.accessibilityState.checked).toBe(false);
+    expect(control(tree, '빨래 선택', 'checkbox').props.accessibilityState.checked).toBe(false);
+
+    await act(async () => resultStage.props.onLayout({
+      nativeEvent: { layout: { height: 500 } },
+    }));
+    expect(tree.root.findByType(FlatList)).toBe(resultList);
+    expect(tree.root.findByType(FlatList).props.ListFooterComponent).not.toBeNull();
+    expect(tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '할 일 제목')).toBe(title);
 
     await act(async () => control(tree, '적용').props.onPress());
     expect(control(tree, '편집된 발표 선택', 'checkbox').props.accessibilityState.checked).toBe(true);
+    expect(tree.root.findByType(FlatList).props.ListFooterComponent).toBeNull();
     await act(async () => control(tree, '선택한 1개 등록').props.onPress());
 
     expect(mockConfirmBrainDump).toHaveBeenCalledTimes(1);

@@ -1,8 +1,9 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { forwardRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
+import { useContentFrame } from '../../layout/useContentFrame';
 import { clampSettings, type PomodoroSettings } from '../../pomodoro/engine';
 import { useTheme } from '../../theme/useTheme';
 import { RetroButton } from '../retro/RetroButton';
@@ -52,6 +53,10 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
   function PomodoroSettingsSheet({ initial, onApply }, ref) {
     const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
+    const frame = useContentFrame(20);
+    const { height: windowHeight } = useWindowDimensions();
+    const topInset = insets.top + 12;
+    const maxContentHeight = Math.max(0, windowHeight - topInset - insets.bottom - 12);
     const { headingRef, onChange } = useSheetFocus();
     const [draftState, setDraftState] = useState(() => ({ initial, draft: initial }));
     if (!sameSettings(draftState.initial, initial)) {
@@ -74,13 +79,19 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
       <BottomSheetModal
         ref={ref}
         enableDynamicSizing
+        topInset={topInset}
+        maxDynamicContentSize={maxContentHeight}
         onDismiss={() => setDraftState({ initial, draft: initial })}
         onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 적용 버튼이 OS 내비 바에 가려진다 */}
-        <BottomSheetView accessibilityViewIsModal style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+        <BottomSheetScrollView
+          accessibilityViewIsModal
+          contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 }])}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.headingRow}>
             <Text ref={headingRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>타이머 설정</Text>
             <Pressable onPress={() => (ref as React.RefObject<BottomSheetModal | null>)?.current?.dismiss()} accessibilityRole="button" accessibilityLabel="타이머 설정 취소" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>
@@ -98,7 +109,7 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
             </>
           )}
           <RetroButton appearance="refined" label="적용" onPress={() => onApply(draft)} style={styles.apply} />
-        </BottomSheetView>
+        </BottomSheetScrollView>
       </BottomSheetModal>
     );
   },

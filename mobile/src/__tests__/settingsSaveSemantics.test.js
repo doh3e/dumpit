@@ -11,10 +11,11 @@ const mockDismiss = jest.fn();
 const mockToast = { show: jest.fn(), error: jest.fn() };
 const mockAuthState = { me: null, loading: false, signOut: jest.fn() };
 let mockWindowWidth = 320;
+let mockWindowHeight = 800;
 
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
   __esModule: true,
-  default: () => ({ width: mockWindowWidth, height: 800, scale: 1, fontScale: 1 }),
+  default: () => ({ width: mockWindowWidth, height: mockWindowHeight, scale: 1, fontScale: 1 }),
 }));
 
 jest.mock('../api/settings', () => ({
@@ -136,6 +137,16 @@ async function flush() {
   });
 }
 
+async function waitForCondition(condition) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (condition()) return;
+    await act(async () => {
+      await new Promise((resolve) => setImmediate(resolve));
+    });
+  }
+  expect(condition()).toBe(true);
+}
+
 function control(tree, label) {
   return tree.root.find(
     (node) => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel === label,
@@ -171,6 +182,7 @@ beforeEach(() => {
   mockAuthState.loading = false;
   mockAuthState.signOut.mockReset();
   mockWindowWidth = 320;
+  mockWindowHeight = 800;
   jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
 });
 
@@ -531,12 +543,16 @@ describe('설정 화면 저장·취소 의미', () => {
     await act(async () => control(tree, '변경').props.onPress());
     await act(async () => control(tree, '시작 10시').props.onPress());
     mockWindowWidth = 1200;
+    mockWindowHeight = 400;
     await act(async () => tree.update(screen()));
     expect(StyleSheet.flatten(tree.root.findByType(ScrollView).props.contentContainerStyle))
       .toEqual(expect.objectContaining({ paddingLeft: 236, paddingRight: 236 }));
     expect(control(tree, '시작 10시').props.accessibilityState.selected).toBe(true);
+    expect(tree.root.findByProps({ testID: 'settings-bottom-sheet' }).props.maxDynamicContentSize).toBe(376);
+    expect(mockPatchSettings).not.toHaveBeenCalled();
 
     mockWindowWidth = 600;
+    mockWindowHeight = 800;
     await act(async () => tree.update(screen()));
     expect(control(tree, '시작 10시').props.accessibilityState.selected).toBe(true);
     await act(async () => control(tree, '활동 시간 취소').props.onPress());
@@ -663,8 +679,8 @@ describe('설정 화면 저장·취소 의미', () => {
     await act(async () => {
       initialLoad.resolve(settings({ routineStartHour: 7, routineEndHour: 20 }));
       await initialLoad.promise;
-      await new Promise((resolve) => setTimeout(resolve, 0));
     });
+    await waitForCondition(() => control(tree, '변경').props.accessibilityState.disabled === false);
     expect(control(tree, '변경').props.accessibilityState.disabled).toBe(false);
     await act(async () => control(tree, '변경').props.onPress());
     expect(control(tree, '시작 7시').props.accessibilityState.selected).toBe(true);

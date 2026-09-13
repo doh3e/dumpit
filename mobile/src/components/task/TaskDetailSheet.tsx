@@ -1,10 +1,12 @@
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput, type BottomSheetScrollViewMethods } from '@gorhom/bottom-sheet';
 import Slider from '@react-native-community/slider';
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View, type NativeMethods } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
+import { useContentFrame } from '../../layout/useContentFrame';
+import { useSheetKeyboardOverlap } from '../../layout/useSheetKeyboardOverlap';
 import { getApiErrorMessage } from '../../api/client';
 import { deleteTask, patchTask, reanalyzeTask, setSticker } from '../../api/tasks';
 import type { Category, PlanningResponse, TaskResponse } from '../../api/types';
@@ -38,11 +40,15 @@ const DEADLINE_MODES: { id: DeadlineMode; label: string; icon?: PixelIconName }[
 export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDetailSheet(_props, ref) {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
+  const topInset = insets.top + 12;
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
   const sheetRef = useRef<BottomSheetModal>(null);
   const splitRef = useRef<SubtaskProposalSheetHandle>(null);
+  const scrollRef = useRef<(BottomSheetScrollViewMethods & NativeMethods) | null>(null);
+  const { keyboardOverlap, onViewportLayout, resetKeyboardOverlap } = useSheetKeyboardOverlap(scrollRef);
   const { headingRef, onChange } = useSheetFocus();
   // 지금 열려 있는 태스크 id — 늦게 도착한 응답이 다른 태스크 상태를 오염시키지 않게 가드
   const presentedIdRef = useRef<string | null>(null);
@@ -224,14 +230,23 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       <BottomSheetModal
         ref={sheetRef}
         snapPoints={['72%', '95%']}
+        topInset={topInset}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
+        onDismiss={resetKeyboardOverlap}
         onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마지막 버튼이 OS 내비 바에 가려진다 */}
-        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+        <BottomSheetScrollView
+          ref={scrollRef}
+          onLayout={onViewportLayout}
+          accessibilityViewIsModal
+          contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 + keyboardOverlap }])}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.headingRow}>
             <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 상세</Text>
             <Pressable onPress={() => sheetRef.current?.dismiss()} accessibilityRole="button" accessibilityLabel="태스크 상세 닫기" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>

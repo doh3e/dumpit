@@ -1,8 +1,9 @@
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
+import { useContentFrame } from '../../layout/useContentFrame';
 import { getApiErrorMessage } from '../../api/client';
 import { useSaveSettings, useUserSettings } from '../../query/routineHooks';
 import { useTheme } from '../../theme/useTheme';
@@ -19,6 +20,10 @@ const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
 export function ActiveHoursCard() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame(20);
+  const { height: windowHeight } = useWindowDimensions();
+  const topInset = insets.top + 12;
+  const maxContentHeight = Math.max(0, windowHeight - topInset - insets.bottom - 12);
   const toast = useToast();
   const settings = useUserSettings();
   const save = useSaveSettings();
@@ -118,6 +123,8 @@ export function ActiveHoursCard() {
       <BottomSheetModal
         ref={sheet}
         enableDynamicSizing
+        topInset={topInset}
+        maxDynamicContentSize={maxContentHeight}
         enablePanDownToClose={!save.isPending}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
@@ -128,7 +135,7 @@ export function ActiveHoursCard() {
       >
         <BottomSheetScrollView
           accessibilityViewIsModal
-          contentContainerStyle={[styles.sheetBody, { paddingBottom: insets.bottom + 24 }]}
+          contentContainerStyle={StyleSheet.flatten([styles.sheetBody, frame, { paddingBottom: insets.bottom + 24 }])}
           keyboardShouldPersistTaps="handled"
         >
           <Text ref={headingRef} accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>하루 시작 시각</Text>

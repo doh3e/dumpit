@@ -86,7 +86,10 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const frame = useContentFrame();
+  const sheetFrame = useContentFrame(20);
   const { height: windowHeight } = useWindowDimensions();
+  const topInset = insets.top + 12;
+  const maxContentHeight = Math.max(0, windowHeight - topInset - insets.bottom - 12);
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
@@ -301,13 +304,18 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
       <BottomSheetModal
         ref={parentSheet}
         enableDynamicSizing
-        maxDynamicContentSize={Math.round(windowHeight * 0.62)}
+        topInset={topInset}
+        maxDynamicContentSize={Math.min(Math.round(windowHeight * 0.62), maxContentHeight)}
         onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         {/* 일반 ScrollView는 시트 팬 제스처에 먹혀 스크롤 불가 — 시트 전용 스크롤러 + OS 내비 바 인셋 필수 */}
-        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.sheetBody, { paddingBottom: insets.bottom + 24 }]}>
+        <BottomSheetScrollView
+          accessibilityViewIsModal
+          contentContainerStyle={StyleSheet.flatten([styles.sheetBody, sheetFrame, { paddingBottom: insets.bottom + 24 }])}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text ref={headingRef} accessibilityRole="header" style={[styles.sheetTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>상위 아이디어 선택</Text>
           <Pressable
             onPress={() => { setParentId(null); parentSheet.current?.dismiss(); }}

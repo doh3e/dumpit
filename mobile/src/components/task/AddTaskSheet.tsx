@@ -1,9 +1,11 @@
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput, type BottomSheetScrollViewMethods } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
-import { forwardRef, useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View, type NativeMethods } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
+import { useContentFrame } from '../../layout/useContentFrame';
+import { useSheetKeyboardOverlap } from '../../layout/useSheetKeyboardOverlap';
 import { getApiErrorMessage } from '../../api/client';
 import { createTask } from '../../api/tasks';
 import { invalidateAfterAi, useAiUsage } from '../../query/hooks';
@@ -37,10 +39,16 @@ function next30(): string {
 export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_props, ref) {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
+  const { height: windowHeight } = useWindowDimensions();
+  const topInset = insets.top + 12;
+  const maxContentHeight = Math.max(0, windowHeight - topInset - insets.bottom - 12);
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
   const { headingRef, onChange } = useSheetFocus();
+  const scrollRef = useRef<(BottomSheetScrollViewMethods & NativeMethods) | null>(null);
+  const { keyboardOverlap, onViewportLayout, resetKeyboardOverlap } = useSheetKeyboardOverlap(scrollRef);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -76,6 +84,10 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
     setMoreOpen(false); setStartTime(null); setEstimate(''); setCategory(null);
     setFormKey((k) => k + 1);   // uncontrolled 입력 리마운트
   }, []);
+  const handleDismiss = useCallback(() => {
+    resetKeyboardOverlap();
+    reset();
+  }, [reset, resetKeyboardOverlap]);
   const dismiss = useCallback(() => {
     (ref as React.RefObject<BottomSheetModal | null>)?.current?.dismiss();
   }, [ref]);
@@ -107,9 +119,12 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
     <BottomSheetModal
       ref={ref}
       enableDynamicSizing
+      topInset={topInset}
+      maxDynamicContentSize={maxContentHeight}
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
-      onDismiss={reset}
+      android_keyboardInputMode="adjustResize"
+      onDismiss={handleDismiss}
       onChange={onChange}
       backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
       handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
@@ -117,8 +132,10 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
       {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마감·시작시간 필드를 펼쳤을 때
           시트가 길어지며 추가 버튼이 OS 내비 바에 가려진다 */}
       <BottomSheetScrollView
+        ref={scrollRef}
+        onLayout={onViewportLayout}
         accessibilityViewIsModal
-        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}
+        contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 + keyboardOverlap }])}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.headingRow}>

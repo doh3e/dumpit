@@ -1,7 +1,9 @@
 const { beforeEach, describe, expect, it, jest } = require('@jest/globals');
 const React = require('react');
 const { act, create } = require('react-test-renderer');
-const { Alert, StyleSheet, Text, View } = require('react-native');
+const { Alert, Keyboard, Platform, StyleSheet, Text, View } = require('react-native');
+
+Object.defineProperty(Platform, 'OS', { configurable: true, value: 'android' });
 
 let mockTheme;
 const mockOnChange = jest.fn();
@@ -17,6 +19,22 @@ const mockSaveSettings = jest.fn();
 const mockStartSession = jest.fn();
 const mockPauseSession = jest.fn();
 const mockResumeSession = jest.fn();
+let mockWindowWidth = 320;
+let mockWindowHeight = 800;
+let mockQueryData = ['sticker.star'];
+let mockKeyboardMetrics = null;
+let mockSheetViewportFrame = { x: 0, y: 100, width: 320, height: 700 };
+let mockDeferViewportMeasurement = false;
+let mockPendingViewportMeasurements = [];
+const mockKeyboardListeners = {
+  keyboardDidShow: new Set(),
+  keyboardDidHide: new Set(),
+};
+
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: mockWindowWidth, height: mockWindowHeight, scale: 1, fontScale: 1 }),
+}));
 
 jest.mock('@react-native-community/datetimepicker', () => 'DateTimePicker');
 jest.mock('@gorhom/bottom-sheet', () => {
@@ -30,15 +48,27 @@ jest.mock('@gorhom/bottom-sheet', () => {
     }));
     return <View testID="bottom-sheet-modal" accessibilityState={{ expanded: open }} {...props}>{children}</View>;
   });
-  function Scroll({ children, contentContainerStyle, ...props }) {
-    return <View testID="bottom-sheet-scroll-content" style={contentContainerStyle} {...props}>{children}</View>;
-  }
+  const Scroll = React.forwardRef(function Scroll({ children, contentContainerStyle, ...props }, ref) {
+    React.useImperativeHandle(ref, () => ({
+      measureInWindow: (callback) => {
+        const measure = () => callback(
+          mockSheetViewportFrame.x,
+          mockSheetViewportFrame.y,
+          mockSheetViewportFrame.width,
+          mockSheetViewportFrame.height,
+        );
+        if (mockDeferViewportMeasurement) mockPendingViewportMeasurements.push(measure);
+        else measure();
+      },
+    }));
+    return <View testID="bottom-sheet-scroll-content" style={contentContainerStyle} contentContainerStyle={contentContainerStyle} {...props}>{children}</View>;
+  });
   return { BottomSheetModal: Modal, BottomSheetView: View, BottomSheetScrollView: Scroll, BottomSheetTextInput: TextInput };
 });
 jest.mock('../theme/useTheme', () => ({ useTheme: () => mockTheme }));
-jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 12 }) }));
+jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 24, right: 0, bottom: 8, left: 12 }) }));
 jest.mock('@tanstack/react-query', () => ({
-  useQuery: () => ({ data: ['sticker.star'], isLoading: false }),
+  useQuery: () => ({ data: mockQueryData, isLoading: false, isFetching: false }),
   useQueryClient: () => ({ cancelQueries: jest.fn(), getQueryData: jest.fn(), setQueryData: jest.fn(), invalidateQueries: jest.fn() }),
 }));
 jest.mock('../query/hooks', () => ({
@@ -60,7 +90,11 @@ jest.mock('../query/routineHooks', () => ({
   useSaveSettings: () => ({ mutate: (...args) => mockSaveSettings(...args), isPending: false }),
 }));
 jest.mock('../components/retro/ToastProvider', () => ({ useToast: () => ({ show: jest.fn(), error: mockToastError }) }));
-jest.mock('expo-router', () => ({ useFocusEffect: (effect) => effect() }));
+jest.mock('expo-router', () => ({
+  router: { back: jest.fn(), replace: jest.fn() },
+  useFocusEffect: (effect) => effect(),
+  useLocalSearchParams: () => ({}),
+}));
 jest.mock('../components/shell/ScreenHeader', () => {
   const React = require('react');
   const { Text } = require('react-native');
@@ -95,6 +129,7 @@ const { SubtaskProposalSheet } = require('../components/task/SubtaskProposalShee
 const { StickerPicker } = require('../components/task/StickerPicker');
 const { TaskDetailSheet } = require('../components/task/TaskDetailSheet');
 const PomodoroScreen = require('../../app/pomodoro').default;
+const IdeaEditScreen = require('../../app/idea-edit').default;
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -122,6 +157,15 @@ function deferred() {
   return { promise, resolve };
 }
 
+async function emitKeyboard(eventName, metrics = null) {
+  mockKeyboardMetrics = metrics;
+  await act(async () => {
+    for (const listener of mockKeyboardListeners[eventName]) {
+      listener(metrics == null ? undefined : { endCoordinates: metrics, duration: 0, easing: 'keyboard' });
+    }
+  });
+}
+
 beforeEach(() => {
   setTheme();
   mockOnChange.mockReset();
@@ -137,6 +181,20 @@ beforeEach(() => {
   mockStartSession.mockReset();
   mockPauseSession.mockReset();
   mockResumeSession.mockReset();
+  mockWindowWidth = 320;
+  mockWindowHeight = 800;
+  mockQueryData = ['sticker.star'];
+  mockKeyboardMetrics = null;
+  mockSheetViewportFrame = { x: 0, y: 100, width: 320, height: 700 };
+  mockDeferViewportMeasurement = false;
+  mockPendingViewportMeasurements = [];
+  mockKeyboardListeners.keyboardDidShow.clear();
+  mockKeyboardListeners.keyboardDidHide.clear();
+  Keyboard.metrics = jest.fn(() => mockKeyboardMetrics);
+  Keyboard.addListener = jest.fn((eventName, listener) => {
+    mockKeyboardListeners[eventName].add(listener);
+    return { remove: jest.fn(() => mockKeyboardListeners[eventName].delete(listener)) };
+  });
   mockCreateTask.mockResolvedValue({});
   mockProposeSplit.mockResolvedValue({ subtasks: [] });
   mockConfirmSplit.mockResolvedValue({});
@@ -209,9 +267,126 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     const scroll = tree.root.find((node) => node.props.testID === 'bottom-sheet-scroll-content');
     expect(modal.props.keyboardBehavior).toBe('interactive');
     expect(modal.props.keyboardBlurBehavior).toBe('restore');
+    expect(modal.props.android_keyboardInputMode).toBe('adjustResize');
+    expect(modal.props.topInset).toBe(36);
+    expect(modal.props.maxDynamicContentSize).toBe(744);
     expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
+    expect(Array.isArray(scroll.props.contentContainerStyle)).toBe(false);
     expect(style(scroll).paddingBottom).toBeGreaterThanOrEqual(24);
     await act(async () => tree.unmount());
+  });
+
+  it('태스크 추가 시트는 폭·높이 변경에도 비제어 제목과 단일 생성 payload를 보존한다', async () => {
+    const ref = React.createRef();
+    const screen = () => <AddTaskSheet ref={ref} />;
+    const tree = await render(screen());
+    await act(async () => ref.current.present());
+    const title = tree.root.find((node) => node.props.accessibilityLabel === '할 일 제목');
+    await act(async () => title.props.onChangeText('  회전해도 남을 제목  '));
+
+    mockWindowWidth = 1200;
+    mockWindowHeight = 400;
+    await act(async () => tree.update(screen()));
+    const resizedTitle = tree.root.find((node) => node.props.accessibilityLabel === '할 일 제목');
+    const modal = tree.root.findByProps({ testID: 'bottom-sheet-modal' });
+    const scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    expect(resizedTitle).toBe(title);
+    expect(mockCreateTask).not.toHaveBeenCalled();
+    expect(modal.props.maxDynamicContentSize).toBe(344);
+    expect(style(scroll).paddingLeft).toBeGreaterThan(16);
+    expect(style(scroll).paddingRight).toBeGreaterThan(16);
+
+    await act(async () => control(tree, '추가').props.onPress());
+    expect(mockCreateTask).toHaveBeenCalledTimes(1);
+    expect(mockCreateTask).toHaveBeenCalledWith(expect.objectContaining({ title: '회전해도 남을 제목' }));
+    await act(async () => tree.unmount());
+  });
+
+  it('태스크 추가 시트는 실제 viewport-keyboard 겹침만 스크롤 여백으로 반영하고 수명주기를 정리한다', async () => {
+    const ref = React.createRef();
+    const screen = () => <AddTaskSheet ref={ref} />;
+    const tree = await render(screen());
+    await act(async () => ref.current.present());
+    const title = tree.root.find((node) => node.props.accessibilityLabel === '할 일 제목');
+    await act(async () => title.props.onChangeText('  키보드 회전 제목  '));
+    const basePadding = style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom;
+
+    await emitKeyboard('keyboardDidShow', { screenX: 0, screenY: 500, width: 320, height: 300 });
+    let scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    expect(style(scroll).paddingBottom).toBe(basePadding + 300);
+    expect(tree.root.find((node) => node.props.accessibilityLabel === '할 일 제목')).toBe(title);
+    expect(mockCreateTask).not.toHaveBeenCalled();
+
+    // Native adjustResize가 viewport를 이미 IME 위로 줄이면 실제 겹침은 0이다.
+    mockSheetViewportFrame = { x: 0, y: 100, width: 320, height: 400 };
+    await act(async () => scroll.props.onLayout?.({ nativeEvent: { layout: mockSheetViewportFrame } }));
+    scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    expect(style(scroll).paddingBottom).toBe(basePadding);
+
+    // 새 native event보다 Dimensions가 먼저 바뀌어도 frame bottom으로 window-local top을 복원한다.
+    mockSheetViewportFrame = { x: 0, y: 100, width: 320, height: 700 };
+    await act(async () => scroll.props.onLayout?.({ nativeEvent: { layout: mockSheetViewportFrame } }));
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding + 300);
+    mockSheetViewportFrame = { x: 0, y: 0, width: 800, height: 600 };
+    mockWindowWidth = 800;
+    mockWindowHeight = 600;
+    await act(async () => tree.update(screen()));
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding + 300);
+
+    // 반대 순서에서는 새 폭의 event 좌표를 그대로 쓰고 이중 이동하지 않는다.
+    await emitKeyboard('keyboardDidShow', { screenX: 0, screenY: 340, width: 600, height: 260 });
+    mockSheetViewportFrame = { x: 0, y: 20, width: 600, height: 420 };
+    mockWindowWidth = 600;
+    await act(async () => tree.update(screen()));
+    await act(async () => scroll.props.onLayout?.({ nativeEvent: { layout: mockSheetViewportFrame } }));
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding + 100);
+
+    // Bottom split의 display-space keyboard frame은 window-local 좌표로 정규화한다.
+    await emitKeyboard('keyboardDidShow', { screenX: 0, screenY: 565, width: 600, height: 62.5 });
+    mockSheetViewportFrame = { x: 0, y: 48.25, width: 600, height: 426.75 };
+    mockWindowHeight = 475;
+    await act(async () => tree.update(screen()));
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding + 62.5);
+
+    // Native viewport가 local keyboard top까지 이미 줄어든 경우에는 이중 보정하지 않는다.
+    mockSheetViewportFrame = { x: 0, y: 48.25, width: 600, height: 364.25 };
+    await act(async () => scroll.props.onLayout?.({ nativeEvent: { layout: mockSheetViewportFrame } }));
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding);
+
+    // 같은 폭의 height-only resize도 새 window height로 원점을 다시 계산한다.
+    mockSheetViewportFrame = { x: 0, y: 0, width: 600, height: 400 };
+    mockWindowHeight = 400;
+    await act(async () => tree.update(screen()));
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding + 62.5);
+
+    // IME 전환 중 음수 height는 겹침으로 사용하지 않는다.
+    await emitKeyboard('keyboardDidShow', { screenX: 0, screenY: 565, width: 600, height: -56 });
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding);
+
+    mockDeferViewportMeasurement = true;
+    await emitKeyboard('keyboardDidShow', { screenX: 0, screenY: 200, width: 600, height: 400 });
+    const staleMeasurements = mockPendingViewportMeasurements.splice(0);
+    await emitKeyboard('keyboardDidHide');
+    await act(async () => staleMeasurements.forEach((measure) => measure()));
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding);
+    await act(async () => control(tree, '추가').props.onPress());
+    expect(mockCreateTask).toHaveBeenCalledTimes(1);
+    expect(mockCreateTask).toHaveBeenCalledWith(expect.objectContaining({ title: '키보드 회전 제목' }));
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding);
+    await act(async () => tree.unmount());
+    expect(mockKeyboardListeners.keyboardDidShow.size).toBe(0);
+    expect(mockKeyboardListeners.keyboardDidHide.size).toBe(0);
+  });
+
+  it('키보드 겹침 보완은 Android에만 적용해 iOS의 기존 sheet keyboard 처리를 유지한다', async () => {
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
+    mockKeyboardMetrics = { screenX: 0, screenY: 500, width: 320, height: 300 };
+    const tree = await render(<AddTaskSheet ref={React.createRef()} />);
+    const scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    expect(style(scroll).paddingBottom).toBe(32);
+    expect(Keyboard.addListener).not.toHaveBeenCalled();
+    await act(async () => tree.unmount());
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'android' });
   });
 
   it.each(['light', 'dark'])('%s 기본·고대비와 기존 스킨에서 옵션 라벨·화살표는 resting·pressed 표면 모두 4.5:1을 지킨다', async (scheme) => {
@@ -261,6 +436,14 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     const title = tree.root.find((node) => node.props.accessibilityLabel === '제목');
     expect(title.props.value).toBeUndefined();
     expect(title.props.defaultValue).toBe('수정할 태스크');
+    const modal = tree.root.find((node) => node.props.testID === 'bottom-sheet-modal'
+      && node.props.snapPoints?.[0] === '72%');
+    const scroll = modal.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    expect(modal.props.topInset).toBe(36);
+    expect(modal.props.snapPoints).toEqual(['72%', '95%']);
+    expect(modal.props.android_keyboardInputMode).toBe('adjustResize');
+    expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
+    expect(Array.isArray(scroll.props.contentContainerStyle)).toBe(false);
     await act(async () => control(tree, '저장').props.onPress());
     expect(mockPatchTask).toHaveBeenCalledWith('task-1', expect.objectContaining({ title: '수정할 태스크' }));
     expect(mockToastError).toHaveBeenCalledWith(expect.stringContaining('저장에 실패했어요.'));
@@ -276,6 +459,41 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     await act(async () => tree.unmount());
   });
 
+  it('태스크 상세는 IME 회전 중 제목 identity와 draft를 유지하고 실제 겹침만 보정해 한 번 저장한다', async () => {
+    const ref = React.createRef();
+    const screen = () => <TaskDetailSheet ref={ref} />;
+    const tree = await render(screen());
+    await act(async () => ref.current.present({
+      taskId: 'task-keyboard', title: '상세 원본', description: '메모', deadline: null, startTime: null,
+      estimatedMinutes: null, category: 'OTHER', userPriorityScore: null, aiPriorityScore: 0.5,
+      isLocked: false, stickerCode: null, parentTaskId: 'parent-1',
+    }));
+    const title = tree.root.find((node) => node.props.accessibilityLabel === '제목');
+    await act(async () => title.props.onChangeText('상세 회전 제목'));
+    const detailScroll = () => tree.root.find(
+      (node) => node.props.testID === 'bottom-sheet-modal' && node.props.snapPoints?.[0] === '72%',
+    ).findByProps({ testID: 'bottom-sheet-scroll-content' });
+    const basePadding = style(detailScroll()).paddingBottom;
+
+    await emitKeyboard('keyboardDidShow', { screenX: 0, screenY: 500, width: 320, height: 300 });
+    expect(style(detailScroll()).paddingBottom).toBe(basePadding + 300);
+    expect(mockPatchTask).not.toHaveBeenCalled();
+
+    mockSheetViewportFrame = { x: 0, y: 40, width: 800, height: 560 };
+    mockWindowWidth = 800;
+    mockWindowHeight = 600;
+    await act(async () => tree.update(screen()));
+    expect(tree.root.find((node) => node.props.accessibilityLabel === '제목')).toBe(title);
+    expect(style(detailScroll()).paddingBottom).toBe(basePadding + 300);
+    expect(mockPatchTask).not.toHaveBeenCalled();
+
+    await act(async () => control(tree, '저장').props.onPress());
+    expect(mockPatchTask).toHaveBeenCalledTimes(1);
+    expect(mockPatchTask).toHaveBeenCalledWith('task-keyboard', expect.objectContaining({ title: '상세 회전 제목' }));
+    expect(style(detailScroll()).paddingBottom).toBe(basePadding);
+    await act(async () => tree.unmount());
+  });
+
   it('서브태스크 제안은 로딩 뒤 선택한 항목만 실제 확정 요청으로 넘긴다', async () => {
     const pending = deferred();
     mockProposeSplit.mockReturnValue(pending.promise);
@@ -288,6 +506,12 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     await act(async () => ref.current.present({ taskId: 'task-1', title: '긴 태스크', status: 'TODO' }));
     expect(tree.root.find((node) => node.type === Text && node.props.children === 'AI가 잘게 쪼개는 중…')).toBeTruthy();
     await act(async () => pending.resolve(proposed));
+    const modal = tree.root.findByProps({ testID: 'bottom-sheet-modal' });
+    const scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    expect(modal.props.topInset).toBe(36);
+    expect(modal.props.snapPoints).toEqual(['65%']);
+    expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
+    expect(Array.isArray(scroll.props.contentContainerStyle)).toBe(false);
     const second = tree.root.find((node) => node.props.accessibilityLabel === '둘째 단계 포함');
     await act(async () => second.props.onPress());
     await act(async () => control(tree, '1개 만들기').props.onPress());
@@ -319,6 +543,15 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     await act(async () => control(tree, '태스크 없이 집중').props.onPress());
     expect(onPick).toHaveBeenCalledWith(null);
     expect(style(control(tree, '태스크 없이 집중')).minHeight).toBeGreaterThanOrEqual(48);
+    const modal = tree.root.findByProps({ testID: 'bottom-sheet-modal' });
+    const scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    expect(modal.props.topInset).toBe(36);
+    expect(modal.props.maxDynamicContentSize).toBe(Math.round(mockWindowHeight * 0.62));
+    expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
+    expect(Array.isArray(scroll.props.contentContainerStyle)).toBe(false);
+    mockWindowHeight = 100;
+    await act(async () => tree.update(<TaskPickerSheet ref={ref} onPick={onPick} />));
+    expect(tree.root.findByProps({ testID: 'bottom-sheet-modal' }).props.maxDynamicContentSize).toBe(44);
     await act(async () => tree.unmount());
   });
 
@@ -333,6 +566,57 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     await act(async () => ref.current.present());
     await act(async () => control(tree, '적용').props.onPress());
     expect(onApply).toHaveBeenCalledWith(expect.objectContaining({ focusMin: 25 }));
+    const modal = tree.root.findByProps({ testID: 'bottom-sheet-modal' });
+    const scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    expect(modal.props.topInset).toBe(36);
+    expect(modal.props.maxDynamicContentSize).toBe(744);
+    expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
+    expect(Array.isArray(scroll.props.contentContainerStyle)).toBe(false);
+    await act(async () => tree.unmount());
+  });
+
+  it('타이머 draft는 폭·높이 변경에 유지되고 적용 뒤 취소·재진입은 저장 baseline을 복원한다', async () => {
+    const initial = { focusMin: 25, breakMin: 5, longBreakMin: 15, longBreakEvery: 4, setsTarget: 4 };
+    const onApply = jest.fn();
+    const ref = React.createRef();
+    const screen = () => <PomodoroSettingsSheet ref={ref} initial={{ ...initial }} onApply={onApply} />;
+    const tree = await render(screen());
+    await act(async () => ref.current.present());
+    await act(async () => control(tree, '집중 (분) 늘리기').props.onPress());
+
+    mockWindowWidth = 1200;
+    mockWindowHeight = 400;
+    await act(async () => tree.update(screen()));
+    expect(tree.root.find((node) => node.type === Text && node.props.children === 30)).toBeTruthy();
+    expect(tree.root.findByProps({ testID: 'bottom-sheet-modal' }).props.maxDynamicContentSize).toBe(344);
+    await act(async () => control(tree, '적용').props.onPress());
+    expect(onApply).toHaveBeenCalledTimes(1);
+    expect(onApply).toHaveBeenLastCalledWith(expect.objectContaining({ focusMin: 30 }));
+
+    await act(async () => control(tree, '타이머 설정 취소').props.onPress());
+    await act(async () => ref.current.present());
+    await act(async () => control(tree, '적용').props.onPress());
+    expect(onApply).toHaveBeenLastCalledWith(expect.objectContaining({ focusMin: 25 }));
+    await act(async () => tree.unmount());
+  });
+
+  it('상위 아이디어 선택 시트는 62% 상한·safe-area·읽기 폭과 탭 유지 정책을 함께 적용한다', async () => {
+    mockQueryData = [];
+    mockWindowWidth = 1200;
+    mockWindowHeight = 400;
+    const tree = await render(<IdeaEditScreen />);
+    const parent = tree.root.find((node) => node.props.accessibilityRole === 'button'
+      && node.findAll((child) => child.type === Text && String(child.props.children).includes('상위:')).length > 0);
+    await act(async () => parent.props.onPress());
+
+    const modal = tree.root.findByProps({ testID: 'bottom-sheet-modal' });
+    const scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    expect(modal.props.topInset).toBe(36);
+    expect(modal.props.maxDynamicContentSize).toBe(248);
+    expect(style(scroll).paddingLeft).toBeGreaterThan(20);
+    expect(style(scroll).paddingRight).toBeGreaterThan(20);
+    expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
+    expect(Array.isArray(scroll.props.contentContainerStyle)).toBe(false);
     await act(async () => tree.unmount());
   });
 
@@ -371,6 +655,9 @@ describe('활동·알림 카드의 refined 시각 조작', () => {
     expect(style(threshold).opacity ?? 1).toBe(1);
     const activeModal = tree.root.find((node) => node.props.testID === 'bottom-sheet-modal' && node.props.keyboardBehavior === 'interactive');
     expect(activeModal.props.keyboardBlurBehavior).toBe('restore');
+    expect(activeModal.props.topInset).toBe(36);
+    expect(activeModal.props.maxDynamicContentSize).toBe(744);
+    expect(Array.isArray(activeModal.findByProps({ testID: 'bottom-sheet-scroll-content' }).props.contentContainerStyle)).toBe(false);
     expect(tree.root.findAll((node) => node.props.testID === 'bottom-sheet-scroll-content')
       .some((node) => style(node).paddingBottom >= 24 && node.props.keyboardShouldPersistTaps === 'handled')).toBe(true);
     await act(async () => change.props.onPress());
@@ -397,7 +684,8 @@ describe('뽀모도로 일반 조작', () => {
     expect(style(picker).minHeight).toBeGreaterThanOrEqual(48);
     expect(style(start).minHeight).toBeGreaterThanOrEqual(48);
     await act(async () => picker.props.onPress());
-    const pickerSheet = tree.root.find((node) => node.props.testID === 'bottom-sheet-modal' && node.props.maxDynamicContentSize != null);
+    const pickerSheet = tree.root.find((node) => node.props.testID === 'bottom-sheet-modal'
+      && node.props.maxDynamicContentSize === Math.round(mockWindowHeight * 0.62));
     expect(pickerSheet.props.accessibilityState.expanded).toBe(true);
     await act(async () => start.props.onPress());
     expect(mockStartSession).toHaveBeenCalledWith(expect.objectContaining({ focusMin: 25 }), null);

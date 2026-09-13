@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
 import type { TaskResponse, TaskStatus } from '../../api/types';
+import { useContentFrame } from '../../layout/useContentFrame';
 import { usePlanning } from '../../query/hooks';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
@@ -19,7 +20,10 @@ export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
   function TaskPickerSheet({ onPick }, ref) {
     const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
+    const frame = useContentFrame(20);
     const { height: windowHeight } = useWindowDimensions();
+    const topInset = insets.top + 12;
+    const maxContentHeight = Math.max(0, windowHeight - topInset - insets.bottom - 12);
     const planning = usePlanning();
     const { headingRef, onChange } = useSheetFocus();
 
@@ -35,14 +39,19 @@ export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
       <BottomSheetModal
         ref={ref}
         enableDynamicSizing
-        maxDynamicContentSize={Math.round(windowHeight * 0.62)}
+        topInset={topInset}
+        maxDynamicContentSize={Math.min(Math.round(windowHeight * 0.62), maxContentHeight)}
         onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         {/* 일반 ScrollView는 시트 팬 제스처에 먹혀 스크롤 불가 — 시트 전용 스크롤러.
             하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마지막 행이 OS 내비 바에 가려진다 */}
-        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+        <BottomSheetScrollView
+          accessibilityViewIsModal
+          contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 }])}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.headingRow}>
             <Text ref={headingRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>무엇에 집중할까요?</Text>
             <Pressable onPress={() => (ref as React.RefObject<BottomSheetModal | null>)?.current?.dismiss()} accessibilityRole="button" accessibilityLabel="태스크 선택 닫기" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>

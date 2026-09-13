@@ -16,6 +16,7 @@ import {
   TextInput,
   View,
   findNodeHandle,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -216,6 +217,8 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
   const [isClearing, setIsClearing] = useState(false);
   const [showDraftDetails, setShowDraftDetails] = useState(false);
   const [editorGeneration, setEditorGeneration] = useState(0);
+  const [resultViewportHeight, setResultViewportHeight] = useState(0);
+  const [confirmBarHeight, setConfirmBarHeight] = useState(0);
   const writeGenerationRef = useRef(0);
   const analyzePendingRef = useRef(false);
   const confirmPendingRef = useRef(false);
@@ -242,6 +245,16 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
   }[draftStatus];
 
   const requestExit = useCallback(() => router.back(), []);
+
+  const handleResultViewportLayout = useCallback((event: LayoutChangeEvent) => {
+    const height = event.nativeEvent.layout.height;
+    setResultViewportHeight((current) => current === height ? current : height);
+  }, []);
+
+  const handleConfirmBarLayout = useCallback((event: LayoutChangeEvent) => {
+    const height = event.nativeEvent.layout.height;
+    setConfirmBarHeight((current) => current === height ? current : height);
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -450,6 +463,56 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
     closeEditor(index);
   }, [closeEditor]);
 
+  const confirmBarInList = editingIndex !== null || (
+    resultViewportHeight > 0
+    && confirmBarHeight > 0
+    && resultViewportHeight <= confirmBarHeight * 2
+  );
+
+  const renderConfirmBar = (inList: boolean) => (
+    <View
+      testID="brain-dump-confirm-bar"
+      onLayout={handleConfirmBarLayout}
+      style={[
+        styles.confirmBar,
+        {
+          // 목록 위에 뜨는 고정 바 — 배경 무늬가 비치면 안 되므로 불투명 카드색
+          backgroundColor: colors.card,
+          borderTopColor: colors.line,
+          paddingBottom: Math.max(insets.bottom, 12),
+        },
+      ]}
+    >
+      <View style={[styles.confirmBarContent, inList ? styles.confirmBarContentInList : frame]}>
+        <View style={styles.resultSecondaryActions}>
+          <RetroButton
+            appearance="refined"
+            label="지우기"
+            variant="ghost"
+            onPress={requestClear}
+            disabled={isSaving || isClearing || editingIndex !== null}
+            style={styles.resultSecondaryAction}
+          />
+          <RetroButton
+            appearance="refined"
+            label="다시 분석"
+            variant="ghost"
+            onPress={handleAnalyze}
+            disabled={isSaving || isClearing || editingIndex !== null || analysisDisabled}
+            style={styles.resultSecondaryAction}
+          />
+        </View>
+        <RetroButton
+          appearance="refined"
+          label={`선택한 ${selectedCount}개 등록`}
+          onPress={handleConfirm}
+          disabled={selectedCount === 0 || isClearing || editingIndex !== null}
+          busy={isSaving}
+        />
+      </View>
+    </View>
+  );
+
   if (!hydrated) {
     return (
       <View style={[styles.screen, styles.loadingContent, { paddingTop: insets.top }]}>
@@ -481,7 +544,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
       {stage === 'input' ? (
         <KeyboardAvoidingView
           style={styles.stage}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <ScrollView
             contentContainerStyle={[styles.inputContent, frame, { paddingBottom: insets.bottom + 16 }]}
@@ -585,7 +648,8 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
       {stage === 'select' ? (
         <KeyboardAvoidingView
           style={styles.stage}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          onLayout={handleResultViewportLayout}
         >
           <FlatList
             data={tasks}
@@ -593,6 +657,8 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
             extraData={`${editingIndex ?? 'none'}:${selectedCount}`}
             contentContainerStyle={[styles.resultList, frame]}
             keyboardShouldPersistTaps="handled"
+            removeClippedSubviews={false}
+            ListFooterComponent={confirmBarInList ? renderConfirmBar(true) : null}
             ListHeaderComponent={(
               <View style={styles.selectHeader}>
                 <View style={styles.selectHeading}>
@@ -629,45 +695,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
               />
             )}
           />
-          <View
-            style={[
-              styles.confirmBar,
-              {
-                // 목록 위에 뜨는 고정 바 — 배경 무늬가 비치면 안 되므로 불투명 카드색
-                backgroundColor: colors.card,
-                borderTopColor: colors.line,
-                paddingBottom: Math.max(insets.bottom, 12),
-              },
-            ]}
-          >
-            <View style={[styles.confirmBarContent, frame]}>
-              <View style={styles.resultSecondaryActions}>
-                <RetroButton
-                  appearance="refined"
-                  label="지우기"
-                  variant="ghost"
-                  onPress={requestClear}
-                  disabled={isSaving || isClearing || editingIndex !== null}
-                  style={styles.resultSecondaryAction}
-                />
-                <RetroButton
-                  appearance="refined"
-                  label="다시 분석"
-                  variant="ghost"
-                  onPress={handleAnalyze}
-                  disabled={isSaving || isClearing || editingIndex !== null || analysisDisabled}
-                  style={styles.resultSecondaryAction}
-                />
-              </View>
-              <RetroButton
-                appearance="refined"
-                label={`선택한 ${selectedCount}개 등록`}
-                onPress={handleConfirm}
-                disabled={selectedCount === 0 || isClearing || editingIndex !== null}
-                busy={isSaving}
-              />
-            </View>
-          </View>
+          {confirmBarInList ? null : renderConfirmBar(false)}
         </KeyboardAvoidingView>
       ) : null}
     </View>
@@ -798,6 +826,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1.5,
   },
   confirmBarContent: { paddingHorizontal: 16, paddingTop: 12 },
+  confirmBarContentInList: { paddingHorizontal: 0 },
   resultSecondaryActions: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   resultSecondaryAction: { flex: 1, minHeight: 48 },
 });
