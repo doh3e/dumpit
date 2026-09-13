@@ -29,6 +29,7 @@ const mockClearDraft = jest.fn();
 jest.mock('../theme/useTheme', () => ({
   useTheme: () => mockTheme,
 }));
+jest.mock('@react-native-community/datetimepicker', () => 'DateTimePicker');
 jest.mock('../api/brainDump', () => ({
   submitBrainDump: (...args) => mockSubmitBrainDump(...args),
   confirmBrainDump: (...args) => mockConfirmBrainDump(...args),
@@ -393,6 +394,67 @@ describe('브레인 덤프 입력·분석', () => {
 });
 
 describe('브레인 덤프 선택·등록', () => {
+  it('체크와 수정은 형제 조작이고 편집값만 적용해 일부 선택 payload로 보낸다', async () => {
+    mockSubmitBrainDump.mockResolvedValue(RESULT);
+    mockConfirmBrainDump.mockResolvedValue([]);
+    const tree = await renderScreen();
+    await changeText(tree, '편집할 원문');
+    await analyze(tree);
+
+    const checkbox = control(tree, '발표 준비 선택', 'checkbox');
+    const edit = control(tree, '발표 준비 수정');
+    expect(edit.parent).toBe(checkbox.parent);
+    expect(StyleSheet.flatten(edit.props.style({ pressed: false })).minHeight).toBeGreaterThanOrEqual(48);
+    await act(async () => edit.props.onPress());
+    expect(control(tree, '다시 분석').props.disabled).toBe(true);
+    expect(control(tree, '선택한 3개 등록').props.disabled).toBe(true);
+    expect(mockSubmitBrainDump).toHaveBeenCalledTimes(1);
+
+    const title = tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '할 일 제목');
+    const minutes = tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '예상 시간(분)');
+    expect(title.props.value).toBeUndefined();
+    await act(async () => title.props.onChangeText('  다듬은 발표  '));
+    await act(async () => control(tree, '일시 지우기').props.onPress());
+    await act(async () => minutes.props.onChangeText('45'));
+    await act(async () => control(tree, '적용').props.onPress());
+
+    const editedCheckbox = control(tree, '다듬은 발표 선택', 'checkbox');
+    expect(editedCheckbox).toBe(checkbox);
+    expect(editedCheckbox.props.accessibilityState.checked).toBe(true);
+    expect(mockSubmitBrainDump).toHaveBeenCalledTimes(1);
+    await act(async () => control(tree, '장보기 선택', 'checkbox').props.onPress());
+    await act(async () => control(tree, '빨래 선택', 'checkbox').props.onPress());
+    await act(async () => control(tree, '선택한 1개 등록').props.onPress());
+
+    expect(mockConfirmBrainDump).toHaveBeenCalledWith('local-dump', [{
+      title: '다듬은 발표',
+      description: '슬라이드 초안',
+      priorityScore: 0.8,
+      category: 'WORK',
+      deadline: null,
+      estimatedMinutes: 45,
+    }]);
+    await unmount(tree);
+  });
+
+  it('결과 편집 취소는 변경과 API 호출을 버리고 선택을 유지한다', async () => {
+    mockSubmitBrainDump.mockResolvedValue(RESULT);
+    const tree = await renderScreen();
+    await changeText(tree, '취소할 원문');
+    await analyze(tree);
+
+    await act(async () => control(tree, '발표 준비 수정').props.onPress());
+    const title = tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '할 일 제목');
+    await act(async () => title.props.onChangeText('버릴 제목'));
+    await act(async () => control(tree, '취소').props.onPress());
+
+    expect(control(tree, '발표 준비 선택', 'checkbox').props.accessibilityState.checked).toBe(true);
+    expect(tree.root.findAll((node) => node.props.accessibilityLabel === '버릴 제목 선택')).toHaveLength(0);
+    expect(mockSubmitBrainDump).toHaveBeenCalledTimes(1);
+    expect(mockConfirmBrainDump).not.toHaveBeenCalled();
+    await unmount(tree);
+  });
+
   it('3개 중 2개만 확정 payload로 보내고 저장 실패 후에도 선택을 유지한다', async () => {
     mockSubmitBrainDump.mockResolvedValue(RESULT);
     const save = deferred();

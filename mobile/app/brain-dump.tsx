@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ElementRef } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Alert,
   BackHandler,
@@ -14,6 +15,7 @@ import {
   Text,
   TextInput,
   View,
+  findNodeHandle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -26,6 +28,7 @@ import type { DumpResponse, DumpTaskItem } from '../src/api/types';
 import { announce } from '../src/a11y/announce';
 import { useAuth } from '../src/auth/AuthContext';
 import { clearDraft, readDraft, writeDraft } from '../src/brainDump/draft';
+import { BrainDumpTaskEditor } from '../src/components/brainDump/BrainDumpTaskEditor';
 import { Chip } from '../src/components/retro/Chip';
 import { PixelIcon } from '../src/components/common/PixelIcon';
 import { RetroBadge } from '../src/components/retro/RetroBadge';
@@ -82,11 +85,23 @@ function AnalysisProgress() {
 function ResultItem({
   item,
   selected,
+  editing,
+  interactionLocked,
+  editRef,
   onToggle,
+  onEdit,
+  onApply,
+  onCancel,
 }: {
   item: DumpTaskItem;
   selected: boolean;
+  editing: boolean;
+  interactionLocked: boolean;
+  editRef: (node: ElementRef<typeof Pressable> | null) => void;
   onToggle: () => void;
+  onEdit: () => void;
+  onApply: (fields: Pick<DumpTaskItem, 'title' | 'deadline' | 'estimatedMinutes'>) => void;
+  onCancel: () => void;
 }) {
   const { colors, fonts } = useTheme();
   const priority = getPriority(item.aiPriorityScore);
@@ -99,52 +114,78 @@ function ResultItem({
   ].filter((value): value is string => value != null);
 
   return (
-    <Pressable
-      onPress={onToggle}
-      accessibilityRole="checkbox"
-      accessibilityLabel={`${item.title} 선택`}
-      accessibilityState={{ checked: selected }}
-      style={({ pressed }) => [
-        styles.resultPressable,
-        { backgroundColor: pressed ? colors.chip : colors.card, opacity: 1 },
-      ]}
-    >
-      <RetroCard
-        appearance="refined"
-        style={[
-          styles.resultCard,
-          {
-            backgroundColor: 'transparent',
-            borderColor: selected ? colors.fg : colors.sub,
-          },
-        ]}
-      >
-        <View
-          style={[
-            styles.checkbox,
+    <View style={styles.resultItem}>
+      <View style={styles.resultItemRow}>
+        <Pressable
+          onPress={onToggle}
+          disabled={interactionLocked}
+          accessibilityRole="checkbox"
+          accessibilityLabel={`${item.title} 선택`}
+          accessibilityState={{ checked: selected, ...(interactionLocked ? { disabled: true } : {}) }}
+          style={({ pressed }) => [
+            styles.resultPressable,
+            { backgroundColor: pressed ? colors.chip : colors.card, opacity: interactionLocked ? 0.6 : 1 },
+          ]}
+        >
+          <RetroCard
+            appearance="refined"
+            style={[
+              styles.resultCard,
+              {
+                backgroundColor: 'transparent',
+                borderColor: selected ? colors.fg : colors.sub,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.checkbox,
+                {
+                  backgroundColor: selected ? colors.accent2Fill : colors.card,
+                  borderColor: selected ? colors.fg : colors.sub,
+                },
+              ]}
+            >
+              {selected ? (
+                <Text style={[styles.checkmark, { color: colors.onAccent, fontFamily: fonts.chrome }]}>✓</Text>
+              ) : null}
+            </View>
+            <View style={styles.resultBody}>
+              <View style={styles.resultTitleRow}>
+                <Text style={[styles.resultTitle, { color: colors.fg, fontFamily: fonts.bodyBold }]}>
+                  {item.title}
+                </Text>
+                <RetroBadge text={priority.label} tone={priority.tone} />
+              </View>
+              <Text style={[styles.metadata, { color: colors.fg, fontFamily: fonts.body }]}>
+                {metadata.join(' · ')}
+              </Text>
+            </View>
+          </RetroCard>
+        </Pressable>
+        <Pressable
+          ref={editRef}
+          onPress={onEdit}
+          disabled={interactionLocked}
+          accessibilityRole="button"
+          accessibilityLabel={`${item.title} 수정`}
+          accessibilityState={{ expanded: editing, disabled: interactionLocked }}
+          style={({ pressed }) => [
+            styles.editButton,
             {
-              backgroundColor: selected ? colors.accent2Fill : colors.card,
-              borderColor: selected ? colors.fg : colors.sub,
+              borderColor: colors.sub,
+              backgroundColor: pressed ? colors.chip : colors.card,
+              opacity: interactionLocked && !editing ? 0.45 : 1,
             },
           ]}
         >
-          {selected ? (
-            <Text style={[styles.checkmark, { color: colors.onAccent, fontFamily: fonts.chrome }]}>✓</Text>
-          ) : null}
-        </View>
-        <View style={styles.resultBody}>
-          <View style={styles.resultTitleRow}>
-            <Text style={[styles.resultTitle, { color: colors.fg, fontFamily: fonts.bodyBold }]}>
-              {item.title}
-            </Text>
-            <RetroBadge text={priority.label} tone={priority.tone} />
-          </View>
-          <Text style={[styles.metadata, { color: colors.fg, fontFamily: fonts.body }]}>
-            {metadata.join(' · ')}
-          </Text>
-        </View>
-      </RetroCard>
-    </Pressable>
+          <Text style={[styles.editText, { color: colors.fg, fontFamily: fonts.chrome }]}>수정</Text>
+        </Pressable>
+      </View>
+      {editing ? (
+        <BrainDumpTaskEditor task={item} onApply={onApply} onCancel={onCancel} />
+      ) : null}
+    </View>
   );
 }
 
@@ -167,6 +208,8 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
   const [hydrated, setHydrated] = useState(accountKey === null);
   const [result, setResult] = useState<DumpResponse | null>(null);
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set());
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [focusRestoreIndex, setFocusRestoreIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [showDraftDetails, setShowDraftDetails] = useState(false);
@@ -177,6 +220,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
   const confirmGenerationRef = useRef(0);
   const clearPendingRef = useRef(false);
   const mountedRef = useRef(true);
+  const editButtonRefs = useRef(new Map<number, ElementRef<typeof Pressable>>());
 
   const tasks = result?.tasks ?? EMPTY_TASKS;
   const selectedCount = tasks.reduce(
@@ -204,6 +248,14 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
       confirmGenerationRef.current += 1;
     };
   }, []);
+
+  useEffect(() => {
+    if (editingIndex !== null || focusRestoreIndex === null) return;
+    const target = editButtonRefs.current.get(focusRestoreIndex);
+    target?.focus?.();
+    const tag = target ? findNodeHandle(target) : null;
+    if (typeof tag === 'number') AccessibilityInfo.setAccessibilityFocus(tag);
+  }, [editingIndex, focusRestoreIndex]);
 
   useEffect(() => {
     if (!accountKey) return undefined;
@@ -251,7 +303,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
 
   const handleAnalyze = useCallback(async () => {
     const rawText = text.trim();
-    if (!rawText || analysisDisabled || analyzePendingRef.current || !hydrated) return;
+    if (!rawText || analysisDisabled || editingIndex !== null || analyzePendingRef.current || !hydrated) return;
 
     analyzePendingRef.current = true;
     const returnStage: Stage = result ? 'select' : 'input';
@@ -262,6 +314,8 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
       setResult(response);
       announce(`분석이 끝났어요. 후보 ${response.tasks.length}개`);
       setSelectedIndexes(new Set(response.tasks.map((_task, index) => index)));
+      setEditingIndex(null);
+      setFocusRestoreIndex(null);
       invalidateAfterAi(qc);
       setStage('select');
     } catch (error) {
@@ -271,7 +325,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
     } finally {
       if (mountedRef.current) analyzePendingRef.current = false;
     }
-  }, [analysisDisabled, hydrated, qc, result, text, toast]);
+  }, [analysisDisabled, editingIndex, hydrated, qc, result, text, toast]);
 
   const performClear = useCallback(async () => {
     if (!mountedRef.current || !accountKey || clearPendingRef.current || !hydrated) return;
@@ -284,6 +338,8 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
       setText('');
       setResult(null);
       setSelectedIndexes(new Set());
+      setEditingIndex(null);
+      setFocusRestoreIndex(null);
       setDraftStatus('idle');
       setStage('input');
       setEditorGeneration((value) => value + 1);
@@ -301,7 +357,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
   }, [accountKey, hydrated, toast]);
 
   const requestClear = useCallback(() => {
-    if (isClearing) return;
+    if (isClearing || editingIndex !== null) return;
     Alert.alert(
       '원문과 결과 지우기',
       '원문과 AI 분석 결과가 모두 사라져요. 지울까요?',
@@ -310,27 +366,29 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
         { text: '지우기', style: 'destructive', onPress: () => { void performClear(); } },
       ],
     );
-  }, [isClearing, performClear]);
+  }, [editingIndex, isClearing, performClear]);
 
   const toggleItem = useCallback((index: number) => {
+    if (editingIndex !== null) return;
     setSelectedIndexes((current) => {
       const next = new Set(current);
       if (next.has(index)) next.delete(index);
       else next.add(index);
       return next;
     });
-  }, []);
+  }, [editingIndex]);
 
   const toggleAll = useCallback(() => {
+    if (editingIndex !== null) return;
     setSelectedIndexes(
       allSelected
         ? new Set()
         : new Set(tasks.map((_task, index) => index)),
     );
-  }, [allSelected, tasks]);
+  }, [allSelected, editingIndex, tasks]);
 
   const handleConfirm = useCallback(async () => {
-    if (!result || selectedCount === 0 || isSaving || confirmPendingRef.current || !accountKey) return;
+    if (!result || selectedCount === 0 || editingIndex !== null || isSaving || confirmPendingRef.current || !accountKey) return;
 
     const selected: DumpConfirmTask[] = result.tasks
       .filter((_task, index) => selectedIndexes.has(index))
@@ -373,7 +431,22 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
     if (!isCurrentConfirm()) return;
     toast.show(`${selected.length}개를 할 일에 등록했어요!`);
     router.back();
-  }, [accountKey, isSaving, qc, result, selectedCount, selectedIndexes, toast]);
+  }, [accountKey, editingIndex, isSaving, qc, result, selectedCount, selectedIndexes, toast]);
+
+  const closeEditor = useCallback((index: number) => {
+    setEditingIndex(null);
+    setFocusRestoreIndex(index);
+  }, []);
+
+  const applyTaskEdit = useCallback((index: number, fields: Pick<DumpTaskItem, 'title' | 'deadline' | 'estimatedMinutes'>) => {
+    setResult((current) => current ? {
+      ...current,
+      tasks: current.tasks.map((task, taskIndex) => (
+        taskIndex === index ? { ...task, ...fields } : task
+      )),
+    } : current);
+    closeEditor(index);
+  }, [closeEditor]);
 
   if (!hydrated) {
     return (
@@ -508,11 +581,16 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
       ) : null}
 
       {stage === 'select' ? (
-        <View style={styles.stage}>
+        <KeyboardAvoidingView
+          style={styles.stage}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <FlatList
             data={tasks}
-            keyExtractor={(_item, index) => String(index)}
+            keyExtractor={(_item, index) => `${result?.dumpId ?? 'dump'}-${index}`}
+            extraData={`${editingIndex ?? 'none'}:${selectedCount}`}
             contentContainerStyle={styles.resultList}
+            keyboardShouldPersistTaps="handled"
             ListHeaderComponent={(
               <View style={styles.selectHeader}>
                 <View style={styles.selectHeading}>
@@ -528,6 +606,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
                   label={allSelected ? '전체 해제' : '전체 선택'}
                   selected={allSelected}
                   onPress={toggleAll}
+                  disabled={editingIndex !== null}
                 />
               </View>
             )}
@@ -535,7 +614,16 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
               <ResultItem
                 item={item}
                 selected={selectedIndexes.has(index)}
+                editing={editingIndex === index}
+                interactionLocked={editingIndex !== null || isSaving || isClearing}
+                editRef={(node) => {
+                  if (node) editButtonRefs.current.set(index, node);
+                  else editButtonRefs.current.delete(index);
+                }}
                 onToggle={() => toggleItem(index)}
+                onEdit={() => setEditingIndex(index)}
+                onApply={(fields) => applyTaskEdit(index, fields)}
+                onCancel={() => closeEditor(index)}
               />
             )}
           />
@@ -556,7 +644,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
                 label="지우기"
                 variant="ghost"
                 onPress={requestClear}
-                disabled={isSaving || isClearing}
+                disabled={isSaving || isClearing || editingIndex !== null}
                 style={styles.resultSecondaryAction}
               />
               <RetroButton
@@ -564,7 +652,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
                 label="다시 분석"
                 variant="ghost"
                 onPress={handleAnalyze}
-                disabled={isSaving || isClearing || analysisDisabled}
+                disabled={isSaving || isClearing || editingIndex !== null || analysisDisabled}
                 style={styles.resultSecondaryAction}
               />
             </View>
@@ -572,11 +660,11 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
               appearance="refined"
               label={`선택한 ${selectedCount}개 등록`}
               onPress={handleConfirm}
-              disabled={selectedCount === 0 || isClearing}
+              disabled={selectedCount === 0 || isClearing || editingIndex !== null}
               busy={isSaving}
             />
           </View>
-        </View>
+        </KeyboardAvoidingView>
       ) : null}
     </View>
   );
@@ -666,7 +754,9 @@ const styles = StyleSheet.create({
   },
   selectTitle: { fontSize: 16 },
   selectCount: { fontSize: 11 },
-  resultPressable: { minHeight: 48, marginBottom: 11, borderRadius: 12, overflow: 'hidden' },
+  resultItem: { marginBottom: 11, gap: 8 },
+  resultItemRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  resultPressable: { flex: 1, minHeight: 48, borderRadius: 12, overflow: 'hidden' },
   resultCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -691,6 +781,15 @@ const styles = StyleSheet.create({
   },
   resultTitle: { flex: 1, fontSize: 14, lineHeight: 20 },
   metadata: { marginTop: 6, fontSize: 11, lineHeight: 16 },
+  editButton: {
+    minWidth: 48,
+    minHeight: 48,
+    borderWidth: 1.5,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editText: { fontSize: 12 },
   confirmBar: {
     borderTopWidth: 1.5,
     paddingHorizontal: 16,
