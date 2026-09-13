@@ -1,7 +1,7 @@
 const { afterEach, beforeEach, describe, expect, it, jest } = require('@jest/globals');
 const React = require('react');
 const { act, create } = require('react-test-renderer');
-const { Alert, ScrollView, StyleSheet, Text } = require('react-native');
+const { Alert, ScrollView, StyleSheet, Text, View } = require('react-native');
 
 const mockEquipItem = jest.fn();
 const mockPurchaseItem = jest.fn();
@@ -14,10 +14,12 @@ let mockCatalog;
 let mockRefreshMe;
 let mockHarness;
 let mockWindowWidth = 320;
+let mockWindowHeight = 800;
+let mockInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
   __esModule: true,
-  default: () => ({ width: mockWindowWidth, height: 800, scale: 1, fontScale: 1 }),
+  default: () => ({ width: mockWindowWidth, height: mockWindowHeight, scale: 1, fontScale: 1 }),
 }));
 
 const NO_AUTH_UPDATE = Symbol('NO_AUTH_UPDATE');
@@ -46,7 +48,7 @@ jest.mock('../widget/mirror', () => ({ mirrorTheme: jest.fn() }));
 jest.mock('../components/fx/CelebrationOverlay', () => ({ CelebrationOverlay: () => null }));
 jest.mock('expo-router', () => ({ router: { back: jest.fn() } }));
 jest.mock('react-native-safe-area-context', () => ({
-  useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+  useSafeAreaInsets: () => mockInsets,
 }));
 
 const { RetroCard } = require('../components/retro/RetroCard');
@@ -109,6 +111,7 @@ function ThemeProbe() {
       {JSON.stringify({
         preview: preview ?? null,
         bg: theme.colors.bg,
+        card: theme.colors.card,
         chromeBg: theme.colors.chromeBg,
       })}
     </Text>
@@ -215,6 +218,8 @@ beforeEach(() => {
   mockCatalog = { coinBalance: 100, items: ITEMS.map((item) => ({ ...item })) };
   mockRefreshMe = NO_AUTH_UPDATE;
   mockWindowWidth = 320;
+  mockWindowHeight = 800;
+  mockInsets = { top: 0, right: 0, bottom: 0, left: 0 };
   mockHarness = React.createRef();
   mockEquipItem.mockReset().mockResolvedValue(undefined);
   mockPurchaseItem.mockReset().mockResolvedValue({ message: 'ok', remainingCoins: 70, equipped: true });
@@ -231,6 +236,24 @@ afterEach(() => {
 });
 
 describe('상점 슬롯 미리보기', () => {
+  it('낮은 창에서도 카테고리 행이 축소되지 않고 48dp 조작을 수용한다', async () => {
+    const tree = await renderShop();
+
+    mockWindowHeight = 160;
+    await act(async () => tree.update(<Harness ref={mockHarness} initialMe={ACCOUNT_A} />));
+
+    const [tabs] = tree.root.findAllByType(ScrollView);
+    expect(StyleSheet.flatten(tabs.props.style)).toEqual(expect.objectContaining({
+      flexGrow: 0,
+      flexShrink: 0,
+    }));
+    for (const label of ['배경', '크롬', '뽀모도로', '행성', '정거장', '축하', '스티커']) {
+      expect(StyleSheet.flatten(button(tree, label).props.style({ pressed: false })))
+        .toEqual(expect.objectContaining({ minHeight: 48 }));
+    }
+    await unmount(tree);
+  });
+
   it('창 크기 변경에도 카테고리와 콘텐츠만 같은 읽기 프레임을 쓰고 카탈로그를 유지한다', async () => {
     const tree = await renderShop();
     const [tabs, content] = tree.root.findAllByType(ScrollView);
@@ -251,6 +274,70 @@ describe('상점 슬롯 미리보기', () => {
       .toEqual(expect.objectContaining({ paddingLeft: 16, paddingRight: 16 }));
     expect(StyleSheet.flatten(content.props.contentContainerStyle))
       .toEqual(expect.objectContaining({ paddingLeft: 16, paddingRight: 16 }));
+    await unmount(tree);
+  });
+
+  it('미리보기 바는 전체 표면을 유지하고 하나의 내부 행만 읽기 프레임에 맞춘다', async () => {
+    mockInsets = { top: 0, right: 0, bottom: 24, left: 0 };
+    const tree = await renderShop();
+    await preview(tree, '바다 배경');
+
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(<Harness ref={mockHarness} initialMe={ACCOUNT_A} />));
+
+    const previewLabel = tree.root.find(
+      (node) => node.type === Text
+        && Array.isArray(node.props.children)
+        && node.props.children.includes(' 미리보기 중 — 아직 장착되지 않았어요'),
+    );
+    const previewContent = previewLabel.parent;
+    const previewSurface = tree.root.find((node) => {
+      const style = StyleSheet.flatten(node.props.style);
+      return node.type === View
+        && style?.position === 'absolute'
+        && style.left === 0
+        && style.right === 0
+        && style.bottom === 0
+        && style.borderTopWidth === 2;
+    });
+    expect(StyleSheet.flatten(previewContent.props.style)).toEqual(expect.objectContaining({
+      flexDirection: 'row',
+      paddingLeft: 236,
+      paddingRight: 236,
+    }));
+    expect(StyleSheet.flatten(previewSurface.props.style)).toEqual(expect.objectContaining({
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: themeState(tree).card,
+      borderTopWidth: 2,
+      paddingBottom: 34,
+    }));
+    expect(StyleSheet.flatten(previewSurface.props.style).paddingHorizontal).toBeUndefined();
+    expect(themeState(tree).preview).toEqual({ BACKGROUND: 'bg.ocean' });
+    expect(tree.root.findAll(
+      (node) => node.props.accessibilityLabel === '원래대로' && typeof node.props.style === 'function',
+    )).toHaveLength(1);
+
+    mockWindowWidth = 320;
+    await act(async () => tree.update(<Harness ref={mockHarness} initialMe={ACCOUNT_A} />));
+    const narrowLabel = tree.root.find(
+      (node) => node.type === Text
+        && Array.isArray(node.props.children)
+        && node.props.children.includes(' 미리보기 중 — 아직 장착되지 않았어요'),
+    );
+    expect(StyleSheet.flatten(narrowLabel.parent.props.style)).toEqual(expect.objectContaining({
+      paddingLeft: 16,
+      paddingRight: 16,
+    }));
+    expect(themeState(tree).preview).toEqual({ BACKGROUND: 'bg.ocean' });
+
+    await press(button(tree, '원래대로'));
+    expect(themeState(tree).preview).toBeNull();
+    expect(tree.root.findAll(
+      (node) => node.props.accessibilityLabel === '원래대로' && typeof node.props.style === 'function',
+    )).toHaveLength(0);
     await unmount(tree);
   });
 

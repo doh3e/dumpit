@@ -396,10 +396,12 @@ export default function ShopScreen() {
 
       {previewing && (
         <View style={[styles.previewBar, { backgroundColor: colors.card, borderColor: colors.edge, paddingBottom: insets.bottom + 10 }]}>
-          <Text style={[styles.previewBarText, { color: colors.fg, fontFamily: fonts.body }]}>
-            <PixelIcon name="eye" size={12} /> 미리보기 중 — 아직 장착되지 않았어요
-          </Text>
-          <RetroButton appearance="refined" label="원래대로" size="sm" variant="ghost" onPress={() => updatePreview(null)} />
+          <View style={[styles.previewBarContent, frame]}>
+            <Text style={[styles.previewBarText, { color: colors.fg, fontFamily: fonts.body }]}>
+              <PixelIcon name="eye" size={12} /> 미리보기 중 — 아직 장착되지 않았어요
+            </Text>
+            <RetroButton appearance="refined" label="원래대로" size="sm" variant="ghost" onPress={() => updatePreview(null)} />
+          </View>
         </View>
       )}
 
@@ -412,7 +414,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   coinRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   coin: { fontSize: 13 },
-  tabBar: { flexGrow: 0 },
+  tabBar: { flexGrow: 0, flexShrink: 0 },
   tabRow: { paddingHorizontal: 16, gap: 6, paddingVertical: 6 },
   body: { padding: 16, gap: 10, paddingBottom: 40 },
   notice: { fontSize: 11, textAlign: 'center' },
@@ -428,8 +430,11 @@ const styles = StyleSheet.create({
   swatch: { width: 11, height: 30, borderRadius: 2 },
   previewBar: {
     position: 'absolute', left: 0, right: 0, bottom: 0,
+    borderTopWidth: 2,
+  },
+  previewBarContent: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-    borderTopWidth: 2, paddingHorizontal: 16, paddingTop: 10,
+    paddingTop: 10,
   },
   previewBarText: { fontSize: 12, flex: 1 },
 });
