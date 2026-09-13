@@ -14,6 +14,7 @@ const TEXT_TOKENS = ['sub', 'accent-text', 'accent2-text', 'danger-text']
 const THEMES = ['light', 'dark']
 const CONTRASTS = ['normal', 'high']
 const BACKGROUNDS = ['default', ...SKINS]
+const CHROMES = ['default', ...SKINS]
 const POMODOROS = ['default', ...SKINS]
 
 function expectText(fg, bg, min, label) {
@@ -47,9 +48,10 @@ function selectorMatchesRoot(selector, attributes) {
   )
 }
 
-function resolvePalette({ background = 'default', pomodoro = 'default', theme = 'light', contrast = 'normal' }) {
+function resolvePalette({ background = 'default', chrome = 'default', pomodoro = 'default', theme = 'light', contrast = 'normal' }) {
   const attributes = {}
   if (background !== 'default') attributes['data-skin-bg'] = background
+  if (chrome !== 'default') attributes['data-skin-chrome'] = chrome
   if (pomodoro !== 'default') attributes['data-skin-pomodoro'] = pomodoro
   if (theme === 'dark') attributes['data-theme'] = 'dark'
   if (contrast === 'high') attributes['data-contrast'] = 'high'
@@ -179,6 +181,27 @@ describe('포커스 링과 채움 위 글자', () => {
 })
 
 describe('실제 cascade 기반 버튼·마감 대비', () => {
+  it('8 BG × 8 CHROME × light/dark × normal/high에서 크롬 글자가 4.5:1 이상', () => {
+    const failures = []
+    for (const background of BACKGROUNDS) {
+      for (const chrome of CHROMES) {
+        for (const theme of THEMES) {
+          for (const contrast of CONTRASTS) {
+            const { resolve } = resolvePalette({ background, chrome, theme, contrast })
+            for (const foreground of ['fg', 'sub']) {
+              const ratio = contrastRatio(resolve(foreground), resolve('chrome-bg'))
+              if (ratio < 4.5) {
+                failures.push(`${background}/${chrome}/${theme}/${contrast} ${foreground}=${ratio.toFixed(6)}`)
+              }
+            }
+          }
+        }
+      }
+    }
+
+    expect(failures).toEqual([])
+  })
+
   it('중립 버튼 resting/hover/active/focus 글자가 기본·스킨 표면에서 4.5:1 이상', () => {
     const hover = declarationsFor(
       '.btn-refined:not(.btn-refined-primary):not(.btn-refined-danger):not(.btn-refined-selected):not(:disabled):hover',
