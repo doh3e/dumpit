@@ -32,11 +32,10 @@ export default function NoticesScreen() {
     setLoadedPage(current.data.page);
   }
 
-  const pinned = current.data?.pinned ?? [];
   const hasMore = current.data ? current.data.page + 1 < current.data.totalPages : false;
 
   const [openId, setOpenId] = useState<string | null>(null);
-  const allRows = useMemo(() => [...pinned, ...loaded], [pinned, loaded]);
+  const allRows = useMemo(() => [...(current.data?.pinned ?? []), ...loaded], [current.data?.pinned, loaded]);
 
   return (
     <View style={styles.screen}>

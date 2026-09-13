@@ -3,19 +3,20 @@ const React = require('react');
 const { act, create } = require('react-test-renderer');
 const { QueryClient, QueryClientProvider } = require('@tanstack/react-query');
 const AsyncStorage = require('@react-native-async-storage/async-storage');
-const { Text } = require('react-native');
+const { Alert, Text, TextInput } = require('react-native');
 
 const mockPatchSettings = jest.fn();
 const mockFetchSettings = jest.fn();
 const mockDismiss = jest.fn();
 const mockToast = { show: jest.fn(), error: jest.fn() };
+const mockAuthState = { me: null, loading: false, signOut: jest.fn() };
 
 jest.mock('../api/settings', () => ({
   fetchSettings: (...args) => mockFetchSettings(...args),
   patchSettings: (...args) => mockPatchSettings(...args),
 }));
 jest.mock('../auth/AuthContext', () => ({
-  useAuth: () => ({ me: null, signOut: jest.fn() }),
+  useAuth: () => mockAuthState,
 }));
 jest.mock('../widget/mirror', () => ({ mirrorTheme: jest.fn(async () => {}) }));
 jest.mock('../components/retro/ToastProvider', () => ({ useToast: () => mockToast }));
@@ -40,6 +41,8 @@ jest.mock('@gorhom/bottom-sheet', () => {
 const { useSaveSettings, useUserSettings } = require('../query/routineHooks');
 const { keys } = require('../query/keys');
 const { ThemeProvider, useA11yPrefs, useThemeMode } = require('../theme/ThemeProvider');
+const { useTheme } = require('../theme/useTheme');
+const { palettes } = require('../theme/tokens');
 const SettingsScreen = require('../../app/settings').default;
 const { ActiveHoursCard } = require('../components/routine/ActiveHoursCard');
 const { NotificationSettingsCard } = require('../components/settings/NotificationSettingsCard');
@@ -102,6 +105,12 @@ const ThemePreferenceProbe = React.forwardRef(function ThemePreferenceProbe(_pro
   return null;
 });
 
+const ThemeVisualProbe = React.forwardRef(function ThemeVisualProbe(_props, ref) {
+  const theme = useTheme();
+  React.useImperativeHandle(ref, () => theme, [theme]);
+  return null;
+});
+
 async function renderConsumers(client, refs) {
   let tree;
   await act(async () => {
@@ -152,6 +161,10 @@ beforeEach(() => {
   mockDismiss.mockReset();
   mockToast.show.mockReset();
   mockToast.error.mockReset();
+  mockAuthState.me = null;
+  mockAuthState.loading = false;
+  mockAuthState.signOut.mockReset();
+  jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
 });
 
 afterEach(async () => {
@@ -159,6 +172,7 @@ afterEach(async () => {
     client.getMutationCache().getAll().forEach((mutation) => mutation.destroy());
     client.clear();
   });
+  jest.restoreAllMocks();
 });
 
 describe('설정 PATCH 직렬화와 계정 경계', () => {
@@ -345,6 +359,36 @@ describe('설정 PATCH 직렬화와 계정 경계', () => {
 });
 
 describe('기기 설정 persistence acknowledgement', () => {
+  it('로그아웃 후 늦게 완료된 이전 계정 스킨 cache 읽기를 표시하지 않는다', async () => {
+    const equipmentRead = deferred();
+    AsyncStorage.getItem.mockImplementation((key) => (
+      key === 'dumpit_equipments' ? equipmentRead.promise : Promise.resolve(null)
+    ));
+    mockAuthState.loading = true;
+    const probe = React.createRef();
+    let tree;
+    await act(async () => {
+      tree = create(<ThemeProvider><ThemeVisualProbe ref={probe} /></ThemeProvider>);
+    });
+
+    mockAuthState.me = { email: 'a@example.com', equipments: { BACKGROUND: 'bg.ocean' } };
+    mockAuthState.loading = false;
+    await act(async () => {
+      tree.update(<ThemeProvider><ThemeVisualProbe ref={probe} /></ThemeProvider>);
+    });
+    mockAuthState.me = null;
+    await act(async () => {
+      tree.update(<ThemeProvider><ThemeVisualProbe ref={probe} /></ThemeProvider>);
+    });
+
+    await act(async () => {
+      equipmentRead.resolve(JSON.stringify({ BACKGROUND: 'bg.ocean' }));
+      await equipmentRead.promise;
+    });
+    expect(probe.current.colors.bg).toBe(palettes.light.bg);
+    await act(async () => tree.unmount());
+  });
+
   it('StrictMode의 폐기된 첫 hydration은 현재 mount의 저장 대기를 풀거나 baseline을 바꾸지 않는다', async () => {
     const firstRead = deferred();
     const currentRead = deferred();
@@ -467,6 +511,34 @@ describe('기기 설정 persistence acknowledgement', () => {
 });
 
 describe('설정 화면 저장·취소 의미', () => {
+  it('같은 계정의 새 me 객체는 탈퇴 확인을 유지하고 계정 전환만 초기화한다', async () => {
+    mockAuthState.me = { email: 'a@example.com' };
+    const client = makeClient();
+    const tree = await renderWithProviders(client, <SettingsScreen />);
+
+    await act(async () => control(tree, '회원 탈퇴').props.onPress());
+    const buttons = Alert.alert.mock.calls.at(-1)[2];
+    await act(async () => buttons.find((button) => button.text === '계속').onPress());
+    const withdrawalInputs = () => tree.root.findAll(
+      (node) => node.type === TextInput && node.props.accessibilityLabel === '탈퇴 확인 입력',
+    );
+    expect(withdrawalInputs()).toHaveLength(1);
+
+    mockAuthState.me = { email: 'a@example.com', coins: 10 };
+    await act(async () => {
+      tree.update(<QueryClientProvider client={client}><ThemeProvider><SettingsScreen /></ThemeProvider></QueryClientProvider>);
+    });
+    expect(withdrawalInputs()).toHaveLength(1);
+
+    mockAuthState.me = { email: 'b@example.com' };
+    await act(async () => {
+      tree.update(<QueryClientProvider client={client}><ThemeProvider><SettingsScreen /></ThemeProvider></QueryClientProvider>);
+    });
+    expect(withdrawalInputs()).toHaveLength(0);
+    expect(control(tree, '회원 탈퇴')).toBeTruthy();
+    await act(async () => tree.unmount());
+  });
+
   it('테마는 persistence 완료 뒤에만 저장 성공을 알리고 실패하면 이전 성공값으로 복원한다', async () => {
     const firstWrite = deferred();
     AsyncStorage.setItem

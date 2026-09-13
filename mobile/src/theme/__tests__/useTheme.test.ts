@@ -1,3 +1,7 @@
+import { palettes, pomoDefaults } from '../tokens';
+import { fonts } from '../typography';
+import { useTheme } from '../useTheme';
+
 // react-native 전체를 모킹하면 jest-expo 셋업이 깨지므로 useColorScheme 모듈만 교체
 jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
   __esModule: true,
@@ -6,11 +10,11 @@ jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
 // 렌더 밖 직접 호출 테스트 — ThemeProvider 부재(ctx null) 폴백 경로를 검증한다
 jest.mock('react', () => ({ ...jest.requireActual('react'), useContext: () => null }));
 
-import { palettes, pomoDefaults } from '../tokens';
-import { fonts } from '../typography';
-import { useTheme } from '../useTheme';
-
-const mocked = require('react-native/Libraries/Utilities/useColorScheme').default as jest.Mock;
+const mocked = jest.requireMock<{
+  default: jest.MockedFunction<
+    () => ReturnType<typeof import('react-native').useColorScheme> | null
+  >;
+}>('react-native/Libraries/Utilities/useColorScheme').default;
 
 it('dark 스킴이면 dark 팔레트', () => {
   mocked.mockReturnValue('dark');

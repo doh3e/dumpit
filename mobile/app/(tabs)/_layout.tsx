@@ -2,13 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Tabs, router, type Href } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { AppState, View } from 'react-native';
 import { useAuth } from '../../src/auth/AuthContext';
 import { NoticePopup } from '../../src/components/notice/NoticePopup';
 import { AddTaskSheet } from '../../src/components/task/AddTaskSheet';
 import { RetroTabBar } from '../../src/components/shell/RetroTabBar';
 import { SpeedDial } from '../../src/components/shell/SpeedDial';
-import { AppState } from 'react-native';
 import { initPomodoro, reconcile } from '../../src/pomodoro/store';
 
 const HELP_SEEN_KEY = 'dumpit_help_seen';

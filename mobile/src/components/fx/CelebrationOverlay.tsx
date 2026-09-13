@@ -38,14 +38,16 @@ export function CelebrationOverlay({ onDone, codeOverride }: { onDone: () => voi
 
   const progress = useSharedValue(0);
   const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
+
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     progress.value = withTiming(1, { duration: TOTAL_MS, easing: Easing.linear });
     const timer = setTimeout(() => onDoneRef.current(), TOTAL_MS);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [progress]);
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.overlay]}>

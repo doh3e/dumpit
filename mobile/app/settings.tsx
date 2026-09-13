@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
@@ -28,6 +28,78 @@ const CONTRAST_MODES: { id: ContrastMode; label: string }[] = [
   { id: 'normal', label: '기본' },
 ];
 
+function WithdrawalControls({
+  colors,
+  fonts,
+  signOut,
+  showError,
+}: {
+  colors: ReturnType<typeof useTheme>['colors'];
+  fonts: ReturnType<typeof useTheme>['fonts'];
+  signOut: ReturnType<typeof useAuth>['signOut'];
+  showError: (message: string) => void;
+}) {
+  const [withdrawStage, setWithdrawStage] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [withdrawing, setWithdrawing] = useState(false);
+
+  const startWithdraw = () => {
+    Alert.alert(
+      '회원 탈퇴',
+      '탈퇴하면 바로 이용할 수 없고 기록도 볼 수 없어요.\n\n30일 안에 같은 구글 계정으로 다시 로그인하면 되돌릴 수 있어요. 30일이 지나면 완전히 삭제됩니다.\n\n계속할까요?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '계속', style: 'destructive', onPress: () => setWithdrawStage(true) },
+      ],
+    );
+  };
+
+  const doWithdraw = async () => {
+    setWithdrawing(true);
+    try {
+      await deleteAccount();
+      await signOut({ afterWithdrawal: true });
+    } catch (error) {
+      showError(getApiErrorMessage(error, '탈퇴 처리에 실패했어요.'));
+      setWithdrawing(false);
+    }
+  };
+
+  return (
+    <>
+      {withdrawStage ? (
+        <>
+          <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>
+            정말 탈퇴하시려면 아래에 &quot;탈퇴&quot;를 입력해주세요.
+          </Text>
+          {/* 한글 IME 조합 보호 — uncontrolled */}
+          <TextInput
+            defaultValue=""
+            onChangeText={setConfirmText}
+            placeholder="탈퇴"
+            placeholderTextColor={colors.subOnChip}
+            style={[styles.input, { borderColor: colors.warn, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+            accessibilityLabel="탈퇴 확인 입력"
+          />
+          <View style={styles.withdrawActions}>
+            <RetroButton appearance="refined" label="취소" variant="ghost" size="sm" onPress={() => { setWithdrawStage(false); setConfirmText(''); }} />
+            <RetroButton appearance="refined"
+              label="영구 탈퇴"
+              variant="danger"
+              size="sm"
+              onPress={doWithdraw}
+              busy={withdrawing}
+              disabled={confirmText.trim() !== '탈퇴'}
+            />
+          </View>
+        </>
+      ) : (
+        <RetroButton appearance="refined" label="회원 탈퇴" variant="danger" size="sm" onPress={startWithdraw} />
+      )}
+    </>
+  );
+}
+
 export default function SettingsScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
@@ -44,9 +116,6 @@ export default function SettingsScreen() {
 
   const boldLabel = boldText ? '켬' : '끔';
 
-  const [withdrawStage, setWithdrawStage] = useState(false);
-  const [confirmText, setConfirmText] = useState('');
-  const [withdrawing, setWithdrawing] = useState(false);
   const [preferencePending, setPreferencePending] = useState(false);
   const preferencePendingRef = useRef(false);
   const [preferenceFeedback, setPreferenceFeedback] = useState<'success' | 'error' | null>(null);
@@ -68,41 +137,11 @@ export default function SettingsScreen() {
     }
   };
 
-  // 로그인 계정이 바뀌면(로그아웃·탈퇴·재로그인) 탈퇴 확인 단계를 처음으로 되돌린다.
-  // 탈퇴는 되돌리기 어려운 결정이라, 확인 입력창만 남은 채로 재진입해 안내 다이얼로그를
-  // 건너뛰는 일이 없어야 한다.
-  useEffect(() => {
-    setWithdrawStage(false);
-    setConfirmText('');
-  }, [me?.email]);
-
   const confirmSignOut = () => {
     Alert.alert('로그아웃', '정말 로그아웃할까요?', [
       { text: '취소', style: 'cancel' },
       { text: '로그아웃', style: 'destructive', onPress: () => { signOut(); } },
     ]);
-  };
-
-  const startWithdraw = () => {
-    Alert.alert(
-      '회원 탈퇴',
-      '탈퇴하면 바로 이용할 수 없고 기록도 볼 수 없어요.\n\n30일 안에 같은 구글 계정으로 다시 로그인하면 되돌릴 수 있어요. 30일이 지나면 완전히 삭제됩니다.\n\n계속할까요?',
-      [
-        { text: '취소', style: 'cancel' },
-        { text: '계속', style: 'destructive', onPress: () => setWithdrawStage(true) },
-      ],
-    );
-  };
-
-  const doWithdraw = async () => {
-    setWithdrawing(true);
-    try {
-      await deleteAccount();          // 서버가 계정을 잠그고 30일 뒤 완전 삭제를 예약
-      await signOut({ afterWithdrawal: true });   // 구글 세션 해제 + 로컬 정리 → 로그인 화면
-    } catch (e) {
-      toast.error(getApiErrorMessage(e, '탈퇴 처리에 실패했어요.'));
-      setWithdrawing(false);
-    }
   };
 
   return (
@@ -184,35 +223,13 @@ export default function SettingsScreen() {
             <PixelIcon name="user" size={13} /> 계정
           </Text>
           <RetroButton appearance="refined" label="로그아웃" variant="ghost" onPress={confirmSignOut} />
-          {withdrawStage ? (
-            <>
-              <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>
-                정말 탈퇴하시려면 아래에 &quot;탈퇴&quot;를 입력해주세요.
-              </Text>
-              {/* 한글 IME 조합 보호 — uncontrolled */}
-              <TextInput
-                defaultValue=""
-                onChangeText={setConfirmText}
-                placeholder="탈퇴"
-                placeholderTextColor={colors.subOnChip}
-                style={[styles.input, { borderColor: colors.warn, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
-                accessibilityLabel="탈퇴 확인 입력"
-              />
-              <View style={styles.withdrawActions}>
-                <RetroButton appearance="refined" label="취소" variant="ghost" size="sm" onPress={() => { setWithdrawStage(false); setConfirmText(''); }} />
-                <RetroButton appearance="refined"
-                  label="영구 탈퇴"
-                  variant="danger"
-                  size="sm"
-                  onPress={doWithdraw}
-                  busy={withdrawing}
-                  disabled={confirmText.trim() !== '탈퇴'}
-                />
-              </View>
-            </>
-          ) : (
-            <RetroButton appearance="refined" label="회원 탈퇴" variant="danger" size="sm" onPress={startWithdraw} />
-          )}
+          <WithdrawalControls
+            key={me?.email ?? 'signed-out'}
+            colors={colors}
+            fonts={fonts}
+            signOut={signOut}
+            showError={toast.error}
+          />
         </RetroCard>
 
         <Text style={[styles.version, { color: colors.sub, fontFamily: fonts.chrome }]}>

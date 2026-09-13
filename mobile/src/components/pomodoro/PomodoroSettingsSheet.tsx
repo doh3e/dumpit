@@ -1,5 +1,5 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
@@ -18,6 +18,14 @@ type RowProps = {
   display?: string;
   onDelta: (d: number) => void;
 };
+
+function sameSettings(left: PomodoroSettings, right: PomodoroSettings): boolean {
+  return left.focusMin === right.focusMin
+    && left.breakMin === right.breakMin
+    && left.longBreakMin === right.longBreakMin
+    && left.longBreakEvery === right.longBreakEvery
+    && left.setsTarget === right.setsTarget;
+}
 
 function StepperRow({ label, value, display, onDelta }: RowProps) {
   const { colors, fonts } = useTheme();
@@ -45,15 +53,18 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
     const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
     const { headingRef, onChange } = useSheetFocus();
-    const [draft, setDraft] = useState(initial);
+    const [draftState, setDraftState] = useState(() => ({ initial, draft: initial }));
+    if (!sameSettings(draftState.initial, initial)) {
+      setDraftState({ initial, draft: initial });
+    }
+    const draft = draftState.draft;
 
-    // 저장 설정은 화면 마운트 후 비동기로 로드된다 — 마운트 시점 값에 갇히면
-    // 시트를 열 때마다 기본값이 보이므로 initial(로드·적용 반영)을 따라간다
-    useEffect(() => {
-      setDraft(initial);
-    }, [initial]);
-
-    const patch = (p: Partial<PomodoroSettings>) => setDraft((d) => clampSettings({ ...d, ...p }));
+    const patch = (p: Partial<PomodoroSettings>) => {
+      setDraftState((current) => ({
+        ...current,
+        draft: clampSettings({ ...current.draft, ...p }),
+      }));
+    };
 
     // 5분 단위 눈금 스냅 — 최소값(1)에서 올릴 때 1→6→11로 어긋나지 않게 (1→5→10…)
     const step5 = (value: number, direction: number) =>
@@ -63,7 +74,7 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
       <BottomSheetModal
         ref={ref}
         enableDynamicSizing
-        onDismiss={() => setDraft(initial)}
+        onDismiss={() => setDraftState({ initial, draft: initial })}
         onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}

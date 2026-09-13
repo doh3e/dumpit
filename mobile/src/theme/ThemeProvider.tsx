@@ -59,7 +59,7 @@ function enqueuePreferenceWrite<T>(
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const { me } = useAuth();
+  const { me, loading: authLoading } = useAuth();
   const accountKey = me?.email ?? null;
   const [mode, setModeState] = useState<ThemeMode>('system');
   const [cachedEquip, setCachedEquip] = useState<Equipments>(null);
@@ -140,19 +140,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (me) {
       const eq = me.equipments ?? {};
-      setCachedEquip(eq);
       AsyncStorage.setItem(EQUIP_KEY, JSON.stringify(eq)).catch(() => {});
-    } else {
-      setCachedEquip(null);
+    } else if (!authLoading) {
       AsyncStorage.removeItem(EQUIP_KEY).catch(() => {});
     }
-  }, [me]);
+  }, [authLoading, me]);
 
   if (previewState.accountKey !== accountKey) {
     setPreviewState({ accountKey, equipments: null });
   }
 
   const previewEquipments = previewState.accountKey === accountKey ? previewState.equipments : null;
+  const startupCachedEquip = !me && authLoading ? cachedEquip : null;
   const setPreviewEquipments = useCallback((update: SetStateAction<Equipments>) => {
     setPreviewState((current) => {
       const currentEquipments = current.accountKey === accountKey ? current.equipments : null;
@@ -203,18 +202,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const highContrastOn = contrastMode === 'high' || (contrastMode === 'system' && systemHighContrast);
   const composed = useMemo(
     () => {
-      const actual = me?.equipments ?? cachedEquip ?? {};
+      const actual = me?.equipments ?? startupCachedEquip ?? {};
       const equipments = previewEquipments ? { ...actual, ...previewEquipments } : actual;
       return composeTheme(scheme, equipments, { highContrast: highContrastOn });
     },
-    [scheme, me?.equipments, cachedEquip, previewEquipments, highContrastOn],
+    [scheme, me?.equipments, startupCachedEquip, previewEquipments, highContrastOn],
   );
   const fonts = useMemo(() => resolveFonts(boldText), [boldText]);
 
   // 위젯도 같은 테마를 보도록 미러 (프리뷰는 제외 — 위젯은 실장착만 따른다)
   useEffect(() => {
-    void mirrorTheme(mode, me?.equipments ?? cachedEquip);
-  }, [mode, me, cachedEquip]);
+    void mirrorTheme(mode, me?.equipments ?? startupCachedEquip);
+  }, [mode, me, startupCachedEquip]);
 
   const value = useMemo(
     () => ({

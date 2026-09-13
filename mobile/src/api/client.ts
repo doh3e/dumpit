@@ -1,6 +1,6 @@
-import axios from 'axios';
+import { create } from 'axios';
 import Constants from 'expo-constants';
-import { hostFrom, resolveBaseUrl } from './devHost';
+import { hostFrom, resolveBaseUrl, shouldLogMetroCorrection } from './devHost';
 import { DEFAULT_ERROR_MESSAGE, describeError, withErrorCode } from './errors';
 
 const PROD_API_URL = 'https://api.dumpit.kr/api';
@@ -23,11 +23,11 @@ export const API_BASE_URL = resolveBaseUrl(
   PROD_API_URL,
 );
 
-if (__DEV__ && API_BASE_URL !== process.env.EXPO_PUBLIC_API_URL) {
+if (__DEV__ && shouldLogMetroCorrection(process.env.EXPO_PUBLIC_API_URL, API_BASE_URL)) {
   console.log(`[api] Metro 호스트 기준으로 보정: ${API_BASE_URL}`);
 }
 
-export const api = axios.create({
+export const api = create({
   baseURL: API_BASE_URL,
   withCredentials: true,
   headers: { 'X-Requested-With': 'XMLHttpRequest' },

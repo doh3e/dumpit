@@ -1,4 +1,4 @@
-import axios, { type AxiosRequestConfig } from 'axios';
+import { isAxiosError, type AxiosRequestConfig } from 'axios';
 import { api } from './client';
 
 export type MeResponse = {
@@ -44,7 +44,7 @@ export async function loginWithGoogleIdToken(
 /** 서버가 "유예 중 탈퇴 계정 — 복구 의사 확인 필요"라고 알린 로그인 실패(409)인지 */
 export function isWithdrawalPendingError(error: unknown): boolean {
   return (
-    axios.isAxiosError(error) &&
+    isAxiosError(error) &&
     error.response?.status === 409 &&
     (error.response.data as { code?: string } | undefined)?.code === 'WITHDRAWAL_PENDING'
   );

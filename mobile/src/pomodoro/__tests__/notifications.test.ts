@@ -1,7 +1,6 @@
-import notifee from '../../test/mocks/notifyKit';
+import notifee, { AndroidImportance } from '../../test/mocks/notifyKit';
 import { cancelAll } from '../notifications';
 import { ensurePushChannels } from '../../push/channels';
-import { AndroidImportance } from '../../test/mocks/notifyKit';
 
 jest.mock('../../test/mocks/notifyKit');
 

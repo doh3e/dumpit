@@ -1,5 +1,5 @@
 import { GoogleSignin, isErrorWithCode } from '@react-native-google-signin/google-signin';
-import axios from 'axios';
+import { isAxiosError } from 'axios';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import {
@@ -77,33 +77,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshGenerationRef.current += 1;
   }, []);
 
+  const canCommitRefresh = useCallback((generation: number) => (
+    mountedRef.current && generation === refreshGenerationRef.current
+  ), []);
+
+  const commitRefreshSuccess = useCallback((generation: number, nextMe: MeResponse) => {
+    if (!canCommitRefresh(generation)) return;
+    setMe(nextMe);
+    void registerPushDevice();
+  }, [canCommitRefresh]);
+
+  const commitRefreshFailure = useCallback((generation: number, error: unknown) => {
+    if (!canCommitRefresh(generation)) return;
+    const status = isAxiosError(error) ? error.response?.status : undefined;
+    if (status === 401 || status === 403) setMe(null);
+  }, [canCommitRefresh]);
+
+  const commitRefreshComplete = useCallback((generation: number) => {
+    if (canCommitRefresh(generation)) setLoading(false);
+  }, [canCommitRefresh]);
+
   const refresh = useCallback(async () => {
     const generation = ++refreshGenerationRef.current;
-    const canCommit = () => mountedRef.current && generation === refreshGenerationRef.current;
     try {
       const nextMe = await fetchMe(); // 세션 쿠키가 살아있으면 자동 로그인
-      if (!canCommit()) return;
-      setMe(nextMe);
-      void registerPushDevice();
-    } catch (e) {
-      if (!canCommit()) return;
+      commitRefreshSuccess(generation, nextMe);
+    } catch (error) {
       // 인증 거부(401/403)만 로그아웃 처리 — 타임아웃·5xx 같은 일시 오류로 쫓아내지 않는다
-      const status = axios.isAxiosError(e) ? e.response?.status : undefined;
-      if (status === 401 || status === 403) setMe(null);
+      commitRefreshFailure(generation, error);
     } finally {
-      if (canCommit()) setLoading(false);
+      commitRefreshComplete(generation);
     }
-  }, []);
+  }, [commitRefreshComplete, commitRefreshFailure, commitRefreshSuccess]);
 
   useEffect(() => {
     mountedRef.current = true;
     void pruneExpiredDrafts().catch(() => undefined);
-    refresh();
+    const generation = ++refreshGenerationRef.current;
+    void fetchMe()
+      .then((nextMe) => commitRefreshSuccess(generation, nextMe), (error) => commitRefreshFailure(generation, error))
+      .finally(() => commitRefreshComplete(generation));
     return () => {
       mountedRef.current = false;
       invalidateRefreshes();
     };
-  }, [invalidateRefreshes, refresh]);
+  }, [commitRefreshComplete, commitRefreshFailure, commitRefreshSuccess, invalidateRefreshes]);
 
   const signInWithGoogle = useCallback(async () => {
     let result: Awaited<ReturnType<typeof GoogleSignin.signIn>>;

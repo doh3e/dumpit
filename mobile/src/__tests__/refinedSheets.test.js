@@ -335,6 +335,28 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     expect(onApply).toHaveBeenCalledWith(expect.objectContaining({ focusMin: 25 }));
     await act(async () => tree.unmount());
   });
+
+  it('늦게 로드된 initial과 값이 바뀐 initial을 반영하되 동일한 새 객체로는 draft를 지우지 않는다', async () => {
+    const onApply = jest.fn();
+    const initial = { focusMin: 25, breakMin: 5, longBreakMin: 15, longBreakEvery: 4, setsTarget: 4 };
+    const loaded = { ...initial, focusMin: 45 };
+    const ref = React.createRef();
+    const tree = await render(<PomodoroSettingsSheet ref={ref} initial={initial} onApply={onApply} />);
+
+    await act(async () => {
+      tree.update(<PomodoroSettingsSheet ref={ref} initial={loaded} onApply={onApply} />);
+    });
+    expect(tree.root.find((node) => node.type === Text && node.props.children === 45)).toBeTruthy();
+
+    await act(async () => control(tree, '집중 (분) 늘리기').props.onPress());
+    expect(tree.root.find((node) => node.type === Text && node.props.children === 50)).toBeTruthy();
+    await act(async () => {
+      tree.update(<PomodoroSettingsSheet ref={ref} initial={{ ...loaded }} onApply={onApply} />);
+    });
+    expect(tree.root.find((node) => node.type === Text && node.props.children === 50)).toBeTruthy();
+
+    await act(async () => tree.unmount());
+  });
 });
 
 describe('활동·알림 카드의 refined 시각 조작', () => {
