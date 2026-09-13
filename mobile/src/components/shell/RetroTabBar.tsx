@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useContentFrame } from '../../layout/useContentFrame';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { TiledImage } from '../common/TiledImage';
@@ -29,6 +30,7 @@ type Props = TabBarProps & {
 export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
   const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
+  const contentFrameStyle = useContentFrame(4);
   const addLabel = fabOpen ? '닫기' : '추가';
 
   const renderTab = (routeName: string) => {
@@ -62,6 +64,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
       style={[
         styles.bar,
         { backgroundColor: colors.chromeBg, borderTopColor: colors.chromeLine, paddingBottom: insets.bottom },
+        contentFrameStyle,
       ]}
     >
       {/* CHROME 스킨 장식 타일 — 웹 .app-sidebar background-image 대응 */}

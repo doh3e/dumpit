@@ -5,14 +5,20 @@ const { StyleSheet, Text, View } = require('react-native');
 
 let mockTheme;
 let mockSession = null;
+let mockWindowWidth = 320;
+let mockInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const mockToastShow = jest.fn();
 const mockRouterPush = jest.fn();
 
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: mockWindowWidth, height: 800, scale: 1, fontScale: 1 }),
+}));
 jest.mock('../../../theme/useTheme', () => ({
   useTheme: () => mockTheme,
 }));
 jest.mock('react-native-safe-area-context', () => ({
-  useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+  useSafeAreaInsets: () => mockInsets,
 }));
 jest.mock('../../retro/ToastProvider', () => ({
   useToast: () => ({ show: mockToastShow }),
@@ -141,11 +147,45 @@ async function unmount(tree) {
 beforeEach(() => {
   setTheme();
   mockSession = null;
+  mockWindowWidth = 320;
+  mockInsets = { top: 0, right: 0, bottom: 0, left: 0 };
   mockToastShow.mockClear();
   mockRouterPush.mockClear();
 });
 
 describe('홈 헤더 자원 표시', () => {
+  it('창 크기 변경에도 같은 헤더에서 읽기 폭과 두 자원 배지를 유지한다', async () => {
+    mockInsets = { top: 12, right: 0, bottom: 10, left: 0 };
+    const header = () => (
+      <HomeAppBar
+        me={{ name: '덤핏', coins: 420, equipments: {} }}
+        aiUsage={{ used: 32, limit: 100, remaining: 68, resetAt: '2026-09-13T00:00:00' }}
+      />
+    );
+    const tree = await render(header());
+    const headerStyle = () => StyleSheet.flatten(tree.root.find(
+      (node) => node.type === View && StyleSheet.flatten(node.props.style)?.borderBottomWidth === 1.5,
+    ).props.style);
+    const expectResources = () => {
+      expect(tree.root.findAll((node) => node.props.accessibilityLabel === '코인 420개')).not.toHaveLength(0);
+      expect(tree.root.findAll((node) => node.props.accessibilityLabel === 'AI 잔여 68점')).not.toHaveLength(0);
+    };
+
+    expect(headerStyle()).toMatchObject({ paddingLeft: 16, paddingRight: 16, paddingTop: 22 });
+    expectResources();
+
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(header()));
+    expect(headerStyle()).toMatchObject({ paddingLeft: 236, paddingRight: 236, paddingTop: 22 });
+    expectResources();
+
+    mockWindowWidth = 600;
+    await act(async () => tree.update(header()));
+    expect(headerStyle()).toMatchObject({ paddingLeft: 16, paddingRight: 16, paddingTop: 22 });
+    expectResources();
+    await unmount(tree);
+  });
+
   it('긴 인사와 코인 420·AI 잔여 68을 한 행에 유지한다', async () => {
     const greeting = '아주아주긴사용자이름의 덤프';
     const tree = await render(

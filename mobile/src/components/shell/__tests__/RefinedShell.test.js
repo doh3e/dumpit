@@ -4,14 +4,20 @@ const { act, create } = require('react-test-renderer');
 const { StyleSheet, Text, View } = require('react-native');
 
 let mockTheme;
+let mockWindowWidth = 320;
+let mockInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const mockBack = jest.fn();
 const mockFabPress = jest.fn();
 const mockEmit = jest.fn(() => ({ defaultPrevented: false }));
 const mockNavigate = jest.fn();
 
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: mockWindowWidth, height: 800, scale: 1, fontScale: 1 }),
+}));
 jest.mock('../../../theme/useTheme', () => ({ useTheme: () => mockTheme }));
 jest.mock('expo-router', () => ({ router: { back: mockBack } }));
-jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }));
+jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => mockInsets }));
 jest.mock('react-native-reanimated', () => {
   const ReactNative = require('react-native');
   return {
@@ -64,6 +70,8 @@ async function renderTabBar(fabOpen) {
 
 beforeEach(() => {
   setTheme();
+  mockWindowWidth = 320;
+  mockInsets = { top: 0, right: 0, bottom: 0, left: 0 };
   mockBack.mockReset();
   mockFabPress.mockReset();
   mockEmit.mockClear();
@@ -71,6 +79,56 @@ beforeEach(() => {
 });
 
 describe('하단 탐색', () => {
+  it('창 크기 변경에도 같은 탭바에서 읽기 폭과 선택·탐색 상태를 유지한다', async () => {
+    mockInsets = { top: 12, right: 0, bottom: 10, left: 0 };
+    const state = { ...tabState(), index: 1 };
+    const navigation = { emit: mockEmit, navigate: mockNavigate };
+    const tabBar = () => (
+      <RetroTabBar
+        state={state}
+        navigation={navigation}
+        onFabPress={mockFabPress}
+        fabOpen={false}
+      />
+    );
+    let tree;
+    await act(async () => { tree = create(tabBar()); });
+    const barStyle = () => StyleSheet.flatten(tree.root.find(
+      (node) => node.type === View && StyleSheet.flatten(node.props.style)?.borderTopWidth === 1,
+    ).props.style);
+    const expectSelection = () => {
+      expect(tree.root.find((node) => node.props.accessibilityLabel === '홈').props.accessibilityState)
+        .toEqual({ selected: false });
+      expect(tree.root.find((node) => node.props.accessibilityLabel === '루틴').props.accessibilityState)
+        .toEqual({ selected: true });
+    };
+
+    expect(barStyle()).toMatchObject({ paddingLeft: 4, paddingRight: 4, paddingBottom: 10 });
+    expectSelection();
+
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(tabBar()));
+    expect(barStyle()).toMatchObject({ paddingLeft: 224, paddingRight: 224, paddingBottom: 10 });
+    expectSelection();
+
+    mockWindowWidth = 600;
+    await act(async () => tree.update(tabBar()));
+    expect(barStyle()).toMatchObject({ paddingLeft: 4, paddingRight: 4, paddingBottom: 10 });
+    expectSelection();
+
+    for (const label of ['홈', '루틴', '추가', '아이디어', 'MY']) {
+      const control = tree.root.find((node) => node.props.accessibilityLabel === label);
+      const style = StyleSheet.flatten(
+        typeof control.props.style === 'function' ? control.props.style({ pressed: false }) : control.props.style,
+      );
+      expect(style.minHeight).toBeGreaterThanOrEqual(48);
+    }
+    await act(async () => tree.root.find((node) => node.props.accessibilityLabel === '아이디어').props.onPress());
+    expect(mockEmit).toHaveBeenCalledWith({ type: 'tabPress', target: 'ideas-key', canPreventDefault: true });
+    expect(mockNavigate).toHaveBeenCalledWith('ideas');
+    await act(async () => tree.unmount());
+  });
+
   it('추가 조작은 라벨을 보이고 기존 탭 이동과 열기 콜백을 보존한다', async () => {
     let tree;
     await act(async () => {
@@ -192,6 +250,28 @@ describe('하단 탐색', () => {
 });
 
 describe('공통 refined 탐색', () => {
+  it('창 크기 변경에도 같은 헤더에서 읽기 폭과 뒤로 탐색을 유지한다', async () => {
+    mockInsets = { top: 12, right: 0, bottom: 10, left: 0 };
+    const header = () => <ScreenHeader title="긴 제목을 가진 일반 화면" />;
+    let tree;
+    await act(async () => { tree = create(header()); });
+    const headerStyle = () => StyleSheet.flatten(tree.root.find(
+      (node) => node.type === View && StyleSheet.flatten(node.props.style)?.borderBottomWidth === 1.5,
+    ).props.style);
+
+    expect(headerStyle()).toMatchObject({ paddingLeft: 20, paddingRight: 20, paddingTop: 24 });
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(header()));
+    expect(headerStyle()).toMatchObject({ paddingLeft: 240, paddingRight: 240, paddingTop: 24 });
+    mockWindowWidth = 600;
+    await act(async () => tree.update(header()));
+    expect(headerStyle()).toMatchObject({ paddingLeft: 20, paddingRight: 20, paddingTop: 24 });
+
+    await act(async () => tree.root.find((node) => node.props.accessibilityLabel === '뒤로').props.onPress());
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    await act(async () => tree.unmount());
+  });
+
   it('뒤로 조작은 48dp이며 눌러도 불투명한 토큰 표면으로 피드백한다', async () => {
     let tree;
     await act(async () => { tree = create(<ScreenHeader title="긴 제목을 가진 일반 화면" />); });
