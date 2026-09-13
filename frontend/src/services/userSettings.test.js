@@ -16,8 +16,12 @@ import {
 
 function deferred() {
   let resolve
-  const promise = new Promise((resolvePromise) => { resolve = resolvePromise })
-  return { promise, resolve }
+  let reject
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+  return { promise, resolve, reject }
 }
 
 describe('userSettings store', () => {
@@ -109,13 +113,14 @@ describe('userSettings store', () => {
     api.patch.mockReturnValueOnce(oldAccountA.promise)
     startUserSettingsSession('a@example.com')
     const saveOldA = saveUserSettings({ routineStartHour: 23 })
+    await vi.waitFor(() => expect(api.patch).toHaveBeenCalledTimes(1))
 
     startUserSettingsSession('b@example.com')
     startUserSettingsSession('a@example.com')
     api.patch.mockResolvedValueOnce({ data: { ...DEFAULT_SETTINGS, routineStartHour: 8 } })
     await saveUserSettings({ routineStartHour: 8 })
     oldAccountA.resolve({ data: { ...DEFAULT_SETTINGS, routineStartHour: 23 } })
-    await saveOldA
+    await expect(saveOldA).rejects.toMatchObject({ code: 'SETTINGS_SESSION_CHANGED' })
 
     expect(getUserSettings().routineStartHour).toBe(8)
   })
@@ -131,6 +136,87 @@ describe('userSettings store', () => {
     oldLoad.resolve({ data: { ...DEFAULT_SETTINGS, routineStartHour: 23 } })
     await loading
 
+    expect(getUserSettings().routineStartHour).toBe(8)
+  })
+
+  it('서로 다른 섹션의 저장을 순서대로 전송하고 마지막 서버 응답을 보존한다', async () => {
+    const first = deferred()
+    api.patch
+      .mockReturnValueOnce(first.promise)
+      .mockResolvedValueOnce({ data: {
+        ...DEFAULT_SETTINGS,
+        routineStartHour: 8,
+        notificationsEnabled: false,
+      } })
+    startUserSettingsSession('a@example.com')
+
+    const notificationSave = saveUserSettings({ notificationsEnabled: false })
+    const routineSave = saveUserSettings({ routineStartHour: 8 })
+
+    await vi.waitFor(() => expect(api.patch).toHaveBeenCalledTimes(1))
+    first.resolve({ data: { ...DEFAULT_SETTINGS, notificationsEnabled: false } })
+    await notificationSave
+    await routineSave
+
+    expect(api.patch.mock.calls).toEqual([
+      ['/me/settings', { notificationsEnabled: false }],
+      ['/me/settings', { routineStartHour: 8 }],
+    ])
+    expect(getUserSettings()).toEqual(expect.objectContaining({
+      routineStartHour: 8,
+      notificationsEnabled: false,
+    }))
+  })
+
+  it('계정 전환 전에 대기하던 저장은 새 세션 쿠키로 전송하지 않고 거절한다', async () => {
+    const first = deferred()
+    api.patch.mockReturnValueOnce(first.promise)
+    startUserSettingsSession('a@example.com')
+    const sentFromA = saveUserSettings({ notificationsEnabled: false })
+    const queuedFromA = saveUserSettings({ routineStartHour: 23 })
+    await vi.waitFor(() => expect(api.patch).toHaveBeenCalledTimes(1))
+
+    startUserSettingsSession('b@example.com')
+    api.patch.mockResolvedValueOnce({ data: { ...DEFAULT_SETTINGS, routineStartHour: 7 } })
+    const saveFromB = saveUserSettings({ routineStartHour: 7 })
+    first.resolve({ data: { ...DEFAULT_SETTINGS, notificationsEnabled: false } })
+
+    await expect(sentFromA).rejects.toMatchObject({ code: 'SETTINGS_SESSION_CHANGED' })
+    await expect(queuedFromA).rejects.toMatchObject({ code: 'SETTINGS_SESSION_CHANGED' })
+    await expect(saveFromB).resolves.toEqual(expect.objectContaining({ routineStartHour: 7 }))
+    expect(api.patch.mock.calls).toEqual([
+      ['/me/settings', { notificationsEnabled: false }],
+      ['/me/settings', { routineStartHour: 7 }],
+    ])
+    expect(getUserSettings().routineStartHour).toBe(7)
+  })
+
+  it('실패한 저장 뒤에도 다음 저장을 전송한다', async () => {
+    startUserSettingsSession('a@example.com')
+    api.patch
+      .mockRejectedValueOnce(new Error('first failed'))
+      .mockResolvedValueOnce({ data: { ...DEFAULT_SETTINGS, routineStartHour: 8 } })
+
+    const failed = saveUserSettings({ notificationsEnabled: false })
+    const succeeded = saveUserSettings({ routineStartHour: 8 })
+
+    await expect(failed).rejects.toThrow('first failed')
+    await expect(succeeded).resolves.toEqual(expect.objectContaining({ routineStartHour: 8 }))
+    expect(api.patch).toHaveBeenCalledTimes(2)
+  })
+
+  it('저장 대기 중 시작한 새 로드는 사용자가 저장 중인 값을 덮지 않는다', async () => {
+    const saving = deferred()
+    startUserSettingsSession('a@example.com')
+    api.patch.mockReturnValueOnce(saving.promise)
+    const save = saveUserSettings({ routineStartHour: 8 })
+    api.get.mockResolvedValueOnce({ data: { ...DEFAULT_SETTINGS, routineStartHour: 23 } })
+
+    await loadUserSettings()
+    expect(getUserSettings()).toEqual(DEFAULT_SETTINGS)
+
+    saving.resolve({ data: { ...DEFAULT_SETTINGS, routineStartHour: 8 } })
+    await save
     expect(getUserSettings().routineStartHour).toBe(8)
   })
 })
