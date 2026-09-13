@@ -29,24 +29,54 @@ fun drawableId(name: String): Int {
 @Composable
 fun RetroFrame(theme: WTheme, modifier: GlanceModifier = GlanceModifier, bgOverride: Color? = null, content: @Composable () -> Unit) {
     val bgColor = bgOverride ?: theme.palette.bg
-    Box(modifier = modifier.fillMaxSize().background(bgColor).cornerRadius(12.dp)) {
-        if (bgOverride == null && theme.patternRes != null) {
+    val layoutModifiers = retroFrameLayoutModifiers(
+        modifier = modifier,
+        background = bgColor,
+        card = theme.palette.card,
+        useCardSurface = bgOverride == null,
+        showPattern = bgOverride == null && theme.patternRes != null,
+        contentPadding = if (bgOverride == null || LocalSize.current.width <= 110.dp) 2.dp else 4.dp,
+    )
+    Box(modifier = layoutModifiers.frame) {
+        layoutModifiers.pattern?.let { patternModifier ->
             Image(
-                provider = ImageProvider(drawableId(theme.patternRes)),
+                provider = ImageProvider(drawableId(checkNotNull(theme.patternRes))),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = GlanceModifier.fillMaxSize().cornerRadius(12.dp),
+                modifier = patternModifier,
             )
         }
-        val contentModifier = when {
-            bgOverride == null -> GlanceModifier.fillMaxSize().padding(2.dp)
-                .background(theme.palette.card).cornerRadius(12.dp).padding(2.dp)
-            LocalSize.current.width <= 110.dp -> GlanceModifier.fillMaxSize().padding(2.dp)
-            else -> GlanceModifier.fillMaxSize().padding(4.dp)
+        Box(modifier = layoutModifiers.contentWrapper) {
+            val contentSurface = layoutModifiers.contentSurface
+            if (contentSurface == null) content() else Box(modifier = contentSurface) { content() }
         }
-        Box(modifier = contentModifier) { content() }
     }
 }
+
+internal data class RetroFrameLayoutModifiers(
+    val frame: GlanceModifier,
+    val pattern: GlanceModifier?,
+    val contentWrapper: GlanceModifier,
+    val contentSurface: GlanceModifier?,
+)
+
+internal fun retroFrameLayoutModifiers(
+    modifier: GlanceModifier,
+    background: Color,
+    card: Color,
+    useCardSurface: Boolean,
+    showPattern: Boolean,
+    contentPadding: Dp,
+) = RetroFrameLayoutModifiers(
+    frame = modifier.fillMaxSize().background(background).cornerRadius(12.dp),
+    pattern = if (showPattern) GlanceModifier.fillMaxSize().cornerRadius(12.dp) else null,
+    contentWrapper = GlanceModifier.fillMaxSize().padding(contentPadding),
+    contentSurface = if (useCardSurface) {
+        GlanceModifier.fillMaxSize().background(card).cornerRadius(12.dp).padding(2.dp)
+    } else {
+        null
+    },
+)
 
 @Composable
 fun PixelText(res: String, tint: Color, height: Dp, width: Dp? = null, modifier: GlanceModifier = GlanceModifier) {

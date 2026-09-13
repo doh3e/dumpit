@@ -14,6 +14,10 @@ function expectMin(fg: string, bg: string, min: number, label: string) {
   expect(ratio).toBeGreaterThanOrEqual(min);
 }
 
+const SKIN_KEYS = Object.keys(BG_SKINS) as SkinKey[];
+const BACKGROUNDS = [null, ...SKIN_KEYS.map((skin) => `bg.${skin}`)];
+const CHROMES = [null, ...SKIN_KEYS.map((skin) => `chrome.${skin}`)];
+
 describe('skinKey', () => {
   it('아이템 코드의 마지막 세그먼트를 스킨 키로 쓴다 (웹 applySkins 규칙)', () => {
     expect(skinKey('bg.ocean')).toBe('ocean');
@@ -61,6 +65,36 @@ describe('composeTheme', () => {
     expect(colors.bg).toBe(BG_SKINS.ocean.light.bg);
     expect(colors.chromeBg).toBe(CHROME_SKINS.wood.light.chromeBg);
     expect(colors.chromeLine).toBe(CHROME_SKINS.wood.light.chromeLine);
+  });
+
+  it('8 BACKGROUND × 8 CHROME × light/dark × normal/high에서 크롬 글자가 4.5:1 이상', () => {
+    const failures: string[] = [];
+    for (const background of BACKGROUNDS) {
+      for (const chrome of CHROMES) {
+        for (const scheme of ['light', 'dark'] as const) {
+          for (const highContrast of [false, true]) {
+            const colors = composeTheme(
+              scheme,
+              {
+                ...(background ? { BACKGROUND: background } : {}),
+                ...(chrome ? { CHROME: chrome } : {}),
+              },
+              { highContrast },
+            ).colors;
+            for (const foreground of ['fg', 'sub'] as const) {
+              const ratio = contrastRatio(colors[foreground], colors.chromeBg);
+              if (ratio < 4.5) {
+                failures.push(
+                  `${background ?? 'default'}/${chrome ?? 'default'}/${scheme}/${highContrast ? 'high' : 'normal'} ${foreground}=${ratio.toFixed(6)}`,
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+
+    expect(failures).toEqual([]);
   });
 
   it('POMODORO는 전역 팔레트에 섞이지 않는다', () => {
