@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "dev:e2e": "vite --config e2e/vite.config.js",
     "preview": "vite preview",
     "lint": "eslint . --report-unused-disable-directives",
-    "test": "vitest run"
+    "test": "vitest run --config vitest.config.js",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@sentry/react": "^10.51.0",
@@ -22,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "1.63.0",
     "@sentry/vite-plugin": "^5.2.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
