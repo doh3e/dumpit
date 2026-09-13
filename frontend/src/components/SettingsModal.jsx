@@ -71,7 +71,7 @@ export default function SettingsModal({ onClose }) {
   const [contrastPref, setContrastPref] = useState(initialLocalPrefs.contrast)
   const [boldText, setBoldText] = useState(initialLocalPrefs.boldText)
   const [localFeedback, setLocalFeedback] = useState(initialLocalPrefs.failed
-    ? { section: 'theme', type: 'error', message: '기기 설정을 불러오지 못했어요.' }
+    ? { section: 'device', type: 'error', message: '기기 설정을 불러오지 못했어요.' }
     : null)
   const [permission, setPermission] = useState(getNotificationPermission)
   const [notificationsEnabled, setNotificationsEnabled] = useState(serverSettings.notificationsEnabled)
@@ -333,10 +333,16 @@ export default function SettingsModal({ onClose }) {
         </button>
       </div>
 
+      {localFeedback?.section === 'device' && (
+        <p role="alert" className="mb-4 text-xs font-bold text-danger">
+          {localFeedback.message}
+        </p>
+      )}
+
       <section className="mb-6">
         <h3 className="font-galmuri font-bold text-dark text-sm mb-3">테마</h3>
         <p className="mb-3 text-xs font-medium text-sub">선택하면 바로 적용되고 이 기기에 저장돼요.</p>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {[
             { value: 'light', label: '라이트' },
             { value: 'dark', label: '다크' },
@@ -347,7 +353,7 @@ export default function SettingsModal({ onClose }) {
               type="button"
               aria-pressed={themePref === value}
               onClick={() => applyLocalPreference('theme', applyTheme, value, setThemePref)}
-              className={`btn-refined flex-1 text-xs ${themePref === value ? 'btn-refined-selected' : ''}`}
+              className={`btn-refined min-w-0 flex-1 whitespace-nowrap !px-1 text-xs ${themePref === value ? 'btn-refined-selected' : ''}`}
             >
               {label}
             </button>
@@ -389,14 +395,14 @@ export default function SettingsModal({ onClose }) {
       <section className="mb-6">
         <h3 className="font-galmuri font-bold text-dark text-sm mb-3">보기 편하게</h3>
         <p className="text-xs text-sub font-medium mb-2">대비</p>
-        <div className="flex gap-2 mb-4">
+        <div className="mb-4 flex gap-1">
           {CONTRAST_OPTIONS.map(({ value, label }) => (
             <button
               key={value}
               type="button"
               aria-pressed={contrastPref === value}
               onClick={() => applyLocalPreference('a11y', applyContrast, value, setContrastPref)}
-              className={`btn-refined flex-1 text-xs ${contrastPref === value ? 'btn-refined-selected' : ''}`}
+              className={`btn-refined min-w-0 flex-1 whitespace-nowrap !px-1 text-xs ${contrastPref === value ? 'btn-refined-selected' : ''}`}
             >
               {label}
             </button>

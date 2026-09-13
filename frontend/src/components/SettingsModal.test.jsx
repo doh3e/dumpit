@@ -164,6 +164,19 @@ describe('SettingsModal', () => {
     expect(screen.getByText('기기 설정을 불러오지 못했어요.')).toHaveAttribute('role', 'alert')
   })
 
+  it('글자 크기만 읽지 못해도 테마 오류로 지목하지 않고 공통 기기 설정 안내를 표시한다', () => {
+    localPrefs.fontScale = new Error('read failed')
+
+    render(<SettingsModal onClose={() => {}} />)
+
+    const alert = screen.getByRole('alert')
+    const themeSection = screen.getByRole('heading', { name: '테마' }).closest('section')
+    const fontSection = screen.getByRole('heading', { name: '글자 크기' }).closest('section')
+    expect(alert).toHaveTextContent('기기 설정을 불러오지 못했어요.')
+    expect(themeSection).not.toContainElement(alert)
+    expect(fontSection).not.toContainElement(alert)
+  })
+
   it('활동 시간은 저장 성공값을 새 기준으로 삼고 모달을 닫지 않는다', async () => {
     const onClose = vi.fn()
     render(<SettingsModal onClose={onClose} />)
@@ -295,6 +308,24 @@ describe('SettingsModal', () => {
     expect(close).toHaveClass('btn-refined', 'btn-refined-text', '!h-11', '!w-11')
     fireEvent.click(close)
     expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('테마와 대비의 짧은 레이블은 큰 글자에서도 음절로 나뉘지 않는 배치 제약을 갖는다', () => {
+    render(<SettingsModal onClose={() => {}} />)
+
+    const themeSection = screen.getByRole('heading', { name: '테마' }).closest('section')
+    const a11ySection = screen.getByRole('heading', { name: '보기 편하게' }).closest('section')
+    const optionNames = ['라이트', '다크', '시스템', '고대비', '기본']
+    for (const name of optionNames) {
+      const scope = name === '라이트' || name === '다크' ? themeSection : name === '고대비' || name === '기본' ? a11ySection : null
+      const buttons = scope
+        ? [within(scope).getByRole('button', { name, exact: true })]
+        : [
+            within(themeSection).getByRole('button', { name, exact: true }),
+            within(a11ySection).getByRole('button', { name, exact: true }),
+          ]
+      buttons.forEach((button) => expect(button).toHaveClass('min-w-0', 'whitespace-nowrap', '!px-1'))
+    }
   })
 
   it('알림 요청 중에는 연속 클릭과 닫기를 막고 성공 뒤 계정 저장을 알린다', async () => {
