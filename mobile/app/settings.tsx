@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
@@ -31,8 +31,14 @@ const CONTRAST_MODES: { id: ContrastMode; label: string }[] = [
 export default function SettingsScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
-  const { mode, setMode } = useThemeMode();
-  const { contrastMode, setContrastMode, boldText, setBoldText } = useA11yPrefs();
+  const { preferencesReady: themePreferencesReady, mode, setMode } = useThemeMode();
+  const {
+    preferencesReady: a11yPreferencesReady,
+    contrastMode,
+    setContrastMode,
+    boldText,
+    setBoldText,
+  } = useA11yPrefs();
   const { me, signOut } = useAuth();
   const toast = useToast();
 
@@ -41,6 +47,26 @@ export default function SettingsScreen() {
   const [withdrawStage, setWithdrawStage] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
+  const [preferencePending, setPreferencePending] = useState(false);
+  const preferencePendingRef = useRef(false);
+  const [preferenceFeedback, setPreferenceFeedback] = useState<'success' | 'error' | null>(null);
+  const preferencesReady = themePreferencesReady && a11yPreferencesReady;
+
+  const saveDevicePreference = async (save: () => Promise<void>) => {
+    if (!preferencesReady || preferencePendingRef.current) return;
+    preferencePendingRef.current = true;
+    setPreferencePending(true);
+    setPreferenceFeedback(null);
+    try {
+      await save();
+      setPreferenceFeedback('success');
+    } catch {
+      setPreferenceFeedback('error');
+    } finally {
+      preferencePendingRef.current = false;
+      setPreferencePending(false);
+    }
+  };
 
   // 로그인 계정이 바뀌면(로그아웃·탈퇴·재로그인) 탈퇴 확인 단계를 처음으로 되돌린다.
   // 탈퇴는 되돌리기 어려운 결정이라, 확인 입력창만 남은 채로 재진입해 안내 다이얼로그를
@@ -88,9 +114,20 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="palette" size={13} /> 테마
           </Text>
+          <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
+            선택하면 바로 적용되고 이 기기에 저장돼요.
+          </Text>
           <View style={styles.chipRow}>
             {THEME_MODES.map((m) => (
-              <Chip appearance="refined" key={m.id} label={m.label} icon={<PixelIcon name={m.icon} size={12} />} selected={mode === m.id} onPress={() => setMode(m.id)} />
+              <Chip
+                appearance="refined"
+                key={m.id}
+                label={m.label}
+                icon={<PixelIcon name={m.icon} size={12} />}
+                selected={mode === m.id}
+                disabled={!preferencesReady || preferencePending}
+                onPress={() => { void saveDevicePreference(() => setMode(m.id)); }}
+              />
             ))}
           </View>
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
@@ -100,16 +137,42 @@ export default function SettingsScreen() {
           <View style={styles.chipRow}>
             {CONTRAST_MODES.map((m) => (
               // 테마 그리드에도 '시스템' 칩이 있어 라벨만으로는 어느 그룹인지 갈린다
-              <Chip appearance="refined" key={m.id} label={m.label} accessibilityLabel={`대비 ${m.label}`} selected={contrastMode === m.id} onPress={() => setContrastMode(m.id)} />
+              <Chip
+                appearance="refined"
+                key={m.id}
+                label={m.label}
+                accessibilityLabel={`대비 ${m.label}`}
+                selected={contrastMode === m.id}
+                disabled={!preferencesReady || preferencePending}
+                onPress={() => { void saveDevicePreference(() => setContrastMode(m.id)); }}
+              />
             ))}
           </View>
           <Text accessibilityRole="header" style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>굵은 글자</Text>
           <View style={styles.chipRow}>
-            <Chip appearance="refined" label={boldLabel} accessibilityLabel={`굵은 글자 ${boldLabel}`} selected={boldText} onPress={() => setBoldText(!boldText)} />
+            <Chip
+              appearance="refined"
+              label={boldLabel}
+              accessibilityLabel={`굵은 글자 ${boldLabel}`}
+              selected={boldText}
+              disabled={!preferencesReady || preferencePending}
+              onPress={() => { void saveDevicePreference(() => setBoldText(!boldText)); }}
+            />
           </View>
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
             &apos;시스템&apos;은 휴대폰의 고대비 텍스트 설정을 따라요. 이 설정은 이 기기에만 저장돼요.
           </Text>
+          {preferenceFeedback && (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[
+                styles.feedback,
+                { color: preferenceFeedback === 'error' ? colors.dangerText : colors.sub, fontFamily: fonts.body },
+              ]}
+            >
+              {preferenceFeedback === 'error' ? '이 기기에 저장하지 못했어요.' : '이 기기에 저장했어요.'}
+            </Text>
+          )}
         </RetroCard>
 
         <ActiveHoursCard />
@@ -167,6 +230,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 14 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   hint: { fontSize: 12, lineHeight: 18 },
+  feedback: { fontSize: 12, lineHeight: 18, fontWeight: '700' },
   subTitle: { fontSize: 11, marginTop: 6 },
   input: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, minHeight: 44 },
   withdrawActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },

@@ -353,7 +353,7 @@ describe('활동·알림 카드의 refined 시각 조작', () => {
       .some((node) => style(node).paddingBottom >= 24 && node.props.keyboardShouldPersistTaps === 'handled')).toBe(true);
     await act(async () => change.props.onPress());
     await act(async () => control(tree, '시작 10시').props.onPress());
-    await act(async () => control(tree, '저장').props.onPress());
+    await act(async () => control(tree, '활동 시간 저장').props.onPress());
     expect(mockSaveSettings).toHaveBeenCalledWith(
       { routineStartHour: 10, routineEndHour: 22 }, expect.objectContaining({ onSuccess: expect.any(Function) }),
     );
