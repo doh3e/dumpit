@@ -89,6 +89,18 @@ function renderPage() {
   )
 }
 
+function offsetDeadlineFixture() {
+  return new Date(2030, 0, 2).getTimezoneOffset() === 0
+    ? '2030-01-02T03:04:00.000+09:00'
+    : '2030-01-02T03:04:00.000Z'
+}
+
+function expectedLocalInput(value) {
+  const date = new Date(value)
+  const pad = (part) => String(part).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
 function renderPageWithoutUnmountingOnNavigation() {
   return render(
     <MemoryRouter initialEntries={['/brain-dump']}>
@@ -375,6 +387,81 @@ describe('BrainDumpPage', () => {
     expect(mocks.clearDraft).toHaveBeenCalledWith('a@example.com')
   })
 
+  it('선택과 수정 조작을 형제로 두고 편집값만 적용해 일부 선택 payload로 보낸다', async () => {
+    mocks.post
+      .mockResolvedValueOnce({ data: {
+        ...analysis,
+        tasks: [{
+          ...analysis.tasks[0],
+          description: '원래 설명',
+          deadline: offsetDeadlineFixture(),
+        }, analysis.tasks[1]],
+      } })
+      .mockResolvedValueOnce({ data: {} })
+    renderPageWithoutUnmountingOnNavigation()
+    enterText()
+    fireEvent.click(screen.getByRole('button', { name: 'AI로 정리하기' }))
+    await screen.findByRole('heading', { name: '정리한 할 일' })
+
+    const checkbox = screen.getByRole('checkbox', { name: '발표 초안 선택' })
+    const edit = screen.getByRole('button', { name: '발표 초안 수정' })
+    expect(checkbox.closest('label')).not.toContainElement(edit)
+    expect(checkbox.closest('li')).toContainElement(edit)
+    fireEvent.click(edit)
+    expect(screen.getByRole('button', { name: '다시 분석' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '선택한 2개 추가' })).toBeDisabled()
+    expect(mocks.post).toHaveBeenCalledTimes(1)
+    expect(screen.getByLabelText('마감 일시 (선택)')).toHaveValue(
+      expectedLocalInput(offsetDeadlineFixture()),
+    )
+
+    fireEvent.change(screen.getByRole('textbox', { name: '할 일 제목' }), {
+      target: { value: '  다듬은 발표  ' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '✕ 지우기' }))
+    fireEvent.change(screen.getByLabelText('예상 시간 (선택)'), { target: { value: '45' } })
+    fireEvent.click(screen.getByRole('button', { name: '적용' }))
+
+    const editedCheckbox = screen.getByRole('checkbox', { name: '다듬은 발표 선택' })
+    const editedButton = screen.getByRole('button', { name: '다듬은 발표 수정' })
+    expect(editedCheckbox).toBe(checkbox)
+    expect(editedCheckbox).toBeChecked()
+    expect(editedButton).toHaveFocus()
+    expect(screen.getByRole('heading', { name: '정리한 할 일' })).not.toHaveFocus()
+    expect(mocks.post).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByRole('checkbox', { name: '빨래 널기 선택' }))
+    fireEvent.click(screen.getByRole('button', { name: '선택한 1개 추가' }))
+    await waitFor(() => expect(mocks.post).toHaveBeenLastCalledWith(
+      '/brain-dump/77/confirm',
+      { tasks: [{
+        title: '다듬은 발표',
+        description: '원래 설명',
+        priorityScore: 0.7,
+        category: 'WORK',
+        deadline: null,
+        estimatedMinutes: 45,
+      }] },
+    ))
+  })
+
+  it('결과 편집을 취소하면 변경을 버리고 수정 버튼으로 포커스를 되돌린다', async () => {
+    renderPage()
+    await analyze()
+
+    fireEvent.click(screen.getByRole('button', { name: '발표 초안 수정' }))
+    fireEvent.change(screen.getByRole('textbox', { name: '할 일 제목' }), {
+      target: { value: '버릴 제목' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '취소' }))
+
+    expect(screen.getByText('발표 초안')).toBeInTheDocument()
+    expect(screen.queryByText('버릴 제목')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '발표 초안 수정' })).toHaveFocus()
+    expect(screen.getByRole('checkbox', { name: '발표 초안 선택' })).toBeChecked()
+    expect(mocks.post).toHaveBeenCalledTimes(1)
+  })
+
   it('등록 성공 뒤 초안 삭제 실패는 등록을 재시도하지 않고 이동 후 오류로 알린다', async () => {
     mocks.post.mockResolvedValueOnce({ data: analysis }).mockResolvedValueOnce({ data: {} })
     mocks.clearDraft.mockImplementationOnce(() => { throw new Error('민감한 삭제 오류') })
@@ -604,13 +691,13 @@ describe('BrainDumpPage', () => {
     expect(await screen.findByText('대시보드 도착')).toBeInTheDocument()
   })
 
-  it('새로 작성과 다시 분석을 제공하지만 초안 저장이나 결과 편집 UI는 만들지 않는다', async () => {
+  it('새로 작성과 다시 분석, 선택과 분리된 결과 수정 조작을 제공한다', async () => {
     renderPage()
     await analyze()
 
     expect(screen.getByRole('button', { name: '새로 작성' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '다시 분석' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /초안 저장|편집/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('textbox', { name: /결과|제목|설명/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '발표 초안 수정' })).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: '할 일 제목' })).not.toBeInTheDocument()
   })
 })

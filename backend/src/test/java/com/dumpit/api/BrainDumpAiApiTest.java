@@ -1,8 +1,10 @@
 package com.dumpit.api;
 
 import com.dumpit.entity.BrainDump;
+import com.dumpit.entity.Task;
 import com.dumpit.entity.User;
 import com.dumpit.repository.BrainDumpRepository;
+import com.dumpit.repository.TaskRepository;
 import com.dumpit.service.OpenAiService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BrainDumpAiApiTest extends ApiIntegrationTestBase {
 
     @Autowired private BrainDumpRepository brainDumpRepository;
+    @Autowired private TaskRepository taskRepository;
 
     // IDOR(V3) 실코드 = 403 — BrainDumpServiceImpl.confirm이 findById로 NotFound(404)를 먼저 걸러낸 뒤
     // 소유권 불일치를 ForbiddenException(403)으로 던진다. Task/Idea 도메인과 동일한 순서/코드.
@@ -89,7 +92,7 @@ class BrainDumpAiApiTest extends ApiIntegrationTestBase {
     // ---------- POST /brain-dump/{dumpId}/confirm ----------
 
     @Test
-    void 확정_태스크저장_201() throws Exception {
+    void 확정_편집한_제목_마감_예상시간이_실제저장_201() throws Exception {
         BrainDump dump = seedDump(userA, "원문");
         LocalDateTime deadline = LocalDateTime.now().plusDays(3).withNano(0);
 
@@ -97,7 +100,7 @@ class BrainDumpAiApiTest extends ApiIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(Map.of(
                                 "tasks", List.of(Map.of(
-                                        "title", "확정된 할일",
+                                        "title", "  사용자가 고친 할일  ",
                                         "description", "설명",
                                         "priorityScore", 0.7,
                                         "category", "WORK",
@@ -106,9 +109,15 @@ class BrainDumpAiApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].taskId").exists())
-                .andExpect(jsonPath("$[0].title").value("확정된 할일"))
+                .andExpect(jsonPath("$[0].title").value("사용자가 고친 할일"))
                 .andExpect(jsonPath("$[0].category").value("WORK"))
                 .andExpect(jsonPath("$[0].estimatedMinutes").value(30));
+
+        List<Task> stored = taskRepository.findByUserOrderByPriority(userA);
+        assertThat(stored).hasSize(1);
+        assertThat(stored.get(0).getTitle()).isEqualTo("사용자가 고친 할일");
+        assertThat(stored.get(0).getDeadline()).isEqualTo(deadline);
+        assertThat(stored.get(0).getEstimatedMinutes()).isEqualTo(30);
     }
 
     @Test
@@ -134,6 +143,24 @@ class BrainDumpAiApiTest extends ApiIntegrationTestBase {
         assertKoreanError(result);
         assertThat(result.getResponse().getContentAsString(StandardCharsets.UTF_8))
                 .doesNotContain("A의 비밀 원문");
+        assertThat(taskRepository.count()).isZero();
+    }
+
+    @Test
+    void 확정_과거마감이면_400이고_태스크를_저장하지_않는다() throws Exception {
+        BrainDump dump = seedDump(userA, "원문");
+
+        MvcResult result = mockMvc.perform(post("/brain-dump/" + dump.getDumpId() + "/confirm").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(Map.of(
+                                "tasks", List.of(Map.of(
+                                        "title", "과거 마감 할일",
+                                        "deadline", LocalDateTime.now().minusMinutes(1)))))))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertKoreanError(result);
+        assertThat(taskRepository.count()).isZero();
     }
 
     @Test

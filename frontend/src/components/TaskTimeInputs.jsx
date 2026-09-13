@@ -1,4 +1,4 @@
-import { useId, useRef } from 'react'
+import { useCallback, useId, useRef } from 'react'
 
 
 function applyDefaultTime(nextValue, currentValue, defaultTimeWhenEmpty) {
@@ -7,12 +7,28 @@ function applyDefaultTime(nextValue, currentValue, defaultTimeWhenEmpty) {
   return `${nextValue.slice(0, 11)}${defaultTimeWhenEmpty}`
 }
 
-export function TaskDateTimeField({ label, value, onChange, onClear, min, defaultTimeWhenEmpty }) {
+export function TaskDateTimeField({
+  label,
+  value,
+  onChange,
+  onClear,
+  min,
+  defaultTimeWhenEmpty,
+  error,
+  inputRef: externalInputRef,
+}) {
   const fieldId = useId()
-  const inputRef = useRef(null)
+  const errorId = useId()
+  const internalInputRef = useRef(null)
+
+  const setInputRef = useCallback((node) => {
+    internalInputRef.current = node
+    if (typeof externalInputRef === 'function') externalInputRef(node)
+    else if (externalInputRef) externalInputRef.current = node
+  }, [externalInputRef])
 
   const handleClear = () => {
-    if (inputRef.current) inputRef.current.value = ''
+    if (internalInputRef.current) internalInputRef.current.value = ''
     onClear()
   }
 
@@ -32,10 +48,12 @@ export function TaskDateTimeField({ label, value, onChange, onClear, min, defaul
       </div>
       <input
         id={fieldId}
-        ref={inputRef}
+        ref={setInputRef}
         type="datetime-local"
         value={value}
         min={min}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error ? errorId : undefined}
         onChange={(e) => onChange({
           ...e,
           target: {
@@ -45,12 +63,14 @@ export function TaskDateTimeField({ label, value, onChange, onClear, min, defaul
         })}
         className="input-refined font-semibold"
       />
+      {error && <p id={errorId} role="alert" className="mt-1 text-xs font-bold text-primary">{error}</p>}
     </div>
   )
 }
 
-export function EstimatedMinutesField({ value, onChange, label = '예상 시간' }) {
+export function EstimatedMinutesField({ value, onChange, label = '예상 시간', error, inputRef }) {
   const minutesId = useId()
+  const errorId = useId()
 
   return (
     <div className="w-28">
@@ -58,15 +78,19 @@ export function EstimatedMinutesField({ value, onChange, label = '예상 시간'
       <div className="flex items-center gap-2">
         <input
           id={minutesId}
+          ref={inputRef}
           type="number"
           value={value}
           onChange={onChange}
           placeholder="60"
           min="1"
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={error ? errorId : undefined}
           className="input-refined !w-16 !px-2 font-semibold"
         />
         <span className="text-xs font-bold text-sub">분</span>
       </div>
+      {error && <p id={errorId} role="alert" className="mt-1 text-xs font-bold text-primary">{error}</p>}
     </div>
   )
 }

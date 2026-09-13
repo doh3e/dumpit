@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
 import AiUsageBadge from '../components/AiUsageBadge'
+import BrainDumpTaskEditor from '../components/BrainDumpTaskEditor'
 import Dialog from '../components/Dialog'
 import useAiUsage, { dispatchAiUsed } from '../hooks/useAiUsage'
 import { useAuth } from '../hooks/useAuth'
@@ -59,11 +60,15 @@ function AccountBrainDumpPage({ accountKey }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [result, setResult] = useState(null)
   const [selected, setSelected] = useState([])
+  const [editingIndex, setEditingIndex] = useState(null)
+  const [focusRestoreIndex, setFocusRestoreIndex] = useState(null)
+  const [resultFocusGeneration, setResultFocusGeneration] = useState(0)
   const [error, setError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
   const [showClearDialog, setShowClearDialog] = useState(false)
   const navigate = useNavigate()
   const resultHeadingRef = useRef(null)
+  const editButtonRefs = useRef(new Map())
   const analyzePendingRef = useRef(false)
   const confirmPendingRef = useRef(false)
   const confirmGenerationRef = useRef(0)
@@ -74,8 +79,15 @@ function AccountBrainDumpPage({ accountKey }) {
   const selectedCount = selected.filter(Boolean).length
 
   useEffect(() => {
-    if (result) resultHeadingRef.current?.focus()
-  }, [result])
+    if (resultFocusGeneration > 0) resultHeadingRef.current?.focus()
+  }, [resultFocusGeneration])
+
+  useEffect(() => {
+    if (editingIndex == null && focusRestoreIndex != null) {
+      editButtonRefs.current.get(focusRestoreIndex)?.focus()
+      setFocusRestoreIndex(null)
+    }
+  }, [editingIndex, focusRestoreIndex])
 
   useEffect(() => {
     mountedRef.current = true
@@ -104,7 +116,7 @@ function AccountBrainDumpPage({ accountKey }) {
   }
 
   const handleAnalyze = async () => {
-    if (isBusy || analyzePendingRef.current || !text.trim() || !aiUsage.hasEnough(5)) return
+    if (isBusy || editingIndex != null || analyzePendingRef.current || !text.trim() || !aiUsage.hasEnough(5)) return
     if (!accountKey) return
     analyzePendingRef.current = true
     setIsAnalyzing(true)
@@ -116,6 +128,9 @@ function AccountBrainDumpPage({ accountKey }) {
       const tasks = Array.isArray(response.data.tasks) ? response.data.tasks : []
       setResult({ ...response.data, tasks })
       setSelected(tasks.map(() => true))
+      setEditingIndex(null)
+      setFocusRestoreIndex(null)
+      setResultFocusGeneration((generation) => generation + 1)
       announce(`분석이 끝났어요. 후보 ${tasks.length}개`)
       dispatchAiUsed()
     } catch (requestError) {
@@ -130,7 +145,7 @@ function AccountBrainDumpPage({ accountKey }) {
   }
 
   const handleClear = () => {
-    if (isBusy) return
+    if (isBusy || editingIndex != null) return
     setShowClearDialog(true)
   }
 
@@ -144,6 +159,8 @@ function AccountBrainDumpPage({ accountKey }) {
       setResult(null)
       setError(null)
       setSelected([])
+      setEditingIndex(null)
+      setFocusRestoreIndex(null)
       setDraftStatus('idle')
     } catch {
       if (mountedRef.current) {
@@ -156,12 +173,12 @@ function AccountBrainDumpPage({ accountKey }) {
   }
 
   const toggleAll = (value) => {
-    if (isBusy) return
+    if (isBusy || editingIndex != null) return
     setSelected(resultTasks.map(() => value))
   }
 
   const handleConfirm = async () => {
-    if (isBusy || confirmPendingRef.current || !result || resultTasks.length === 0 || selectedCount === 0) return
+    if (isBusy || editingIndex != null || confirmPendingRef.current || !result || resultTasks.length === 0 || selectedCount === 0) return
     if (!accountKey) return
     const tasks = resultTasks
       .filter((_, index) => selected[index])
@@ -204,6 +221,21 @@ function AccountBrainDumpPage({ accountKey }) {
     navigate('/dashboard')
   }
 
+  const closeEditor = (index) => {
+    setEditingIndex(null)
+    setFocusRestoreIndex(index)
+  }
+
+  const applyTaskEdit = (index, fields) => {
+    setResult((current) => ({
+      ...current,
+      tasks: current.tasks.map((task, taskIndex) => (
+        taskIndex === index ? { ...task, ...fields } : task
+      )),
+    }))
+    closeEditor(index)
+  }
+
   return (
     <div className="brain-dump-page mx-auto max-w-2xl space-y-6">
       <header>
@@ -230,7 +262,7 @@ function AccountBrainDumpPage({ accountKey }) {
             <button
               type="button"
               onClick={handleClear}
-              disabled={isBusy}
+              disabled={isBusy || editingIndex != null}
               className="btn-refined btn-refined-text"
             >
               지우기
@@ -295,7 +327,7 @@ function AccountBrainDumpPage({ accountKey }) {
               <button
                 type="button"
                 onClick={() => toggleAll(true)}
-                disabled={isBusy || resultTasks.length === 0}
+                disabled={isBusy || editingIndex != null || resultTasks.length === 0}
                 className="btn-refined btn-refined-text"
               >
                 전체 선택
@@ -303,7 +335,7 @@ function AccountBrainDumpPage({ accountKey }) {
               <button
                 type="button"
                 onClick={() => toggleAll(false)}
-                disabled={isBusy || resultTasks.length === 0}
+                disabled={isBusy || editingIndex != null || resultTasks.length === 0}
                 className="btn-refined btn-refined-text"
               >
                 전체 해제
@@ -324,46 +356,71 @@ function AccountBrainDumpPage({ accountKey }) {
                 const checkboxId = `brain-dump-task-${index}`
 
                 return (
-                  <li key={`${item.title}-${index}`} className="result-row-refined brain-dump-result-row">
-                    <label htmlFor={checkboxId} className="brain-dump-result-label">
-                      <span className="brain-dump-checkbox-target">
-                        <input
-                          id={checkboxId}
-                          type="checkbox"
-                          aria-label={`${item.title} 선택`}
-                          checked={isChecked}
-                          disabled={isBusy}
-                          onChange={(event) => {
-                            const checked = event.target.checked
-                            setSelected((previous) => previous.map(
-                              (value, itemIndex) => itemIndex === index ? checked : value,
-                            ))
-                          }}
-                          className="brain-dump-checkbox"
-                        />
-                      </span>
-                      <span className="brain-dump-result-content">
-                        <span className="brain-dump-result-title font-galmuri font-bold text-dark">
-                          {item.title}
+                  <li key={`${result.dumpId}-${index}`} className="result-row-refined brain-dump-result-row">
+                    <div className="flex items-start gap-2">
+                      <label htmlFor={checkboxId} className="brain-dump-result-label min-w-0 flex-1">
+                        <span className="brain-dump-checkbox-target">
+                          <input
+                            id={checkboxId}
+                            type="checkbox"
+                            aria-label={`${item.title} 선택`}
+                            checked={isChecked}
+                            disabled={isBusy || editingIndex != null}
+                            onChange={(event) => {
+                              const checked = event.target.checked
+                              setSelected((previous) => previous.map(
+                                (value, itemIndex) => itemIndex === index ? checked : value,
+                              ))
+                            }}
+                            className="brain-dump-checkbox"
+                          />
                         </span>
-                        {item.description && (
-                          <span className="brain-dump-result-description text-sm font-medium text-dark">
-                            {item.description}
+                        <span className="brain-dump-result-content">
+                          <span className="brain-dump-result-title font-galmuri font-bold text-dark">
+                            {item.title}
                           </span>
-                        )}
-                        <span className="brain-dump-result-meta">
-                          <span className="brain-dump-meta-badge">
-                            {deadline ? `마감: ${deadline}` : '기한 없음'}
-                          </span>
-                          {item.estimatedMinutes && (
-                            <span className="brain-dump-meta-badge">예상 {item.estimatedMinutes}분</span>
+                          {item.description && (
+                            <span className="brain-dump-result-description text-sm font-medium text-dark">
+                              {item.description}
+                            </span>
                           )}
+                          <span className="brain-dump-result-meta">
+                            <span className="brain-dump-meta-badge">
+                              {deadline ? `마감: ${deadline}` : '기한 없음'}
+                            </span>
+                            {item.estimatedMinutes && (
+                              <span className="brain-dump-meta-badge">예상 {item.estimatedMinutes}분</span>
+                            )}
+                          </span>
                         </span>
-                      </span>
-                      <span className={`brain-dump-priority ${PRIORITY_COLOR[priorityLabel]}`}>
-                        우선순위 {priorityLabel}
-                      </span>
-                    </label>
+                        <span className={`brain-dump-priority ${PRIORITY_COLOR[priorityLabel]}`}>
+                          우선순위 {priorityLabel}
+                        </span>
+                      </label>
+                      <button
+                        ref={(node) => {
+                          if (node) editButtonRefs.current.set(index, node)
+                          else editButtonRefs.current.delete(index)
+                        }}
+                        type="button"
+                        aria-label={`${item.title} 수정`}
+                        aria-expanded={editingIndex === index}
+                        onClick={() => setEditingIndex(index)}
+                        disabled={isBusy || editingIndex != null}
+                        className="btn-refined btn-refined-text mr-3 mt-3 shrink-0"
+                      >
+                        수정
+                      </button>
+                    </div>
+                    {editingIndex === index && (
+                      <div className="px-4 pb-4">
+                        <BrainDumpTaskEditor
+                          task={item}
+                          onApply={(fields) => applyTaskEdit(index, fields)}
+                          onCancel={() => closeEditor(index)}
+                        />
+                      </div>
+                    )}
                   </li>
                 )
               })}
@@ -374,7 +431,7 @@ function AccountBrainDumpPage({ accountKey }) {
             <button
               type="button"
               onClick={handleClear}
-              disabled={isBusy}
+              disabled={isBusy || editingIndex != null}
               className="btn-refined btn-refined-text"
             >
               새로 작성
@@ -382,7 +439,7 @@ function AccountBrainDumpPage({ accountKey }) {
             <button
               type="button"
               onClick={handleAnalyze}
-              disabled={!text.trim() || isBusy || !aiUsage.hasEnough(5)}
+              disabled={!text.trim() || isBusy || editingIndex != null || !aiUsage.hasEnough(5)}
               className="btn-refined"
             >
               {isAnalyzing ? '분석 중...' : '다시 분석'}
@@ -390,7 +447,7 @@ function AccountBrainDumpPage({ accountKey }) {
             <button
               type="button"
               onClick={handleConfirm}
-              disabled={isBusy || selectedCount === 0 || resultTasks.length === 0}
+              disabled={isBusy || editingIndex != null || selectedCount === 0 || resultTasks.length === 0}
               className="btn-refined btn-refined-primary brain-dump-primary-action"
             >
               {isSaving ? '추가 중...' : `선택한 ${selectedCount}개 추가`}
