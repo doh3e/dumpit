@@ -14,6 +14,7 @@ let mockTheme;
 let mockAiUsage;
 let mockHardwareBackHandler;
 let mockUserEmail;
+let mockWindowWidth = 320;
 const mockSubmitBrainDump = jest.fn();
 const mockConfirmBrainDump = jest.fn();
 const mockToastShow = jest.fn();
@@ -25,6 +26,11 @@ const mockInvalidateQueries = jest.fn();
 const mockReadDraft = jest.fn();
 const mockWriteDraft = jest.fn();
 const mockClearDraft = jest.fn();
+
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: mockWindowWidth, height: 800, scale: 1, fontScale: 1 }),
+}));
 
 jest.mock('../theme/useTheme', () => ({
   useTheme: () => mockTheme,
@@ -196,6 +202,7 @@ beforeEach(() => {
   mockInvalidateAfterAi.mockReset();
   mockInvalidateQueries.mockReset().mockResolvedValue(undefined);
   mockUserEmail = 'a@example.com';
+  mockWindowWidth = 320;
   mockReadDraft.mockReset().mockResolvedValue(null);
   mockWriteDraft.mockReset().mockImplementation(async (_account, rawText) => (
     rawText ? { version: 1, rawText, updatedAt: 1 } : null
@@ -213,6 +220,40 @@ afterEach(() => {
 });
 
 describe('브레인 덤프 입력·분석', () => {
+  it('창 크기 변경과 화면 재진입에도 비제어 원문과 분석 0회를 유지한다', async () => {
+    let storedDraft = null;
+    mockReadDraft.mockImplementation(async () => storedDraft);
+    mockWriteDraft.mockImplementation(async (_account, rawText) => {
+      storedDraft = rawText ? { version: 1, rawText, updatedAt: 1 } : null;
+      return storedDraft;
+    });
+    const screen = () => <BrainDumpScreen />;
+    const tree = await renderScreen();
+    const mountedInput = input(tree);
+
+    await changeText(tree, '  줄바꿈도\n그대로 남길 원문  ');
+    expect(input(tree)).toBe(mountedInput);
+
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(screen()));
+    expect(StyleSheet.flatten(tree.root.findByType(ScrollView).props.contentContainerStyle))
+      .toEqual(expect.objectContaining({ paddingLeft: 236, paddingRight: 236 }));
+    expect(input(tree)).toBe(mountedInput);
+
+    mockWindowWidth = 600;
+    await act(async () => tree.update(screen()));
+    expect(StyleSheet.flatten(tree.root.findByType(ScrollView).props.contentContainerStyle))
+      .toEqual(expect.objectContaining({ paddingLeft: 16, paddingRight: 16 }));
+    expect(input(tree)).toBe(mountedInput);
+    expect(mockSubmitBrainDump).not.toHaveBeenCalled();
+
+    await unmount(tree);
+    const reopened = await renderScreen();
+    expect(input(reopened).props.defaultValue).toBe('  줄바꿈도\n그대로 남길 원문  ');
+    expect(mockSubmitBrainDump).not.toHaveBeenCalled();
+    await unmount(reopened);
+  });
+
   it('원문 복구가 끝난 뒤 editor를 한 번만 열고 계정별 7일 범위를 안내한다', async () => {
     mockReadDraft.mockResolvedValueOnce({ version: 1, rawText: '  복구 원문\n ', updatedAt: 1 });
     const tree = await renderScreen();
@@ -394,6 +435,60 @@ describe('브레인 덤프 입력·분석', () => {
 });
 
 describe('브레인 덤프 선택·등록', () => {
+  it('편집·선택 중 창 크기를 바꿔도 editor와 확정 payload를 보존한다', async () => {
+    mockSubmitBrainDump.mockResolvedValue(RESULT);
+    mockConfirmBrainDump.mockResolvedValue([]);
+    const screen = () => <BrainDumpScreen />;
+    const tree = await renderScreen();
+    await changeText(tree, '편집할 원문');
+    await analyze(tree);
+    expect(mockSubmitBrainDump).toHaveBeenCalledTimes(1);
+    await act(async () => control(tree, '장보기 선택', 'checkbox').props.onPress());
+    await act(async () => control(tree, '빨래 선택', 'checkbox').props.onPress());
+
+    await act(async () => control(tree, '발표 준비 수정').props.onPress());
+    const title = tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '할 일 제목');
+    const minutes = tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '예상 시간(분)');
+    await act(async () => title.props.onChangeText('  편집된 발표  '));
+    await act(async () => control(tree, '일시 지우기').props.onPress());
+    await act(async () => minutes.props.onChangeText('45'));
+
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(screen()));
+    expect(tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '할 일 제목')).toBe(title);
+    expect(control(tree, '발표 준비 선택', 'checkbox').props.accessibilityState.checked).toBe(true);
+    expect(control(tree, '장보기 선택', 'checkbox').props.accessibilityState.checked).toBe(false);
+    expect(control(tree, '빨래 선택', 'checkbox').props.accessibilityState.checked).toBe(false);
+    expect(StyleSheet.flatten(tree.root.findByType(require('react-native').FlatList).props.contentContainerStyle))
+      .toEqual(expect.objectContaining({ paddingLeft: 236, paddingRight: 236 }));
+    expect(mockSubmitBrainDump).toHaveBeenCalledTimes(1);
+
+    mockWindowWidth = 600;
+    await act(async () => tree.update(screen()));
+    expect(tree.root.find((node) => node.type === TextInput && node.props.accessibilityLabel === '할 일 제목')).toBe(title);
+    expect(control(tree, '발표 준비 선택', 'checkbox').props.accessibilityState.checked).toBe(true);
+    expect(control(tree, '장보기 선택', 'checkbox').props.accessibilityState.checked).toBe(false);
+    expect(control(tree, '빨래 선택', 'checkbox').props.accessibilityState.checked).toBe(false);
+    expect(mockSubmitBrainDump).toHaveBeenCalledTimes(1);
+    expect(mockConfirmBrainDump).not.toHaveBeenCalled();
+
+    await act(async () => control(tree, '적용').props.onPress());
+    expect(control(tree, '편집된 발표 선택', 'checkbox').props.accessibilityState.checked).toBe(true);
+    await act(async () => control(tree, '선택한 1개 등록').props.onPress());
+
+    expect(mockConfirmBrainDump).toHaveBeenCalledTimes(1);
+    expect(mockSubmitBrainDump).toHaveBeenCalledTimes(1);
+    expect(mockConfirmBrainDump).toHaveBeenCalledWith('local-dump', [{
+      title: '편집된 발표',
+      description: '슬라이드 초안',
+      priorityScore: 0.8,
+      category: 'WORK',
+      deadline: null,
+      estimatedMinutes: 45,
+    }]);
+    await unmount(tree);
+  });
+
   it('체크와 수정은 형제 조작이고 편집값만 적용해 일부 선택 payload로 보낸다', async () => {
     mockSubmitBrainDump.mockResolvedValue(RESULT);
     mockConfirmBrainDump.mockResolvedValue([]);

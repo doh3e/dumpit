@@ -5,6 +5,7 @@ import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { PixelIcon, type PixelIconName } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { useTheme } from '../src/theme/useTheme';
 
 // 웹 HelpModal.jsx 정적 콘텐츠 이식 — 문구 변경 시 웹과 동기화
@@ -31,11 +32,12 @@ const FEATURES: { icon: PixelIconName; title: string; desc: string }[] = [
 export default function HelpScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   return (
     <View style={styles.screen}>
       <ScreenHeader title="도움말" icon={<PixelIcon name="question" size={16} />} />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard appearance="refined" style={[styles.card, { backgroundColor: colors.chip }] as never}>
           <Text style={[styles.betaTitle, { color: colors.accentText, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="party" size={13} /> 베타 서비스 안내

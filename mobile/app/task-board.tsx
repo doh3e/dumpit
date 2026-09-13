@@ -8,6 +8,7 @@ import { RetroBadge } from '../src/components/retro/RetroBadge';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { TaskDetailSheet, type TaskDetailSheetHandle } from '../src/components/task/TaskDetailSheet';
 import { usePlanning, useToggleTask } from '../src/query/hooks';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { sortByDeadline, sortTasks } from '../src/tasks/grouping';
 import { useTheme } from '../src/theme/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,6 +34,7 @@ const SORT_OPTIONS: { id: SortMode; label: string }[] = [
 export default function TaskBoardScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const toast = useToast();
   const planning = usePlanning();
   const toggle = useToggleTask();
@@ -66,7 +68,7 @@ export default function TaskBoardScreen() {
     <View style={{ flex: 1, paddingTop: insets.top }}>
       <Stack.Screen options={{ animation: 'slide_from_right' }} />
       <View style={styles.header}>
-        <View style={styles.titleRow}>
+        <View style={[styles.titleRow, frame]}>
           <Pressable
             onPress={() => router.back()}
             accessibilityRole="button"
@@ -83,7 +85,7 @@ export default function TaskBoardScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           style={{ flexGrow: 0, flexShrink: 0 }}
-          contentContainerStyle={styles.sort}
+          contentContainerStyle={[styles.sort, frame]}
         >
           {SORT_OPTIONS.map((option) => (
             <Pressable
@@ -127,7 +129,7 @@ export default function TaskBoardScreen() {
         sections={sections}
         keyExtractor={(t) => t.taskId}
         stickySectionHeadersEnabled={false}
-        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}
+        contentContainerStyle={[{ padding: 16, paddingBottom: insets.bottom + 24 }, frame]}
         renderSectionHeader={({ section }) => (
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>

@@ -4,6 +4,7 @@ const { act, create } = require('react-test-renderer');
 const { ScrollView, StyleSheet } = require('react-native');
 
 let mockBottomInset = 0;
+let mockWindowWidth = 320;
 const mockPlanningRefetch = jest.fn();
 const mockAiUsageRefetch = jest.fn();
 const mockRefreshAuth = jest.fn();
@@ -29,6 +30,11 @@ const mockPlanningResult = {
 };
 const mockAiUsageResult = { data: undefined, refetch: mockAiUsageRefetch };
 const mockToggleResult = { mutate: jest.fn() };
+
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: mockWindowWidth, height: 800, scale: 1, fontScale: 1 }),
+}));
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
@@ -86,6 +92,7 @@ async function unmount(tree) {
 
 beforeEach(() => {
   mockBottomInset = 0;
+  mockWindowWidth = 320;
   mockPlanningRefetch.mockReset();
   mockAiUsageRefetch.mockReset();
   mockRefreshAuth.mockReset();
@@ -96,6 +103,34 @@ beforeEach(() => {
 });
 
 describe('홈 콘텐츠 간격', () => {
+  it('창 크기를 바꿔도 기존 히어로·뽀모도로 목록의 프레임과 상하 간격을 유지한다', async () => {
+    const screen = () => <HomeScreen />;
+    const tree = await renderHome();
+    const scroll = tree.root.findByType(ScrollView);
+
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(screen()));
+    expect(tree.root.findByType(ScrollView)).toBe(scroll);
+    expect(StyleSheet.flatten(scroll.props.contentContainerStyle)).toEqual(expect.objectContaining({
+      paddingLeft: 236,
+      paddingRight: 236,
+      paddingTop: 16,
+      paddingBottom: 24,
+      gap: 16,
+    }));
+
+    mockWindowWidth = 600;
+    await act(async () => tree.update(screen()));
+    expect(tree.root.findByType(ScrollView)).toBe(scroll);
+    expect(StyleSheet.flatten(scroll.props.contentContainerStyle)).toEqual(expect.objectContaining({
+      paddingLeft: 16,
+      paddingRight: 16,
+      paddingTop: 16,
+      paddingBottom: 24,
+    }));
+    await unmount(tree);
+  });
+
   it.each([0, 24, 48])('하단 안전 영역이 %idp여도 콘텐츠 간격은 고정된다', async (bottomInset) => {
     mockBottomInset = bottomInset;
     const tree = await renderHome();

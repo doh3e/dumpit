@@ -13,6 +13,7 @@ import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, getCategory } from '../src/tasks/constants';
@@ -26,6 +27,7 @@ import { useTheme } from '../src/theme/useTheme';
 export default function IdeaViewScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const { ideaId } = useLocalSearchParams<{ ideaId?: string }>();
   const ideas = useQuery({ queryKey: keys.ideas, queryFn: fetchIdeas });
   const toast = useToast();
@@ -104,7 +106,7 @@ export default function IdeaViewScreen() {
         }
       />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard appearance="refined" style={styles.card}>
           <View style={styles.titleRow}>
             {sticker && <Image source={sticker.img} style={styles.sticker} resizeMode="contain" />}

@@ -14,6 +14,7 @@ import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { DEFAULT_SETTINGS, deriveState, type PomodoroSettings } from '../src/pomodoro/engine';
 import {
   checkExactAlarm, openAlarmSettings, requestNotificationPermission,
@@ -28,6 +29,7 @@ import { useTheme } from '../src/theme/useTheme';
 export default function PomodoroScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame(24);
   const toast = useToast();
   const qc = useQueryClient();
   // 렌더 중 Date.now() 직접 읽기는 React Compiler가 캐시해 시간이 멈춰 보인다 — now를 상태로 관리
@@ -138,7 +140,7 @@ export default function PomodoroScreen() {
     <View style={styles.screen}>
       <ScreenHeader title="뽀모도로" icon={<PixelIcon name="tomato" size={16} />} />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]}>
         {session && derived ? (
           <>
             <TimerRing remainingSec={derived.remainingSec} totalSec={totalSec} phase={derived.phase} long={derived.long} />

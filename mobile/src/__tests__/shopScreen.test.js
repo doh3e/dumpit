@@ -1,7 +1,7 @@
 const { afterEach, beforeEach, describe, expect, it, jest } = require('@jest/globals');
 const React = require('react');
 const { act, create } = require('react-test-renderer');
-const { Alert, Text } = require('react-native');
+const { Alert, ScrollView, StyleSheet, Text } = require('react-native');
 
 const mockEquipItem = jest.fn();
 const mockPurchaseItem = jest.fn();
@@ -13,6 +13,12 @@ const mockToast = { error: jest.fn(), show: jest.fn() };
 let mockCatalog;
 let mockRefreshMe;
 let mockHarness;
+let mockWindowWidth = 320;
+
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: mockWindowWidth, height: 800, scale: 1, fontScale: 1 }),
+}));
 
 const NO_AUTH_UPDATE = Symbol('NO_AUTH_UPDATE');
 const mockAuthContext = React.createContext(null);
@@ -208,6 +214,7 @@ async function unmount(tree) {
 beforeEach(() => {
   mockCatalog = { coinBalance: 100, items: ITEMS.map((item) => ({ ...item })) };
   mockRefreshMe = NO_AUTH_UPDATE;
+  mockWindowWidth = 320;
   mockHarness = React.createRef();
   mockEquipItem.mockReset().mockResolvedValue(undefined);
   mockPurchaseItem.mockReset().mockResolvedValue({ message: 'ok', remainingCoins: 70, equipped: true });
@@ -224,6 +231,29 @@ afterEach(() => {
 });
 
 describe('상점 슬롯 미리보기', () => {
+  it('창 크기 변경에도 카테고리와 콘텐츠만 같은 읽기 프레임을 쓰고 카탈로그를 유지한다', async () => {
+    const tree = await renderShop();
+    const [tabs, content] = tree.root.findAllByType(ScrollView);
+    const originalCards = tree.root.findAllByType(RetroCard).length;
+
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(<Harness ref={mockHarness} initialMe={ACCOUNT_A} />));
+    expect(StyleSheet.flatten(tabs.props.contentContainerStyle))
+      .toEqual(expect.objectContaining({ paddingLeft: 236, paddingRight: 236 }));
+    expect(StyleSheet.flatten(content.props.contentContainerStyle))
+      .toEqual(expect.objectContaining({ paddingLeft: 236, paddingRight: 236 }));
+    expect(tree.root.findAllByType(RetroCard)).toHaveLength(originalCards);
+    expect(button(tree, '배경').props.accessibilityState.selected).toBe(true);
+
+    mockWindowWidth = 600;
+    await act(async () => tree.update(<Harness ref={mockHarness} initialMe={ACCOUNT_A} />));
+    expect(StyleSheet.flatten(tabs.props.contentContainerStyle))
+      .toEqual(expect.objectContaining({ paddingLeft: 16, paddingRight: 16 }));
+    expect(StyleSheet.flatten(content.props.contentContainerStyle))
+      .toEqual(expect.objectContaining({ paddingLeft: 16, paddingRight: 16 }));
+    await unmount(tree);
+  });
+
   it('preview는 해당 슬롯만 덮고 같은 슬롯 취소는 다른 슬롯 preview를 보존한다', async () => {
     const tree = await renderShop();
     await preview(tree, '바다 배경');

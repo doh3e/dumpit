@@ -8,6 +8,7 @@ import { PixelIcon } from '../../src/components/common/PixelIcon';
 import { RetroBadge } from '../../src/components/retro/RetroBadge';
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
+import { useContentFrame } from '../../src/layout/useContentFrame';
 import { buildTreeRows } from '../../src/ideas/tree';
 import { keys } from '../../src/query/keys';
 import { getCategory } from '../../src/tasks/constants';
@@ -17,6 +18,7 @@ import { useTheme } from '../../src/theme/useTheme';
 export default function IdeasScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const ideas = useQuery({ queryKey: keys.ideas, queryFn: fetchIdeas });
 
   const [query, setQuery] = useState('');
@@ -47,7 +49,7 @@ export default function IdeasScreen() {
         refreshControl={
           <RefreshControl refreshing={pulling} onRefresh={onRefresh} colors={[colors.accent]} tintColor={colors.accent} />
         }
-        contentContainerStyle={[styles.body, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[styles.body, frame, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.headerRow}>

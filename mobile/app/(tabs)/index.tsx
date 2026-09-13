@@ -14,6 +14,7 @@ import { TaskDetailSheet, type TaskDetailSheetHandle } from '../../src/component
 import { CoinToast } from '../../src/components/fx/CoinToast';
 import { PixelBurst } from '../../src/components/fx/PixelBurst';
 import { CelebrationOverlay } from '../../src/components/fx/CelebrationOverlay';
+import { useContentFrame } from '../../src/layout/useContentFrame';
 import { calcCompletionCoins } from '../../src/tasks/rewards';
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
@@ -27,6 +28,7 @@ import { useTheme } from '../../src/theme/useTheme';
 
 export default function HomeScreen() {
   const { colors, fonts } = useTheme();
+  const frame = useContentFrame();
   const { me, refresh } = useAuth();
   const toast = useToast();
   const planning = usePlanning();
@@ -154,7 +156,7 @@ export default function HomeScreen() {
             tintColor={colors.accent}
           />
         }
-        contentContainerStyle={{ padding: 16, paddingTop: 16, gap: 16, paddingBottom: 24 }}
+        contentContainerStyle={[{ padding: 16, paddingTop: 16, gap: 16, paddingBottom: 24 }, frame]}
       >
         {planning.isLoading && (
           <View style={{ paddingVertical: 48 }}>

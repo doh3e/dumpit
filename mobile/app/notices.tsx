@@ -10,6 +10,7 @@ import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { parseDate } from '../src/tasks/dates';
 import { keys } from '../src/query/keys';
 import { useTheme } from '../src/theme/useTheme';
@@ -22,6 +23,7 @@ function dateLabel(notice: NoticeResponse): string {
 export default function NoticesScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const [page, setPage] = useState(0);
   const current = useQuery({ queryKey: keys.notices(page), queryFn: () => fetchNotices(page) });
 
@@ -41,7 +43,7 @@ export default function NoticesScreen() {
     <View style={styles.screen}>
       <ScreenHeader title="공지사항" icon={<PixelIcon name="megaphone" size={16} />} />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]}>
         <RetroCard appearance="refined" style={styles.listCard}>
           {allRows.length === 0 && !current.isLoading && (
             <Text style={[styles.empty, { color: colors.sub, fontFamily: fonts.body }]}>아직 공지가 없어요.</Text>

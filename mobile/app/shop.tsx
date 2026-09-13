@@ -18,6 +18,7 @@ import { useToast } from '../src/components/retro/ToastProvider';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { PixelSprite } from '../src/components/shop/PixelSprite';
 import { keys } from '../src/query/keys';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { PLANET_SPRITES, STATION_SPRITES } from '../src/shop/spriteRegistry';
 import { STICKER_SPRITES } from '../src/tasks/stickers';
 import { useSkinPreview } from '../src/theme/ThemeProvider';
@@ -107,6 +108,7 @@ function withoutPreviewSlot(current: Equipments, slot: string): Equipments {
 export default function ShopScreen() {
   const { colors, fonts, scheme } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const toast = useToast();
   const qc = useQueryClient();
   const { me, refresh } = useAuth();
@@ -321,13 +323,13 @@ export default function ShopScreen() {
         }
       />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar} contentContainerStyle={styles.tabRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar} contentContainerStyle={[styles.tabRow, frame]}>
         {TABS.map((t) => (
           <Chip appearance="refined" key={t.key} label={t.label} selected={tab === t.key} onPress={() => setTab(t.key)} />
         ))}
       </ScrollView>
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]}>
         {(PREVIEWABLE.has(tab) || tab === 'CELEBRATION') && (
           <Text style={[styles.notice, { color: colors.sub, fontFamily: fonts.body }]}>
             {tab === 'CELEBRATION' ? '카드를 누르면 연출을 미리 볼 수 있어요' : '카드를 누르면 화면에 미리 입혀봐요'}

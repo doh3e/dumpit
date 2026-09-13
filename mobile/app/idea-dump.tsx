@@ -12,6 +12,7 @@ import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, getCategory } from '../src/tasks/constants';
@@ -50,6 +51,7 @@ const previewStyles = StyleSheet.create({
 export default function IdeaDumpScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
@@ -124,7 +126,7 @@ export default function IdeaDumpScreen() {
     <View style={styles.screen}>
       <ScreenHeader title="아이디어 덤프" icon={<PixelIcon name="bulb" size={16} />} />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         {stage === 'input' ? (
           <>
             <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>

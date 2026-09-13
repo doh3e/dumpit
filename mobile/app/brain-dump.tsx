@@ -37,6 +37,7 @@ import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { AI_COSTS, getCategory } from '../src/tasks/constants';
 import { formatDeadline } from '../src/tasks/dates';
 import { useTheme } from '../src/theme/useTheme';
@@ -199,6 +200,7 @@ export default function BrainDumpScreen() {
 function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
@@ -461,7 +463,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <Stack.Screen options={{ animation: 'slide_from_bottom' }} />
 
-      <View style={styles.header}>
+      <View style={[styles.header, frame]}>
         <Pressable
           onPress={requestExit}
           accessibilityRole="button"
@@ -482,7 +484,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
-            contentContainerStyle={[styles.inputContent, { paddingBottom: insets.bottom + 16 }]}
+            contentContainerStyle={[styles.inputContent, frame, { paddingBottom: insets.bottom + 16 }]}
             keyboardShouldPersistTaps="handled"
           >
             <Text style={[styles.guide, { color: colors.sub, fontFamily: fonts.bodyBold }]}>
@@ -589,7 +591,7 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
             data={tasks}
             keyExtractor={(_item, index) => `${result?.dumpId ?? 'dump'}-${index}`}
             extraData={`${editingIndex ?? 'none'}:${selectedCount}`}
-            contentContainerStyle={styles.resultList}
+            contentContainerStyle={[styles.resultList, frame]}
             keyboardShouldPersistTaps="handled"
             ListHeaderComponent={(
               <View style={styles.selectHeader}>
@@ -638,31 +640,33 @@ function AccountBrainDumpScreen({ accountKey }: { accountKey: string | null }) {
               },
             ]}
           >
-            <View style={styles.resultSecondaryActions}>
+            <View style={[styles.confirmBarContent, frame]}>
+              <View style={styles.resultSecondaryActions}>
+                <RetroButton
+                  appearance="refined"
+                  label="지우기"
+                  variant="ghost"
+                  onPress={requestClear}
+                  disabled={isSaving || isClearing || editingIndex !== null}
+                  style={styles.resultSecondaryAction}
+                />
+                <RetroButton
+                  appearance="refined"
+                  label="다시 분석"
+                  variant="ghost"
+                  onPress={handleAnalyze}
+                  disabled={isSaving || isClearing || editingIndex !== null || analysisDisabled}
+                  style={styles.resultSecondaryAction}
+                />
+              </View>
               <RetroButton
                 appearance="refined"
-                label="지우기"
-                variant="ghost"
-                onPress={requestClear}
-                disabled={isSaving || isClearing || editingIndex !== null}
-                style={styles.resultSecondaryAction}
-              />
-              <RetroButton
-                appearance="refined"
-                label="다시 분석"
-                variant="ghost"
-                onPress={handleAnalyze}
-                disabled={isSaving || isClearing || editingIndex !== null || analysisDisabled}
-                style={styles.resultSecondaryAction}
+                label={`선택한 ${selectedCount}개 등록`}
+                onPress={handleConfirm}
+                disabled={selectedCount === 0 || isClearing || editingIndex !== null}
+                busy={isSaving}
               />
             </View>
-            <RetroButton
-              appearance="refined"
-              label={`선택한 ${selectedCount}개 등록`}
-              onPress={handleConfirm}
-              disabled={selectedCount === 0 || isClearing || editingIndex !== null}
-              busy={isSaving}
-            />
           </View>
         </KeyboardAvoidingView>
       ) : null}
@@ -792,9 +796,8 @@ const styles = StyleSheet.create({
   editText: { fontSize: 12 },
   confirmBar: {
     borderTopWidth: 1.5,
-    paddingHorizontal: 16,
-    paddingTop: 12,
   },
+  confirmBarContent: { paddingHorizontal: 16, paddingTop: 12 },
   resultSecondaryActions: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   resultSecondaryAction: { flex: 1, minHeight: 48 },
 });

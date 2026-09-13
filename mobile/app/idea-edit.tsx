@@ -15,6 +15,7 @@ import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { StickerPicker } from '../src/components/task/StickerPicker';
 import { sortParentCandidates } from '../src/ideas/tree';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
@@ -84,6 +85,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
 }) {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const { height: windowHeight } = useWindowDimensions();
   const toast = useToast();
   const qc = useQueryClient();
@@ -206,7 +208,7 @@ function IdeaEditForm({ editing, allIdeas, initialParentId }: {
     <View style={styles.screen}>
       <ScreenHeader title={editing ? '아이디어 수정' : '새 아이디어'} />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard appearance="refined" style={styles.card}>
           {/* 한글 IME 조합 보호 — uncontrolled */}
           <TextInput

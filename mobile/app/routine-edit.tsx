@@ -10,6 +10,7 @@ import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { TimeField } from '../src/components/task/TimeField';
 import { useDeleteRoutine, useRoutines, useSaveRoutine } from '../src/query/routineHooks';
 import {
@@ -71,6 +72,7 @@ export default function RoutineEditScreen() {
 function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const toast = useToast();
   const save = useSaveRoutine();
   const remove = useDeleteRoutine();
@@ -127,7 +129,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
     <View style={styles.screen}>
       <ScreenHeader title={editing ? '루틴 수정' : '새 루틴'} />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard appearance="refined" style={styles.card}>
           {sectionTitle('이름 *')}
           {/* 한글 IME 조합 보호 — uncontrolled */}

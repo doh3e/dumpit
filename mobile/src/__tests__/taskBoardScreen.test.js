@@ -5,10 +5,16 @@ const { ScrollView, SectionList, StyleSheet, Text, View } = require('react-nativ
 
 let mockTheme;
 let mockPlanningResult;
+let mockWindowWidth = 320;
 const mockBack = jest.fn();
 const mockMutate = jest.fn();
 const mockPresent = jest.fn();
 const mockToastError = jest.fn();
+
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: mockWindowWidth, height: 800, scale: 1, fontScale: 1 }),
+}));
 
 jest.mock('../theme/useTheme', () => ({ useTheme: () => mockTheme }));
 jest.mock('../query/hooks', () => ({
@@ -122,6 +128,7 @@ async function unmount(tree) {
 beforeEach(() => {
   setTheme();
   mockPlanningResult = { data: { sections: planningSections() } };
+  mockWindowWidth = 320;
   mockBack.mockReset();
   mockMutate.mockReset();
   mockPresent.mockReset();
@@ -146,6 +153,27 @@ describe('태스크 전체 화면 정렬', () => {
     expect(StyleSheet.flatten(sortRow.props.contentContainerStyle)).toEqual(expect.objectContaining({
       paddingHorizontal: 16,
       gap: 4,
+    }));
+
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(<TaskBoardScreen />));
+    expect(StyleSheet.flatten(title.parent.props.style)).toEqual(expect.objectContaining({
+      paddingLeft: 236,
+      paddingRight: 236,
+    }));
+    expect(StyleSheet.flatten(sortRow.props.contentContainerStyle)).toEqual(expect.objectContaining({
+      paddingLeft: 236,
+      paddingRight: 236,
+    }));
+    expect(StyleSheet.flatten(tree.root.findByType(SectionList).props.contentContainerStyle))
+      .toEqual(expect.objectContaining({ paddingLeft: 236, paddingRight: 236 }));
+    expect(byLabel(tree, '중요도순').props.accessibilityState).toEqual({ selected: true });
+
+    mockWindowWidth = 600;
+    await act(async () => tree.update(<TaskBoardScreen />));
+    expect(StyleSheet.flatten(title.parent.props.style)).toEqual(expect.objectContaining({
+      paddingLeft: 16,
+      paddingRight: 16,
     }));
 
     for (const [control, selected] of [[priority, true], [deadline, false]]) {

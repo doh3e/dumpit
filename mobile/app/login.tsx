@@ -5,6 +5,7 @@ import { describeError, type ErrorInfo } from '../src/api/errors';
 import { useAuth } from '../src/auth/AuthContext';
 import { GoogleGIcon } from '../src/components/common/GoogleGIcon';
 import { PRIVACY_URL, TERMS_URL } from '../src/legal/links';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { useTheme } from '../src/theme/useTheme';
 
 // 스플래시 원본을 440px로 줄인 사본(scripts/gen_login_logo.py) — 원본을 require하면 AAB가 1.5MB 늘어난다
@@ -14,6 +15,7 @@ const LOGO = require('../assets/images/login-logo.png');
 export default function LoginScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame(24);
   const { signInWithGoogle } = useAuth();
   const [error, setError] = useState<ErrorInfo | null>(null);
   const [busy, setBusy] = useState(false);
@@ -36,6 +38,7 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.container,
+          frame,
           { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 },
         ]}
       >

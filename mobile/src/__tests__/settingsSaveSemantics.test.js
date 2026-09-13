@@ -3,13 +3,19 @@ const React = require('react');
 const { act, create } = require('react-test-renderer');
 const { QueryClient, QueryClientProvider } = require('@tanstack/react-query');
 const AsyncStorage = require('@react-native-async-storage/async-storage');
-const { Alert, Text, TextInput } = require('react-native');
+const { Alert, ScrollView, StyleSheet, Text, TextInput } = require('react-native');
 
 const mockPatchSettings = jest.fn();
 const mockFetchSettings = jest.fn();
 const mockDismiss = jest.fn();
 const mockToast = { show: jest.fn(), error: jest.fn() };
 const mockAuthState = { me: null, loading: false, signOut: jest.fn() };
+let mockWindowWidth = 320;
+
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: mockWindowWidth, height: 800, scale: 1, fontScale: 1 }),
+}));
 
 jest.mock('../api/settings', () => ({
   fetchSettings: (...args) => mockFetchSettings(...args),
@@ -164,6 +170,7 @@ beforeEach(() => {
   mockAuthState.me = null;
   mockAuthState.loading = false;
   mockAuthState.signOut.mockReset();
+  mockWindowWidth = 320;
   jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
 });
 
@@ -511,6 +518,44 @@ describe('기기 설정 persistence acknowledgement', () => {
 });
 
 describe('설정 화면 저장·취소 의미', () => {
+  it('창 크기 변경 중 dirty 활동 시간을 보존하고 취소·저장 의미를 유지한다', async () => {
+    mockPatchSettings.mockResolvedValueOnce(settings({ routineStartHour: 10 }));
+    const client = makeClient();
+    const screen = () => (
+      <QueryClientProvider client={client}>
+        <ThemeProvider><SettingsScreen /></ThemeProvider>
+      </QueryClientProvider>
+    );
+    const tree = await renderWithProviders(client, <SettingsScreen />);
+
+    await act(async () => control(tree, '변경').props.onPress());
+    await act(async () => control(tree, '시작 10시').props.onPress());
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(screen()));
+    expect(StyleSheet.flatten(tree.root.findByType(ScrollView).props.contentContainerStyle))
+      .toEqual(expect.objectContaining({ paddingLeft: 236, paddingRight: 236 }));
+    expect(control(tree, '시작 10시').props.accessibilityState.selected).toBe(true);
+
+    mockWindowWidth = 600;
+    await act(async () => tree.update(screen()));
+    expect(control(tree, '시작 10시').props.accessibilityState.selected).toBe(true);
+    await act(async () => control(tree, '활동 시간 취소').props.onPress());
+    await act(async () => control(tree, '변경').props.onPress());
+    expect(control(tree, '시작 9시').props.accessibilityState.selected).toBe(true);
+
+    await act(async () => control(tree, '시작 10시').props.onPress());
+    mockWindowWidth = 1200;
+    await act(async () => tree.update(screen()));
+    expect(control(tree, '시작 10시').props.accessibilityState.selected).toBe(true);
+    await act(async () => control(tree, '활동 시간 저장').props.onPress());
+    await flush();
+
+    expect(mockPatchSettings).toHaveBeenCalledTimes(1);
+    expect(mockPatchSettings).toHaveBeenCalledWith(expect.objectContaining({ routineStartHour: 10 }));
+    expect(control(tree, '시작 10시').props.accessibilityState.selected).toBe(true);
+    await act(async () => tree.unmount());
+  });
+
   it('같은 계정의 새 me 객체는 탈퇴 확인을 유지하고 계정 전환만 초기화한다', async () => {
     mockAuthState.me = { email: 'a@example.com' };
     const client = makeClient();

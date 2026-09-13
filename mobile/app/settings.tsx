@@ -13,6 +13,7 @@ import { ActiveHoursCard } from '../src/components/routine/ActiveHoursCard';
 import { NotificationSettingsCard } from '../src/components/settings/NotificationSettingsCard';
 import { PixelIcon, type PixelIconName } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { useA11yPrefs, useThemeMode, type ContrastMode, type ThemeMode } from '../src/theme/ThemeProvider';
 import { useTheme } from '../src/theme/useTheme';
 
@@ -103,6 +104,7 @@ function WithdrawalControls({
 export default function SettingsScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const { preferencesReady: themePreferencesReady, mode, setMode } = useThemeMode();
   const {
     preferencesReady: a11yPreferencesReady,
@@ -148,7 +150,7 @@ export default function SettingsScreen() {
     <View style={styles.screen}>
       <ScreenHeader title="설정" icon={<PixelIcon name="gear" size={16} />} />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
         <RetroCard appearance="refined" style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="palette" size={13} /> 테마

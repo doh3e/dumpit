@@ -13,6 +13,7 @@ import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
 import { useToast } from '../../src/components/retro/ToastProvider';
 import { AiMemoryCard } from '../../src/components/settings/AiMemoryCard';
+import { useContentFrame } from '../../src/layout/useContentFrame';
 import { PixelSprite } from '../../src/components/shop/PixelSprite';
 import { categoryBars, formatFocusTotal, heatLevel, heatmapWeeks } from '../../src/my/stats';
 import { keys } from '../../src/query/keys';
@@ -39,6 +40,7 @@ const HEAT_ALPHA = [0.12, 0.4, 0.7, 1] as const;
 
 export default function MyScreen() {
   const { colors, fonts } = useTheme();
+  const frame = useContentFrame();
   const toast = useToast();
   const qc = useQueryClient();
   const { me, refresh } = useAuth();
@@ -118,7 +120,7 @@ export default function MyScreen() {
         refreshControl={
           <RefreshControl refreshing={pulling} onRefresh={onRefresh} colors={[colors.accent]} tintColor={colors.accent} />
         }
-        contentContainerStyle={[styles.body, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[styles.body, frame, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.stationRow}>
