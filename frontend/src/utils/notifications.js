@@ -45,6 +45,19 @@ async function getNotificationRegistration() {
 export async function showBrowserNotification(title, options = {}, clickUrl) {
   if (getNotificationPermission() !== 'granted') return false
 
+  if (typeof window.dumpitDesktop?.notify === 'function') {
+    try {
+      return await window.dumpitDesktop.notify({
+        title,
+        body: options.body,
+        silent: options.silent,
+        clickUrl: clickUrl || options.data?.url,
+      }) === true
+    } catch {
+      return false
+    }
+  }
+
   const notificationOptions = clickUrl
     ? { ...options, data: { ...(options.data || {}), url: clickUrl } }
     : options

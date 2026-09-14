@@ -23,27 +23,27 @@ const FEATURES = [
 
 export default function HelpModal({ onClose }) {
   return (
-    <Dialog onClose={onClose} title="Dumpit! 도움말" className="w-full max-w-lg">
+    <Dialog onClose={onClose} title="Dumpit! 도움말" variant="refined" className="w-full max-w-lg p-5">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="font-dungeon text-dark text-base text-dark">Dumpit! 도움말</h2>
-          <p className="text-xs font-bold text-sub mt-0.5">현재 베타 서비스 중이에요</p>
+          <h2 className="page-refined-heading text-xl">Dumpit! 도움말</h2>
+          <p className="mt-0.5 text-xs font-bold text-dark">현재 베타 서비스 중이에요</p>
         </div>
         <button
           onClick={onClose}
           aria-label="닫기"
-          className="w-8 h-8 rounded-lg border border-line font-black text-sub hover:bg-chip hover:text-dark transition-colors flex-shrink-0 flex items-center justify-center"
+          className="btn-refined btn-refined-text !h-11 !w-11 flex-shrink-0 !p-0 text-dark"
         >
           ✕
         </button>
       </div>
 
       <div className="mb-5 rounded-lg border-2 tone-urgent-soon px-4 py-3">
-        <p className="inline-flex items-center gap-1 text-xs font-black text-secondary mb-1">
+        <p className="mb-1 inline-flex items-center gap-1 text-xs font-black text-dark">
           <img {...iconProps('party', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
           베타 서비스 안내
         </p>
-        <p className="text-xs font-semibold text-sub leading-relaxed">
+        <p className="text-xs font-semibold leading-relaxed text-dark">
           Dumpit!은 현재 베타 서비스 중이에요. 모든 활동이 무료인 대신,
           AI를 활용하는 기능에는 일일 사용량 제한이 있습니다.
         </p>
@@ -52,7 +52,7 @@ export default function HelpModal({ onClose }) {
       <h3 className="font-galmuri font-bold text-sm text-dark mb-2">주요 기능</h3>
       <div className="space-y-2 mb-5">
         {FEATURES.map(({ icon, title, desc }) => (
-          <div key={title} className="flex gap-3 rounded-lg border border-line bg-card px-3 py-2">
+          <div key={title} className="surface-refined flex gap-3 border border-line px-3 py-2">
             <img {...iconProps(icon, 16)} alt="" className="w-4 h-4 flex-shrink-0 object-contain mt-0.5" />
             <div>
               <p className="text-xs font-black text-dark">{title}</p>
@@ -66,7 +66,7 @@ export default function HelpModal({ onClose }) {
         <img {...iconProps('token', 16)} alt="" className="w-4 h-4 object-contain" />
         일일 AI 사용량 안내
       </h3>
-      <div className="rounded-lg border-2 border-line overflow-hidden mb-1">
+      <div className="surface-refined mb-1 overflow-hidden border border-line">
         {AI_COSTS.map(({ label, cost, highlight }) => (
           <div
             key={label}
@@ -83,7 +83,7 @@ export default function HelpModal({ onClose }) {
       </div>
       <p className="text-[0.6875rem] font-semibold text-sub mb-5">매일 자정(KST)에 초기화돼요.</p>
 
-      <button onClick={onClose} className="w-full btn-retro text-sm">
+      <button onClick={onClose} className="btn-refined btn-refined-primary w-full text-sm">
         확인했어요!
       </button>
     </Dialog>

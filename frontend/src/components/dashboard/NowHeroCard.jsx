@@ -29,7 +29,7 @@ export default function NowHeroCard({
   const bonusTime = allDone && nowSuggestion?.type !== 'SLEEP' && queue.length > 0
 
   return (
-    <div className="card-retro-hero p-4 sm:p-5">
+    <div className="surface-refined border border-line p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex-1 min-w-[220px]">
           <p className="label-retro mb-2">지금 할 일</p>
@@ -48,24 +48,19 @@ export default function NowHeroCard({
             </>
           ) : task ? (
             <>
-              <button
-                type="button"
-                onClick={() => onEdit(task)}
-                className="block max-w-full truncate text-left font-galmuri font-bold text-[1.5rem] max-sm:text-[1.1875rem] leading-tight text-dark hover:text-primary transition-colors"
+              <p
+                className="min-w-0 break-words font-galmuri font-bold text-[1.5rem] max-sm:text-[1.1875rem] leading-tight text-dark"
                 title={task.title}
               >
                 {task.title}
-              </button>
+              </p>
               {heroTime && (
                 <p className="font-dungeon text-[1.1875rem] text-primary mt-1">{heroTime} 마감</p>
               )}
               <p className="text-xs text-sub mt-1">{nowSuggestion.message}</p>
               <div className="mt-3 flex gap-2">
-                <button type="button" onClick={(e) => onComplete(task, e)} className="btn-retro-primary text-xs">
+                <button type="button" onClick={(e) => onComplete(task, e)} className="btn-refined btn-refined-primary text-xs">
                   완료하기
-                </button>
-                <button type="button" onClick={() => onEdit(task)} className="btn-retro text-xs">
-                  수정
                 </button>
               </div>
             </>
@@ -92,7 +87,7 @@ export default function NowHeroCard({
                 key={recommendation.task.taskId}
                 type="button"
                 onClick={() => onEdit(recommendation.task)}
-                className="flex items-center gap-2 rounded-lg border-2 border-line bg-card px-3 py-1.5 text-left hover:border-edge transition-colors"
+                className="btn-refined !flex items-center gap-2 !px-3 !py-1.5 text-left"
               >
                 <span className="text-[0.625rem] font-bold px-1.5 py-0.5 rounded-full border border-line bg-chip text-dark flex-shrink-0">
                   {QUEUE_BUCKET_LABEL[recommendation.bucket] || '추천'}

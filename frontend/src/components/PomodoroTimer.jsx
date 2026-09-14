@@ -1,6 +1,6 @@
 import { useId, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import api from '../services/api'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { setPomodoroFocus, clearPomodoroFocus } from '../services/pomodoroFocus'
 import { nextAfterFocus, autoStartNextFocus } from '../utils/pomodoroCycle'
 import { iconProps } from '../assets/icons'
@@ -388,24 +388,29 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
     <div className={`flex flex-col items-center gap-2 ${compact ? 'p-2' : 'p-3'}`}>
       <div className="flex items-center gap-2">
         <div
-          className="text-[0.625rem] font-black px-3 py-1 rounded-full border border-edge text-on-accent"
-          style={{ background: isFocus ? 'var(--pomo-focus)' : 'var(--pomo-break)' }}
+          className="text-[0.625rem] font-black px-3 py-1 rounded-full border border-edge"
+          style={{
+            background: isFocus ? 'var(--pomo-focus)' : 'var(--pomo-break)',
+            color: isFocus ? 'var(--on-pomo-focus)' : 'var(--on-pomo-break)',
+          }}
         >
           {isFocus ? 'FOCUS' : 'BREAK'}
         </div>
         {isDesktop && (
           <button
             onClick={openDesktopPomodoroWidget}
-            className="w-6 h-6 flex items-center justify-center rounded-md border border-line bg-card hover:bg-secondary transition-colors"
+            className="group min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="뽀모도로 위젯 열기"
             title="뽀모도로 위젯 열기"
           >
-            <img {...iconProps('arrowhead', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+            <span className="w-6 h-6 flex items-center justify-center rounded-md border border-line bg-card group-hover:bg-secondary transition-colors">
+              <img {...iconProps('arrowhead', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
+            </span>
           </button>
         )}
         <button
           onClick={() => setShowSettings(!showSettings)}
-          className="w-6 h-6 flex items-center justify-center hover:opacity-70 transition-opacity"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity"
           aria-expanded={showSettings}
           aria-label="타이머 설정"
           title="타이머 설정"
@@ -486,7 +491,7 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
           <button
             onClick={() => saveSettings(focusMin, breakMin, setsTarget, longBreakMin, longBreakEvery)}
             className="w-full btn-retro text-on-accent text-[0.625rem] py-1.5"
-            style={{ background: 'var(--pomo-focus)' }}
+            style={{ background: 'var(--accent-fill)' }}
           >
             적용
           </button>
@@ -544,8 +549,11 @@ export default function PomodoroTimer({ tasks = [], recommendedTaskId = '', comp
       <div className="flex items-center gap-2 w-full">
         <button
           onClick={toggle}
-          style={{ background: running ? 'var(--pomo-soft)' : 'var(--pomo-focus)' }}
-          className={`btn-retro flex-1 text-xs py-2 ${running ? 'text-dark' : 'text-on-accent'}`}
+          style={{
+            background: running ? 'var(--pomo-soft)' : isFocus ? 'var(--pomo-focus)' : 'var(--pomo-break)',
+            color: running ? undefined : isFocus ? 'var(--on-pomo-focus)' : 'var(--on-pomo-break)',
+          }}
+          className={`btn-retro flex-1 text-xs py-2 ${running ? 'text-dark' : ''}`}
         >
           {running ? '일시정지' : isFocus ? '집중시작' : '쉬기시작'}
         </button>

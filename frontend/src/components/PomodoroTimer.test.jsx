@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import PomodoroTimer from './PomodoroTimer'
@@ -7,7 +8,7 @@ import PomodoroTimer from './PomodoroTimer'
 vi.mock('../services/api', () => ({
   default: { post: vi.fn().mockResolvedValue({ data: { coins: 1 } }) },
 }))
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../hooks/useAuth', () => ({
   useAuth: () => ({ refreshCoins: vi.fn() }),
 }))
 
@@ -39,6 +40,7 @@ describe('PomodoroTimer 카운트다운', () => {
   afterEach(() => {
     vi.useRealTimers()
     cleanup()
+    delete window.dumpitDesktop
   })
 
   it('집중 중에는 1초마다 줄어든다', async () => {
@@ -97,6 +99,68 @@ describe('PomodoroTimer 카운트다운', () => {
     await click('집중시작')
     await advance(2000)
     expect(clock()).toBe('00:55')
+  })
+
+  it('채움 위 상태·재개 조작만 모드별 전경 토큰을 사용한다', async () => {
+    render(<PomodoroTimer />)
+
+    const badge = screen.getByText('FOCUS')
+    const start = screen.getByRole('button', { name: '집중시작' })
+    expect(badge).toHaveStyle({ color: 'var(--on-pomo-focus)' })
+    expect(start).toHaveStyle({ color: 'var(--on-pomo-focus)' })
+
+    await click('집중시작')
+    const pause = screen.getByRole('button', { name: '일시정지' })
+    expect(pause).toHaveStyle({ background: 'var(--pomo-soft)' })
+    expect(pause).toHaveClass('text-dark')
+
+    await click('일시정지')
+    expect(screen.getByRole('button', { name: '집중시작' }))
+      .toHaveStyle({ color: 'var(--on-pomo-focus)' })
+  })
+
+  it('휴식 상태 배지와 시작 조작은 휴식 전경 토큰을 사용한다', async () => {
+    render(<PomodoroTimer />)
+
+    await click('집중시작')
+    await advance(60_000)
+
+    expect(screen.getByText('BREAK')).toHaveStyle({ color: 'var(--on-pomo-break)' })
+    const pause = screen.getByRole('button', { name: '일시정지' })
+    expect(pause).toHaveStyle({ background: 'var(--pomo-soft)' })
+    expect(pause).toHaveClass('text-dark')
+    await click('일시정지')
+    expect(screen.getByRole('button', { name: '쉬기시작' }))
+      .toHaveStyle({ color: 'var(--on-pomo-break)' })
+  })
+
+  it('데스크톱 위젯에는 기존 색상 payload만 전달한다', () => {
+    const updatePomodoroState = vi.fn()
+    window.dumpitDesktop = { updatePomodoroState }
+    render(<PomodoroTimer />)
+
+    const payload = updatePomodoroState.mock.calls.find(([state]) => state.active)?.[0]
+    expect(Object.keys(payload.colors)).toEqual([
+      'focus', 'break', 'ring', 'soft', 'bg', 'card', 'fg', 'sub', 'line', 'edge', 'chip',
+      'shadowSm', 'onAccent',
+    ])
+  })
+
+  it('위젯 열기와 설정은 평면 외관·아이콘 크기를 유지한 44px 히트 영역을 제공한다', () => {
+    window.dumpitDesktop = { updatePomodoroState: vi.fn() }
+    render(<PomodoroTimer />)
+
+    const widgetButton = screen.getByRole('button', { name: '뽀모도로 위젯 열기' })
+    const settingsButton = screen.getByRole('button', { name: '타이머 설정' })
+    expect(widgetButton).toHaveClass('min-w-[44px]', 'min-h-[44px]')
+    expect(settingsButton).toHaveClass('min-w-[44px]', 'min-h-[44px]')
+    expect(widgetButton).not.toHaveClass('btn-retro', 'btn-refined')
+    expect(settingsButton).not.toHaveClass('btn-retro', 'btn-refined')
+
+    const widgetVisual = widgetButton.querySelector('span')
+    expect(widgetVisual).toHaveClass('w-6', 'h-6', 'rounded-md', 'border-line', 'bg-card')
+    expect(widgetVisual.querySelector('img')).toHaveClass('w-3.5', 'h-3.5')
+    expect(settingsButton.querySelector('img')).toHaveClass('w-5', 'h-5')
   })
 
   it('세트 1이면 휴식 후 자동으로 다음 집중을 시작하지 않는다', async () => {

@@ -1,7 +1,9 @@
 import { useEffect, lazy, Suspense, Component } from 'react'
 import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom'
-import { AuthProvider, useAuth } from './context/AuthContext'
-import { ToastProvider, notifyToast } from './context/ToastContext'
+import { AuthProvider } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
+import { useAuth } from './hooks/useAuth'
+import { notifyToast } from './services/notifyToast'
 import Layout from './components/layout/Layout'
 import HomePage from './pages/HomePage'
 

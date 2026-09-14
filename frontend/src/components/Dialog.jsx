@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 // 배경 클릭 판별은 이벤트 대상이 dialog 자신인지로 한다(::backdrop 클릭은 dialog가 target).
 export default function Dialog({
   onClose, title, children, className = '', placement = 'center', closeOnBackdrop = true, initialFocusRef,
+  variant = 'retro',
 }) {
   const ref = useRef(null)
   const downOnBackdrop = useRef(false)
@@ -32,7 +33,7 @@ export default function Dialog({
   }
 
   return createPortal(
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 배경 클릭은 포인터 전용, 키보드 동등 경로는 Esc(native cancel → handleCancel)
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- native dialog 배경 클릭은 포인터 전용이며 키보드 동등 경로는 Esc(cancel → handleCancel)다
     <dialog
       ref={ref}
       aria-label={title}
@@ -41,7 +42,9 @@ export default function Dialog({
       onClick={handleClick}
       className={['dialog-retro', placement === 'bottom' && 'dialog-retro-bottom'].filter(Boolean).join(' ')}
     >
-      <div className={`card-retro ${className}`}>{children}</div>
+      <div className={`${variant === 'refined' ? 'surface-refined' : 'card-retro'} ${className}`}>
+        {children}
+      </div>
     </dialog>,
     document.body,
   )

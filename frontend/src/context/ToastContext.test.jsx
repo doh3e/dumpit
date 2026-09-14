@@ -2,7 +2,8 @@
 import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { ToastProvider, notifyToast } from './ToastContext'
+import { ToastProvider } from './ToastContext'
+import { notifyToast } from '../services/notifyToast'
 
 beforeAll(() => {
   // jsdom은 Popover API가 없으면서 UA 스타일로 [popover]를 display:none 처리한다 — 표시 여부만 흉내 낸다
@@ -20,9 +21,12 @@ describe('ToastProvider', () => {
     render(<ToastProvider><div /></ToastProvider>)
     act(() => notifyToast('상태 변경에 실패했어요.', 'error'))
     expect(screen.getByRole('alert')).toHaveTextContent('상태 변경에 실패했어요.')
+    expect(screen.getByRole('alert')).toHaveClass('surface-refined')
     act(() => vi.advanceTimersByTime(10000))
     expect(screen.getByRole('alert')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
+    const close = screen.getByRole('button', { name: '닫기' })
+    expect(close).toHaveClass('btn-refined', 'btn-refined-text', '!h-11', '!w-11')
+    fireEvent.click(close)
     expect(screen.queryByRole('alert')).toBeNull()
   })
 

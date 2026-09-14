@@ -30,7 +30,7 @@ function editedDate(notice) {
 
 const GRID_COLS = 'grid-cols-[minmax(0,1fr)_4.75rem] sm:grid-cols-[minmax(0,1fr)_4.75rem_4.75rem]'
 const PAGE_BTN =
-  'h-9 min-w-[2.25rem] rounded-lg border-[1.5px] border-edge bg-card px-2 font-dungeon text-xs text-dark transition-colors hover:bg-chip disabled:opacity-40 disabled:hover:bg-card'
+  'btn-refined !h-11 !min-w-[max(44px,2.75rem)] !px-2 text-xs'
 const PAGE_WINDOW = 5
 
 function NoticeRow({ notice, isPinned, expanded, onToggle }) {
@@ -41,15 +41,15 @@ function NoticeRow({ notice, isPinned, expanded, onToggle }) {
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
-        className={`grid w-full ${GRID_COLS} items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-chip ${isPinned ? 'bg-chip' : ''}`}
+        className={`btn-refined !grid min-w-0 !w-full ${GRID_COLS} items-start gap-2 !rounded-none !border-0 !px-4 !py-3 text-left focus-visible:[outline-offset:-4px] ${isPinned ? 'btn-refined-selected' : 'btn-refined-text'}`}
       >
-        <span className="flex min-w-0 items-center gap-1.5">
+        <span className="flex min-w-0 items-start gap-1.5">
           {isPinned && (
             <span aria-label="고정 공지" className="flex-shrink-0">
               <img {...iconProps('pin', 14)} alt="" className="w-3.5 h-3.5 object-contain" />
             </span>
           )}
-          <span className={`truncate text-sm text-dark ${expanded ? 'font-black' : 'font-bold'}`}>{notice.title}</span>
+          <span className={`min-w-0 flex-1 break-words whitespace-normal font-sans text-sm text-dark ${expanded ? 'font-black' : 'font-bold'}`}>{notice.title}</span>
           <span
             aria-hidden
             className={`flex-shrink-0 text-[0.625rem] text-sub transition-transform ${expanded ? 'rotate-180' : ''}`}
@@ -57,8 +57,8 @@ function NoticeRow({ notice, isPinned, expanded, onToggle }) {
             ▼
           </span>
         </span>
-        <time className="text-center text-xs font-bold text-sub">{formatDay(notice.publishAt)}</time>
-        <span className="hidden text-center text-xs font-bold text-sub sm:block">{edited ? formatDay(edited) : '-'}</span>
+        <time className="text-center font-sans text-xs font-bold text-sub">{formatDay(notice.publishAt)}</time>
+        <span className="hidden text-center font-sans text-xs font-bold text-sub sm:block">{edited ? formatDay(edited) : '-'}</span>
       </button>
       {expanded && (
         <div className="border-t border-dashed border-line px-4 py-4">
@@ -118,23 +118,23 @@ export default function NoticePage() {
   const isEmpty = pinned.length === 0 && notices.length === 0
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="font-dungeon text-dark text-2xl">공지사항</h1>
+        <h1 className="page-refined-heading">공지사항</h1>
         <p className="mt-2 text-sm font-semibold text-sub">업데이트와 운영 안내를 모아볼 수 있어요.</p>
       </div>
 
       {loading ? (
-        <div className="card-retro py-12 text-center">
+        <div className="surface-refined py-12 text-center">
           <p className="font-bold text-sub">불러오는 중...</p>
         </div>
       ) : isEmpty ? (
-        <div className="card-retro py-12 text-center">
+        <div className="surface-refined py-12 text-center">
           <p className="font-black text-dark">아직 공지가 없어요.</p>
         </div>
       ) : (
         <>
-          <div className="card-retro overflow-hidden !p-0">
+          <div className="surface-refined overflow-hidden border border-line">
             <div className={`grid ${GRID_COLS} gap-2 border-b-2 border-line bg-accent px-4 py-2.5`}>
               <span className="label-retro">제목</span>
               <span className="label-retro text-center">등록일</span>
@@ -166,8 +166,8 @@ export default function NoticePage() {
           </div>
 
           {totalPages > 1 && (
-            <nav aria-label="공지 페이지" className="flex items-center justify-center gap-1.5">
-              <button type="button" onClick={() => goPage(page - 1)} disabled={page === 0} className={PAGE_BTN}>
+            <nav aria-label="공지 페이지" className="flex flex-wrap items-center justify-center gap-1.5">
+              <button type="button" aria-label="이전 페이지" onClick={() => goPage(page - 1)} disabled={page === 0} className={PAGE_BTN}>
                 ◀
               </button>
               {pageNumbers.map((n) => (
@@ -176,13 +176,14 @@ export default function NoticePage() {
                   type="button"
                   onClick={() => goPage(n)}
                   aria-current={n === page ? 'page' : undefined}
-                  className={`${PAGE_BTN} ${n === page ? '!bg-primary !text-on-accent' : ''}`}
+                  className={`${PAGE_BTN} ${n === page ? 'btn-refined-selected' : ''}`}
                 >
                   {n + 1}
                 </button>
               ))}
               <button
                 type="button"
+                aria-label="다음 페이지"
                 onClick={() => goPage(page + 1)}
                 disabled={page >= totalPages - 1}
                 className={PAGE_BTN}

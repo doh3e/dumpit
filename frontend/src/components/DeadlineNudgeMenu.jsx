@@ -153,11 +153,11 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
         type="button"
         onClick={() => setOpen((value) => !value)}
         className={isCard
-          ? 'w-full rounded-lg border-2 tone-urgent-soon px-2 py-2 text-center transition-colors'
-          : `flex items-center gap-1.5 rounded-full px-3 py-1 border-2 font-dungeon text-sm transition-colors ${
+          ? 'btn-refined !block w-full tone-urgent-soon !px-2 !py-2 text-center'
+          : `btn-refined flex items-center gap-1.5 !rounded-full !px-3 font-dungeon text-sm ${
               urgentCount > 0
-                ? 'bg-[var(--warn)] border-edge text-on-warn'
-                : 'bg-chip border-line text-dark'
+                ? 'border-edge bg-[var(--warn)] text-on-warn'
+                : 'border-line bg-chip text-dark'
             }`
         }
         aria-label="마감 임박 알림"
@@ -188,7 +188,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
         /* 앵커(알약/카드) 기준이 아니라 뷰포트 기준 — 좁은 화면에서 왼쪽으로 잘려나가지 않게
            상단바(h-20) 바로 아래 우측에 고정 */
         <div className="fixed right-4 top-[5.5rem] z-50 w-[min(22rem,calc(100vw-2rem))]">
-          <div className="card-retro !p-3 bg-card">
+          <div className="surface-refined border border-line p-3">
             <div className="flex items-center justify-between gap-3 px-1 pb-2 border-b-2 border-line">
               <p className="text-sm font-black text-dark">마감 임박</p>
               <span className="text-[0.625rem] font-extrabold text-sub">24시간 이내</span>
@@ -206,7 +206,7 @@ export default function DeadlineNudgeMenu({ variant = 'pill' }) {
                     key={task.taskId}
                     to="/dashboard"
                     onClick={() => setOpen(false)}
-                    className={`block rounded-lg border-2 p-3 transition-colors ${
+                    className={`btn-refined !block w-full p-3 text-left ${
                       task.overdue
                         ? 'border-primary tone-overdue'
                         : 'border-warn tone-urgent-soon'

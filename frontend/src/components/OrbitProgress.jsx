@@ -1,6 +1,6 @@
 // 크기는 --orbit-size(clamp)로 뷰포트 비례: 모바일 64px ~ 데스크톱 120px.
 // 엔드포인트가 rem이라 글자 크기 설정(루트 font-size)과도 연동된다.
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { PLANET_SPRITES, spriteFor } from '../shop/registry'
 import PixelSprite from './PixelSprite'
 

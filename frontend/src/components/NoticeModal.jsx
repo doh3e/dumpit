@@ -15,24 +15,24 @@ export default function NoticeModal({ notice, onClose }) {
   if (!notice) return null
 
   return (
-    <Dialog onClose={onClose} title={notice.title} className="w-full max-w-lg">
+    <Dialog onClose={onClose} title={notice.title} variant="refined" className="w-full max-w-lg p-5">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[0.625rem] font-black uppercase text-primary">Notice</p>
-          <h2 className="font-dungeon text-dark mt-1 text-xl leading-tight">{notice.title}</h2>
+          <h2 className="page-refined-heading mt-1 text-xl leading-tight">{notice.title}</h2>
           <p className="mt-2 text-xs font-semibold text-sub">{formatDate(notice.publishAt)}</p>
         </div>
         <button
           type="button"
           onClick={onClose}
           aria-label="닫기"
-          className="h-8 w-8 flex-shrink-0 rounded-lg border border-line text-sm font-black text-sub transition-colors hover:bg-chip hover:text-dark"
+          className="btn-refined btn-refined-text !h-11 !w-11 flex-shrink-0 !p-0 text-sm text-dark"
         >
           X
         </button>
       </div>
 
-      <div className="rounded-lg border-2 border-line bg-card p-4">
+      <div className="surface-refined border border-line p-4">
         <MarkdownRenderer content={notice.content} />
       </div>
 
@@ -40,14 +40,14 @@ export default function NoticeModal({ notice, onClose }) {
         <Link
           to="/notices"
           onClick={onClose}
-          className="btn-retro flex-1 bg-accent py-2 text-center text-sm text-dark"
+          className="btn-refined flex-1 text-center text-sm"
         >
           지난 공지
         </Link>
         <button
           type="button"
           onClick={onClose}
-          className="btn-retro-primary flex-1 py-2 text-sm"
+          className="btn-refined btn-refined-primary flex-1 text-sm"
         >
           확인
         </button>

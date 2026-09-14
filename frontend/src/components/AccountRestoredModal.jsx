@@ -22,15 +22,15 @@ export default function AccountRestoredModal() {
   if (!open) return null
 
   return (
-    <Dialog onClose={() => setOpen(false)} title="다시 오셨네요!" className="w-full max-w-md">
-      <h2 className="text-xl font-bold text-dark">다시 오셨네요!</h2>
+    <Dialog onClose={() => setOpen(false)} title="다시 오셨네요!" variant="refined" className="w-full max-w-md p-5">
+      <h2 className="page-refined-heading text-xl">다시 오셨네요!</h2>
       <p className="mt-3 text-sm font-semibold leading-relaxed text-sub">
         탈퇴 신청이 취소되었어요. 할 일과 아이디어, 루틴까지 예전 기록이 모두 그대로 돌아왔습니다.
       </p>
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="btn-retro-primary mt-5 w-full py-2 text-sm"
+        className="btn-refined btn-refined-primary mt-5 w-full text-sm"
       >
         확인
       </button>

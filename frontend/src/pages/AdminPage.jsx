@@ -72,7 +72,7 @@ function toTimestamp(value) {
 
 function StatPill({ label, value }) {
   return (
-    <div className="rounded-lg border-2 border-line bg-card px-3 py-2">
+    <div className="surface-refined border border-line px-3 py-2">
       <p className="text-[0.625rem] font-black text-sub">{label}</p>
       <p className="mt-0.5 text-lg font-black text-dark">{value}</p>
     </div>
@@ -343,12 +343,12 @@ export default function AdminPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-dungeon text-dark text-2xl">관리자</h1>
+          <h1 className="page-refined-heading">관리자</h1>
           <p className="mt-2 text-sm font-semibold text-sub">
             문의 {inquiries.length}건 · 대기 {pendingCount}건 · 회원 {users.length}명
           </p>
         </div>
-        <div className="inline-flex rounded-lg border border-line bg-card p-1">
+        <div className="surface-refined grid grid-cols-3 border border-line p-1">
           {[
             ['inquiries', '문의'],
             ['users', '회원'],
@@ -358,8 +358,9 @@ export default function AdminPage() {
               key={value}
               type="button"
               onClick={() => setTab(value)}
-              className={`rounded-md px-4 py-2 text-sm font-black transition-colors ${
-                tab === value ? 'bg-primary text-on-accent' : 'text-sub hover:bg-accent'
+              aria-pressed={tab === value}
+              className={`btn-refined min-w-0 !px-3 text-sm ${
+                tab === value ? 'btn-refined-selected' : 'btn-refined-text text-sub'
               }`}
             >
               {label}
@@ -379,16 +380,16 @@ export default function AdminPage() {
 
       {tab === 'inquiries' && (
         loadingInquiries ? (
-          <div className="card-retro py-12 text-center">
+          <div className="surface-refined border border-line px-5 py-12 text-center">
             <p className="font-bold text-sub">불러오는 중...</p>
           </div>
         ) : inquiries.length === 0 ? (
-          <div className="card-retro py-12 text-center">
+          <div className="surface-refined border border-line px-5 py-12 text-center">
             <p className="text-base font-extrabold text-dark">접수된 문의가 없어요.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="card-retro">
+            <div className="surface-refined border border-line p-5">
               <h3 className="mb-4 font-galmuri font-bold text-dark">문의 목록</h3>
               <div className="max-h-[600px] space-y-2 overflow-y-auto pr-1">
                 {inquiries.map((inquiry) => {
@@ -399,8 +400,8 @@ export default function AdminPage() {
                       key={inquiry.inquiryId}
                       type="button"
                       onClick={() => openInquiry(inquiry)}
-                      className={`w-full rounded-lg border-2 p-3 text-left transition-colors ${
-                        isSelected ? 'tone-overdue' : 'border-line hover:border-line'
+                      className={`btn-refined !block w-full p-3 text-left ${
+                        isSelected ? 'btn-refined-selected tone-overdue' : 'border-line'
                       }`}
                     >
                       <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -417,7 +418,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="card-retro">
+            <div className="surface-refined border border-line p-5">
               <h3 className="mb-4 font-galmuri font-bold text-dark">상세 / 답변</h3>
               {!selected ? (
                 <div className="py-12 text-center">
@@ -425,7 +426,7 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="space-y-2 rounded-lg border border-line bg-accent p-3">
+                  <div className="surface-refined space-y-2 border border-line p-3">
                     <p className="text-xs">
                       <span className="font-bold text-sub">이메일:</span>{' '}
                       <a href={`mailto:${selected.userEmail}`} className="text-primary underline">
@@ -438,7 +439,7 @@ export default function AdminPage() {
 
                   <div>
                     <span className="mb-1 block text-xs font-bold text-sub">문의 내용</span>
-                    <pre className="whitespace-pre-wrap rounded-lg border-2 border-line bg-card p-3 text-sm font-medium text-dark">
+                    <pre className="whitespace-pre-wrap break-words rounded-lg border border-line bg-card p-3 font-sans text-sm font-medium text-dark">
                       {selected.message}
                     </pre>
                   </div>
@@ -448,7 +449,7 @@ export default function AdminPage() {
                       <span className="mb-1 block text-xs font-bold text-sub">
                         이전 답변 ({formatDate(selected.repliedAt)})
                       </span>
-                      <pre className="whitespace-pre-wrap rounded-lg border-2 cat-chip cat-health p-3 text-sm font-medium text-dark">
+                      <pre className="whitespace-pre-wrap break-words rounded-lg border cat-chip cat-health p-3 font-sans text-sm font-medium text-dark">
                         {selected.adminReply}
                       </pre>
                     </div>
@@ -465,20 +466,20 @@ export default function AdminPage() {
                       rows={6}
                       maxLength={3000}
                       placeholder="답변 내용을 입력해주세요."
-                      className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
+                      className="input-refined resize-none text-sm font-semibold"
                     />
                     <p className="mt-1 text-right text-[0.625rem] font-bold text-sub">{reply.length} / 3000</p>
                   </div>
 
                   <div className="flex gap-3">
-                    <button type="button" onClick={() => setSelected(null)} className="btn-retro flex-1 bg-accent py-2 text-sm text-dark">
+                    <button type="button" onClick={() => setSelected(null)} className="btn-refined flex-1 text-sm">
                       닫기
                     </button>
                     <button
                       type="button"
                       onClick={handleSendReply}
                       disabled={!reply.trim() || sending}
-                      className="btn-retro-secondary flex-1 py-2 text-sm disabled:opacity-50"
+                      className="btn-refined btn-refined-primary flex-1 text-sm"
                     >
                       {sending ? '전송 중...' : '답변 전송'}
                     </button>
@@ -499,7 +500,7 @@ export default function AdminPage() {
             <StatPill label="탈퇴" value={userStats.withdrawn} />
           </div>
 
-          <div className="rounded-lg border border-line bg-card p-3">
+          <div className="surface-refined border border-line p-3">
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_160px_180px]">
               <div>
                 <label htmlFor={userSearchId} className="mb-1 block text-[0.625rem] font-black text-sub">검색</label>
@@ -508,7 +509,7 @@ export default function AdminPage() {
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
                   placeholder="이메일, 닉네임, 밴 사유"
-                  className="w-full rounded-lg border-2 border-line bg-accent px-3 py-2 text-sm font-bold focus:border-primary"
+                  className="input-refined text-sm font-bold"
                 />
               </div>
               <div>
@@ -517,7 +518,7 @@ export default function AdminPage() {
                   id={userStatusFilterId}
                   value={userStatusFilter}
                   onChange={(e) => setUserStatusFilter(e.target.value)}
-                  className="w-full rounded-lg border-2 border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
+                  className="input-refined text-sm font-bold"
                 >
                   {USER_STATUS_FILTERS.map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
@@ -530,7 +531,7 @@ export default function AdminPage() {
                   id={userSortId}
                   value={userSort}
                   onChange={(e) => setUserSort(e.target.value)}
-                  className="w-full rounded-lg border-2 border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
+                  className="input-refined text-sm font-bold"
                 >
                   {USER_SORT_OPTIONS.map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
@@ -543,7 +544,7 @@ export default function AdminPage() {
             </p>
           </div>
 
-          <div className="card-retro overflow-hidden !p-0">
+          <div className="surface-refined border border-line !p-0">
             {loadingUsers ? (
               <div className="py-12 text-center">
                 <p className="font-bold text-sub">불러오는 중...</p>
@@ -633,7 +634,7 @@ export default function AdminPage() {
                               type="button"
                               onClick={() => openUserManage(user)}
                               disabled={disabled}
-                              className="whitespace-nowrap rounded-lg border border-line bg-card px-3 py-1.5 text-xs font-black text-dark shadow-retro disabled:opacity-40"
+                              className="btn-refined whitespace-nowrap !px-3 text-xs"
                             >
                               관리
                             </button>
@@ -651,7 +652,7 @@ export default function AdminPage() {
 
       {tab === 'notices' && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="card-retro">
+          <div className="surface-refined border border-line p-5">
             <h3 className="mb-4 font-galmuri font-bold text-dark">
               {editingNoticeId ? '공지 수정' : '공지 작성'}
             </h3>
@@ -663,20 +664,20 @@ export default function AdminPage() {
                   value={noticeForm.title}
                   onChange={(e) => setNoticeForm((prev) => ({ ...prev, title: e.target.value }))}
                   maxLength={200}
-                  className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
+                  className="input-refined text-sm font-bold"
                   placeholder="공지 제목"
                 />
               </div>
               <div>
                 <label htmlFor={noticeContentId} className="mb-1 block text-xs font-bold text-sub">내용</label>
-                <div className="overflow-hidden rounded-lg border border-line bg-card">
+                <div className="rounded-lg border border-line bg-card">
                   <div className="flex flex-wrap gap-1 border-b-2 border-line bg-accent px-2 py-2">
                     {MARKDOWN_TOOLS.map((tool) => (
                       <button
                         key={tool.label}
                         type="button"
                         onClick={() => insertMarkdown(tool)}
-                        className="rounded-md border-2 border-line bg-card px-2 py-1 text-[0.625rem] font-black text-dark hover:border-edge"
+                        className="btn-refined !px-2 text-[0.625rem]"
                       >
                         {tool.label}
                       </button>
@@ -689,7 +690,7 @@ export default function AdminPage() {
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, content: e.target.value }))}
                     rows={10}
                     maxLength={5000}
-                    className="w-full resize-none bg-card px-3 py-2 text-sm font-semibold"
+                    className="input-refined resize-none !rounded-none !border-0 text-sm font-semibold focus-visible:[outline-offset:-3px]"
                     placeholder="## 업데이트 안내&#10;- 새 기능&#10;- 수정 사항&#10;&#10;**중요한 내용**을 강조할 수 있어요."
                   />
                 </div>
@@ -697,7 +698,7 @@ export default function AdminPage() {
               </div>
               <div>
                 <p className="mb-1 block text-xs font-bold text-sub">미리보기</p>
-                <div className="min-h-28 rounded-lg border-2 border-line bg-card p-3">
+                <div className="surface-refined min-h-28 border border-line p-3">
                   {noticeForm.content.trim() ? (
                     <MarkdownRenderer content={noticeForm.content} />
                   ) : (
@@ -713,7 +714,7 @@ export default function AdminPage() {
                     type="datetime-local"
                     value={noticeForm.publishAt}
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, publishAt: e.target.value }))}
-                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
+                    className="input-refined text-sm font-bold"
                   />
                 </div>
                 <div>
@@ -722,7 +723,7 @@ export default function AdminPage() {
                     id={noticeStatusId}
                     value={noticeForm.status}
                     onChange={(e) => setNoticeForm((prev) => ({ ...prev, status: e.target.value }))}
-                    className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold focus:border-primary"
+                    className="input-refined text-sm font-bold"
                   >
                     <option value="PUBLISHED">게시</option>
                     <option value="DRAFT">초안</option>
@@ -731,7 +732,7 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-card px-3 py-2">
+                <label className="surface-refined flex min-h-[max(44px,2.75rem)] cursor-pointer items-center gap-2 border border-line px-3 py-2">
                   <input
                     type="checkbox"
                     checked={noticeForm.pinned}
@@ -743,7 +744,7 @@ export default function AdminPage() {
                     상단 고정
                   </span>
                 </label>
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-card px-3 py-2">
+                <label className="surface-refined flex min-h-[max(44px,2.75rem)] cursor-pointer items-center gap-2 border border-line px-3 py-2">
                   <input
                     type="checkbox"
                     checked={noticeForm.popup}
@@ -755,7 +756,7 @@ export default function AdminPage() {
               </div>
               <div className="flex gap-3">
                 {editingNoticeId && (
-                  <button type="button" onClick={resetNoticeForm} className="btn-retro flex-1 bg-accent py-2 text-sm text-dark">
+                  <button type="button" onClick={resetNoticeForm} className="btn-refined flex-1 text-sm">
                     새 공지
                   </button>
                 )}
@@ -763,7 +764,7 @@ export default function AdminPage() {
                   type="button"
                   onClick={saveNotice}
                   disabled={savingNotice || !noticeForm.title.trim() || !noticeForm.content.trim()}
-                  className="btn-retro-primary flex-1 py-2 text-sm disabled:opacity-50"
+                  className="btn-refined btn-refined-primary flex-1 text-sm"
                 >
                   {savingNotice ? '저장 중...' : editingNoticeId ? '수정 저장' : '공지 저장'}
                 </button>
@@ -771,7 +772,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="card-retro">
+          <div className="surface-refined border border-line p-5">
             <h3 className="mb-4 font-galmuri font-bold text-dark">공지 목록</h3>
             {loadingNotices ? (
               <div className="py-12 text-center">
@@ -784,7 +785,7 @@ export default function AdminPage() {
             ) : (
               <div className="max-h-[680px] space-y-3 overflow-y-auto pr-1">
                 {notices.map((notice) => (
-                  <article key={notice.noticeId} className="rounded-lg border-2 border-line bg-card p-3">
+                  <article key={notice.noticeId} className="surface-refined border border-line p-3">
                     <div className="mb-2 flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
@@ -809,14 +810,14 @@ export default function AdminPage() {
                         <button
                           type="button"
                           onClick={() => editNotice(notice)}
-                          className="rounded-lg border border-line bg-accent px-2 py-1 text-[0.625rem] font-black text-dark"
+                          className="btn-refined !px-2 text-[0.625rem]"
                         >
                           수정
                         </button>
                         <button
                           type="button"
                           onClick={() => archiveNotice(notice)}
-                          className="rounded-lg border-2 border-red-500 bg-card px-2 py-1 text-[0.625rem] font-black text-red-600"
+                          className="btn-refined btn-refined-danger !px-2 text-[0.625rem]"
                         >
                           보관
                         </button>
@@ -834,17 +835,17 @@ export default function AdminPage() {
       )}
 
       {managingUser && (
-        <Dialog onClose={() => setManagingUser(null)} title="회원 관리" className="w-full max-w-xl">
+        <Dialog onClose={() => setManagingUser(null)} title="회원 관리" variant="refined" className="w-full max-w-xl p-5">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-dungeon text-dark text-xl">회원 관리</h3>
+              <h3 className="page-refined-heading text-xl">회원 관리</h3>
               <p className="mt-2 truncate text-xs font-semibold text-sub">{managingUser.email}</p>
             </div>
             <button
               type="button"
               onClick={() => setManagingUser(null)}
               aria-label="닫기"
-              className="h-8 w-8 rounded-lg border border-line text-sm font-black text-dark hover:bg-chip hover:text-dark"
+              className="btn-refined btn-refined-text !h-11 !w-11 flex-shrink-0 !p-0 text-sm text-dark"
             >
               X
             </button>
@@ -852,11 +853,11 @@ export default function AdminPage() {
 
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+              <div className="surface-refined border border-line px-4 py-3">
                 <p className="text-xs font-black text-sub">보유 코인</p>
                 <p className="mt-1 text-sm font-black text-dark">{managingUser.coinBalance ?? 0}</p>
               </div>
-              <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+              <div className="surface-refined border border-line px-4 py-3">
                 <p className="text-xs font-black text-sub">오늘 AI 잔여</p>
                 <p className="mt-1 text-sm font-black text-dark">
                   {managingUser.aiUsage ? `${managingUser.aiUsage.remaining} / ${managingUser.aiUsage.limit}` : '-'}
@@ -871,14 +872,14 @@ export default function AdminPage() {
                 ['아이디어', managingUser.activity?.ideaCount ?? 0],
                 ['브레인덤프', managingUser.activity?.brainDumpCount ?? 0],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-lg border-2 border-line bg-accent px-3 py-2">
+                <div key={label} className="surface-refined border border-line px-3 py-2">
                   <p className="text-[0.625rem] font-black text-sub">{label}</p>
                   <p className="mt-1 text-sm font-black text-dark">{value}</p>
                 </div>
               ))}
             </div>
 
-            <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+            <div className="surface-refined border border-line px-4 py-3">
               <p className="text-xs font-black text-sub">현재 상태</p>
               <p className="mt-1 text-sm font-black text-dark">
                 {managingUser.isAdmin ? '관리자' : USER_STATUS[managingUser.status]?.label || managingUser.status}
@@ -886,9 +887,9 @@ export default function AdminPage() {
             </div>
 
             {managingUser.status === 'ACTIVE' && (
-              <div className="rounded-lg border-2 border-line bg-card px-4 py-3">
+              <div className="surface-refined border border-line px-4 py-3">
                 <p className="text-xs font-black text-sub">이벤트 코인 지급</p>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-2 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[6rem_minmax(0,1fr)_auto]">
                   <input
                     type="number"
                     aria-label="지급량"
@@ -897,7 +898,7 @@ export default function AdminPage() {
                     value={coinAmountInput}
                     onChange={(e) => setCoinAmountInput(e.target.value)}
                     placeholder="지급량"
-                    className="w-24 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
+                    className="input-refined min-w-0 text-sm font-semibold"
                   />
                   <input
                     aria-label="지급 사유 (운영 기록용, 선택)"
@@ -905,13 +906,13 @@ export default function AdminPage() {
                     onChange={(e) => setCoinReasonInput(e.target.value)}
                     maxLength={200}
                     placeholder="지급 사유 (운영 기록용, 선택)"
-                    className="min-w-[160px] flex-1 rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
+                    className="input-refined min-w-0 text-sm font-semibold"
                   />
                   <button
                     type="button"
                     onClick={handleGrantCoins}
                     disabled={workingUserId === managingUser.userId || !coinAmountInput}
-                    className="btn-retro-secondary px-4 py-2 text-xs disabled:opacity-50"
+                    className="btn-refined btn-refined-primary w-full px-4 text-xs sm:w-auto"
                   >
                     {workingUserId === managingUser.userId ? '처리 중...' : '지급'}
                   </button>
@@ -929,15 +930,15 @@ export default function AdminPage() {
                   rows={4}
                   maxLength={500}
                   placeholder="운영 메모로 남길 사유를 입력해주세요."
-                  className="w-full resize-none rounded-lg border border-line bg-accent px-3 py-2 text-sm font-semibold focus:border-primary"
+                  className="input-refined resize-none text-sm font-semibold"
                 />
               </div>
             )}
 
             {managingUser.status === 'BANNED' && managingUser.banReason && (
-              <div className="rounded-lg border-2 tone-danger px-4 py-3">
-                <p className="text-xs font-black text-red-600">밴 사유</p>
-                <p className="mt-1 whitespace-pre-wrap text-xs font-semibold text-red-500/80">{managingUser.banReason}</p>
+              <div className="surface-refined tone-danger border px-4 py-3">
+                <p className="text-xs font-black text-danger">밴 사유</p>
+                <p className="mt-1 whitespace-pre-wrap text-xs font-semibold text-danger">{managingUser.banReason}</p>
               </div>
             )}
           </div>
@@ -947,7 +948,7 @@ export default function AdminPage() {
               type="button"
               onClick={() => setManagingUser(null)}
               disabled={workingUserId === managingUser.userId}
-              className="btn-retro flex-1 bg-accent py-2 text-sm text-dark disabled:opacity-50"
+              className="btn-refined flex-1 text-sm"
             >
               닫기
             </button>
@@ -956,7 +957,7 @@ export default function AdminPage() {
                 type="button"
                 onClick={handleUnban}
                 disabled={workingUserId === managingUser.userId}
-                className="btn-retro-secondary flex-1 py-2 text-sm disabled:opacity-50"
+                className="btn-refined flex-1 text-sm"
               >
                 {workingUserId === managingUser.userId ? '처리 중...' : '밴 해제'}
               </button>
@@ -965,7 +966,7 @@ export default function AdminPage() {
                 type="button"
                 onClick={handleBan}
                 disabled={workingUserId === managingUser.userId || managingUser.isAdmin || managingUser.status === 'WITHDRAWN'}
-                className="btn-retro-primary flex-1 py-2 text-sm disabled:opacity-50"
+                className="btn-refined btn-refined-danger flex-1 text-sm"
               >
                 {workingUserId === managingUser.userId ? '처리 중...' : '밴 적용'}
               </button>
