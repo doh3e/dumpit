@@ -227,7 +227,7 @@ private fun HeroWide(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?
                 snapshot, theme, focusTitle, GlanceModifier.defaultWeight().fillMaxHeight(),
             )
             snapshot.hero != null -> {
-                Column(modifier = GlanceModifier.width(102.dp)) {
+                Column(modifier = GlanceModifier.defaultWeight().fillMaxHeight()) {
                     HeroDetails(snapshot.hero, snapshot.suggestionMessage, theme, 1, false,
                         GlanceModifier.fillMaxWidth().height(54.dp))
                     if (queue.isNotEmpty()) QueueInfo(queue.first(), theme, true, GlanceModifier.fillMaxWidth().height(48.dp))
@@ -308,7 +308,7 @@ private fun HeroTall(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?
             when {
                 snapshot?.hero != null && focusTitle == null -> {
                     HeroDetails(snapshot.hero, snapshot.suggestionMessage, theme, 2, true,
-                        GlanceModifier.width(80.dp).height(110.dp))
+                        GlanceModifier.defaultWeight().height(110.dp))
                     Spacer(GlanceModifier.width(4.dp))
                     Column(modifier = GlanceModifier.width(68.dp)) {
                         PixelIcon("w_i_refresh", p.sub, 16.dp, actionRunCallback<RefreshTodayAction>(), "오늘 할 일 새로고침")
