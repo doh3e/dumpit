@@ -37,6 +37,7 @@ export function CoinBadge({ coins }: { coins: number }) {
   return (
     <Animated.View
       style={[styles.badge, { backgroundColor: colors.chip, borderColor: colors.edge }, animStyle]}
+      accessible
       accessibilityLabel={`코인 ${coins}개`}
     >
       <CoinIcon size={13} />

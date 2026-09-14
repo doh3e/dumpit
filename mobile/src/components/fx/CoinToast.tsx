@@ -13,7 +13,10 @@ export function CoinToast({ coins, taskTitle, onDone }: { coins: number; taskTit
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
+
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     const timer = setTimeout(() => onDoneRef.current(), SHOW_MS);

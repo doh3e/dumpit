@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, type Dispatch, type SetStateAction } from 'react';
 import type { ComposedTheme, Equipments } from './compose';
 import type { PomoColors } from './skins';
 import type { Palette } from './tokens';
@@ -12,15 +12,16 @@ export type ThemeContextValue = ComposedTheme & {
   pomo: PomoColors;
   fonts: Fonts;
   scheme: 'light' | 'dark';
+  preferencesReady: boolean;
   mode: ThemeMode;
-  setMode: (m: ThemeMode) => void;
+  setMode: (m: ThemeMode) => Promise<void>;
   contrastMode: ContrastMode;
-  setContrastMode: (m: ContrastMode) => void;
+  setContrastMode: (m: ContrastMode) => Promise<void>;
   boldText: boolean;
-  setBoldText: (on: boolean) => void;
+  setBoldText: (on: boolean) => Promise<void>;
   /** 상점 미리보기 — 실제 장착을 바꾸지 않고 화면만 임시로 입힌다. null이면 해제 */
   previewEquipments: Equipments;
-  setPreviewEquipments: (eq: Equipments) => void;
+  setPreviewEquipments: Dispatch<SetStateAction<Equipments>>;
 };
 
 /**
@@ -29,13 +30,22 @@ export type ThemeContextValue = ComposedTheme & {
  */
 export const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function useThemeMode(): { mode: ThemeMode; setMode: (m: ThemeMode) => void } {
+export function useThemeMode(): {
+  preferencesReady: boolean;
+  mode: ThemeMode;
+  setMode: (m: ThemeMode) => Promise<void>;
+} {
   const ctx = useContext(ThemeContext);
-  return ctx ? { mode: ctx.mode, setMode: ctx.setMode } : { mode: 'system', setMode: () => {} };
+  return ctx
+    ? { preferencesReady: ctx.preferencesReady, mode: ctx.mode, setMode: ctx.setMode }
+    : { preferencesReady: true, mode: 'system', setMode: () => Promise.resolve() };
 }
 
 /** 상점 미리보기 제어 — Provider 밖에서는 무동작 */
-export function useSkinPreview(): { preview: Equipments; setPreview: (eq: Equipments) => void } {
+export function useSkinPreview(): {
+  preview: Equipments;
+  setPreview: Dispatch<SetStateAction<Equipments>>;
+} {
   const ctx = useContext(ThemeContext);
   return ctx
     ? { preview: ctx.previewEquipments, setPreview: ctx.setPreviewEquipments }
@@ -43,11 +53,24 @@ export function useSkinPreview(): { preview: Equipments; setPreview: (eq: Equipm
 }
 
 export function useA11yPrefs(): {
-  contrastMode: ContrastMode; setContrastMode: (m: ContrastMode) => void;
-  boldText: boolean; setBoldText: (on: boolean) => void;
+  preferencesReady: boolean;
+  contrastMode: ContrastMode; setContrastMode: (m: ContrastMode) => Promise<void>;
+  boldText: boolean; setBoldText: (on: boolean) => Promise<void>;
 } {
   const ctx = useContext(ThemeContext);
   return ctx
-    ? { contrastMode: ctx.contrastMode, setContrastMode: ctx.setContrastMode, boldText: ctx.boldText, setBoldText: ctx.setBoldText }
-    : { contrastMode: 'system', setContrastMode: () => {}, boldText: false, setBoldText: () => {} };
+    ? {
+        preferencesReady: ctx.preferencesReady,
+        contrastMode: ctx.contrastMode,
+        setContrastMode: ctx.setContrastMode,
+        boldText: ctx.boldText,
+        setBoldText: ctx.setBoldText,
+      }
+    : {
+        preferencesReady: true,
+        contrastMode: 'system',
+        setContrastMode: () => Promise.resolve(),
+        boldText: false,
+        setBoldText: () => Promise.resolve(),
+      };
 }

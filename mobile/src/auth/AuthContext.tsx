@@ -1,6 +1,6 @@
 import { GoogleSignin, isErrorWithCode } from '@react-native-google-signin/google-signin';
-import axios from 'axios';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { isAxiosError } from 'axios';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import {
   fetchMe,
@@ -12,6 +12,7 @@ import {
 import { api } from '../api/client';
 import { AppError, GoogleSignInError } from '../api/errors';
 import { bypassReauth, installSilentReauth } from '../api/reauth';
+import { clearDraft, pruneExpiredDrafts } from '../brainDump/draft';
 import { registerPushDevice, unregisterPushDevice } from '../push/fcm';
 import { clearWidgetMirrors } from '../widget/mirror';
 
@@ -69,23 +70,58 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const refreshGenerationRef = useRef(0);
+  const mountedRef = useRef(true);
 
-  const refresh = useCallback(async () => {
-    try {
-      setMe(await fetchMe()); // 세션 쿠키가 살아있으면 자동 로그인
-      void registerPushDevice();
-    } catch (e) {
-      // 인증 거부(401/403)만 로그아웃 처리 — 타임아웃·5xx 같은 일시 오류로 쫓아내지 않는다
-      const status = axios.isAxiosError(e) ? e.response?.status : undefined;
-      if (status === 401 || status === 403) setMe(null);
-    } finally {
-      setLoading(false);
-    }
+  const invalidateRefreshes = useCallback(() => {
+    refreshGenerationRef.current += 1;
   }, []);
 
+  const canCommitRefresh = useCallback((generation: number) => (
+    mountedRef.current && generation === refreshGenerationRef.current
+  ), []);
+
+  const commitRefreshSuccess = useCallback((generation: number, nextMe: MeResponse) => {
+    if (!canCommitRefresh(generation)) return;
+    setMe(nextMe);
+    void registerPushDevice();
+  }, [canCommitRefresh]);
+
+  const commitRefreshFailure = useCallback((generation: number, error: unknown) => {
+    if (!canCommitRefresh(generation)) return;
+    const status = isAxiosError(error) ? error.response?.status : undefined;
+    if (status === 401 || status === 403) setMe(null);
+  }, [canCommitRefresh]);
+
+  const commitRefreshComplete = useCallback((generation: number) => {
+    if (canCommitRefresh(generation)) setLoading(false);
+  }, [canCommitRefresh]);
+
+  const refresh = useCallback(async () => {
+    const generation = ++refreshGenerationRef.current;
+    try {
+      const nextMe = await fetchMe(); // 세션 쿠키가 살아있으면 자동 로그인
+      commitRefreshSuccess(generation, nextMe);
+    } catch (error) {
+      // 인증 거부(401/403)만 로그아웃 처리 — 타임아웃·5xx 같은 일시 오류로 쫓아내지 않는다
+      commitRefreshFailure(generation, error);
+    } finally {
+      commitRefreshComplete(generation);
+    }
+  }, [commitRefreshComplete, commitRefreshFailure, commitRefreshSuccess]);
+
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    mountedRef.current = true;
+    void pruneExpiredDrafts().catch(() => undefined);
+    const generation = ++refreshGenerationRef.current;
+    void fetchMe()
+      .then((nextMe) => commitRefreshSuccess(generation, nextMe), (error) => commitRefreshFailure(generation, error))
+      .finally(() => commitRefreshComplete(generation));
+    return () => {
+      mountedRef.current = false;
+      invalidateRefreshes();
+    };
+  }, [commitRefreshComplete, commitRefreshFailure, commitRefreshSuccess, invalidateRefreshes]);
 
   const signInWithGoogle = useCallback(async () => {
     let result: Awaited<ReturnType<typeof GoogleSignin.signIn>>;
@@ -105,26 +141,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const login = await loginWithRestoreConfirm(idToken, confirmRestore);
     if (!login) return; // 복구 거절 — 로그아웃 상태 그대로
     const { restored, ...me } = login;
+    if (!mountedRef.current) return;
+    invalidateRefreshes();
     setMe(me);
+    setLoading(false);
     void registerPushDevice();
     // 탈퇴 유예 중 복구에 동의하고 들어온 경우 — 서버가 계정과 기록을 되살렸다
     if (restored) {
       Alert.alert('다시 오셨네요!', '탈퇴 신청이 취소되었어요.\n할 일과 아이디어, 루틴까지 예전 기록이 모두 그대로 돌아왔습니다.');
     }
-  }, []);
+  }, [invalidateRefreshes]);
 
   /**
    * @param afterWithdrawal 탈퇴 직후 호출 — 서버가 탈퇴 처리에서 이미 기기 토큰을 지웠고 계정도
    *   비활성이라, 기기 토큰 해제 요청은 어차피 401로 막힌다. 헛되이 보내지 않는다.
    */
   const signOut = useCallback(async ({ afterWithdrawal = false } = {}) => {
+    const accountKey = me?.email ?? null;
+    invalidateRefreshes();
     // 세션이 살아있는 동안 서버에서 기기 토큰을 지운다
     if (!afterWithdrawal) await unregisterPushDevice();
     void clearWidgetMirrors(); // 위젯 미러도 함께 비운다 — 다음 401까지 이전 유저 목록이 남지 않도록
     try { await logout(); } catch { /* 서버 실패해도 로컬은 정리 */ }
     try { await GoogleSignin.signOut(); } catch { /* noop */ }
-    setMe(null);
-  }, []);
+    invalidateRefreshes();
+    if (mountedRef.current) {
+      setMe(null);
+      setLoading(false);
+    }
+    if (accountKey) {
+      try {
+        await clearDraft(accountKey);
+      } catch {
+        if (mountedRef.current) {
+          Alert.alert('초안 삭제 실패', '로그아웃했지만 이 기기의 원문 초안을 지우지 못했어요.');
+        }
+      }
+    }
+  }, [invalidateRefreshes, me?.email]);
 
   const value = useMemo(
     () => ({ me, loading, signInWithGoogle, signOut, refresh }),

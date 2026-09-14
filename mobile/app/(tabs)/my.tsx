@@ -13,6 +13,7 @@ import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
 import { useToast } from '../../src/components/retro/ToastProvider';
 import { AiMemoryCard } from '../../src/components/settings/AiMemoryCard';
+import { useContentFrame } from '../../src/layout/useContentFrame';
 import { PixelSprite } from '../../src/components/shop/PixelSprite';
 import { categoryBars, formatFocusTotal, heatLevel, heatmapWeeks } from '../../src/my/stats';
 import { keys } from '../../src/query/keys';
@@ -39,6 +40,7 @@ const HEAT_ALPHA = [0.12, 0.4, 0.7, 1] as const;
 
 export default function MyScreen() {
   const { colors, fonts } = useTheme();
+  const frame = useContentFrame();
   const toast = useToast();
   const qc = useQueryClient();
   const { me, refresh } = useAuth();
@@ -118,14 +120,14 @@ export default function MyScreen() {
         refreshControl={
           <RefreshControl refreshing={pulling} onRefresh={onRefresh} colors={[colors.accent]} tintColor={colors.accent} />
         }
-        contentContainerStyle={[styles.body, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[styles.body, frame, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.stationRow}>
           <PixelSprite sprite={spriteFor(STATION_SPRITES, me?.equipments?.STATION)} size={96} />
         </View>
 
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           <View style={styles.profileRow}>
             {p?.picture ? (
               <Image source={{ uri: p.picture }} style={styles.avatar} />
@@ -156,8 +158,8 @@ export default function MyScreen() {
                 accessibilityLabel="한 줄 소개"
               />
               <View style={styles.bioActions}>
-                <RetroButton label="취소" variant="ghost" size="sm" onPress={() => setEditingBio(false)} />
-                <RetroButton label="저장" size="sm" onPress={saveBio} busy={savingBio} />
+                <RetroButton appearance="refined" label="취소" variant="ghost" size="sm" onPress={() => setEditingBio(false)} />
+                <RetroButton appearance="refined" label="저장" size="sm" onPress={saveBio} busy={savingBio} />
               </View>
             </>
           ) : (
@@ -175,7 +177,7 @@ export default function MyScreen() {
           <>
             <View style={styles.tileGrid}>
               {tiles.map((t) => (
-                <RetroCard key={t.label} style={styles.tile}>
+                <RetroCard appearance="refined" key={t.label} style={styles.tile}>
                   <Text style={[styles.tileLabel, { color: colors.sub, fontFamily: fonts.chrome }]}>{t.label}</Text>
                   <View style={styles.tileValueRow}>
                     {t.coin && <CoinIcon size={18} />}
@@ -186,7 +188,7 @@ export default function MyScreen() {
               ))}
             </View>
 
-            <RetroCard style={styles.card}>
+            <RetroCard appearance="refined" style={styles.card}>
               <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
                 <PixelIcon name="star" size={13} /> 완료 히트맵
               </Text>
@@ -227,7 +229,7 @@ export default function MyScreen() {
             </RetroCard>
 
             {bars.length > 0 && (
-              <RetroCard style={styles.card}>
+              <RetroCard appearance="refined" style={styles.card}>
                 <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
                   <PixelIcon name="chart" size={13} /> 완료 카테고리
                 </Text>
@@ -252,7 +254,7 @@ export default function MyScreen() {
         )}
 
         {(overdue.data?.length ?? 0) > 0 && (
-          <RetroCard style={styles.card}>
+          <RetroCard appearance="refined" style={styles.card}>
             <Text style={[styles.sectionTitle, { color: colors.warnText, fontFamily: fonts.displayBold }]}>
               ⏰ 기한 지난 태스크 {overdue.data!.length}
             </Text>
@@ -266,13 +268,13 @@ export default function MyScreen() {
                     {formatDeadline(t.deadline)} 마감
                   </Text>
                 </View>
-                <RetroButton label="완료" size="sm" onPress={() => completeOverdue(t.taskId, t.title)} />
+                <RetroButton appearance="refined" label="완료" size="sm" onPress={() => completeOverdue(t.taskId, t.title)} />
               </View>
             ))}
           </RetroCard>
         )}
 
-        <RetroCard style={styles.menuCard}>
+        <RetroCard appearance="refined" style={styles.menuCard}>
           {MENU.map((m, i) => (
             <Pressable
               key={m.label}
@@ -282,7 +284,7 @@ export default function MyScreen() {
               style={({ pressed }) => [
                 styles.menuRow,
                 i > 0 && { borderTopWidth: 1, borderTopColor: colors.line },
-                { opacity: pressed ? 0.7 : 1 },
+                { backgroundColor: pressed ? colors.chip : colors.card },
               ]}
             >
               <View style={styles.menuLeft}>

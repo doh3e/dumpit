@@ -1,8 +1,9 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { forwardRef, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { forwardRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
+import { useContentFrame } from '../../layout/useContentFrame';
 import { clampSettings, type PomodoroSettings } from '../../pomodoro/engine';
 import { useTheme } from '../../theme/useTheme';
 import { RetroButton } from '../retro/RetroButton';
@@ -19,19 +20,27 @@ type RowProps = {
   onDelta: (d: number) => void;
 };
 
+function sameSettings(left: PomodoroSettings, right: PomodoroSettings): boolean {
+  return left.focusMin === right.focusMin
+    && left.breakMin === right.breakMin
+    && left.longBreakMin === right.longBreakMin
+    && left.longBreakEvery === right.longBreakEvery
+    && left.setsTarget === right.setsTarget;
+}
+
 function StepperRow({ label, value, display, onDelta }: RowProps) {
   const { colors, fonts } = useTheme();
   return (
     <View style={styles.row}>
       <Text style={[styles.rowLabel, { color: colors.fg, fontFamily: fonts.body }]}>{label}</Text>
       <View style={styles.stepper}>
-        <Pressable onPress={() => onDelta(-1)} hitSlop={8} accessibilityLabel={`${label} 줄이기`}
-          style={[styles.stepBtn, { borderColor: colors.line, backgroundColor: colors.chip }]}>
+        <Pressable onPress={() => onDelta(-1)} accessibilityRole="button" accessibilityLabel={`${label} 줄이기`}
+          style={({ pressed }) => [styles.stepBtn, { borderColor: pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : colors.card }]}>
           <Text style={[styles.stepText, { color: colors.fg, fontFamily: fonts.chrome }]}>−</Text>
         </Pressable>
         <Text style={[styles.value, { color: colors.fg, fontFamily: fonts.chrome }]}>{display ?? value}</Text>
-        <Pressable onPress={() => onDelta(1)} hitSlop={8} accessibilityLabel={`${label} 늘리기`}
-          style={[styles.stepBtn, { borderColor: colors.line, backgroundColor: colors.chip }]}>
+        <Pressable onPress={() => onDelta(1)} accessibilityRole="button" accessibilityLabel={`${label} 늘리기`}
+          style={({ pressed }) => [styles.stepBtn, { borderColor: pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : colors.card }]}>
           <Text style={[styles.stepText, { color: colors.fg, fontFamily: fonts.chrome }]}>＋</Text>
         </Pressable>
       </View>
@@ -44,16 +53,23 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
   function PomodoroSettingsSheet({ initial, onApply }, ref) {
     const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
+    const frame = useContentFrame(20);
+    const { height: windowHeight } = useWindowDimensions();
+    const topInset = insets.top + 12;
+    const maxContentHeight = Math.max(0, windowHeight - topInset - insets.bottom - 12);
     const { headingRef, onChange } = useSheetFocus();
-    const [draft, setDraft] = useState(initial);
+    const [draftState, setDraftState] = useState(() => ({ initial, draft: initial }));
+    if (!sameSettings(draftState.initial, initial)) {
+      setDraftState({ initial, draft: initial });
+    }
+    const draft = draftState.draft;
 
-    // 저장 설정은 화면 마운트 후 비동기로 로드된다 — 마운트 시점 값에 갇히면
-    // 시트를 열 때마다 기본값이 보이므로 initial(로드·적용 반영)을 따라간다
-    useEffect(() => {
-      setDraft(initial);
-    }, [initial]);
-
-    const patch = (p: Partial<PomodoroSettings>) => setDraft((d) => clampSettings({ ...d, ...p }));
+    const patch = (p: Partial<PomodoroSettings>) => {
+      setDraftState((current) => ({
+        ...current,
+        draft: clampSettings({ ...current.draft, ...p }),
+      }));
+    };
 
     // 5분 단위 눈금 스냅 — 최소값(1)에서 올릴 때 1→6→11로 어긋나지 않게 (1→5→10…)
     const step5 = (value: number, direction: number) =>
@@ -63,14 +79,25 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
       <BottomSheetModal
         ref={ref}
         enableDynamicSizing
-        onDismiss={() => setDraft(initial)}
+        topInset={topInset}
+        maxDynamicContentSize={maxContentHeight}
+        onDismiss={() => setDraftState({ initial, draft: initial })}
         onChange={onChange}
-        backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
+        backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 적용 버튼이 OS 내비 바에 가려진다 */}
-        <BottomSheetView accessibilityViewIsModal style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-          <Text ref={headingRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>타이머 설정</Text>
+        <BottomSheetScrollView
+          accessibilityViewIsModal
+          contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 }])}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.headingRow}>
+            <Text ref={headingRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>타이머 설정</Text>
+            <Pressable onPress={() => (ref as React.RefObject<BottomSheetModal | null>)?.current?.dismiss()} accessibilityRole="button" accessibilityLabel="타이머 설정 취소" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>
+              <Text style={{ color: colors.fg, fontFamily: fonts.chrome }}>취소</Text>
+            </Pressable>
+          </View>
           <StepperRow label="집중 (분)" value={draft.focusMin} onDelta={(d) => patch({ focusMin: step5(draft.focusMin, d) })} />
           <StepperRow label="휴식 (분)" value={draft.breakMin} onDelta={(d) => patch({ breakMin: draft.breakMin + d })} />
           <StepperRow label="세트 수" value={draft.setsTarget} display={draft.setsTarget === 0 ? '∞' : String(draft.setsTarget)}
@@ -81,8 +108,8 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
               <StepperRow label="긴 휴식 주기 (세트)" value={draft.longBreakEvery} onDelta={(d) => patch({ longBreakEvery: draft.longBreakEvery + d })} />
             </>
           )}
-          <RetroButton label="적용" onPress={() => onApply(draft)} style={styles.apply} />
-        </BottomSheetView>
+          <RetroButton appearance="refined" label="적용" onPress={() => onApply(draft)} style={styles.apply} />
+        </BottomSheetScrollView>
       </BottomSheetModal>
     );
   },
@@ -90,11 +117,13 @@ export const PomodoroSettingsSheet = forwardRef<BottomSheetModal, Props>(
 
 const styles = StyleSheet.create({
   body: { padding: 20, paddingBottom: 32, gap: 12 },
+  headingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontSize: 16, marginBottom: 4 },
+  close: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   rowLabel: { fontSize: 14 },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  stepBtn: { width: 34, height: 34, borderWidth: 1.5, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  stepBtn: { width: 48, height: 48, borderWidth: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   stepText: { fontSize: 16 },
   value: { fontSize: 14, minWidth: 32, textAlign: 'center' },
   apply: { marginTop: 8 },

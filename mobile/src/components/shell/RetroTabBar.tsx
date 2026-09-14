@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { retroShadow } from '../../theme/tokens';
+import { useContentFrame } from '../../layout/useContentFrame';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 import { TiledImage } from '../common/TiledImage';
@@ -31,10 +30,8 @@ type Props = TabBarProps & {
 export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
   const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
-
-  const fabIconStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: withTiming(fabOpen ? '45deg' : '0deg', { duration: 160 }) }],
-  }));
+  const contentFrameStyle = useContentFrame(4);
+  const addLabel = fabOpen ? '닫기' : '추가';
 
   const renderTab = (routeName: string) => {
     const route = state.routes.find((r) => r.name === routeName);
@@ -52,7 +49,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
         accessibilityRole="tab"
         accessibilityLabel={meta.label}
         accessibilityState={{ selected: focused }}
-        style={({ pressed }) => [styles.tab, { transform: [{ translateY: pressed ? 1 : 0 }] }]}
+        style={({ pressed }) => [styles.tab, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
       >
         <PixelIcon name={meta.icon} size={20} style={{ opacity: focused ? 1 : 0.55 }} />
         <Text style={[styles.label, { fontFamily: fonts.chrome, color: focused ? colors.accentText : colors.sub }]}>
@@ -66,32 +63,31 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
     <View
       style={[
         styles.bar,
-        { backgroundColor: colors.chromeBg, borderTopColor: colors.edge, paddingBottom: insets.bottom },
+        { backgroundColor: colors.chromeBg, borderTopColor: colors.chromeLine, paddingBottom: insets.bottom },
+        contentFrameStyle,
       ]}
     >
       {/* CHROME 스킨 장식 타일 — 웹 .app-sidebar background-image 대응 */}
       {chromeDeco && <TiledImage source={chromeDeco} />}
       {renderTab('index')}
       {renderTab('routine')}
-      <View style={styles.fabSlot}>
-        <Pressable
-          onPress={onFabPress}
-          accessibilityRole="button"
-          accessibilityLabel={fabOpen ? '닫기' : '추가'}
-          accessibilityState={{ expanded: fabOpen }}
-          style={({ pressed }) => [
-            styles.fab,
-            { backgroundColor: colors.accent, borderColor: colors.edge },
-            pressed
-              ? { transform: [{ translateY: -14 }], boxShadow: `0px 0px 0px ${colors.shadowSm}` }
-              : [{ transform: [{ translateY: -18 }] }, retroShadow(3, colors.shadowSm)],
-          ]}
-        >
-          <Animated.Text style={[styles.fabIcon, { color: colors.onAccent, fontFamily: fonts.displayBold }, fabIconStyle]}>
-            ＋
-          </Animated.Text>
-        </Pressable>
-      </View>
+      <Pressable
+        onPress={onFabPress}
+        accessibilityRole="button"
+        accessibilityLabel={addLabel}
+        accessibilityState={{ expanded: fabOpen }}
+        style={({ pressed }) => [
+          styles.tab,
+          styles.addTab,
+          { backgroundColor: pressed ? colors.card : colors.chip, borderColor: colors.accent2Text },
+        ]}
+      >
+        <View style={styles.addGlyph} accessible={false}>
+          <View style={[styles.addGlyphLine, fabOpen ? styles.addGlyphCloseFirst : styles.addGlyphPlusFirst, { backgroundColor: colors.accent2Text }]} />
+          <View style={[styles.addGlyphLine, fabOpen ? styles.addGlyphCloseSecond : styles.addGlyphPlusSecond, { backgroundColor: colors.accent2Text }]} />
+        </View>
+        <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.chrome }]}>{addLabel}</Text>
+      </Pressable>
       {renderTab('ideas')}
       {renderTab('my')}
     </View>
@@ -99,13 +95,14 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
 }
 
 const styles = StyleSheet.create({
-  bar: { flexDirection: 'row', borderTopWidth: 2, paddingTop: 8, paddingHorizontal: 4 },
+  bar: { flexDirection: 'row', borderTopWidth: 1, paddingTop: 8, paddingHorizontal: 4 },
   tab: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 4, minHeight: 48 },
   label: { fontSize: 10 },
-  fabSlot: { flex: 1, alignItems: 'center' },
-  fab: {
-    width: 56, height: 56, borderRadius: 14, borderWidth: 2,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  fabIcon: { fontSize: 26, lineHeight: 30 },
+  addTab: { borderWidth: 1, borderRadius: 8 },
+  addGlyph: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  addGlyphLine: { position: 'absolute', width: 14, height: 2 },
+  addGlyphPlusFirst: { transform: [{ rotate: '0deg' }] },
+  addGlyphPlusSecond: { transform: [{ rotate: '90deg' }] },
+  addGlyphCloseFirst: { transform: [{ rotate: '45deg' }] },
+  addGlyphCloseSecond: { transform: [{ rotate: '-45deg' }] },
 });

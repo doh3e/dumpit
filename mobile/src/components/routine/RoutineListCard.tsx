@@ -38,12 +38,12 @@ export function RoutineListCard() {
   };
 
   return (
-    <RetroCard style={styles.card}>
+    <RetroCard appearance="refined" style={styles.card}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
           <PixelIcon name="loop" size={13} /> 루틴 {sorted.length > 0 ? `(${sorted.filter((r) => r.enabled).length}/${sorted.length} 활성)` : ''}
         </Text>
-        <RetroButton label="＋ 새 루틴" size="sm" onPress={() => router.push('/routine-edit' as Href)} />
+        <RetroButton appearance="refined" label="＋ 새 루틴" size="sm" onPress={() => router.push('/routine-edit' as Href)} />
       </View>
 
       {sorted.length === 0 && (
@@ -60,7 +60,10 @@ export function RoutineListCard() {
             onPress={() => router.push({ pathname: '/routine-edit', params: { routineId: r.routineId } } as never)}
             accessibilityRole="button"
             accessibilityLabel={`${r.name} 편집`}
-            style={({ pressed }) => [styles.row, { borderTopColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
+            style={({ pressed }) => [
+              styles.row,
+              { borderTopColor: colors.line, backgroundColor: pressed ? colors.chip : colors.card },
+            ]}
           >
             <View style={styles.rowText}>
               <Text

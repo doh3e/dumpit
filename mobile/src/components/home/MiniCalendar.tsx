@@ -87,15 +87,14 @@ export function MiniCalendar({ tasks, onTaskAdded }: Props) {
     retry: false,
   });
 
-  const googleEvents = calendarQuery.isError ? [] : (calendarQuery.data ?? []);
   const cells = useMemo(() => buildMonthCells(year, month), [year, month]);
   const tasksByDay = useMemo(
     () => bucketByDay(tasks, (task) => task.deadline, year, month),
     [tasks, year, month],
   );
   const googleByDay = useMemo(
-    () => bucketByDay(googleEvents, (event) => event.start, year, month),
-    [googleEvents, year, month],
+    () => bucketByDay(calendarQuery.isError ? [] : (calendarQuery.data ?? []), (event) => event.start, year, month),
+    [calendarQuery.data, calendarQuery.isError, year, month],
   );
   const today = new Date();
   const todayDay =

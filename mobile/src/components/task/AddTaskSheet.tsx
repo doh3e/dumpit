@@ -1,9 +1,11 @@
-import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput, type BottomSheetScrollViewMethods } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
-import { forwardRef, useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View, type NativeMethods } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
+import { useContentFrame } from '../../layout/useContentFrame';
+import { useSheetKeyboardOverlap } from '../../layout/useSheetKeyboardOverlap';
 import { getApiErrorMessage } from '../../api/client';
 import { createTask } from '../../api/tasks';
 import { invalidateAfterAi, useAiUsage } from '../../query/hooks';
@@ -37,10 +39,16 @@ function next30(): string {
 export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_props, ref) {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
+  const { height: windowHeight } = useWindowDimensions();
+  const topInset = insets.top + 12;
+  const maxContentHeight = Math.max(0, windowHeight - topInset - insets.bottom - 12);
   const toast = useToast();
   const qc = useQueryClient();
   const aiUsage = useAiUsage();
   const { headingRef, onChange } = useSheetFocus();
+  const scrollRef = useRef<(BottomSheetScrollViewMethods & NativeMethods) | null>(null);
+  const { keyboardOverlap, onViewportLayout, resetKeyboardOverlap } = useSheetKeyboardOverlap(scrollRef);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -76,6 +84,13 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
     setMoreOpen(false); setStartTime(null); setEstimate(''); setCategory(null);
     setFormKey((k) => k + 1);   // uncontrolled 입력 리마운트
   }, []);
+  const handleDismiss = useCallback(() => {
+    resetKeyboardOverlap();
+    reset();
+  }, [reset, resetKeyboardOverlap]);
+  const dismiss = useCallback(() => {
+    (ref as React.RefObject<BottomSheetModal | null>)?.current?.dismiss();
+  }, [ref]);
 
   const submit = useCallback(async () => {
     setSaving(true);
@@ -104,17 +119,31 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
     <BottomSheetModal
       ref={ref}
       enableDynamicSizing
+      topInset={topInset}
+      maxDynamicContentSize={maxContentHeight}
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
-      onDismiss={reset}
+      android_keyboardInputMode="adjustResize"
+      onDismiss={handleDismiss}
       onChange={onChange}
-      backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
+      backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
       handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
     >
       {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마감·시작시간 필드를 펼쳤을 때
           시트가 길어지며 추가 버튼이 OS 내비 바에 가려진다 */}
-      <BottomSheetView accessibilityViewIsModal style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-        <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 추가</Text>
+      <BottomSheetScrollView
+        ref={scrollRef}
+        onLayout={onViewportLayout}
+        accessibilityViewIsModal
+        contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 + keyboardOverlap }])}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.headingRow}>
+          <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>태스크 추가</Text>
+          <Pressable onPress={dismiss} accessibilityRole="button" accessibilityLabel="태스크 추가 닫기" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>
+            <Text style={{ color: colors.fg, fontFamily: fonts.chrome }}>✕</Text>
+          </Pressable>
+        </View>
 
         <BottomSheetTextInput
           key={`title-${formKey}`}
@@ -140,14 +169,14 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
           accessibilityLabel="메모"
         />
 
-        <View style={styles.chipRow}>
+        <View style={styles.deadlineGrid}>
           {DEADLINE_MODES.map((m) => (
             <Chip
               key={m.id}
               label={m.label}
               icon={m.icon ? <PixelIcon name={m.icon} size={12} /> : undefined}
               selected={deadlineMode === m.id}
-              onPress={() => setDeadlineMode(m.id)}
+              appearance="refined" insetTarget targetStyle={styles.deadlineTarget} surfaceStyle={styles.deadlineSurface} onPress={() => setDeadlineMode(m.id)}
             />
           ))}
         </View>
@@ -155,17 +184,23 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
           <DateTimeField value={customDeadline} onChange={setCustomDeadline} minimumDate={new Date()} placeholder="마감 일시 선택" />
         )}
 
-        <Chip
-          label={moreOpen ? '옵션 접기 ▲' : '옵션 더보기 ▼'}
+        <Pressable
           onPress={() => setMoreOpen((v) => !v)}
-        />
+          accessibilityRole="button"
+          accessibilityLabel={moreOpen ? '옵션 접기 ▲' : '옵션 더보기 ▼'}
+          accessibilityState={{ expanded: moreOpen }}
+          style={({ pressed }) => [styles.moreToggle, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
+        >
+          <Text style={[styles.moreToggleText, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>{moreOpen ? '옵션 접기' : '옵션 더보기'}</Text>
+          <Text style={[styles.moreToggleArrow, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>{moreOpen ? '▲' : '▼'}</Text>
+        </Pressable>
         {moreOpen && (
           <View style={styles.more}>
             <View style={styles.optionRow}>
               <Chip
                 label="시작 시간"
                 selected={startTime != null}
-                onPress={() => setStartTime(startTime == null ? next30() : null)}
+                appearance="refined" insetTarget onPress={() => setStartTime(startTime == null ? next30() : null)}
               />
               {startTime != null && (
                 <View style={styles.optionField}>
@@ -177,7 +212,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
               <Chip
                 label="예상 시간(분)"
                 selected={estimate !== ''}
-                onPress={() => setEstimate(estimate === '' ? '30' : '')}
+                appearance="refined" insetTarget onPress={() => setEstimate(estimate === '' ? '30' : '')}
               />
               {estimate !== '' && (
                 <BottomSheetTextInput
@@ -192,13 +227,13 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
             </View>
             {/* 시트 안 가로 ScrollView는 팬 제스처에 먹혀 스와이프 불가 — 칩 행은 wrap으로 */}
             <View style={styles.chipRow}>
-              <Chip label="AI 자동" icon={<PixelIcon name="sparkle" size={12} />} selected={category === null} onPress={() => setCategory(null)} />
+              <Chip appearance="refined" insetTarget label="AI 자동" icon={<PixelIcon name="sparkle" size={12} />} selected={category === null} onPress={() => setCategory(null)} />
               {TASK_CATEGORIES.map((c) => (
                 <Chip
                   key={c.value}
                   label={c.label}
                   icon={<PixelIcon name={c.icon} size={12} />}
-                  selected={category === c.value}
+                  appearance="refined" insetTarget selected={category === c.value}
                   onPress={() => setCategory(c.value)}
                 />
               ))}
@@ -223,9 +258,12 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
               </>
             )}
           </Text>
-          <RetroButton label="추가" onPress={submit} busy={saving} disabled={blocked} />
+          <View style={styles.actions}>
+            <RetroButton appearance="refined" label="취소" variant="ghost" onPress={dismiss} />
+            <RetroButton appearance="refined" label="추가" onPress={submit} busy={saving} disabled={blocked} />
+          </View>
         </View>
-      </BottomSheetView>
+      </BottomSheetScrollView>
     </BottomSheetModal>
   );
 });
@@ -233,14 +271,23 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
 const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 28, gap: 10 },
   heading: { fontSize: 16, marginBottom: 2 },
+  headingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  close: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   input: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
   memo: { minHeight: 56, textAlignVertical: 'top' },
   chipRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  deadlineGrid: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  deadlineTarget: { flexBasis: '48%', flexGrow: 1, minWidth: 0 },
+  deadlineSurface: { alignSelf: 'stretch', width: '100%' },
+  moreToggle: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 4 },
+  moreToggleText: { fontSize: 12 },
+  moreToggleArrow: { fontSize: 10 },
   more: { gap: 10 },
   optionRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   optionField: { flex: 1 },
   estimate: { width: 90, textAlign: 'center' },
   warnText: { fontSize: 12 },
-  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 4 },
+  actions: { flexDirection: 'row', gap: 8 },
   cost: { fontSize: 11 },
 });

@@ -28,13 +28,13 @@ export const palettes: { light: Palette; dark: Palette } = {
     chromeBg: '#FFFDF6', chromeLine: '#E0D2B6',
   },
   dark: {
-    bg: '#1F1B2E', card: '#2B2442', fg: '#F2E9D8', sub: '#9D93A8',
+    bg: '#1F1B2E', card: '#2B2442', fg: '#F2E9D8', sub: '#9E94A9',
     line: '#413966', edge: '#141021', chip: '#3A3156',
     accent: '#F09355', accent2: '#5FC4B4', onAccent: '#241E14',
     shadowHero: '#141021', shadowSm: '#141021',
     warn: '#E9B44C', starlight: '#E9B44C',
     accentText: '#F09355', accentFill: '#F09355', accent2Text: '#5FC4B4', accent2Fill: '#5FC4B4',
-    // subOnChip: 다크 sub(#9D93A8)는 chip 위 4.09:1 — 스킨 chip 8종 전부 4.5:1을 넘도록 한 단계 밝힌 값
+    // subOnChip은 더 밝은 다크 chip에서도 정적 보조 글자 대비를 유지한다.
     warnText: '#E9B44C', dangerText: '#E57B67', subOnChip: '#B5ABC0', onWarn: '#241E14',
     chromeBg: '#2B2442', chromeLine: '#413966',
   },

@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useContentFrame } from '../../layout/useContentFrame';
 import { useTheme } from '../../theme/useTheme';
 import { TiledImage } from '../common/TiledImage';
 
@@ -25,6 +26,7 @@ export function ScreenHeader({
 }) {
   const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
+  const contentFrameStyle = useContentFrame(20);
 
   return (
     <View
@@ -35,14 +37,18 @@ export function ScreenHeader({
           backgroundColor: colors.chromeBg,
           borderBottomColor: colors.chromeLine,
         },
+        contentFrameStyle,
       ]}
     >
       {chromeDeco && <TiledImage source={chromeDeco} />}
       <Pressable
         onPress={onBack ?? (() => router.back())}
-        hitSlop={12}
         accessibilityRole="button"
         accessibilityLabel="뒤로"
+        style={({ pressed }) => [
+          styles.backButton,
+          { backgroundColor: pressed ? colors.chip : 'transparent' },
+        ]}
       >
         <Text style={[styles.back, { color: colors.fg, fontFamily: fonts.chrome }]}>←</Text>
       </Pressable>
@@ -64,6 +70,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 10,
     borderBottomWidth: 1.5, gap: 8,
   },
+  backButton: { minWidth: 48, minHeight: 48, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   back: { fontSize: 22 },
   titleRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   title: { fontSize: 18, textAlign: 'center', flexShrink: 1 },

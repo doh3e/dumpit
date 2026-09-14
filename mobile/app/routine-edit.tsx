@@ -10,6 +10,7 @@ import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { TimeField } from '../src/components/task/TimeField';
 import { useDeleteRoutine, useRoutines, useSaveRoutine } from '../src/query/routineHooks';
 import {
@@ -57,7 +58,7 @@ export default function RoutineEditScreen() {
             <Text style={[styles.notFound, { color: colors.sub, fontFamily: fonts.body }]}>
               루틴을 찾지 못했어요.
             </Text>
-            <RetroButton label="돌아가기" size="sm" onPress={() => router.back()} />
+            <RetroButton appearance="refined" label="돌아가기" size="sm" onPress={() => router.back()} />
           </>
         )}
       </View>
@@ -71,6 +72,7 @@ export default function RoutineEditScreen() {
 function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const toast = useToast();
   const save = useSaveRoutine();
   const remove = useDeleteRoutine();
@@ -127,8 +129,8 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
     <View style={styles.screen}>
       <ScreenHeader title={editing ? '루틴 수정' : '새 루틴'} />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
-        <RetroCard style={styles.card}>
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
+        <RetroCard appearance="refined" style={styles.card}>
           {sectionTitle('이름 *')}
           {/* 한글 IME 조합 보호 — uncontrolled */}
           <TextInput
@@ -154,18 +156,18 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
           />
         </RetroCard>
 
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           {sectionTitle('반복')}
           <View style={styles.chipRow}>
             {REPEAT_TYPES.map((t) => (
-              <Chip key={t.id} label={t.label} selected={form.repeatType === t.id} onPress={() => patch({ repeatType: t.id })} />
+              <Chip appearance="refined" key={t.id} label={t.label} selected={form.repeatType === t.id} onPress={() => patch({ repeatType: t.id })} />
             ))}
           </View>
 
           {form.repeatType === 'WEEKLY' && (
             <View style={styles.chipRow}>
               {WEEK_DAYS.map((d) => (
-                <Chip
+                <Chip appearance="refined"
                   key={d.value}
                   label={d.label}
                   selected={form.daysOfWeek.includes(d.value)}
@@ -218,13 +220,13 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
             <>
               <View style={styles.chipRow}>
                 {MONTHLY_ORDINALS.map((o) => (
-                  <Chip key={o.value} label={o.label} selected={form.monthlyWeekOrdinal === o.value}
+                  <Chip appearance="refined" key={o.value} label={o.label} selected={form.monthlyWeekOrdinal === o.value}
                     onPress={() => patch({ monthlyWeekOrdinal: o.value })} />
                 ))}
               </View>
               <View style={styles.chipRow}>
                 {WEEK_DAYS.map((d) => (
-                  <Chip key={d.value} label={d.label} selected={form.monthlyWeekDay === d.value}
+                  <Chip appearance="refined" key={d.value} label={d.label} selected={form.monthlyWeekDay === d.value}
                     onPress={() => patch({ monthlyWeekDay: d.value })} />
                 ))}
               </View>
@@ -232,7 +234,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
           )}
         </RetroCard>
 
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           <View style={styles.switchRow}>
             <Text style={[styles.switchLabel, { color: colors.fg, fontFamily: fonts.body }]}>시작 시각 지정</Text>
             <Switch value={form.hasStartTime} onValueChange={(v) => patch({ hasStartTime: v })}
@@ -260,7 +262,7 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
           </Text>
         </RetroCard>
 
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           {sectionTitle('기간')}
           <View style={styles.dateRow}>
             <Pressable
@@ -292,9 +294,9 @@ function RoutineEditForm({ editing }: { editing: RoutineResponse | null }) {
           </View>
         </RetroCard>
 
-        <RetroButton label={editing ? '저장' : '루틴 만들기'} onPress={onSave} busy={save.isPending} />
+        <RetroButton appearance="refined" label={editing ? '저장' : '루틴 만들기'} onPress={onSave} busy={save.isPending} />
         {editing && (
-          <RetroButton label="삭제" variant="danger" size="sm" onPress={onDelete} busy={remove.isPending} />
+          <RetroButton appearance="refined" label="삭제" variant="danger" size="sm" onPress={onDelete} busy={remove.isPending} />
         )}
       </ScrollView>
 

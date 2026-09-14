@@ -1,9 +1,10 @@
 import { BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { forwardRef, useMemo } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
 import type { TaskResponse, TaskStatus } from '../../api/types';
+import { useContentFrame } from '../../layout/useContentFrame';
 import { usePlanning } from '../../query/hooks';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
@@ -19,7 +20,10 @@ export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
   function TaskPickerSheet({ onPick }, ref) {
     const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
+    const frame = useContentFrame(20);
     const { height: windowHeight } = useWindowDimensions();
+    const topInset = insets.top + 12;
+    const maxContentHeight = Math.max(0, windowHeight - topInset - insets.bottom - 12);
     const planning = usePlanning();
     const { headingRef, onChange } = useSheetFocus();
 
@@ -35,19 +39,29 @@ export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
       <BottomSheetModal
         ref={ref}
         enableDynamicSizing
-        maxDynamicContentSize={Math.round(windowHeight * 0.62)}
+        topInset={topInset}
+        maxDynamicContentSize={Math.min(Math.round(windowHeight * 0.62), maxContentHeight)}
         onChange={onChange}
-        backgroundStyle={{ backgroundColor: colors.card, borderWidth: 2, borderColor: colors.edge }}
+        backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line }}
       >
         {/* 일반 ScrollView는 시트 팬 제스처에 먹혀 스크롤 불가 — 시트 전용 스크롤러.
             하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 마지막 행이 OS 내비 바에 가려진다 */}
-        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
-          <Text ref={headingRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>무엇에 집중할까요?</Text>
+        <BottomSheetScrollView
+          accessibilityViewIsModal
+          contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 }])}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.headingRow}>
+            <Text ref={headingRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>무엇에 집중할까요?</Text>
+            <Pressable onPress={() => (ref as React.RefObject<BottomSheetModal | null>)?.current?.dismiss()} accessibilityRole="button" accessibilityLabel="태스크 선택 닫기" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>
+              <Text style={{ color: colors.fg, fontFamily: fonts.chrome }}>✕</Text>
+            </Pressable>
+          </View>
           <Pressable
             onPress={() => onPick(null)}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.row, { borderColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
+            accessibilityRole="button" accessibilityLabel="태스크 없이 집중"
+            style={({ pressed }) => [styles.row, { borderColor: pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : colors.card }]}
           >
             <Text style={[styles.rowText, { color: colors.sub, fontFamily: fonts.body }]}>
               <PixelIcon name="ban" size={12} /> 태스크 없이 집중
@@ -57,8 +71,8 @@ export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
             <Pressable
               key={t.taskId}
               onPress={() => onPick({ taskId: t.taskId, title: t.title, status: t.status })}
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.row, { borderColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
+              accessibilityRole="button" accessibilityLabel={`${t.title} 선택`}
+              style={({ pressed }) => [styles.row, { borderColor: pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : colors.card }]}
             >
               <Text numberOfLines={1} style={[styles.rowText, { color: colors.fg, fontFamily: fonts.body }]}>
                 {t.title}
@@ -76,10 +90,12 @@ export const TaskPickerSheet = forwardRef<BottomSheetModal, Props>(
 
 const styles = StyleSheet.create({
   body: { padding: 20 },
-  title: { fontSize: 16, marginBottom: 12 },
+  headingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  title: { fontSize: 16 },
+  close: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   row: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-    borderBottomWidth: 1, paddingVertical: 13, minHeight: 46,
+    borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, minHeight: 48,
   },
   rowText: { fontSize: 14, flex: 1 },
   score: { fontSize: 11 },

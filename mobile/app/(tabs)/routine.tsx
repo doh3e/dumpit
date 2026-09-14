@@ -2,12 +2,14 @@ import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RoutineListCard } from '../../src/components/routine/RoutineListCard';
+import { useContentFrame } from '../../src/layout/useContentFrame';
 import { useRoutines } from '../../src/query/routineHooks';
 import { useTheme } from '../../src/theme/useTheme';
 
 export default function RoutineScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const routines = useRoutines();
 
   const [pulling, setPulling] = useState(false);
@@ -22,7 +24,7 @@ export default function RoutineScreen() {
         refreshControl={
           <RefreshControl refreshing={pulling} onRefresh={onRefresh} colors={[colors.accent]} tintColor={colors.accent} />
         }
-        contentContainerStyle={[styles.body, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[styles.body, frame, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}
       >
         <Text style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>루틴</Text>
         <RoutineListCard />

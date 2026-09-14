@@ -31,6 +31,8 @@ import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.*
+import androidx.glance.semantics.contentDescription
+import androidx.glance.semantics.semantics
 import androidx.glance.state.GlanceStateDefinition
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
@@ -86,17 +88,11 @@ private fun PomodoroContent(snapshot: PomodoroSnapshot?, theme: WTheme, now: Lon
     // 뽀모도로 위젯은 pomo.soft 솔리드 배경 전용 — RetroFrame에 bgOverride를 넘기면 BG_SKINS 패턴
     // (히어로 전용 장식)이 자동으로 생략된다.
     RetroFrame(theme, bgOverride = theme.pomo.soft) {
-        Box(
-            modifier = GlanceModifier.fillMaxSize()
-                .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))),
-            contentAlignment = Alignment.Center,
-        ) {
-            val size = LocalSize.current
-            when {
-                size.height >= 230.dp -> PomodoroExpanded(snapshot, theme, now)
-                size.width >= 230.dp -> PomodoroExpandedWide(snapshot, theme, now)
-                else -> PomodoroCompact(snapshot, theme, now)
-            }
+        val size = LocalSize.current
+        when {
+            size.height >= 230.dp -> PomodoroExpanded(snapshot, theme, now)
+            size.width >= 230.dp -> PomodoroExpandedWide(snapshot, theme, now)
+            else -> PomodoroCompact(snapshot, theme, now)
         }
     }
 }
@@ -108,82 +104,82 @@ private fun PomodoroContent(snapshot: PomodoroSnapshot?, theme: WTheme, now: Lon
  */
 @Composable
 fun PomodoroCompact(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        when {
-            snapshot == null -> IdleContent(theme)
-            // effectivelyDone — JS 미러 done 플래그 + 위젯 단독 시간 경과 완료 파생(음수 크로노미터 방지)
-            snapshot.effectivelyDone(now) -> DoneContent(theme)
-            snapshot.pausedAt != null -> PausedContent(snapshot, theme)
-            snapshot.currentPhase(now) != null -> RunningContent(snapshot, theme, now)
-            // 페이즈 사이(예: 세션 시작 전) — done도 아니고 일시정지도 아니고 진행 중 페이즈도 없음.
-            else -> IdleContent(theme)
-        }
+    when {
+        snapshot == null -> IdleContent(theme)
+        snapshot.effectivelyDone(now) -> DoneContent(theme)
+        snapshot.pausedAt != null -> PausedContent(snapshot, theme)
+        snapshot.currentPhase(now) != null -> RunningContent(snapshot, theme, now)
+        else -> IdleContent(theme)
     }
 }
 
 @Composable
 private fun IdleContent(theme: WTheme) {
-    TomatoFlipper(48.dp)
-    Spacer(GlanceModifier.height(8.dp))
-    PixelButton(
-        labelRes = "w_t_start", theme = theme, primary = true, accentOverride = theme.pomo.focus,
-        onClick = actionRunCallback<PomodoroCommandAction>(
-            actionParametersOf(PomodoroCommandAction.CommandParam to "start")),
-    )
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Box(modifier = GlanceModifier.fillMaxWidth().height(48.dp).semantics { contentDescription = "뽀모도로 열기" }
+            .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))), contentAlignment = Alignment.Center) { TomatoFlipper(48.dp) }
+        Spacer(GlanceModifier.height(10.dp))
+        PixelButton("w_t_start", theme, true,
+            actionRunCallback<PomodoroCommandAction>(actionParametersOf(PomodoroCommandAction.CommandParam to "start")),
+            "뽀모도로 시작", accentOverride = theme.pomo.focus, modifier = GlanceModifier.fillMaxWidth())
+    }
 }
 
 @Composable
 private fun DoneContent(theme: WTheme) {
-    PixelText("w_t_pomo_done", theme.palette.fg, 14.dp)
-    Spacer(GlanceModifier.height(8.dp))
-    TomatoFlipper(40.dp)
+    Box(modifier = GlanceModifier.fillMaxSize().semantics { contentDescription = "뽀모도로 열기" }
+        .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            PixelText("w_t_pomo_done", theme.palette.fg, 14.dp)
+            Spacer(GlanceModifier.height(8.dp))
+            TomatoFlipper(40.dp)
+        }
+    }
 }
 
 @Composable
 private fun PausedContent(snapshot: PomodoroSnapshot, theme: WTheme) {
     val remaining = snapshot.remainingSecAtPause ?: 0
-    Text(
-        "%d:%02d".format(remaining / 60, remaining % 60),
-        style = TextStyle(fontSize = 20.sp, color = ColorProvider(theme.palette.fg)),
-    )
-    Spacer(GlanceModifier.height(8.dp))
-    Row {
-        PixelButton(
-            labelRes = "w_t_resume", theme = theme, primary = true, accentOverride = theme.pomo.focus,
-            onClick = actionRunCallback<PomodoroCommandAction>(
-                actionParametersOf(PomodoroCommandAction.CommandParam to "resume")),
-        )
-        Spacer(GlanceModifier.width(8.dp))
-        PixelButton(
-            labelRes = "w_t_reset", theme = theme, primary = false,
-            onClick = actionRunCallback<PomodoroCommandAction>(
-                actionParametersOf(PomodoroCommandAction.CommandParam to "reset")),
-        )
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Box(modifier = GlanceModifier.fillMaxWidth().height(54.dp).semantics { contentDescription = "뽀모도로 열기" }
+            .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))), contentAlignment = Alignment.Center) {
+            Text("%d:%02d".format(remaining / 60, remaining % 60),
+                style = TextStyle(fontSize = 20.sp, color = ColorProvider(theme.palette.fg)))
+        }
+        Spacer(GlanceModifier.height(4.dp))
+        Row(modifier = GlanceModifier.fillMaxWidth().height(48.dp)) {
+            PixelButton("w_t_resume", theme, true,
+                actionRunCallback<PomodoroCommandAction>(actionParametersOf(PomodoroCommandAction.CommandParam to "resume")),
+                "뽀모도로 재개", accentOverride = theme.pomo.focus, modifier = GlanceModifier.width(51.dp))
+            Spacer(GlanceModifier.width(4.dp))
+            PixelButton("w_t_reset", theme, false,
+                actionRunCallback<PomodoroCommandAction>(actionParametersOf(PomodoroCommandAction.CommandParam to "reset")),
+                "뽀모도로 초기화", modifier = GlanceModifier.width(51.dp))
+        }
     }
 }
 
 @Composable
 private fun RunningContent(snapshot: PomodoroSnapshot, theme: WTheme, now: Long) {
     val phase = snapshot.currentPhase(now)!!
-    PhaseLabel(phase, theme)
-    val context = LocalContext.current
-    val rv = chronometerRemoteViews(context, theme, phase, now)
-    // 실기기(갤럭시 S23U, 2x2)에서 크로노미터(AndroidRemoteViews)가 세로 공간을 독식해
-    // 아래 버튼이 화면 밖으로 밀려 안 보이는 문제 — 높이를 고정해 공간을 제한한다.
-    Box(modifier = GlanceModifier.height(40.dp), contentAlignment = Alignment.Center) {
-        AndroidRemoteViews(remoteViews = rv)
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Box(modifier = GlanceModifier.fillMaxWidth().height(58.dp).semantics { contentDescription = "뽀모도로 열기" }
+            .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                PhaseLabel(phase, theme, textDp = 13.dp)
+                Box(modifier = GlanceModifier.height(40.dp), contentAlignment = Alignment.Center) {
+                    AndroidRemoteViews(remoteViews = chronometerRemoteViews(LocalContext.current, theme, phase, now))
+                }
+            }
+        }
+        Row(modifier = GlanceModifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+            PixelButton("w_t_pause", theme, true,
+                actionRunCallback<PomodoroCommandAction>(actionParametersOf(PomodoroCommandAction.CommandParam to "pause")),
+                "뽀모도로 일시정지", accentOverride = theme.pomo.focus, modifier = GlanceModifier.width(92.dp))
+            Spacer(GlanceModifier.width(4.dp))
+            SetDots(snapshot, now, theme, vertical = true)
+        }
     }
-    Spacer(GlanceModifier.height(4.dp))
-    SetDots(snapshot, now, theme)
-    Spacer(GlanceModifier.height(4.dp))
-    PixelButton(
-        labelRes = "w_t_pause", theme = theme, primary = true, accentOverride = theme.pomo.focus,
-        onClick = actionRunCallback<PomodoroCommandAction>(
-            actionParametersOf(PomodoroCommandAction.CommandParam to "pause")),
-    )
 }
 
 /**
@@ -200,17 +196,27 @@ private fun RunningContent(snapshot: PomodoroSnapshot, theme: WTheme, now: Long)
  * 세트당 점 1개로 자연히 정확히 맞아떨어진다).
  */
 @Composable
-private fun SetDots(snapshot: PomodoroSnapshot, now: Long, theme: WTheme) {
+private fun SetDots(snapshot: PomodoroSnapshot, now: Long, theme: WTheme, vertical: Boolean = false) {
     val focusVisible = snapshot.phases.count { it.kind == "FOCUS" }
     val completed = snapshot.focusDone + snapshot.phases.count { it.kind == "FOCUS" && it.endsAt <= now }
     val total = (snapshot.focusTotal ?: (snapshot.focusDone + focusVisible)).coerceAtLeast(1)
     val drawn = minOf(total, 4)
     val filled = ((completed.toFloat() / total) * drawn).roundToInt().coerceIn(0, drawn)
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        for (i in 0 until drawn) {
-            if (i > 0) Spacer(GlanceModifier.width(6.dp))
-            Box(modifier = GlanceModifier.size(10.dp).cornerRadius(5.dp)
-                .background(if (i < filled) theme.pomo.focus else theme.pomo.ring)) {}
+    if (vertical) {
+        Column(modifier = GlanceModifier.width(10.dp).height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+            for (i in 0 until drawn) {
+                if (i > 0) Spacer(GlanceModifier.height(2.dp))
+                Box(modifier = GlanceModifier.size(10.dp).cornerRadius(5.dp)
+                    .background(if (i < filled) theme.pomo.focus else theme.pomo.ring)) {}
+            }
+        }
+    } else {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            for (i in 0 until drawn) {
+                if (i > 0) Spacer(GlanceModifier.width(6.dp))
+                Box(modifier = GlanceModifier.size(10.dp).cornerRadius(5.dp)
+                    .background(if (i < filled) theme.pomo.focus else theme.pomo.ring)) {}
+            }
         }
     }
 }
@@ -243,11 +249,12 @@ private fun TomatoFlipper(size: Dp) {
 @Composable
 private fun PhaseLabel(phase: PomodoroPhase, theme: WTheme, indexSp: TextUnit = 14.sp, textDp: Dp = 13.dp) {
     if (phase.kind == "FOCUS") {
+        val focusText = readableWidgetText(theme.pomo.focus, theme.pomo.soft)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("${phase.index}", style = TextStyle(
-                fontWeight = FontWeight.Bold, fontSize = indexSp, color = ColorProvider(theme.pomo.focus)))
+                fontWeight = FontWeight.Bold, fontSize = indexSp, color = ColorProvider(focusText)))
             Spacer(GlanceModifier.width(2.dp))
-            PixelText("w_t_nth_focus", theme.pomo.focus, textDp)
+            PixelText("w_t_nth_focus", focusText, textDp)
         }
     } else {
         PixelText(if (phase.long) "w_t_rest_long" else "w_t_rest", theme.palette.fg, textDp)
@@ -327,24 +334,26 @@ private fun deriveExpandedState(snapshot: PomodoroSnapshot?, now: Long): Expande
 fun PomodoroExpanded(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
     val p = theme.palette
     val s = deriveExpandedState(snapshot, now)
-    // horizontalAlignment 명시 — Glance Column 기본은 Start라, 없으면 위젯을 옆으로 늘렸을 때
-    // 링·버튼 행이 왼쪽에 붙는다(PomodoroCompact는 이미 이걸 명시하고 있다. 리뷰 지적).
     Column(modifier = GlanceModifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            PixelText("w_t_pomodoro", p.sub, 11.dp)
+        Row(modifier = GlanceModifier.fillMaxWidth().height(18.dp), verticalAlignment = Alignment.CenterVertically) {
+            PixelText("w_t_pomodoro", readableWidgetText(p.sub, theme.pomo.soft), 11.dp)
             Spacer(GlanceModifier.defaultWeight())
             ModePill(s.resting, s.isIdle, theme)
         }
         Spacer(GlanceModifier.height(4.dp))
-        Box(modifier = GlanceModifier.fillMaxWidth().height(2.dp).background(p.accent2)) {}
-        // 남는 높이를 링 위·아래(weight 쌍)로 나눠 링+칩 블록을 중앙에 둔다 — 위에만 붙이면
-        // 세로로 큰 배치에서 하단이 비어 보인다(실기기 지적).
+        Box(modifier = GlanceModifier.fillMaxWidth().height(if (s.taskTitle == null) 104.dp else 136.dp)
+            .semantics { contentDescription = "뽀모도로 열기" }
+            .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                SessionRing(theme, now, s.activePhase, s.resting, s.isIdle, s.done, s.paused, s.remainingSec, s.fraction, 104.dp)
+                if (s.taskTitle != null) {
+                    Spacer(GlanceModifier.height(4.dp))
+                    TaskChip(s.taskTitle, theme, clickable = false)
+                }
+            }
+        }
         Spacer(GlanceModifier.defaultWeight())
-        SessionRing(theme, now, s.activePhase, s.resting, s.isIdle, s.done, s.paused, s.remainingSec, s.fraction, 104.dp)
-        Spacer(GlanceModifier.height(6.dp))
-        if (s.taskTitle != null) TaskChip(s.taskTitle, theme)
-        Spacer(GlanceModifier.defaultWeight())
-        ExpandedButtons(s.isIdle, s.done, s.paused, theme)
+        ExpandedButtons(s.isIdle, s.done, s.paused, theme, GlanceModifier.fillMaxWidth())
     }
 }
 
@@ -359,34 +368,22 @@ fun PomodoroExpanded(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
 @Composable
 fun PomodoroExpandedWide(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) {
     val s = deriveExpandedState(snapshot, now)
-    Box(modifier = GlanceModifier.fillMaxSize()) {
-        Column(
-            modifier = GlanceModifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Spacer(GlanceModifier.defaultWeight())
+    Row(modifier = GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = GlanceModifier.width(90.dp).height(90.dp).semantics { contentDescription = "뽀모도로 열기" }
+            .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))), contentAlignment = Alignment.Center) {
             SessionRing(theme, now, s.activePhase, s.resting, s.isIdle, s.done, s.paused, s.remainingSec, s.fraction, 90.dp)
-            Spacer(GlanceModifier.height(6.dp))
-            ExpandedButtons(s.isIdle, s.done, s.paused, theme)
-            Spacer(GlanceModifier.defaultWeight())
         }
-        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            if (s.taskTitle != null) {
-                // 자리(weight)와 칩(wrap)을 분리 — 칩 자체에 weight를 주면 짧은 제목도 풀폭 카드가 된다.
-                Box(modifier = GlanceModifier.defaultWeight()) {
-                    Box(
-                        modifier = GlanceModifier.background(theme.palette.card).cornerRadius(8.dp)
-                            .padding(horizontal = 6.dp, vertical = 3.dp),
-                    ) {
-                        Text(s.taskTitle, maxLines = 1,
-                            style = TextStyle(fontSize = 11.sp, color = ColorProvider(theme.palette.fg)))
-                    }
+        Spacer(GlanceModifier.width(8.dp))
+        Column(modifier = GlanceModifier.width(124.dp).fillMaxHeight()) {
+            Box(modifier = GlanceModifier.fillMaxWidth().height(48.dp).semantics { contentDescription = "뽀모도로 열기" }
+                .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO)))) {
+                Column {
+                    ModePill(s.resting, s.isIdle, theme)
+                    if (s.taskTitle != null) TaskChip(s.taskTitle, theme, clickable = false)
                 }
-                Spacer(GlanceModifier.width(8.dp))
-            } else {
-                Spacer(GlanceModifier.defaultWeight())
             }
-            ModePill(s.resting, s.isIdle, theme)
+            Spacer(GlanceModifier.defaultWeight())
+            ExpandedButtons(s.isIdle, s.done, s.paused, theme, GlanceModifier.fillMaxWidth())
         }
     }
 }
@@ -396,7 +393,7 @@ fun PomodoroExpandedWide(snapshot: PomodoroSnapshot?, theme: WTheme, now: Long) 
 private fun ModePill(resting: Boolean, isIdle: Boolean, theme: WTheme) {
     val p = theme.palette
     val bg = if (isIdle) p.chip else (if (resting) theme.pomo.rest else theme.pomo.focus)
-    val tint = if (isIdle) p.sub else p.onAccent
+    val tint = if (isIdle) readableWidgetText(p.sub, p.chip) else readableWidgetText(p.onAccent, bg)
     Box(modifier = GlanceModifier.background(p.edge).cornerRadius(7.dp).padding(1.dp)) {
         Box(modifier = GlanceModifier.background(bg).cornerRadius(6.dp)
             .padding(horizontal = 6.dp, vertical = 3.dp)) {
@@ -446,37 +443,44 @@ private fun SessionRing(
 
 /** 태스크 칩 — 카드 배경 + 제목(시스템 폰트, 1줄) + 뽀모도로 딥링크. */
 @Composable
-private fun TaskChip(taskTitle: String, theme: WTheme) {
-    Box(
-        modifier = GlanceModifier.fillMaxWidth().background(theme.palette.card).cornerRadius(8.dp)
-            .padding(horizontal = 8.dp, vertical = 6.dp)
-            .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))),
-    ) {
+private fun TaskChip(taskTitle: String, theme: WTheme, clickable: Boolean = true) {
+    val modifier = GlanceModifier.fillMaxWidth().background(theme.palette.card).cornerRadius(8.dp)
+        .padding(horizontal = 8.dp, vertical = 6.dp).let {
+            if (clickable) it.semantics { contentDescription = "뽀모도로 열기" }
+                .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))) else it
+        }
+    Box(modifier = modifier) {
         Text(taskTitle, maxLines = 1, style = TextStyle(fontSize = 13.sp, color = ColorProvider(theme.palette.fg)))
     }
 }
 
 /** 상태별 버튼 행 — idle/done은 시작(새 세션 포함), running은 일시정지+리셋, paused는 재개+리셋. */
 @Composable
-private fun ExpandedButtons(isIdle: Boolean, done: Boolean, paused: Boolean, theme: WTheme) {
-    Row {
+private fun ExpandedButtons(isIdle: Boolean, done: Boolean, paused: Boolean, theme: WTheme, modifier: GlanceModifier) {
+    Row(modifier = modifier.height(48.dp), verticalAlignment = Alignment.CenterVertically) {
         when {
             isIdle || done -> PixelButton(
                 labelRes = "w_t_start", theme = theme, primary = true, accentOverride = theme.pomo.focus,
                 onClick = actionRunCallback<PomodoroCommandAction>(
                     actionParametersOf(PomodoroCommandAction.CommandParam to "start")),
+                actionLabel = "뽀모도로 시작",
+                modifier = GlanceModifier.fillMaxWidth(),
             )
             paused -> {
                 PixelButton(
                     labelRes = "w_t_resume", theme = theme, primary = true, accentOverride = theme.pomo.focus,
                     onClick = actionRunCallback<PomodoroCommandAction>(
                         actionParametersOf(PomodoroCommandAction.CommandParam to "resume")),
+                    actionLabel = "뽀모도로 재개",
+                    modifier = GlanceModifier.width(68.dp),
                 )
-                Spacer(GlanceModifier.width(8.dp))
+                Spacer(GlanceModifier.width(4.dp))
                 PixelButton(
                     labelRes = "w_t_reset", theme = theme, primary = false,
                     onClick = actionRunCallback<PomodoroCommandAction>(
                         actionParametersOf(PomodoroCommandAction.CommandParam to "reset")),
+                    actionLabel = "뽀모도로 초기화",
+                    modifier = GlanceModifier.width(52.dp),
                 )
             }
             else -> {
@@ -484,12 +488,16 @@ private fun ExpandedButtons(isIdle: Boolean, done: Boolean, paused: Boolean, the
                     labelRes = "w_t_pause", theme = theme, primary = true, accentOverride = theme.pomo.focus,
                     onClick = actionRunCallback<PomodoroCommandAction>(
                         actionParametersOf(PomodoroCommandAction.CommandParam to "pause")),
+                    actionLabel = "뽀모도로 일시정지",
+                    modifier = GlanceModifier.width(68.dp),
                 )
-                Spacer(GlanceModifier.width(8.dp))
+                Spacer(GlanceModifier.width(4.dp))
                 PixelButton(
                     labelRes = "w_t_reset", theme = theme, primary = false,
                     onClick = actionRunCallback<PomodoroCommandAction>(
                         actionParametersOf(PomodoroCommandAction.CommandParam to "reset")),
+                    actionLabel = "뽀모도로 초기화",
+                    modifier = GlanceModifier.width(52.dp),
                 )
             }
         }

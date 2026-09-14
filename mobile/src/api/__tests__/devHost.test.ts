@@ -1,4 +1,4 @@
-import { hostFrom, resolveBaseUrl } from '../devHost';
+import { hostFrom, resolveBaseUrl, shouldLogMetroCorrection } from '../devHost';
 
 const PROD = 'https://api.dumpit.kr/api';
 
@@ -88,5 +88,16 @@ describe('resolveBaseUrl', () => {
       expect(resolveBaseUrl('http://172.32.0.1:8080/api', '172.30.1.5', PROD))
         .toBe('http://172.32.0.1:8080/api');
     });
+  });
+});
+
+describe('shouldLogMetroCorrection', () => {
+  it('설정된 주소의 호스트를 실제로 바꾼 경우만 진단한다', () => {
+    expect(shouldLogMetroCorrection(
+      'http://172.30.1.75:8080/api',
+      'http://172.30.1.5:8080/api',
+    )).toBe(true);
+    expect(shouldLogMetroCorrection(undefined, PROD)).toBe(false);
+    expect(shouldLogMetroCorrection(PROD, PROD)).toBe(false);
   });
 });

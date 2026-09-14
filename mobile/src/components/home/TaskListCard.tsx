@@ -6,10 +6,7 @@ import { groupByParent, sortByDeadline } from '../../tasks/grouping';
 import { calcCompletionCoins } from '../../tasks/rewards';
 import { useTheme } from '../../theme/useTheme';
 import { CoinIcon } from '../common/CoinIcon';
-import { RetroBadge } from '../retro/RetroBadge';
-import { RetroButton } from '../retro/RetroButton';
 import { RetroCard } from '../retro/RetroCard';
-import { Chip } from '../retro/Chip';
 import { TaskRow, type TogglePos } from './TaskRow';
 
 const TABS = [
@@ -79,17 +76,56 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
   };
 
   return (
-    <RetroCard style={{ paddingBottom: 10 }}>
+    <RetroCard appearance="refined" style={{ paddingBottom: 10 }}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
           해야 할 일 <Text style={{ color: colors.accent2Text }}>({activeCount})</Text>
         </Text>
-        <RetroButton label="전체 보드" size="sm" variant="ghost" onPress={onPressBoard} />
+        <Pressable
+          onPress={onPressBoard}
+          accessibilityRole="button"
+          accessibilityLabel="태스크 전체 보기"
+          style={({ pressed }) => [
+            styles.boardLink,
+            { backgroundColor: pressed ? colors.chip : 'transparent' },
+          ]}
+        >
+          <Text style={[styles.boardLinkText, { color: colors.fg, fontFamily: fonts.chrome }]}>
+            태스크 전체 보기 →
+          </Text>
+        </Pressable>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
         {TABS.map((t) => (
-          <Chip key={t.id} label={t.label} selected={tab === t.id} onPress={() => setTab(t.id)} />
+          <Pressable
+            key={t.id}
+            accessibilityRole="tab"
+            accessibilityLabel={t.label}
+            accessibilityState={{ selected: tab === t.id }}
+            onPress={() => setTab(t.id)}
+            style={({ pressed }) => [
+              styles.filterTab,
+              { backgroundColor: pressed ? colors.chip : 'transparent' },
+            ]}
+          >
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.filterLabel,
+                { color: tab === t.id ? colors.fg : colors.subOnChip, fontFamily: fonts.chrome },
+              ]}
+            >
+              {t.label}
+            </Text>
+            <View
+              accessible={false}
+              style={[
+                styles.filterMarker,
+                { backgroundColor: tab === t.id ? colors.accent2Text : 'transparent' },
+              ]}
+            />
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -139,14 +175,14 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
                   accessibilityRole="checkbox"
                   accessibilityLabel={`${t.title} 완료 해제`}
                   accessibilityState={{ checked: true }}
-                  hitSlop={14}
                   style={({ pressed }) => [
-                    styles.doneCheckbox,
-                    { borderColor: colors.edge, backgroundColor: colors.accentFill },
-                    pressed && { transform: [{ scale: 0.9 }] },
+                    styles.doneCheckboxTarget,
+                    { backgroundColor: pressed ? colors.chip : 'transparent' },
                   ]}
                 >
-                  <Text style={{ color: colors.onAccent, fontSize: 11, fontFamily: fonts.chrome }}>✓</Text>
+                  <View style={[styles.doneCheckbox, { borderColor: colors.sub, backgroundColor: colors.accentFill }]}>
+                    <Text style={{ color: colors.onAccent, fontSize: 11, fontFamily: fonts.chrome }}>✓</Text>
+                  </View>
                 </Pressable>
                 <Text
                   style={[styles.doneTitle, { color: colors.sub, fontFamily: fonts.body }]}
@@ -171,15 +207,32 @@ export function TaskListCard({ sections, onToggle, onPressTask, onPressBoard }: 
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  header: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   title: { fontSize: 16 },
-  tabs: { gap: 6, paddingBottom: 10 },
+  boardLink: { minWidth: 0, minHeight: 48, paddingHorizontal: 8, justifyContent: 'center', flexShrink: 1, borderRadius: 8 },
+  boardLinkText: { fontSize: 12, textAlign: 'right' },
+  tabs: { gap: 4, paddingBottom: 10, flexGrow: 1 },
+  filterTab: {
+    minWidth: 48,
+    minHeight: 48,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    flexGrow: 1,
+    flexShrink: 0,
+    borderRadius: 8,
+  },
+  filterLabel: { fontSize: 12 },
+  filterMarker: { width: 18, height: 2 },
   section: { marginBottom: 4 },
   sectionTitle: { fontSize: 11, marginTop: 6, marginBottom: 2 },
   empty: { fontSize: 13, paddingVertical: 18, textAlign: 'center' },
   doneWrap: { borderTopWidth: 1.5, marginTop: 8, paddingTop: 8 },
-  doneHeader: { minHeight: 32, justifyContent: 'center' },
+  doneHeader: { minHeight: 48, justifyContent: 'center' },
   doneRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5 },
+  doneCheckboxTarget: { width: 48, height: 48, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   doneCheckbox: {
     width: 20, height: 20, borderWidth: 2, borderRadius: 4,
     alignItems: 'center', justifyContent: 'center',

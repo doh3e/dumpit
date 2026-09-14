@@ -35,14 +35,14 @@ export function PomodoroCard() {
 
   if (!session || !derived) {
     return (
-      <RetroCard style={styles.idleCard}>
+      <RetroCard appearance="refined" style={styles.card}>
         <View style={styles.idleText}>
           <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="tomato" size={14} /> 뽀모도로
           </Text>
           <Text style={[styles.sub, { color: colors.sub, fontFamily: fonts.body }]}>몰입의 시간을 시작해봐요</Text>
         </View>
-        <RetroButton label="집중 시작하기" size="sm" onPress={goTimer} />
+        <RetroButton appearance="refined" label="집중 시작하기" size="sm" style={styles.action} onPress={goTimer} />
       </RetroCard>
     );
   }
@@ -64,33 +64,41 @@ export function PomodoroCard() {
       : `${fmt(derived.remainingSec)} 남음${session.taskTitle ? ` · ${session.taskTitle}` : ''}`;
 
   return (
-    <Pressable onPress={goTimer} accessibilityRole="button" accessibilityLabel="뽀모도로 타이머 열기">
-      {({ pressed }) => (
-        <RetroCard style={[styles.idleCard, pressed && { opacity: 0.85 }]}>
-          <View style={styles.idleText}>
-            <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
-              <PixelIcon name="tomato" size={14} /> 뽀모도로
-            </Text>
-            <Text numberOfLines={1} style={[styles.sub, { color: paused ? colors.sub : colors.fg, fontFamily: fonts.chrome }]}>
-              {statusLine}
-            </Text>
-          </View>
-          <RetroButton
-            label={buttonLabel}
-            icon={buttonIcon ? <PixelIcon name={buttonIcon} size={13} /> : undefined}
-            size="sm"
-            variant={derived.phase === 'DONE' ? 'primary' : 'focus'}
-            onPress={goTimer}
-          />
-        </RetroCard>
-      )}
-    </Pressable>
+    <RetroCard appearance="refined" style={styles.card}>
+      <Pressable
+        onPress={goTimer}
+        accessibilityRole="button"
+        accessibilityLabel="뽀모도로 타이머 열기"
+        style={({ pressed }) => [
+          styles.openArea,
+          { backgroundColor: pressed ? colors.chip : colors.card, opacity: 1 },
+        ]}
+      >
+        <Text style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
+          <PixelIcon name="tomato" size={14} /> 뽀모도로
+        </Text>
+        <Text numberOfLines={2} style={[styles.sub, { color: paused ? colors.subOnChip : colors.fg, fontFamily: fonts.chrome }]}>
+          {statusLine}
+        </Text>
+      </Pressable>
+      <RetroButton
+        appearance="refined"
+        label={buttonLabel}
+        icon={buttonIcon ? <PixelIcon name={buttonIcon} size={13} /> : undefined}
+        size="sm"
+        style={styles.action}
+        variant={derived.phase === 'DONE' ? 'primary' : 'focus'}
+        onPress={goTimer}
+      />
+    </RetroCard>
   );
 }
 
 const styles = StyleSheet.create({
-  idleCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  idleText: { flex: 1, gap: 3 },
+  card: { gap: 12 },
+  idleText: { gap: 3 },
+  openArea: { minHeight: 48, borderRadius: 8, justifyContent: 'center', gap: 3 },
+  action: { alignSelf: 'flex-end' },
   title: { fontSize: 15 },
   sub: { fontSize: 12 },
 });

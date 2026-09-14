@@ -45,3 +45,10 @@ export function resolveBaseUrl(
 
   return `${scheme}${metroHost}${port}${path}`;
 }
+
+export function shouldLogMetroCorrection(
+  configured: string | undefined,
+  resolved: string,
+): boolean {
+  return Boolean(configured && configured !== resolved);
+}

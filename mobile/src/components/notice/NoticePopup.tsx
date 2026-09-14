@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, findNodeHandle, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { fetchUnreadNotices, markNoticeRead } from '../../api/notices';
 import type { NoticeResponse } from '../../api/types';
-import { retroShadow } from '../../theme/tokens';
 import { useTheme } from '../../theme/useTheme';
 import { MarkdownView } from '../common/MarkdownView';
 import { RetroButton } from '../retro/RetroButton';
@@ -40,8 +39,7 @@ export function NoticePopup() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors.card, borderColor: colors.edge },
-            retroShadow(5, colors.shadowHero),
+            { backgroundColor: colors.card, borderColor: colors.line },
           ]}
         >
           <Text ref={titleRef} accessibilityRole="header" style={[styles.title, { color: colors.fg, fontFamily: fonts.displayBold }]}>
@@ -50,7 +48,7 @@ export function NoticePopup() {
           <ScrollView style={styles.content}>
             <MarkdownView>{current.content}</MarkdownView>
           </ScrollView>
-          <RetroButton label="확인했어요!" onPress={dismiss} />
+          <RetroButton appearance="refined" label="확인했어요!" onPress={dismiss} />
         </View>
       </View>
     </Modal>
@@ -59,7 +57,7 @@ export function NoticePopup() {
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 24 },
-  card: { width: '100%', maxWidth: 420, borderWidth: 2, borderRadius: 12, padding: 18, gap: 12, maxHeight: '75%' },
+  card: { width: '100%', maxWidth: 420, borderWidth: 1, borderRadius: 12, padding: 18, gap: 12, maxHeight: '75%' },
   title: { fontSize: 16 },
   content: { flexGrow: 0 },
 });

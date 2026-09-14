@@ -13,6 +13,7 @@ import { RetroButton } from '../src/components/retro/RetroButton';
 import { RetroCard } from '../src/components/retro/RetroCard';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { invalidateAfterAi, useAiUsage } from '../src/query/hooks';
 import { keys } from '../src/query/keys';
 import { AI_COSTS, getCategory } from '../src/tasks/constants';
@@ -26,6 +27,7 @@ import { useTheme } from '../src/theme/useTheme';
 export default function IdeaViewScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const { ideaId } = useLocalSearchParams<{ ideaId?: string }>();
   const ideas = useQuery({ queryKey: keys.ideas, queryFn: fetchIdeas });
   const toast = useToast();
@@ -55,7 +57,7 @@ export default function IdeaViewScreen() {
         ) : (
           <>
             <Text style={[styles.notFound, { color: colors.sub, fontFamily: fonts.body }]}>아이디어를 찾지 못했어요.</Text>
-            <RetroButton label="돌아가기" size="sm" onPress={() => router.back()} />
+            <RetroButton appearance="refined" label="돌아가기" size="sm" onPress={() => router.back()} />
           </>
         )}
       </View>
@@ -104,8 +106,8 @@ export default function IdeaViewScreen() {
         }
       />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}>
-        <RetroCard style={styles.card}>
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]}>
+        <RetroCard appearance="refined" style={styles.card}>
           <View style={styles.titleRow}>
             {sticker && <Image source={sticker.img} style={styles.sticker} resizeMode="contain" />}
             {idea.pinned && <PixelIcon name="pin" size={14} />}
@@ -121,7 +123,7 @@ export default function IdeaViewScreen() {
             <Pressable
               onPress={() => router.push({ pathname: '/idea-view', params: { ideaId: parent.ideaId } } as never)}
               accessibilityRole="button"
-              style={({ pressed }) => [styles.parentLink, { opacity: pressed ? 0.7 : 1 }]}
+              style={({ pressed }) => [styles.parentLink, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
             >
               <Text numberOfLines={1} style={[styles.parentText, { color: colors.sub, fontFamily: fonts.body }]}>
                 <PixelIcon name="tree" size={11} /> 상위: {parent.title}
@@ -130,7 +132,7 @@ export default function IdeaViewScreen() {
           )}
         </RetroCard>
 
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           {idea.content?.trim() ? (
             <MarkdownView>{idea.content}</MarkdownView>
           ) : (
@@ -140,7 +142,7 @@ export default function IdeaViewScreen() {
           )}
         </RetroCard>
 
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="sprout" size={13} /> 하위 아이디어 {children.length > 0 ? children.length : ''}
           </Text>
@@ -156,7 +158,7 @@ export default function IdeaViewScreen() {
                   key={child.ideaId}
                   onPress={() => router.push({ pathname: '/idea-view', params: { ideaId: child.ideaId } } as never)}
                   accessibilityRole="button"
-                  style={({ pressed }) => [styles.childRow, { borderTopColor: colors.line, opacity: pressed ? 0.7 : 1 }]}
+                  style={({ pressed }) => [styles.childRow, { borderTopColor: colors.line, backgroundColor: pressed ? colors.chip : colors.card }]}
                 >
                   {child.pinned && <PixelIcon name="pin" size={11} />}
                   <Text numberOfLines={1} style={[styles.childTitle, { color: colors.fg, fontFamily: fonts.body }]}>
@@ -167,7 +169,7 @@ export default function IdeaViewScreen() {
               );
             })
           )}
-          <RetroButton
+          <RetroButton appearance="refined"
             label="＋ 하위 아이디어 추가"
             variant="ghost"
             size="sm"
@@ -177,19 +179,19 @@ export default function IdeaViewScreen() {
           />
         </RetroCard>
 
-        <RetroButton
+        <RetroButton appearance="refined"
           label="편집"
           icon={<PixelIcon name="pencil" size={14} />}
           onPress={() => router.push({ pathname: '/idea-edit', params: { ideaId: idea.ideaId } } as never)}
         />
-        <RetroButton
+        <RetroButton appearance="refined"
           label={idea.convertedTaskId ? '✓ 이미 태스크로 전환됨' : `태스크로 전환 (${AI_COSTS.IDEA_CONVERT}점)`}
           icon={idea.convertedTaskId ? undefined : <PixelIcon name="scissors" size={14} />}
           variant="ghost"
           onPress={confirmConvert}
           disabled={!!idea.convertedTaskId || busy || remaining < AI_COSTS.IDEA_CONVERT}
         />
-        <RetroButton label="아이디어 목록" icon={<PixelIcon name="bulb" size={13} />} variant="ghost" size="sm" onPress={() => router.replace('/ideas' as Href)} />
+        <RetroButton appearance="refined" label="아이디어 목록" icon={<PixelIcon name="bulb" size={13} />} variant="ghost" size="sm" onPress={() => router.replace('/ideas' as Href)} />
       </ScrollView>
     </View>
   );

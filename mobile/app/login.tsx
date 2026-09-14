@@ -5,7 +5,7 @@ import { describeError, type ErrorInfo } from '../src/api/errors';
 import { useAuth } from '../src/auth/AuthContext';
 import { GoogleGIcon } from '../src/components/common/GoogleGIcon';
 import { PRIVACY_URL, TERMS_URL } from '../src/legal/links';
-import { retroShadow } from '../src/theme/tokens';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { useTheme } from '../src/theme/useTheme';
 
 // 스플래시 원본을 440px로 줄인 사본(scripts/gen_login_logo.py) — 원본을 require하면 AAB가 1.5MB 늘어난다
@@ -15,6 +15,7 @@ const LOGO = require('../assets/images/login-logo.png');
 export default function LoginScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame(24);
   const { signInWithGoogle } = useAuth();
   const [error, setError] = useState<ErrorInfo | null>(null);
   const [busy, setBusy] = useState(false);
@@ -37,6 +38,7 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.container,
+          frame,
           { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 },
         ]}
       >
@@ -62,11 +64,7 @@ export default function LoginScreen() {
           accessibilityState={{ disabled: busy, busy }}
           style={({ pressed }) => [
             styles.button,
-            { backgroundColor: colors.accent, borderColor: colors.edge },
-            // 웹 .btn-retro:active 재현 — 3px 밀리며 오프셋 섀도가 접힌다
-            pressed
-              ? { transform: [{ translateX: 3 }, { translateY: 3 }], boxShadow: `0px 0px 0px ${colors.shadowSm}` }
-              : retroShadow(3, colors.shadowSm),
+            { backgroundColor: pressed ? colors.accent2Fill : colors.accentFill, borderColor: pressed ? colors.accent2Fill : colors.accentFill },
           ]}
         >
           {busy ? (
@@ -120,7 +118,7 @@ const styles = StyleSheet.create({
   underline: { textDecorationLine: 'underline' },
   button: {
     marginTop: 32,
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 28,
     paddingVertical: 14,

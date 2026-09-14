@@ -9,11 +9,14 @@ import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
+import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
 import androidx.glance.layout.*
+import androidx.glance.semantics.contentDescription
+import androidx.glance.semantics.semantics
 import androidx.glance.unit.ColorProvider
 
 @Composable
@@ -22,61 +25,140 @@ fun drawableId(name: String): Int {
     return context.resources.getIdentifier(name, "drawable", context.packageName)
 }
 
-/** RetroCard 미러 — 섀도(우하 3dp)·edge 보더(2dp)·내용(bg+패턴) 3겹 */
+/** Flat widget frame — 스킨은 가장자리에 남기고 정보 표면은 불투명하게 분리한다. */
 @Composable
 fun RetroFrame(theme: WTheme, modifier: GlanceModifier = GlanceModifier, bgOverride: Color? = null, content: @Composable () -> Unit) {
-    Box(modifier = modifier.fillMaxSize()) {
-        Box(modifier = GlanceModifier.fillMaxSize().padding(start = 3.dp, top = 3.dp)) {
-            Box(modifier = GlanceModifier.fillMaxSize().background(theme.palette.shadowHero).cornerRadius(12.dp)) {}
+    val bgColor = bgOverride ?: theme.palette.bg
+    val layoutModifiers = retroFrameLayoutModifiers(
+        modifier = modifier,
+        background = bgColor,
+        card = theme.palette.card,
+        useCardSurface = bgOverride == null,
+        showPattern = bgOverride == null && theme.patternRes != null,
+        contentPadding = if (bgOverride == null || LocalSize.current.width <= 110.dp) 2.dp else 4.dp,
+    )
+    Box(modifier = layoutModifiers.frame) {
+        layoutModifiers.pattern?.let { patternModifier ->
+            Image(
+                provider = ImageProvider(drawableId(checkNotNull(theme.patternRes))),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = patternModifier,
+            )
         }
-        Box(modifier = GlanceModifier.fillMaxSize().padding(end = 3.dp, bottom = 3.dp)) {
-            Box(modifier = GlanceModifier.fillMaxSize().background(theme.palette.edge).cornerRadius(12.dp).padding(2.dp)) {
-                val bgColor = bgOverride ?: theme.palette.bg
-                Box(modifier = GlanceModifier.fillMaxSize().background(bgColor).cornerRadius(10.dp)) {
-                    if (bgOverride == null && theme.patternRes != null) {
-                        Image(
-                            provider = ImageProvider(drawableId(theme.patternRes)),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = GlanceModifier.fillMaxSize().cornerRadius(10.dp),
-                        )
-                    }
-                    Box(modifier = GlanceModifier.fillMaxSize().padding(10.dp)) { content() }
-                }
-            }
+        Box(modifier = layoutModifiers.contentWrapper) {
+            val contentSurface = layoutModifiers.contentSurface
+            if (contentSurface == null) content() else Box(modifier = contentSurface) { content() }
+        }
+    }
+}
+
+internal data class RetroFrameLayoutModifiers(
+    val frame: GlanceModifier,
+    val pattern: GlanceModifier?,
+    val contentWrapper: GlanceModifier,
+    val contentSurface: GlanceModifier?,
+)
+
+internal fun retroFrameLayoutModifiers(
+    modifier: GlanceModifier,
+    background: Color,
+    card: Color,
+    useCardSurface: Boolean,
+    showPattern: Boolean,
+    contentPadding: Dp,
+) = RetroFrameLayoutModifiers(
+    frame = modifier.fillMaxSize().background(background).cornerRadius(12.dp),
+    pattern = if (showPattern) GlanceModifier.fillMaxSize().cornerRadius(12.dp) else null,
+    contentWrapper = GlanceModifier.fillMaxSize().padding(contentPadding),
+    contentSurface = if (useCardSurface) {
+        GlanceModifier.fillMaxSize().background(card).cornerRadius(12.dp).padding(2.dp)
+    } else {
+        null
+    },
+)
+
+@Composable
+fun PixelText(res: String, tint: Color, height: Dp, width: Dp? = null, modifier: GlanceModifier = GlanceModifier) {
+    Image(
+        provider = ImageProvider(drawableId(res)),
+        contentDescription = null,
+        colorFilter = ColorFilter.tint(ColorProvider(tint)),
+        modifier = (width?.let { modifier.width(it) } ?: modifier).height(height),
+        contentScale = ContentScale.Fit,
+    )
+}
+
+internal data class PixelButtonLayoutModifiers(
+    val frame: GlanceModifier,
+    val secondarySurface: GlanceModifier?,
+)
+
+internal fun pixelButtonLayoutModifiers(
+    modifier: GlanceModifier,
+    primary: Boolean,
+    border: Color,
+    background: Color,
+) = PixelButtonLayoutModifiers(
+    frame = modifier.height(48.dp).background(border).cornerRadius(8.dp).let {
+        if (primary) it else it.padding(2.dp)
+    },
+    secondarySurface = if (primary) null else {
+        GlanceModifier.fillMaxSize().background(background).cornerRadius(6.dp)
+    },
+)
+
+@Composable
+fun PixelIcon(res: String, tint: Color, size: Dp, onClick: Action? = null, actionLabel: String? = null) {
+    if (onClick == null) {
+        Image(provider = ImageProvider(drawableId(res)), contentDescription = null,
+            colorFilter = ColorFilter.tint(ColorProvider(tint)), modifier = GlanceModifier.size(size))
+    } else {
+        Box(
+            modifier = GlanceModifier.size(if (size < 48.dp) 48.dp else size)
+                .semantics { contentDescription = actionLabel ?: "위젯 동작" }.clickable(onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(provider = ImageProvider(drawableId(res)), contentDescription = null,
+                colorFilter = ColorFilter.tint(ColorProvider(tint)), modifier = GlanceModifier.size(size))
         }
     }
 }
 
 @Composable
-fun PixelText(res: String, tint: Color, height: Dp, modifier: GlanceModifier = GlanceModifier) {
-    Image(
-        provider = ImageProvider(drawableId(res)),
-        contentDescription = null,
-        colorFilter = ColorFilter.tint(ColorProvider(tint)),
-        modifier = modifier.height(height),
-        contentScale = ContentScale.Fit,
-    )
-}
-
-@Composable
-fun PixelIcon(res: String, tint: Color, size: Dp, onClick: Action? = null) {
-    val m = GlanceModifier.size(size).let { if (onClick != null) it.clickable(onClick) else it }
-    Image(
-        provider = ImageProvider(drawableId(res)),
-        contentDescription = null,
-        colorFilter = ColorFilter.tint(ColorProvider(tint)),
-        modifier = m,
-    )
-}
-
-@Composable
-fun PixelButton(labelRes: String, theme: WTheme, primary: Boolean, onClick: Action, accentOverride: Color? = null) {
+fun PixelButton(
+    labelRes: String,
+    theme: WTheme,
+    primary: Boolean,
+    onClick: Action,
+    actionLabel: String,
+    accentOverride: Color? = null,
+    modifier: GlanceModifier = GlanceModifier,
+) {
     val bg = if (primary) (accentOverride ?: theme.palette.accent) else theme.palette.card
-    val fg = if (primary) theme.palette.onAccent else theme.palette.fg
-    Box(modifier = GlanceModifier.background(theme.palette.edge).cornerRadius(9.dp).padding(2.dp).clickable(onClick)) {
-        Box(modifier = GlanceModifier.background(bg).cornerRadius(7.dp).padding(horizontal = 12.dp, vertical = 6.dp)) {
-            PixelText(labelRes, fg, 14.dp)
+    val fg = if (primary) readableWidgetText(theme.palette.onAccent, bg) else theme.palette.fg
+    val border = if (primary) bg else readableWidgetBorder(theme.palette.line, bg)
+    val labelWidth = when (labelRes) {
+        "w_t_complete", "w_t_pause" -> 60.dp
+        "w_t_resume" -> 31.dp
+        "w_t_reset" -> 46.dp
+        else -> 60.dp
+    }
+    val layoutModifiers = pixelButtonLayoutModifiers(modifier, primary, border, bg)
+    Box(
+        modifier = layoutModifiers.frame
+            .semantics { contentDescription = actionLabel }.clickable(onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (primary) {
+            PixelText(labelRes, fg, 14.dp, width = labelWidth)
+        } else {
+            Box(
+                modifier = checkNotNull(layoutModifiers.secondarySurface),
+                contentAlignment = Alignment.Center,
+            ) {
+                PixelText(labelRes, fg, 14.dp, width = labelWidth)
+            }
         }
     }
 }

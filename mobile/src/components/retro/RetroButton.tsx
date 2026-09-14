@@ -6,6 +6,7 @@ import { useTheme } from '../../theme/useTheme';
 type Props = {
   label: string;
   onPress: () => void;
+  appearance?: 'retro' | 'refined';
   variant?: 'primary' | 'ghost' | 'danger' | 'focus';
   size?: 'md' | 'sm';
   disabled?: boolean;
@@ -18,20 +19,29 @@ type Props = {
   accessibilityHint?: string;
 };
 
-/** 웹 .btn-retro 이식 — 누르면 3px 밀리며 오프셋 섀도가 접힌다 (login.tsx 패턴) */
+/** 기본 retro는 3px 눌림과 오프셋 섀도, refined는 평면 조작 표현을 사용한다. */
 export function RetroButton({
-  label, onPress, variant = 'primary', size = 'md', disabled, busy, style, icon,
+  label, onPress, appearance = 'retro', variant = 'primary', size = 'md', disabled, busy, style, icon,
   accessibilityLabel, accessibilityHint,
 }: Props) {
   const { colors, fonts } = useTheme();
-  const palette = {
-    primary: { bg: colors.accentFill, fg: colors.onAccent },
-    ghost: { bg: colors.card, fg: colors.fg },
-    // 앰버 위 크림은 2.6:1 — 앰버 채움은 onWarn 글자 (웹 결정 C)
-    danger: { bg: colors.warn, fg: colors.onWarn },
-    focus: { bg: colors.accent2Fill, fg: colors.onAccent },   // 진행 중 상태 표시용 (틸)
-  }[variant];
+  const refined = appearance === 'refined';
+  const palette = refined
+    ? {
+        primary: { bg: colors.accentFill, fg: colors.onAccent, border: colors.accentFill },
+        ghost: { bg: colors.card, fg: colors.fg, border: colors.sub },
+        danger: { bg: colors.card, fg: colors.dangerText, border: colors.dangerText },
+        focus: { bg: colors.accent2Fill, fg: colors.onAccent, border: colors.accent2Fill },
+      }[variant]
+    : {
+        primary: { bg: colors.accentFill, fg: colors.onAccent, border: colors.edge },
+        ghost: { bg: colors.card, fg: colors.fg, border: colors.edge },
+        // 앰버 위 크림은 2.6:1 — 앰버 채움은 onWarn 글자 (웹 결정 C)
+        danger: { bg: colors.warn, fg: colors.onWarn, border: colors.edge },
+        focus: { bg: colors.accent2Fill, fg: colors.onAccent, border: colors.edge },
+      }[variant];
   const blocked = disabled || busy;
+  const labelFont = refined ? fonts.chrome : fonts.displayBold;
 
   return (
     <Pressable
@@ -41,15 +51,21 @@ export function RetroButton({
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: !!blocked, busy: !!busy }}
-      // sm은 34dp — 위아래 7dp씩 넓혀 48dp 타깃을 맞춘다 (모양은 그대로)
-      hitSlop={size === 'sm' ? { top: 7, bottom: 7, left: 0, right: 0 } : undefined}
+      // retro sm은 시각 크기를 유지하면서 세로 터치 영역을 보완한다.
+      hitSlop={!refined && size === 'sm' ? { top: 7, bottom: 7, left: 0, right: 0 } : undefined}
       style={({ pressed }) => [
         styles.base,
+        refined && styles.refinedBase,
         size === 'sm' ? styles.sm : styles.md,
-        { backgroundColor: palette.bg, borderColor: colors.edge, opacity: blocked && !busy ? 0.45 : 1 },
-        pressed && !blocked
+        refined && styles.refinedSize,
+        { backgroundColor: palette.bg, borderColor: palette.border, opacity: blocked && !busy ? 0.45 : 1 },
+        refined && pressed && !blocked && {
+          backgroundColor: variant === 'ghost' ? colors.chip : palette.bg,
+          borderColor: colors.fg,
+        },
+        !refined && (pressed && !blocked
           ? { transform: [{ translateX: 3 }, { translateY: 3 }], boxShadow: `0px 0px 0px ${colors.shadowSm}` }
-          : retroShadow(3, colors.shadowSm),
+          : retroShadow(3, colors.shadowSm)),
         style,
       ]}
     >
@@ -58,12 +74,12 @@ export function RetroButton({
       ) : icon ? (
         <View style={styles.iconRow}>
           {icon}
-          <Text style={[size === 'sm' ? styles.smText : styles.mdText, { color: palette.fg, fontFamily: fonts.displayBold }]}>
+          <Text style={[size === 'sm' ? styles.smText : styles.mdText, { color: palette.fg, fontFamily: labelFont }]}>
             {label}
           </Text>
         </View>
       ) : (
-        <Text style={[size === 'sm' ? styles.smText : styles.mdText, { color: palette.fg, fontFamily: fonts.displayBold }]}>
+        <Text style={[size === 'sm' ? styles.smText : styles.mdText, { color: palette.fg, fontFamily: labelFont }]}>
           {label}
         </Text>
       )}
@@ -73,6 +89,8 @@ export function RetroButton({
 
 const styles = StyleSheet.create({
   base: { borderWidth: 2, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  refinedBase: { borderWidth: 1 },
+  refinedSize: { minHeight: 48, minWidth: 48 },
   md: { paddingHorizontal: 20, paddingVertical: 12, minHeight: 48 },
   sm: { paddingHorizontal: 12, paddingVertical: 7, minHeight: 34 },
   mdText: { fontSize: 15 },

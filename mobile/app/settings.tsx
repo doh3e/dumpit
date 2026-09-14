@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../src/api/client';
@@ -13,6 +13,7 @@ import { ActiveHoursCard } from '../src/components/routine/ActiveHoursCard';
 import { NotificationSettingsCard } from '../src/components/settings/NotificationSettingsCard';
 import { PixelIcon, type PixelIconName } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { useA11yPrefs, useThemeMode, type ContrastMode, type ThemeMode } from '../src/theme/ThemeProvider';
 import { useTheme } from '../src/theme/useTheme';
 
@@ -28,34 +29,20 @@ const CONTRAST_MODES: { id: ContrastMode; label: string }[] = [
   { id: 'normal', label: '기본' },
 ];
 
-export default function SettingsScreen() {
-  const { colors, fonts } = useTheme();
-  const insets = useSafeAreaInsets();
-  const { mode, setMode } = useThemeMode();
-  const { contrastMode, setContrastMode, boldText, setBoldText } = useA11yPrefs();
-  const { me, signOut } = useAuth();
-  const toast = useToast();
-
-  const boldLabel = boldText ? '켬' : '끔';
-
+function WithdrawalControls({
+  colors,
+  fonts,
+  signOut,
+  showError,
+}: {
+  colors: ReturnType<typeof useTheme>['colors'];
+  fonts: ReturnType<typeof useTheme>['fonts'];
+  signOut: ReturnType<typeof useAuth>['signOut'];
+  showError: (message: string) => void;
+}) {
   const [withdrawStage, setWithdrawStage] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
-
-  // 로그인 계정이 바뀌면(로그아웃·탈퇴·재로그인) 탈퇴 확인 단계를 처음으로 되돌린다.
-  // 탈퇴는 되돌리기 어려운 결정이라, 확인 입력창만 남은 채로 재진입해 안내 다이얼로그를
-  // 건너뛰는 일이 없어야 한다.
-  useEffect(() => {
-    setWithdrawStage(false);
-    setConfirmText('');
-  }, [me?.email]);
-
-  const confirmSignOut = () => {
-    Alert.alert('로그아웃', '정말 로그아웃할까요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '로그아웃', style: 'destructive', onPress: () => { signOut(); } },
-    ]);
-  };
 
   const startWithdraw = () => {
     Alert.alert(
@@ -71,26 +58,117 @@ export default function SettingsScreen() {
   const doWithdraw = async () => {
     setWithdrawing(true);
     try {
-      await deleteAccount();          // 서버가 계정을 잠그고 30일 뒤 완전 삭제를 예약
-      await signOut({ afterWithdrawal: true });   // 구글 세션 해제 + 로컬 정리 → 로그인 화면
-    } catch (e) {
-      toast.error(getApiErrorMessage(e, '탈퇴 처리에 실패했어요.'));
+      await deleteAccount();
+      await signOut({ afterWithdrawal: true });
+    } catch (error) {
+      showError(getApiErrorMessage(error, '탈퇴 처리에 실패했어요.'));
       setWithdrawing(false);
     }
+  };
+
+  return (
+    <>
+      {withdrawStage ? (
+        <>
+          <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>
+            정말 탈퇴하시려면 아래에 &quot;탈퇴&quot;를 입력해주세요.
+          </Text>
+          {/* 한글 IME 조합 보호 — uncontrolled */}
+          <TextInput
+            defaultValue=""
+            onChangeText={setConfirmText}
+            placeholder="탈퇴"
+            placeholderTextColor={colors.subOnChip}
+            style={[styles.input, { borderColor: colors.warn, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
+            accessibilityLabel="탈퇴 확인 입력"
+          />
+          <View style={styles.withdrawActions}>
+            <RetroButton appearance="refined" label="취소" variant="ghost" size="sm" onPress={() => { setWithdrawStage(false); setConfirmText(''); }} />
+            <RetroButton appearance="refined"
+              label="영구 탈퇴"
+              variant="danger"
+              size="sm"
+              onPress={doWithdraw}
+              busy={withdrawing}
+              disabled={confirmText.trim() !== '탈퇴'}
+            />
+          </View>
+        </>
+      ) : (
+        <RetroButton appearance="refined" label="회원 탈퇴" variant="danger" size="sm" onPress={startWithdraw} />
+      )}
+    </>
+  );
+}
+
+export default function SettingsScreen() {
+  const { colors, fonts } = useTheme();
+  const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
+  const { preferencesReady: themePreferencesReady, mode, setMode } = useThemeMode();
+  const {
+    preferencesReady: a11yPreferencesReady,
+    contrastMode,
+    setContrastMode,
+    boldText,
+    setBoldText,
+  } = useA11yPrefs();
+  const { me, signOut } = useAuth();
+  const toast = useToast();
+
+  const boldLabel = boldText ? '켬' : '끔';
+
+  const [preferencePending, setPreferencePending] = useState(false);
+  const preferencePendingRef = useRef(false);
+  const [preferenceFeedback, setPreferenceFeedback] = useState<'success' | 'error' | null>(null);
+  const preferencesReady = themePreferencesReady && a11yPreferencesReady;
+
+  const saveDevicePreference = async (save: () => Promise<void>) => {
+    if (!preferencesReady || preferencePendingRef.current) return;
+    preferencePendingRef.current = true;
+    setPreferencePending(true);
+    setPreferenceFeedback(null);
+    try {
+      await save();
+      setPreferenceFeedback('success');
+    } catch {
+      setPreferenceFeedback('error');
+    } finally {
+      preferencePendingRef.current = false;
+      setPreferencePending(false);
+    }
+  };
+
+  const confirmSignOut = () => {
+    Alert.alert('로그아웃', '정말 로그아웃할까요?', [
+      { text: '취소', style: 'cancel' },
+      { text: '로그아웃', style: 'destructive', onPress: () => { signOut(); } },
+    ]);
   };
 
   return (
     <View style={styles.screen}>
       <ScreenHeader title="설정" icon={<PixelIcon name="gear" size={16} />} />
 
-      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
-        <RetroCard style={styles.card}>
+      <ScrollView contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
+        <RetroCard appearance="refined" style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="palette" size={13} /> 테마
           </Text>
+          <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
+            선택하면 바로 적용되고 이 기기에 저장돼요.
+          </Text>
           <View style={styles.chipRow}>
             {THEME_MODES.map((m) => (
-              <Chip key={m.id} label={m.label} icon={<PixelIcon name={m.icon} size={12} />} selected={mode === m.id} onPress={() => setMode(m.id)} />
+              <Chip
+                appearance="refined"
+                key={m.id}
+                label={m.label}
+                icon={<PixelIcon name={m.icon} size={12} />}
+                selected={mode === m.id}
+                disabled={!preferencesReady || preferencePending}
+                onPress={() => { void saveDevicePreference(() => setMode(m.id)); }}
+              />
             ))}
           </View>
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
@@ -100,56 +178,60 @@ export default function SettingsScreen() {
           <View style={styles.chipRow}>
             {CONTRAST_MODES.map((m) => (
               // 테마 그리드에도 '시스템' 칩이 있어 라벨만으로는 어느 그룹인지 갈린다
-              <Chip key={m.id} label={m.label} accessibilityLabel={`대비 ${m.label}`} selected={contrastMode === m.id} onPress={() => setContrastMode(m.id)} />
+              <Chip
+                appearance="refined"
+                key={m.id}
+                label={m.label}
+                accessibilityLabel={`대비 ${m.label}`}
+                selected={contrastMode === m.id}
+                disabled={!preferencesReady || preferencePending}
+                onPress={() => { void saveDevicePreference(() => setContrastMode(m.id)); }}
+              />
             ))}
           </View>
           <Text accessibilityRole="header" style={[styles.subTitle, { color: colors.sub, fontFamily: fonts.chrome }]}>굵은 글자</Text>
           <View style={styles.chipRow}>
-            <Chip label={boldLabel} accessibilityLabel={`굵은 글자 ${boldLabel}`} selected={boldText} onPress={() => setBoldText(!boldText)} />
+            <Chip
+              appearance="refined"
+              label={boldLabel}
+              accessibilityLabel={`굵은 글자 ${boldLabel}`}
+              selected={boldText}
+              disabled={!preferencesReady || preferencePending}
+              onPress={() => { void saveDevicePreference(() => setBoldText(!boldText)); }}
+            />
           </View>
           <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
             &apos;시스템&apos;은 휴대폰의 고대비 텍스트 설정을 따라요. 이 설정은 이 기기에만 저장돼요.
           </Text>
+          {preferenceFeedback && (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[
+                styles.feedback,
+                { color: preferenceFeedback === 'error' ? colors.dangerText : colors.sub, fontFamily: fonts.body },
+              ]}
+            >
+              {preferenceFeedback === 'error' ? '이 기기에 저장하지 못했어요.' : '이 기기에 저장했어요.'}
+            </Text>
+          )}
         </RetroCard>
 
         <ActiveHoursCard />
 
         <NotificationSettingsCard />
 
-        <RetroCard style={styles.card}>
+        <RetroCard appearance="refined" style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
             <PixelIcon name="user" size={13} /> 계정
           </Text>
-          <RetroButton label="로그아웃" variant="ghost" onPress={confirmSignOut} />
-          {withdrawStage ? (
-            <>
-              <Text style={[styles.hint, { color: colors.warnText, fontFamily: fonts.body }]}>
-                정말 탈퇴하시려면 아래에 &quot;탈퇴&quot;를 입력해주세요.
-              </Text>
-              {/* 한글 IME 조합 보호 — uncontrolled */}
-              <TextInput
-                defaultValue=""
-                onChangeText={setConfirmText}
-                placeholder="탈퇴"
-                placeholderTextColor={colors.subOnChip}
-                style={[styles.input, { borderColor: colors.warn, backgroundColor: colors.chip, color: colors.fg, fontFamily: fonts.body }]}
-                accessibilityLabel="탈퇴 확인 입력"
-              />
-              <View style={styles.withdrawActions}>
-                <RetroButton label="취소" variant="ghost" size="sm" onPress={() => { setWithdrawStage(false); setConfirmText(''); }} />
-                <RetroButton
-                  label="영구 탈퇴"
-                  variant="danger"
-                  size="sm"
-                  onPress={doWithdraw}
-                  busy={withdrawing}
-                  disabled={confirmText.trim() !== '탈퇴'}
-                />
-              </View>
-            </>
-          ) : (
-            <RetroButton label="회원 탈퇴" variant="danger" size="sm" onPress={startWithdraw} />
-          )}
+          <RetroButton appearance="refined" label="로그아웃" variant="ghost" onPress={confirmSignOut} />
+          <WithdrawalControls
+            key={me?.email ?? 'signed-out'}
+            colors={colors}
+            fonts={fonts}
+            signOut={signOut}
+            showError={toast.error}
+          />
         </RetroCard>
 
         <Text style={[styles.version, { color: colors.sub, fontFamily: fonts.chrome }]}>
@@ -167,6 +249,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 14 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   hint: { fontSize: 12, lineHeight: 18 },
+  feedback: { fontSize: 12, lineHeight: 18, fontWeight: '700' },
   subTitle: { fontSize: 11, marginTop: 6 },
   input: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, minHeight: 44 },
   withdrawActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },

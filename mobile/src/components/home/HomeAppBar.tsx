@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MeResponse } from '../../api/auth';
 import type { AiUsage } from '../../api/types';
+import { useContentFrame } from '../../layout/useContentFrame';
 import { PLANET_SPRITES, spriteFor } from '../../shop/spriteRegistry';
 import { useTheme } from '../../theme/useTheme';
 import { TiledImage } from '../common/TiledImage';
@@ -15,6 +16,7 @@ const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: AiUsage | undefined }) {
   const { colors, fonts, chromeDeco } = useTheme();
   const insets = useSafeAreaInsets();
+  const contentFrameStyle = useContentFrame(16);
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}월 ${now.getDate()}일 ${DAY_NAMES[now.getDay()]}`;
   const greeting = me?.name ? `${me.name}의 덤프` : 'DUMPIT!';
@@ -24,6 +26,7 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
       style={[
         styles.bar,
         { paddingTop: insets.top + 10, backgroundColor: colors.chromeBg, borderBottomColor: colors.chromeLine },
+        contentFrameStyle,
       ]}
     >
       {/* CHROME 스킨 장식 타일 — 웹 .app-header background-image 대응 */}
@@ -44,7 +47,7 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
           </Text>
         </View>
       </View>
-      <View style={styles.right}>
+      <View style={styles.resources}>
         <CoinBadge coins={me?.coins ?? 0} />
         <AiBadge usage={aiUsage} />
       </View>
@@ -54,12 +57,12 @@ export function HomeAppBar({ me, aiUsage }: { me: MeResponse | null; aiUsage: Ai
 
 const styles = StyleSheet.create({
   bar: {
-    flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between',
+    flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1.5,
   },
-  left: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
-  leftText: { gap: 2, flexShrink: 1 },
+  left: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
+  leftText: { flex: 1, minWidth: 0, gap: 2, flexShrink: 1 },
   date: { fontSize: 11 },
   greeting: { fontSize: 20 },
-  right: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  resources: { flexDirection: 'row', gap: 8, alignItems: 'center', flexShrink: 0 },
 });

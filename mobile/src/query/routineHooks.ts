@@ -1,10 +1,38 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import {
   createRoutine, deleteRoutine, fetchRoutines, patchRoutine, toggleRoutine, type RoutinePayload,
 } from '../api/routines';
 import { fetchSettings, patchSettings, type SettingsPatch } from '../api/settings';
 import type { RoutineResponse } from '../api/types';
 import { keys } from './keys';
+
+const settingsSaveQueues = new WeakMap<QueryClient, Promise<void>>();
+
+function settingsSessionChangedError() {
+  return Object.assign(new Error('설정 세션이 변경됐어요.'), { code: 'SETTINGS_SESSION_CHANGED' });
+}
+
+async function saveSettingsInOrder(
+  qc: QueryClient,
+  patch: SettingsPatch,
+  isCurrent: () => boolean,
+) {
+  const previous = settingsSaveQueues.get(qc) ?? Promise.resolve();
+  const request = previous.then(async () => {
+    if (!isCurrent()) throw settingsSessionChangedError();
+    await qc.cancelQueries({ queryKey: keys.settings });
+    if (!isCurrent()) throw settingsSessionChangedError();
+    const data = await patchSettings(patch);
+    if (!isCurrent()) throw settingsSessionChangedError();
+    await qc.cancelQueries({ queryKey: keys.settings });
+    if (!isCurrent()) throw settingsSessionChangedError();
+    qc.setQueryData(keys.settings, data);
+    return data;
+  });
+  settingsSaveQueues.set(qc, request.then(() => undefined, () => undefined));
+  return request;
+}
 
 export function useRoutines() {
   return useQuery({ queryKey: keys.routines, queryFn: fetchRoutines });
@@ -77,10 +105,26 @@ export function useDeleteRoutine() {
 
 export function useSaveSettings() {
   const qc = useQueryClient();
+  const lifecycle = useRef({ active: false, generation: 0 });
+
+  useEffect(() => {
+    const generation = lifecycle.current.generation + 1;
+    lifecycle.current = { active: true, generation };
+    return () => {
+      if (lifecycle.current.generation === generation) {
+        lifecycle.current = { active: false, generation: generation + 1 };
+      }
+    };
+  }, []);
+
   return useMutation({
-    mutationFn: (patch: SettingsPatch) => patchSettings(patch),
-    onSuccess: (data) => {
-      qc.setQueryData(keys.settings, data);
+    mutationFn: (patch: SettingsPatch) => {
+      const generation = lifecycle.current.generation;
+      return saveSettingsInOrder(
+        qc,
+        patch,
+        () => lifecycle.current.active && lifecycle.current.generation === generation,
+      );
     },
   });
 }

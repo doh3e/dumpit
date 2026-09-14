@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type SetStateAction } from 'react';
 import { AccessibilityInfo, useColorScheme } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
 import { mirrorTheme } from '../widget/mirror';
@@ -13,31 +13,120 @@ const EQUIP_KEY = 'dumpit_equipments';
 const CONTRAST_KEY = 'dumpit_contrast_mode';
 const BOLD_KEY = 'dumpit_bold_text';
 
+function hydrationGate() {
+  let resolve!: () => void;
+  const promise = new Promise<void>((onResolve) => { resolve = onResolve; });
+  return { promise, resolve };
+}
+
+function hydrationCycle() {
+  return {
+    active: true,
+    mode: hydrationGate(),
+    contrast: hydrationGate(),
+    bold: hydrationGate(),
+  };
+}
+
+function enqueuePreferenceWrite<T>(
+  queue: { current: Promise<void> },
+  operationRef: { current: number },
+  waitForHydration: () => Promise<void>,
+  next: T,
+  apply: (value: T) => void,
+  saved: { current: T },
+  write: () => Promise<void>,
+) {
+  const operation = ++operationRef.current;
+  const request = queue.current.then(async () => {
+    await waitForHydration();
+    apply(next);
+    try {
+      await write();
+      saved.current = next;
+    } catch (error) {
+      if (operation === operationRef.current) apply(saved.current);
+      throw error;
+    }
+  });
+  queue.current = request.then(() => undefined, () => undefined);
+  return request;
+}
+
 /**
  * 테마 모드(기기별 AsyncStorage) + 장착 스킨(서버 me.equipments) 합성.
  * AuthProvider 안쪽에 두어야 equipments를 읽을 수 있다 — app/_layout.tsx의 Provider 순서 참고.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const { me } = useAuth();
+  const { me, loading: authLoading } = useAuth();
+  const accountKey = me?.email ?? null;
   const [mode, setModeState] = useState<ThemeMode>('system');
   const [cachedEquip, setCachedEquip] = useState<Equipments>(null);
-  const [previewEquipments, setPreviewEquipments] = useState<Equipments>(null);
+  const [previewState, setPreviewState] = useState<{ accountKey: string | null; equipments: Equipments }>({
+    accountKey,
+    equipments: null,
+  });
   const [contrastMode, setContrastModeState] = useState<ContrastMode>('system');
   const [boldText, setBoldTextState] = useState(false);
+  const [preferencesReady, setPreferencesReady] = useState(false);
   const [systemHighContrast, setSystemHighContrast] = useState(false);
+  const hydration = useRef(hydrationCycle());
+  const modeSaved = useRef<ThemeMode>('system');
+  const contrastSaved = useRef<ContrastMode>('system');
+  const boldSaved = useRef(false);
+  const modeQueue = useRef<Promise<void>>(Promise.resolve());
+  const contrastQueue = useRef<Promise<void>>(Promise.resolve());
+  const boldQueue = useRef<Promise<void>>(Promise.resolve());
+  const modeOperation = useRef(0);
+  const contrastOperation = useRef(0);
+  const boldOperation = useRef(0);
 
   useEffect(() => {
-    AsyncStorage.getItem(MODE_KEY).then((v) => {
-      if (v === 'light' || v === 'dark' || v === 'system') setModeState(v);
-    }).catch(() => {});
+    const cycle = hydrationCycle();
+    hydration.current = cycle;
+    const modeRead = AsyncStorage.getItem(MODE_KEY).then((v) => {
+      if (!cycle.active || hydration.current !== cycle) return;
+      if (v === 'light' || v === 'dark' || v === 'system') {
+        modeSaved.current = v;
+        setModeState(v);
+      }
+    }).catch(() => {}).finally(cycle.mode.resolve);
     AsyncStorage.getItem(EQUIP_KEY).then((v) => {
-      if (v) setCachedEquip(JSON.parse(v) as Equipments);
+      if (cycle.active && hydration.current === cycle && v) setCachedEquip(JSON.parse(v) as Equipments);
     }).catch(() => {});
-    AsyncStorage.getItem(CONTRAST_KEY).then((v) => {
-      if (v === 'high' || v === 'normal' || v === 'system') setContrastModeState(v);
-    }).catch(() => {});
-    AsyncStorage.getItem(BOLD_KEY).then((v) => setBoldTextState(v === '1')).catch(() => {});
+    const contrastRead = AsyncStorage.getItem(CONTRAST_KEY).then((v) => {
+      if (!cycle.active || hydration.current !== cycle) return;
+      if (v === 'high' || v === 'normal' || v === 'system') {
+        contrastSaved.current = v;
+        setContrastModeState(v);
+      }
+    }).catch(() => {}).finally(cycle.contrast.resolve);
+    const boldRead = AsyncStorage.getItem(BOLD_KEY).then((v) => {
+      if (!cycle.active || hydration.current !== cycle) return;
+      const next = v === '1';
+      boldSaved.current = next;
+      setBoldTextState(next);
+    }).catch(() => {}).finally(cycle.bold.resolve);
+    void Promise.all([modeRead, contrastRead, boldRead]).then(() => {
+      if (cycle.active && hydration.current === cycle) setPreferencesReady(true);
+    });
+    return () => {
+      cycle.active = false;
+      cycle.mode.resolve();
+      cycle.contrast.resolve();
+      cycle.bold.resolve();
+    };
+  }, []);
+
+  const waitForHydration = useCallback(async (key: 'mode' | 'contrast' | 'bold') => {
+    while (true) {
+      const cycle = hydration.current;
+      await cycle[key].promise;
+      if (hydration.current !== cycle) continue;
+      if (cycle.active) return;
+      throw new Error('기기 설정 화면이 닫혔어요.');
+    }
   }, []);
 
   // 시스템 고대비 감시 — Android 전용 API(iOS에서는 false로 남는다)
@@ -51,45 +140,110 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (me) {
       const eq = me.equipments ?? {};
-      setCachedEquip(eq);
       AsyncStorage.setItem(EQUIP_KEY, JSON.stringify(eq)).catch(() => {});
-    } else {
-      setCachedEquip(null);
+    } else if (!authLoading) {
       AsyncStorage.removeItem(EQUIP_KEY).catch(() => {});
     }
-  }, [me]);
+  }, [authLoading, me]);
 
-  const setMode = (m: ThemeMode) => {
-    setModeState(m);
-    AsyncStorage.setItem(MODE_KEY, m).catch(() => {});
-  };
-  const setContrastMode = (m: ContrastMode) => {
-    setContrastModeState(m);
-    AsyncStorage.setItem(CONTRAST_KEY, m).catch(() => {});
-  };
-  const setBoldText = (on: boolean) => {
-    setBoldTextState(on);
-    AsyncStorage.setItem(BOLD_KEY, on ? '1' : '0').catch(() => {});
-  };
+  if (previewState.accountKey !== accountKey) {
+    setPreviewState({ accountKey, equipments: null });
+  }
+
+  const previewEquipments = previewState.accountKey === accountKey ? previewState.equipments : null;
+  const startupCachedEquip = !me && authLoading ? cachedEquip : null;
+  const setPreviewEquipments = useCallback((update: SetStateAction<Equipments>) => {
+    setPreviewState((current) => {
+      const currentEquipments = current.accountKey === accountKey ? current.equipments : null;
+      return {
+        accountKey,
+        equipments: typeof update === 'function' ? update(currentEquipments) : update,
+      };
+    });
+  }, [accountKey]);
+
+  const setMode = useCallback((m: ThemeMode) => {
+    return enqueuePreferenceWrite(
+      modeQueue,
+      modeOperation,
+      () => waitForHydration('mode'),
+      m,
+      setModeState,
+      modeSaved,
+      () => AsyncStorage.setItem(MODE_KEY, m),
+    );
+  }, [waitForHydration]);
+
+  const setContrastMode = useCallback((m: ContrastMode) => {
+    return enqueuePreferenceWrite(
+      contrastQueue,
+      contrastOperation,
+      () => waitForHydration('contrast'),
+      m,
+      setContrastModeState,
+      contrastSaved,
+      () => AsyncStorage.setItem(CONTRAST_KEY, m),
+    );
+  }, [waitForHydration]);
+
+  const setBoldText = useCallback((on: boolean) => {
+    return enqueuePreferenceWrite(
+      boldQueue,
+      boldOperation,
+      () => waitForHydration('bold'),
+      on,
+      setBoldTextState,
+      boldSaved,
+      () => AsyncStorage.setItem(BOLD_KEY, on ? '1' : '0'),
+    );
+  }, [waitForHydration]);
 
   const scheme = mode === 'system' ? system : mode;
-  const equipments = previewEquipments ?? me?.equipments ?? cachedEquip;
   const highContrastOn = contrastMode === 'high' || (contrastMode === 'system' && systemHighContrast);
   const composed = useMemo(
-    () => composeTheme(scheme, equipments, { highContrast: highContrastOn }),
-    [scheme, equipments, highContrastOn],
+    () => {
+      const actual = me?.equipments ?? startupCachedEquip ?? {};
+      const equipments = previewEquipments ? { ...actual, ...previewEquipments } : actual;
+      return composeTheme(scheme, equipments, { highContrast: highContrastOn });
+    },
+    [scheme, me?.equipments, startupCachedEquip, previewEquipments, highContrastOn],
   );
   const fonts = useMemo(() => resolveFonts(boldText), [boldText]);
 
   // 위젯도 같은 테마를 보도록 미러 (프리뷰는 제외 — 위젯은 실장착만 따른다)
   useEffect(() => {
-    void mirrorTheme(mode, me?.equipments ?? cachedEquip);
-  }, [mode, me, cachedEquip]);
+    void mirrorTheme(mode, me?.equipments ?? startupCachedEquip);
+  }, [mode, me, startupCachedEquip]);
 
   const value = useMemo(
-    () => ({ ...composed, fonts, scheme, mode, setMode, contrastMode, setContrastMode, boldText, setBoldText, previewEquipments, setPreviewEquipments }),
-    // 세터들은 매 렌더 새로 만들어지지만 상태만 건드리므로 의존성에서 제외
-    [composed, fonts, scheme, mode, contrastMode, boldText, previewEquipments],
+    () => ({
+      ...composed,
+      fonts,
+      scheme,
+      preferencesReady,
+      mode,
+      setMode,
+      contrastMode,
+      setContrastMode,
+      boldText,
+      setBoldText,
+      previewEquipments,
+      setPreviewEquipments,
+    }),
+    [
+      composed,
+      fonts,
+      scheme,
+      preferencesReady,
+      mode,
+      setMode,
+      contrastMode,
+      setContrastMode,
+      boldText,
+      setBoldText,
+      previewEquipments,
+      setPreviewEquipments,
+    ],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

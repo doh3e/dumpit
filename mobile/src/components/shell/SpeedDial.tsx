@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { retroShadow } from '../../theme/tokens';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon, type PixelIconName } from '../common/PixelIcon';
 
@@ -39,7 +38,7 @@ export function SpeedDial({ open, onClose, actions }: Props) {
           accessibilityLabel="닫기"
         />
       </Animated.View>
-      <View style={[styles.stack, { bottom: insets.bottom + 108 }]} pointerEvents="box-none">
+      <View style={[styles.stack, { bottom: insets.bottom + 72 }]} pointerEvents="box-none">
         {actions.map((a, i) => (
           <Animated.View
             key={a.label}
@@ -52,10 +51,7 @@ export function SpeedDial({ open, onClose, actions }: Props) {
               accessibilityLabel={a.label}
               style={({ pressed }) => [
                 styles.action,
-                { backgroundColor: colors.card, borderColor: colors.edge },
-                pressed
-                  ? { transform: [{ translateX: 2 }, { translateY: 2 }], boxShadow: `0px 0px 0px ${colors.shadowSm}` }
-                  : retroShadow(3, colors.shadowSm),
+                { backgroundColor: pressed ? colors.chip : colors.card, borderColor: pressed ? colors.fg : colors.sub },
               ]}
             >
               <PixelIcon name={a.icon} size={18} />
@@ -72,7 +68,7 @@ const styles = StyleSheet.create({
   stack: { position: 'absolute', alignSelf: 'center', gap: 10, alignItems: 'center' },
   action: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 2, borderRadius: 10,
+    borderWidth: 1, borderRadius: 8,
     paddingHorizontal: 18, paddingVertical: 12, minWidth: 176, minHeight: 48,
   },
   label: { fontSize: 15 },

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { StyleSheet, Switch, Text, View } from 'react-native';
 import { getApiErrorMessage } from '../../api/client';
 import { useSaveSettings, useUserSettings } from '../../query/routineHooks';
@@ -16,21 +16,37 @@ export function NotificationSettingsCard() {
   const save = useSaveSettings();
   const toast = useToast();
   const [pending, setPending] = useState(false);
+  const pendingRef = useRef(false);
+  const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
   if (!settings) return null;
 
   const patch = (p: Parameters<typeof save.mutate>[0]) => {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
     setPending(true);
+    setFeedback(null);
     save.mutate(p, {
-      onError: (e) => toast.error(getApiErrorMessage(e, '저장하지 못했어요.')),
-      onSettled: () => setPending(false),
+      onSuccess: () => setFeedback({ kind: 'success', message: '계정에 저장했어요.' }),
+      onError: (e) => {
+        const message = getApiErrorMessage(e, '저장하지 못했어요.');
+        setFeedback({ kind: 'error', message });
+        toast.error(message);
+      },
+      onSettled: () => {
+        pendingRef.current = false;
+        setPending(false);
+      },
     });
   };
 
   return (
-    <RetroCard style={styles.card}>
+    <RetroCard appearance="refined" style={styles.card}>
       <Text style={[styles.sectionTitle, { color: colors.fg, fontFamily: fonts.displayBold }]}>
         <PixelIcon name="bell" size={13} /> 알림
+      </Text>
+      <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
+        바꾸면 바로 계정에 저장돼요.
       </Text>
       <View style={styles.row}>
         <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.body }]}>알림 받기</Text>
@@ -51,7 +67,7 @@ export function NotificationSettingsCard() {
           <View style={styles.chipRow}>
             {NOTIFICATION_THRESHOLDS.map((t) => (
               <Chip
-                key={t.min}
+                appearance="refined" key={t.min}
                 label={t.label}
                 selected={settings.notificationThresholds.includes(t.min)}
                 disabled={pending}
@@ -77,6 +93,17 @@ export function NotificationSettingsCard() {
           </View>
         </>
       )}
+      {feedback && (
+        <Text
+          accessibilityLiveRegion={feedback.kind === 'error' ? 'assertive' : 'polite'}
+          style={[
+            styles.feedback,
+            { color: feedback.kind === 'error' ? colors.dangerText : colors.sub, fontFamily: fonts.body },
+          ]}
+        >
+          {feedback.message}
+        </Text>
+      )}
     </RetroCard>
   );
 }
@@ -89,4 +116,5 @@ const styles = StyleSheet.create({
   label: { fontSize: 14 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   hint: { fontSize: 12, lineHeight: 18 },
+  feedback: { fontSize: 12, lineHeight: 18, fontWeight: '700' },
 });

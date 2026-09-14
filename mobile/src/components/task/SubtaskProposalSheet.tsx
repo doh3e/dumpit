@@ -1,9 +1,11 @@
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput, type BottomSheetScrollViewMethods } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View, type NativeMethods } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
+import { useContentFrame } from '../../layout/useContentFrame';
+import { useSheetKeyboardOverlap } from '../../layout/useSheetKeyboardOverlap';
 import { getApiErrorMessage } from '../../api/client';
 import { confirmSplit, proposeSplit } from '../../api/tasks';
 import type { TaskResponse } from '../../api/types';
@@ -26,9 +28,13 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
   function SubtaskProposalSheet({ onCreated }, ref) {
     const { colors, fonts } = useTheme();
     const insets = useSafeAreaInsets();
+    const frame = useContentFrame();
+    const topInset = insets.top + 12;
     const toast = useToast();
     const qc = useQueryClient();
     const sheetRef = useRef<BottomSheetModal>(null);
+    const scrollRef = useRef<(BottomSheetScrollViewMethods & NativeMethods) | null>(null);
+    const { keyboardOverlap, onViewportLayout, resetKeyboardOverlap } = useSheetKeyboardOverlap(scrollRef);
     const presentedIdRef = useRef<string | null>(null);
     const { headingRef, onChange } = useSheetFocus();
 
@@ -99,17 +105,31 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
       <BottomSheetModal
         ref={sheetRef}
         snapPoints={['65%']}
+        topInset={topInset}
+        android_keyboardInputMode="adjustResize"
+        keyboardBehavior={Platform.OS === 'android' ? 'fillParent' : undefined}
+        keyboardBlurBehavior={Platform.OS === 'android' ? 'restore' : undefined}
+        onDismiss={resetKeyboardOverlap}
         onChange={onChange}
-        backgroundStyle={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 2, borderColor: colors.edge }}
+        backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 확정 버튼이 OS 내비 바에 가려진다 */}
-        <BottomSheetScrollView accessibilityViewIsModal contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+        <BottomSheetScrollView
+          ref={scrollRef}
+          onLayout={onViewportLayout}
+          accessibilityViewIsModal
+          contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 + keyboardOverlap }])}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.headingRow}>
             <PixelIcon name="puzzle" size={16} />
             <Text ref={headingRef} accessibilityRole="header" style={[styles.heading, { color: colors.fg, fontFamily: fonts.displayBold }]}>
               AI로 쪼개기 <Text style={{ color: colors.sub, fontSize: 11, fontFamily: fonts.chrome }}><PixelIcon name="token" size={11} /> {AI_COSTS.SUBTASK_PROPOSAL}점</Text>
             </Text>
+            <Pressable onPress={() => sheetRef.current?.dismiss()} accessibilityRole="button" accessibilityLabel="서브태스크 제안 닫기" style={({ pressed }) => [styles.close, { backgroundColor: pressed ? colors.chip : 'transparent' }]}>
+              <Text style={{ color: colors.fg, fontFamily: fonts.chrome }}>✕</Text>
+            </Pressable>
           </View>
           {task && (
             <Text style={[styles.parent, { color: colors.sub, fontFamily: fonts.body }]} numberOfLines={1}>
@@ -134,10 +154,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
                 accessibilityState={{ checked: item.include }}
                 accessibilityLabel={`${item.title} 포함`}
                 hitSlop={8}
-                style={[
-                  styles.checkbox,
-                  { borderColor: colors.edge, backgroundColor: item.include ? colors.accent2 : colors.card },
-                ]}
+                style={({ pressed }) => [styles.checkbox, { borderColor: item.include || pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : item.include ? colors.accent2Fill : colors.card }]}
               >
                 {item.include && <Text style={{ color: colors.onAccent, fontSize: 11, fontFamily: fonts.chrome }}>✓</Text>}
               </Pressable>
@@ -171,7 +188,7 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
 
           {!loading && items.length > 0 && (
             <RetroButton
-              label={`${selected.length}개 만들기`}
+              appearance="refined" label={`${selected.length}개 만들기`}
               onPress={create}
               busy={saving}
               disabled={selected.length === 0 || saving}
@@ -187,11 +204,12 @@ const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 32, gap: 10 },
   heading: { fontSize: 16 },
   headingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  close: { marginLeft: 'auto', minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   parent: { fontSize: 12 },
   loading: { alignItems: 'center', gap: 8, paddingVertical: 28 },
   loadingText: { fontSize: 13 },
   item: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', borderWidth: 1.5, borderRadius: 8, padding: 10 },
-  checkbox: { width: 20, height: 20, borderWidth: 2, borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
+  checkbox: { width: 48, height: 48, borderWidth: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
   itemBody: { flex: 1, gap: 4 },
   itemInput: { borderWidth: 1.5, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 6, fontSize: 13 },
   itemDesc: { fontSize: 11 },

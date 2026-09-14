@@ -1,7 +1,6 @@
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getApiErrorMessage } from '../../src/api/client';
 import type { TaskResponse, TaskStatus } from '../../src/api/types';
 import { useAuth } from '../../src/auth/AuthContext';
@@ -15,6 +14,7 @@ import { TaskDetailSheet, type TaskDetailSheetHandle } from '../../src/component
 import { CoinToast } from '../../src/components/fx/CoinToast';
 import { PixelBurst } from '../../src/components/fx/PixelBurst';
 import { CelebrationOverlay } from '../../src/components/fx/CelebrationOverlay';
+import { useContentFrame } from '../../src/layout/useContentFrame';
 import { calcCompletionCoins } from '../../src/tasks/rewards';
 import { RetroButton } from '../../src/components/retro/RetroButton';
 import { RetroCard } from '../../src/components/retro/RetroCard';
@@ -28,7 +28,7 @@ import { useTheme } from '../../src/theme/useTheme';
 
 export default function HomeScreen() {
   const { colors, fonts } = useTheme();
-  const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const { me, refresh } = useAuth();
   const toast = useToast();
   const planning = usePlanning();
@@ -156,7 +156,7 @@ export default function HomeScreen() {
             tintColor={colors.accent}
           />
         }
-        contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 16, paddingBottom: insets.bottom + 40 }}
+        contentContainerStyle={[{ padding: 16, paddingTop: 16, gap: 16, paddingBottom: 24 }, frame]}
       >
         {planning.isLoading && (
           <View style={{ paddingVertical: 48 }}>
@@ -164,11 +164,11 @@ export default function HomeScreen() {
           </View>
         )}
         {planning.isError && (
-          <RetroCard style={{ alignItems: 'center', gap: 10 }}>
+          <RetroCard appearance="refined" style={{ alignItems: 'center', gap: 10 }}>
             <Text style={{ color: colors.fg, fontFamily: fonts.body, fontSize: 13, textAlign: 'center' }}>
               {getApiErrorMessage(planning.error, '할 일을 불러오지 못했어요.')}
             </Text>
-            <RetroButton label="다시 시도" size="sm" onPress={() => planning.refetch()} />
+            <RetroButton appearance="refined" label="다시 시도" size="sm" onPress={() => planning.refetch()} />
           </RetroCard>
         )}
         {planning.data && (

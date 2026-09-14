@@ -1,5 +1,4 @@
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { router, Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -11,11 +10,10 @@ import { AuthProvider, useAuth } from '../src/auth/AuthContext';
 import { ToastProvider } from '../src/components/retro/ToastProvider';
 import { AppBackground } from '../src/components/shell/AppBackground';
 import { initPushHandlers } from '../src/push/fcm';
-import { queryClient } from '../src/query/queryClient';
+import { AccountQueryProvider } from '../src/query/AccountQueryProvider';
 import { ThemeProvider } from '../src/theme/ThemeProvider';
 import { useTheme } from '../src/theme/useTheme';
-import { mirrorConfig } from '../src/widget/mirror';
-import { installTodayMirror } from '../src/widget/todayMirror';
+import { WidgetConfigGate, WidgetMirrorGate } from '../src/widget/WidgetMirrorGate';
 
 /** 수동 다크 모드에서도 상태바 아이콘이 배경과 맞게 — Provider 안쪽에서 scheme 구독 */
 function ThemedStatusBar() {
@@ -48,15 +46,6 @@ function PushHandlerGate() {
   return null;
 }
 
-/** 위젯 미러 — 설정값 1회 전달 + planning 캐시 갱신 구독 설치 */
-function WidgetMirrorGate() {
-  useEffect(() => {
-    void mirrorConfig();
-    return installTodayMirror(queryClient);
-  }, []);
-  return null;
-}
-
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -75,16 +64,17 @@ export default function RootLayout() {
   if (!loaded) return null;
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        {/* ThemeProvider는 me.equipments(장착 스킨)를 읽으므로 AuthProvider 안쪽이어야 한다 */}
-        <AuthProvider>
-          <ThemeProvider>
+      <AuthProvider>
+        {/* ThemeProvider는 me.equipments를 읽되 계정 query cache 수명과는 독립적이다 */}
+        <ThemeProvider>
+          <WidgetConfigGate />
+          <PushHandlerGate />
+          <AccountQueryProvider>
             <BottomSheetModalProvider>
               <ToastProvider>
                 <SheetA11yProvider>
                   <ThemedStatusBar />
                   <AuthRouteGate />
-                  <PushHandlerGate />
                   <WidgetMirrorGate />
                   <SheetA11yScreenHost>
                     <AppBackground />
@@ -99,9 +89,9 @@ export default function RootLayout() {
                 </SheetA11yProvider>
               </ToastProvider>
             </BottomSheetModalProvider>
-          </ThemeProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+          </AccountQueryProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }

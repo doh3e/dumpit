@@ -1,10 +1,10 @@
-import axios from 'axios';
+import { create } from 'axios';
 import { bypassReauth, installSilentReauth } from '../reauth';
 
 /** 응답 시퀀스를 주입한 axios 인스턴스 — 어댑터 교체로 네트워크 없이 검증 */
-function makeInstance(responses: Array<{ status: number; data?: unknown }>) {
+function makeInstance(responses: { status: number; data?: unknown }[]) {
   let call = 0;
-  const instance = axios.create();
+  const instance = create();
   instance.defaults.adapter = async (config) => {
     const r = responses[Math.min(call++, responses.length - 1)];
     if (r.status >= 400) {
@@ -75,12 +75,19 @@ it('reauth 내부 요청의 401은 pending을 기다리지 않고 즉시 실패�
   });
   installSilentReauth(instance, reauth);
   // 데드락이면 이 프라미스는 영원히 settle되지 않는다 — 5초 타임아웃 가드
-  await expect(
-    Promise.race([
-      instance.get('/x').catch((e) => e.response?.status),
-      new Promise((_r, rej) => setTimeout(() => rej(new Error('deadlock')), 5000)),
-    ]),
-  ).resolves.toBe(401);
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await expect(
+      Promise.race([
+        instance.get('/x').catch((e) => e.response?.status),
+        new Promise((_r, reject) => {
+          timeout = setTimeout(() => reject(new Error('deadlock')), 5000);
+        }),
+      ]),
+    ).resolves.toBe(401);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
   expect(reauth).toHaveBeenCalledTimes(1);
   expect(calls()).toBe(2);   // 원요청 + reauth 내부 /auth/me
 });

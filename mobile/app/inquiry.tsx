@@ -10,6 +10,7 @@ import { PixelIcon } from '../src/components/common/PixelIcon';
 import { ScreenHeader } from '../src/components/shell/ScreenHeader';
 import { useToast } from '../src/components/retro/ToastProvider';
 import { PRIVACY_URL } from '../src/legal/links';
+import { useContentFrame } from '../src/layout/useContentFrame';
 import { useTheme } from '../src/theme/useTheme';
 
 const SUPPORT_EMAIL = 'dumpitadmin@gmail.com';
@@ -17,6 +18,7 @@ const SUPPORT_EMAIL = 'dumpitadmin@gmail.com';
 export default function InquiryScreen() {
   const { colors, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const frame = useContentFrame();
   const toast = useToast();
 
   // 한글 IME 조합이 끊기지 않도록 입력은 uncontrolled로 둔다 (Fabric controlled input 이슈)
@@ -45,10 +47,10 @@ export default function InquiryScreen() {
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32 }]}
+          contentContainerStyle={[styles.body, frame, { paddingBottom: insets.bottom + 32 }]}
           keyboardShouldPersistTaps="handled"
         >
-          <RetroCard style={styles.card}>
+          <RetroCard appearance="refined" style={styles.card}>
             <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.displayBold }]}>제목</Text>
             <TextInput
               defaultValue=""
@@ -79,10 +81,10 @@ export default function InquiryScreen() {
               에 따라 처리 완료 후 1년간 보관됩니다.
             </Text>
 
-            <RetroButton label="문의 보내기" onPress={onSubmit} busy={sending} disabled={!canSend} />
+            <RetroButton appearance="refined" label="문의 보내기" onPress={onSubmit} busy={sending} disabled={!canSend} />
           </RetroCard>
 
-          <RetroCard style={styles.card}>
+          <RetroCard appearance="refined" style={styles.card}>
             <Text style={[styles.label, { color: colors.fg, fontFamily: fonts.displayBold }]}>이메일로 문의</Text>
             <Text style={[styles.hint, { color: colors.sub, fontFamily: fonts.body }]}>
               앱에서 보내기 어려우면 아래 주소로 직접 보내주셔도 됩니다.

@@ -42,8 +42,8 @@ export function StickerPicker({ current, onSelect, disabled }: Props) {
             accessibilityState={{ selected, disabled: !!disabled }}
             style={({ pressed }) => [
               styles.cell,
-              { borderColor: selected ? colors.accent2 : colors.line, backgroundColor: selected ? colors.chip : colors.card },
-              { opacity: pressed || disabled ? 0.6 : 1 },
+              { borderColor: selected || pressed ? colors.fg : colors.line, backgroundColor: pressed ? colors.chip : selected ? colors.chip : colors.card },
+              { opacity: disabled ? 0.45 : 1 },
             ]}
           >
             <Image source={sprite.img} style={styles.img} resizeMode="contain" />
@@ -51,7 +51,7 @@ export function StickerPicker({ current, onSelect, disabled }: Props) {
           </Pressable>
         );
       })}
-      {current && <Chip label="떼기 ✕" onPress={() => onSelect(null)} disabled={disabled} />}
+      {current && <Chip appearance="refined" label="떼기 ✕" onPress={() => onSelect(null)} disabled={disabled} />}
     </View>
   );
 }
@@ -59,8 +59,8 @@ export function StickerPicker({ current, onSelect, disabled }: Props) {
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
   cell: {
-    borderWidth: 1.5, borderRadius: 8, padding: 8, alignItems: 'center', gap: 3,
-    minWidth: 58, minHeight: 52,
+    borderWidth: 1, borderRadius: 8, padding: 8, alignItems: 'center', gap: 3,
+    minWidth: 58, minHeight: 56,
   },
   img: { width: 20, height: 20 },
   name: { fontSize: 9 },

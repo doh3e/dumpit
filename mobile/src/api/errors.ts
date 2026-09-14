@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { isAxiosError } from 'axios';
 
 /** 앱이 스스로 던지는 예외 — 화면에는 `APP-<code>`로 노출된다 */
 export class AppError extends Error {
@@ -54,7 +54,7 @@ function nonBlank(value: unknown): string | null {
 }
 
 export function describeError(error: unknown, fallback: string = DEFAULT_ERROR_MESSAGE): ErrorInfo {
-  if (axios.isAxiosError(error)) {
+  if (isAxiosError(error)) {
     const status = error.response?.status;
     if (!status) {
       return {

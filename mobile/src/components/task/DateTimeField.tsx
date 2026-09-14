@@ -1,6 +1,6 @@
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { parseDate, toLocalDateTimeString } from '../../tasks/dates';
 import { useTheme } from '../../theme/useTheme';
 import { PixelIcon } from '../common/PixelIcon';
@@ -42,27 +42,31 @@ export function DateTimeField({ value, onChange, minimumDate, placeholder = '선
 
   return (
     <>
-      <Pressable
-        onPress={() => {
-          setDraft(current ?? new Date());
-          setStage('date');
-        }}
-        accessibilityRole="button"
-        accessibilityLabel={`일시 선택, 현재 ${label}`}
-        style={({ pressed }) => [
-          styles.field,
-          { borderColor: colors.line, backgroundColor: colors.chip, opacity: pressed ? 0.7 : 1 },
-        ]}
-      >
+      <View style={[styles.field, { borderColor: colors.line, backgroundColor: colors.card }]}>
+        <Pressable
+          onPress={() => {
+            setDraft(current ?? new Date());
+            setStage('date');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={`일시 선택, 현재 ${label}`}
+          style={({ pressed }) => [styles.choose, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
+        >
         <Text style={[styles.text, { color: colors.fg, fontFamily: fonts.chrome }]}>
           <PixelIcon name="calendar" size={12} /> {label}
         </Text>
+        </Pressable>
         {current && (
-          <Pressable onPress={() => onChange(null)} hitSlop={8} accessibilityLabel="지우기">
+          <Pressable
+            onPress={() => onChange(null)}
+            accessibilityRole="button"
+            accessibilityLabel="일시 지우기"
+            style={({ pressed }) => [styles.clearButton, { backgroundColor: pressed ? colors.chip : 'transparent' }]}
+          >
             <Text style={[styles.clear, { color: colors.subOnChip, fontFamily: fonts.chrome }]}>✕</Text>
           </Pressable>
         )}
-      </Pressable>
+      </View>
       {stage === 'date' && (
         <DateTimePicker value={draft} mode="date" minimumDate={minimumDate} onChange={onPickDate} />
       )}
@@ -75,9 +79,10 @@ export function DateTimeField({ value, onChange, minimumDate, placeholder = '선
 
 const styles = StyleSheet.create({
   field: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-    borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44,
+    flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 8, minHeight: 48,
   },
+  choose: { flex: 1, minHeight: 48, paddingHorizontal: 12, justifyContent: 'center', borderRadius: 8 },
+  clearButton: { width: 48, minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   text: { fontSize: 12 },
   clear: { fontSize: 12 },
 });

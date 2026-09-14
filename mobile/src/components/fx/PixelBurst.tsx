@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
-  Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming, type SharedValue,
+  cancelAnimation, Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming, type SharedValue,
 } from 'react-native-reanimated';
 import { useTheme } from '../../theme/useTheme';
 
@@ -10,6 +10,7 @@ const COUNT = 10;
 const GRAVITY = 140;
 
 type ParticleSpec = { angle: number; speed: number; size: number; color: string };
+type ParticleGeometry = Omit<ParticleSpec, 'color'>;
 
 function Particle({ spec, progress }: { spec: ParticleSpec; progress: SharedValue<number> }) {
   const style = useAnimatedStyle(() => {
@@ -30,25 +31,39 @@ export function PixelBurst({ x, y, onDone }: { x: number; y: number; onDone: () 
   const { colors } = useTheme();
   const progress = useSharedValue(0);
   const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
 
-  const specs = useMemo<ParticleSpec[]>(() => {
-    const palette = [colors.accent, colors.accent2, colors.starlight];
-    return Array.from({ length: COUNT }, (_, i) => ({
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
+
+  const [geometry] = useState<ParticleGeometry[]>(() => (
+    Array.from({ length: COUNT }, (_, i) => ({
       angle: (i / COUNT) * Math.PI * 2 + Math.random() * 0.5,
       speed: 34 + Math.random() * 40,
       size: 4 + Math.round(Math.random() * 4),
+    }))
+  ));
+  const specs = useMemo<ParticleSpec[]>(() => {
+    const palette = [colors.accent, colors.accent2, colors.starlight];
+    return geometry.map((spec, i) => ({
+      ...spec,
       color: palette[i % palette.length],
     }));
-  }, [colors]);
+  }, [colors.accent, colors.accent2, colors.starlight, geometry]);
 
   useEffect(() => {
+    let active = true;
     progress.value = withTiming(1, { duration: DURATION, easing: Easing.out(Easing.quad) }, (finished) => {
       if (finished) runOnJS(invokeDone)();
     });
-    function invokeDone() { onDoneRef.current(); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    function invokeDone() {
+      if (active) onDoneRef.current();
+    }
+    return () => {
+      active = false;
+      cancelAnimation(progress);
+    };
+  }, [progress]);
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
