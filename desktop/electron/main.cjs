@@ -14,6 +14,10 @@ const {
 const path = require('node:path')
 const fs = require('node:fs')
 const { autoUpdater } = require('electron-updater')
+const {
+  isNotificationShimPathname,
+  prepareFrontendHtml,
+} = require('./frontend-csp.cjs')
 
 app.setName('덤핏(Dumpit!)')
 app.setPath('userData', path.join(app.getPath('appData'), 'Dumpit'))
@@ -246,14 +250,24 @@ function registerFrontendProtocol() {
       return new Response('Not found', { status: 404 })
     }
 
-    const filePath = resolveFrontendFile(request.url)
+    const filePath = isNotificationShimPathname(parsed.pathname)
+      ? path.join(__dirname, 'notification-shim.js')
+      : resolveFrontendFile(request.url)
     const fileBuffer = await fs.promises.readFile(filePath)
     const contentType = CONTENT_TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream'
+    const headers = {
+      'content-type': contentType,
+    }
+    let responseBody = fileBuffer
 
-    return new Response(fileBuffer, {
-      headers: {
-        'content-type': contentType,
-      },
+    if (contentType === CONTENT_TYPES['.html']) {
+      const prepared = prepareFrontendHtml(fileBuffer.toString('utf8'), { apiOrigin: API_ORIGIN })
+      responseBody = prepared.html
+      headers['Content-Security-Policy'] = prepared.contentSecurityPolicy
+    }
+
+    return new Response(responseBody, {
+      headers,
     })
   })
 }
@@ -521,8 +535,8 @@ function showPomodoroWidget() {
   }
 
   const { workArea } = screen.getPrimaryDisplay()
-  const width = 190
-  const height = 280
+  const width = 220
+  const height = 340
 
   pomodoroWidgetWindow = new BrowserWindow({
     width,
