@@ -118,7 +118,7 @@ describe('할 일 모달', () => {
     const view = render(<TaskBoardModal sections={sections} onClose={vi.fn()} onEditTask={onEditTask} onToggleTask={onToggleTask} />)
 
     const priority = screen.getByRole('button', { name: '중요도순' })
-    expect(priority).toHaveClass('btn-refined', 'btn-refined-selected')
+    expect(priority).toHaveClass('btn-refined', 'btn-refined-underline')
     expect(priority).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: '마감순' })).toHaveAttribute('aria-pressed', 'false')
 

@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
-import { notifyToast } from '../context/ToastContext'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
+import { notifyToast } from '../services/notifyToast'
 import MiniCalendar from '../components/MiniCalendar'
 import AddTaskModal from '../components/AddTaskModal'
 import EditTaskModal from '../components/EditTaskModal'
@@ -240,13 +240,14 @@ export default function DashboardPage() {
             오늘의 할 일을 확인하고 시간을 효율적으로 관리해보세요
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 [&>*]:grow">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setShowTaskBoard(true)}
             disabled={!sections}
-            className="btn-refined text-sm"
+            className="btn-refined btn-refined-text text-sm"
+            aria-label="태스크 전체 보기"
           >
-            태스크 전체 보기
+            태스크 전체 보기 <span aria-hidden="true">→</span>
           </button>
           <button onClick={() => setShowAddModal(true)} className="btn-refined btn-refined-primary text-sm">
             태스크 추가

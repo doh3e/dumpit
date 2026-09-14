@@ -26,7 +26,7 @@ vi.mock('../services/api', async (importOriginal) => {
   }
 })
 
-vi.mock('../context/AuthContext', () => ({
+vi.mock('../hooks/useAuth', () => ({
   useAuth: () => ({
     user: { email: 'tester@example.com', equipments: { BACKGROUND: 'bg.candy' } },
     refreshCoins: mocks.refreshCoins,
@@ -73,8 +73,20 @@ const planetItem = {
   equipped: false,
 }
 
+const pomodoroItem = {
+  code: 'pomo.candy',
+  name: '캔디 뽀모도로',
+  description: '집중과 휴식 색상',
+  price: 90,
+  type: 'THEME',
+  slot: 'POMODORO',
+  tier: 'COLOR',
+  owned: true,
+  equipped: false,
+}
+
 function catalog(coinBalance = 300) {
-  return { data: { coinBalance, items: [...backgroundItems, planetItem] } }
+  return { data: { coinBalance, items: [...backgroundItems, pomodoroItem, planetItem] } }
 }
 
 beforeAll(() => {
@@ -86,6 +98,7 @@ beforeAll(() => {
 
 describe('ShopPage', () => {
   beforeEach(() => {
+    document.documentElement.dataset.theme = 'light'
     window.matchMedia = vi.fn().mockReturnValue({
       matches: false,
       addEventListener: vi.fn(),
@@ -103,6 +116,7 @@ describe('ShopPage', () => {
     cleanup()
     localStorage.clear()
     delete document.documentElement.dataset.skinBg
+    delete document.documentElement.dataset.theme
     vi.restoreAllMocks()
   })
 
@@ -124,6 +138,29 @@ describe('ShopPage', () => {
     expect(document.documentElement.dataset.skinBg).toBe('galaxy')
     fireEvent.click(screen.getByRole('button', { name: '미리보기 취소' }))
     expect(document.documentElement.dataset.skinBg).toBe('candy')
+  })
+
+  it('색상 스와치는 CSS 스킨 토큰을 사용하고 현재 테마 변경에 반응한다', async () => {
+    render(<ShopPage />)
+    await screen.findByRole('heading', { name: '코인샵' })
+
+    const card = screen.getByText('캔디 배경').closest('.surface-refined')
+    const preview = card.querySelector('[data-skin-bg="candy"]')
+    expect(preview).not.toBeNull()
+    const swatches = [...preview.querySelectorAll('span')]
+    expect(preview).toHaveAttribute('data-theme', 'light')
+    expect(swatches.map((swatch) => swatch.style.backgroundColor))
+      .toEqual(['var(--bg)', 'var(--accent)', 'var(--chip)'])
+
+    document.documentElement.dataset.theme = 'dark'
+    await waitFor(() => expect(preview).toHaveAttribute('data-theme', 'dark'))
+
+    fireEvent.click(screen.getByRole('button', { name: '뽀모도로' }))
+    const pomodoroCard = screen.getByText('캔디 뽀모도로').closest('.surface-refined')
+    const pomodoroPreview = pomodoroCard.querySelector('[data-skin-pomodoro="candy"]')
+    expect(pomodoroPreview).not.toBeNull()
+    expect([...pomodoroPreview.querySelectorAll('span')].map((swatch) => swatch.style.backgroundColor))
+      .toEqual(['var(--pomo-focus)', 'var(--pomo-break)'])
   })
 
   it('PLANET 미리보기는 refined Dialog로 열고 실제 THEME 장착 API를 유지한다', async () => {

@@ -26,7 +26,7 @@ function cssDeclarationsFor(selector) {
   )
 }
 
-vi.mock('../../context/AuthContext', () => ({
+vi.mock('../../hooks/useAuth', () => ({
   useAuth: () => authValue,
 }))
 

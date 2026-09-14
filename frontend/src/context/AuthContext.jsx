@@ -1,36 +1,61 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import api from '../services/api'
 import { applySkins, clearSkins } from '../shop/applySkins.js'
-import { loadUserSettings, resetUserSettings } from '../services/userSettings'
+import { clearDraft, pruneExpiredDrafts } from '../services/brainDumpDraft'
+import { loadUserSettings, resetUserSettings, startUserSettingsSession } from '../services/userSettings'
+import { AuthContext } from './authState'
 
-const AuthContext = createContext(null)
 const INACTIVE_LOGOUT_MS = 60 * 60 * 1000
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const mountedRef = useRef(true)
+  const requestGenerationRef = useRef(0)
+  const activeAccountRef = useRef(null)
 
   const applyMeResponse = useCallback((res) => {
     const nextUser = res?.data
     const validUser = nextUser && typeof nextUser === 'object' && nextUser.email ? nextUser : null
     setUser(validUser)
     if (validUser) {
+      if (activeAccountRef.current !== validUser.email) {
+        activeAccountRef.current = validUser.email
+        startUserSettingsSession(validUser.email)
+      }
       applySkins(validUser.equipments)
       void loadUserSettings()
     } else {
+      activeAccountRef.current = null
       clearSkins()
       resetUserSettings()
     }
   }, [])
 
-  const fetchUser = useCallback(() => {
-    api.get('/auth/me')
-      .then(applyMeResponse)
-      .catch(() => applyMeResponse(null))
-      .finally(() => setLoading(false))
+  const fetchUser = useCallback(async () => {
+    const generation = ++requestGenerationRef.current
+    try {
+      const response = await api.get('/auth/me')
+      if (!mountedRef.current || generation !== requestGenerationRef.current) return
+      applyMeResponse(response)
+    } catch (error) {
+      if (!mountedRef.current || generation !== requestGenerationRef.current) return
+      const status = error?.response?.status
+      if (status === 401 || status === 403) applyMeResponse(null)
+    } finally {
+      if (mountedRef.current && generation === requestGenerationRef.current) setLoading(false)
+    }
   }, [applyMeResponse])
 
-  useEffect(() => { fetchUser() }, [fetchUser])
+  useEffect(() => {
+    mountedRef.current = true
+    try { pruneExpiredDrafts() } catch { /* 정리 실패는 인증 시작을 막지 않는다. */ }
+    void fetchUser()
+    return () => {
+      mountedRef.current = false
+      requestGenerationRef.current += 1
+    }
+  }, [fetchUser])
 
   useEffect(() => {
     if (!user) return undefined
@@ -54,7 +79,11 @@ export function AuthProvider({ children }) {
       try {
         await api.post('/auth/logout')
       } finally {
+        requestGenerationRef.current += 1
+        activeAccountRef.current = null
         setUser(null)
+        clearSkins()
+        resetUserSettings()
         window.location.href = '/'
       }
     }
@@ -100,17 +129,27 @@ export function AuthProvider({ children }) {
   }, [fetchUser, user])
 
   const refreshCoins = () => {
-    api.get('/auth/me')
-      .then(applyMeResponse)
-      .catch(() => {})
+    return fetchUser()
   }
 
   const logout = async () => {
+    const accountKey = activeAccountRef.current
+    requestGenerationRef.current += 1
     try {
       await api.post('/auth/logout')
     } finally {
+      requestGenerationRef.current += 1
+      activeAccountRef.current = null
       setUser(null)
       clearSkins()
+      resetUserSettings()
+      if (accountKey) {
+        try {
+          clearDraft(accountKey)
+        } catch {
+          window.alert('로그아웃했지만 이 기기의 원문 초안을 지우지 못했어요.')
+        }
+      }
       window.location.href = '/'
     }
   }
@@ -120,8 +159,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  return useContext(AuthContext)
 }

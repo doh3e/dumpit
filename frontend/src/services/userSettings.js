@@ -17,6 +17,10 @@ const LEGACY_KEYS = [
 ]
 
 let settings = { ...DEFAULT_SETTINGS }
+let sessionGeneration = 0
+let operationGeneration = 0
+let pendingSaveCount = 0
+let saveQueue = Promise.resolve()
 const listeners = new Set()
 
 function emit() {
@@ -32,10 +36,26 @@ export function subscribeUserSettings(listener) {
   return () => listeners.delete(listener)
 }
 
+export function startUserSettingsSession() {
+  sessionGeneration += 1
+  operationGeneration += 1
+  pendingSaveCount = 0
+  saveQueue = Promise.resolve()
+  settings = { ...DEFAULT_SETTINGS }
+  emit()
+}
+
 /** 로그인 직후 호출 — 실패해도 기본값으로 동작한다 */
 export async function loadUserSettings() {
+  const generation = sessionGeneration
+  const operation = ++operationGeneration
   try {
     const res = await api.get('/me/settings')
+    if (
+      generation !== sessionGeneration
+      || operation !== operationGeneration
+      || pendingSaveCount > 0
+    ) return settings
     settings = { ...DEFAULT_SETTINGS, ...res.data }
     LEGACY_KEYS.forEach((key) => localStorage.removeItem(key))
     emit()
@@ -46,13 +66,39 @@ export async function loadUserSettings() {
 }
 
 export async function saveUserSettings(patch) {
-  const res = await api.patch('/me/settings', patch)
-  settings = { ...DEFAULT_SETTINGS, ...res.data }
-  emit()
-  return settings
+  const generation = sessionGeneration
+  operationGeneration += 1
+  pendingSaveCount += 1
+
+  const request = saveQueue.then(async () => {
+    if (generation !== sessionGeneration) throw sessionChangedError()
+    const res = await api.patch('/me/settings', patch)
+    if (generation !== sessionGeneration) throw sessionChangedError()
+    settings = { ...DEFAULT_SETTINGS, ...res.data }
+    emit()
+    return settings
+  })
+  saveQueue = request.then(() => undefined, () => undefined)
+
+  try {
+    return await request
+  } finally {
+    if (generation === sessionGeneration) {
+      pendingSaveCount -= 1
+      operationGeneration += 1
+    }
+  }
 }
 
 export function resetUserSettings() {
+  sessionGeneration += 1
+  operationGeneration += 1
+  pendingSaveCount = 0
+  saveQueue = Promise.resolve()
   settings = { ...DEFAULT_SETTINGS }
   emit()
+}
+
+function sessionChangedError() {
+  return Object.assign(new Error('설정 세션이 변경됐어요.'), { code: 'SETTINGS_SESSION_CHANGED' })
 }

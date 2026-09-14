@@ -94,27 +94,11 @@ export default function TaskBoardModal({ sections: planningSections, onClose, on
 
   return (
     <Dialog onClose={onClose} title="할 일 크게 보기" className="w-full max-w-6xl overflow-hidden p-0 flex flex-col" variant="refined">
-      <div className="flex flex-col gap-3 border-b border-line bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="font-galmuri font-bold text-dark text-xl">할 일 크게 보기</h2>
-          <p className="mt-1 text-xs font-semibold text-sub">마감 구간별로 나눠서 전체 흐름을 볼 수 있어요.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex flex-wrap rounded-lg border border-line bg-card p-1">
-            {[
-              ['priority', '중요도순'],
-              ['deadline', '마감순'],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setSortMode(value)}
-                aria-pressed={sortMode === value}
-                className={`btn-refined !px-3 text-xs ${sortMode === value ? 'btn-refined-selected' : 'btn-refined-text text-sub'}`}
-              >
-                {label}
-              </button>
-            ))}
+      <div className="border-b border-line bg-card px-4 py-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="font-galmuri font-bold text-dark text-xl">할 일 크게 보기</h2>
+            <p className="mt-1 text-xs font-semibold text-sub">마감 구간별로 나눠서 전체 흐름을 볼 수 있어요.</p>
           </div>
           <button
             type="button"
@@ -124,6 +108,26 @@ export default function TaskBoardModal({ sections: planningSections, onClose, on
           >
             X
           </button>
+        </div>
+        <div
+          role="group"
+          aria-label="할 일 정렬"
+          className="flex min-w-0 max-w-full gap-1 overflow-x-auto p-1.5"
+        >
+          {[
+            ['priority', '중요도순'],
+            ['deadline', '마감순'],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setSortMode(value)}
+              aria-pressed={sortMode === value}
+              className="btn-refined btn-refined-underline text-xs"
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 

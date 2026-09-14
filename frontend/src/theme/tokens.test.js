@@ -11,21 +11,76 @@ const dark = blocks.get('[data-theme="dark"]')
 const SKINS = ['ocean', 'lavender', 'sprout', 'galaxy', 'rose', 'wood', 'candy']
 const TEXT_TOKENS = ['sub', 'accent-text', 'accent2-text', 'danger-text']
 
+const THEMES = ['light', 'dark']
+const CONTRASTS = ['normal', 'high']
+const BACKGROUNDS = ['default', ...SKINS]
+const CHROMES = ['default', ...SKINS]
+const POMODOROS = ['default', ...SKINS]
+
 function expectText(fg, bg, min, label) {
   expect(contrastRatio(fg, bg), `${label}: ${fg} on ${bg}`).toBeGreaterThanOrEqual(min)
 }
 
 function declarationsFor(selector) {
   let declarations
-  stylesheet.walkRules(selector, (rule) => {
-    declarations = Object.fromEntries(
-      rule.nodes
-        .filter((node) => node.type === 'decl')
-        .map(({ prop, value }) => [prop, value]),
-    )
+  stylesheet.walkRules((rule) => {
+    if (rule.selectors.includes(selector)) {
+      declarations = Object.fromEntries(
+        rule.nodes
+          .filter((node) => node.type === 'decl')
+          .map(({ prop, value }) => [prop, value]),
+      )
+    }
   })
   expect(declarations, `${selector} 규칙`).toBeTruthy()
   return declarations
+}
+
+function selectorMatchesRoot(selector, attributes) {
+  const attributeMatches = [...selector.matchAll(/\[([a-z0-9-]+)(?:="([^"]+)")?\]/gi)]
+  const remainder = selector
+    .replace(/:root/g, '')
+    .replace(/\[[^\]]+\]/g, '')
+    .trim()
+  if (remainder) return false
+  return attributeMatches.every(([, name, value]) =>
+    name in attributes && (value === undefined || attributes[name] === value)
+  )
+}
+
+function resolvePalette({ background = 'default', chrome = 'default', pomodoro = 'default', theme = 'light', contrast = 'normal' }) {
+  const attributes = {}
+  if (background !== 'default') attributes['data-skin-bg'] = background
+  if (chrome !== 'default') attributes['data-skin-chrome'] = chrome
+  if (pomodoro !== 'default') attributes['data-skin-pomodoro'] = pomodoro
+  if (theme === 'dark') attributes['data-theme'] = 'dark'
+  if (contrast === 'high') attributes['data-contrast'] = 'high'
+
+  const winners = new Map()
+  let order = 0
+  stylesheet.walkRules((rule) => {
+    order += 1
+    for (const selector of rule.selectors) {
+      if (!selectorMatchesRoot(selector, attributes)) continue
+      const specificity = (selector.match(/:root|\[[^\]]+\]/g) || []).length
+      for (const declaration of rule.nodes.filter((node) => node.type === 'decl' && node.prop.startsWith('--'))) {
+        const current = winners.get(declaration.prop)
+        if (!current || specificity > current.specificity || (specificity === current.specificity && order >= current.order)) {
+          winners.set(declaration.prop, { value: declaration.value, specificity, order })
+        }
+      }
+    }
+  })
+
+  const resolve = (name, seen = new Set()) => {
+    expect(seen.has(name), `${name} 순환 참조`).toBe(false)
+    const entry = winners.get(`--${name}`)
+    expect(entry, `--${name} 토큰 (${JSON.stringify(attributes)})`).toBeTruthy()
+    const variable = /^var\(--([a-z0-9-]+)\)$/.exec(entry.value)
+    return variable ? resolve(variable[1], new Set([...seen, name])) : entry.value.toUpperCase()
+  }
+
+  return { resolve }
 }
 
 describe('라이트 기본 팔레트', () => {
@@ -123,14 +178,123 @@ describe('포커스 링과 채움 위 글자', () => {
       expectText(s['accent2-text'], s.card, 3, `${skin} ring/card`)
     }
   })
-  it('뽀모도로 채움 위 크림 글자가 4.5:1 이상 (라이트·다크)', () => {
-    expectText(root['on-accent'], root['pomo-focus'], 4.5, 'on-accent/pomo-focus')
-    expectText(root['on-accent'], root['pomo-break'], 4.5, 'on-accent/pomo-break')
-    expectText(dark['on-accent'], dark['pomo-focus'], 4.5, 'dark on-accent/pomo-focus')
-    expectText(dark['on-accent'], dark['pomo-break'], 4.5, 'dark on-accent/pomo-break')
+})
+
+describe('실제 cascade 기반 버튼·마감 대비', () => {
+  it('8 BG × 8 CHROME × light/dark × normal/high에서 크롬 글자가 4.5:1 이상', () => {
+    const failures = []
+    for (const background of BACKGROUNDS) {
+      for (const chrome of CHROMES) {
+        for (const theme of THEMES) {
+          for (const contrast of CONTRASTS) {
+            const { resolve } = resolvePalette({ background, chrome, theme, contrast })
+            for (const foreground of ['fg', 'sub']) {
+              const ratio = contrastRatio(resolve(foreground), resolve('chrome-bg'))
+              if (ratio < 4.5) {
+                failures.push(`${background}/${chrome}/${theme}/${contrast} ${foreground}=${ratio.toFixed(6)}`)
+              }
+            }
+          }
+        }
+      }
+    }
+
+    expect(failures).toEqual([])
   })
-  it('warn-text가 card 위에서 4.5:1 이상', () => {
-    expectText(root['warn-text'], root.card, 4.5, 'warn-text/card')
+
+  it('중립 버튼 resting/hover/active/focus 글자가 기본·스킨 표면에서 4.5:1 이상', () => {
+    const hover = declarationsFor(
+      '.btn-refined:not(.btn-refined-primary):not(.btn-refined-danger):not(.btn-refined-selected):not(:disabled):hover',
+    )
+    const active = declarationsFor(
+      '.btn-refined:not(.btn-refined-primary):not(.btn-refined-danger):not(.btn-refined-selected):not(:disabled):active',
+    )
+    const interactiveForeground = hover.color === 'var(--fg)' && active.color === 'var(--fg)'
+      ? 'fg'
+      : 'sub'
+
+    for (const background of BACKGROUNDS) {
+      for (const theme of THEMES) {
+        for (const contrast of CONTRASTS) {
+          const { resolve } = resolvePalette({ background, theme, contrast })
+          const context = `${background}/${theme}/${contrast}`
+          expectText(resolve('sub'), resolve('card'), 4.5, `${context} resting`)
+          expectText(resolve(interactiveForeground), resolve('chip'), 4.5, `${context} hover`)
+          expectText(resolve(interactiveForeground), resolve('chip'), 4.5, `${context} active`)
+          expectText(resolve('sub'), resolve('card'), 4.5, `${context} focus`)
+          expectText(resolve('accent2-text'), resolve('card'), 3, `${context} focus ring`)
+        }
+      }
+    }
+  })
+
+  it('마감 글자가 실제 bg/card/chip 표면에서 4.5:1 이상', () => {
+    for (const background of BACKGROUNDS) {
+      for (const theme of THEMES) {
+        for (const contrast of CONTRASTS) {
+          const { resolve } = resolvePalette({ background, theme, contrast })
+          for (const surface of ['bg', 'card', 'chip']) {
+            expectText(
+              resolve('warn-text'),
+              resolve(surface),
+              4.5,
+              `${background}/${theme}/${contrast} warn-text/${surface}`,
+            )
+          }
+        }
+      }
+    }
+  })
+})
+
+describe('독립 뽀모도로 채움 전경', () => {
+  it('일반 on-accent를 바꾸지 않고 POMO 스킨마다 전용 전경을 선언한다', () => {
+    expect(root['on-accent']).toBe('#FFFBF0')
+    expect(dark['on-accent']).toBe('#241E14')
+    for (const pomodoro of SKINS) {
+      const light = declarationsFor(`[data-skin-pomodoro="${pomodoro}"]`)
+      const darkPomo = declarationsFor(`[data-skin-pomodoro="${pomodoro}"][data-theme="dark"]`)
+      expect(light['--on-pomo-focus']).toBeTruthy()
+      expect(light['--on-pomo-break']).toBeTruthy()
+      expect(darkPomo['--on-pomo-focus']).toBeTruthy()
+      expect(darkPomo['--on-pomo-break']).toBeTruthy()
+      expect(light['--on-accent']).toBeUndefined()
+      expect(darkPomo['--on-accent']).toBeUndefined()
+    }
+  })
+
+  it('기존 대응 스킨 전경이 4.5:1을 충족하면 그대로 보존한다', () => {
+    for (const pomodoro of POMODOROS) {
+      for (const theme of THEMES) {
+        const { resolve } = resolvePalette({
+          background: pomodoro,
+          pomodoro,
+          theme,
+        })
+        const preferred = resolve('on-accent')
+        for (const phase of ['focus', 'break']) {
+          if (contrastRatio(preferred, resolve(`pomo-${phase}`)) >= 4.5) {
+            expect(resolve(`on-pomo-${phase}`), `${pomodoro}/${theme}/${phase}`)
+              .toBe(preferred)
+          }
+        }
+      }
+    }
+  })
+
+  it('8 BG × 8 POMO × light/dark × normal/high에서 채움과 전경이 4.5:1 이상', () => {
+    for (const background of BACKGROUNDS) {
+      for (const pomodoro of POMODOROS) {
+        for (const theme of THEMES) {
+          for (const contrast of CONTRASTS) {
+            const { resolve } = resolvePalette({ background, pomodoro, theme, contrast })
+            const context = `${background}/${pomodoro}/${theme}/${contrast}`
+            expectText(resolve('on-pomo-focus'), resolve('pomo-focus'), 4.5, `${context} focus`)
+            expectText(resolve('on-pomo-break'), resolve('pomo-break'), 4.5, `${context} break`)
+          }
+        }
+      }
+    }
   })
 })
 

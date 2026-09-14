@@ -1,12 +1,6 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
-
-const ToastContext = createContext(null)
-const TOAST_EVENT = 'dumpit:toast'
-
-export function notifyToast(message, type = 'error') {
-  if (!message || typeof window === 'undefined') return
-  window.dispatchEvent(new CustomEvent(TOAST_EVENT, { detail: { message, type } }))
-}
+import { useEffect, useRef, useState } from 'react'
+import { TOAST_EVENT } from '../services/notifyToast'
+import { ToastContext } from './toastState'
 
 const SUCCESS_MS = 3200
 
@@ -73,8 +67,4 @@ export function ToastProvider({ children }) {
       )}
     </ToastContext.Provider>
   )
-}
-
-export function useToast() {
-  return useContext(ToastContext)
 }

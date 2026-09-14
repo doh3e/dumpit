@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useId } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import DeadlineNudgeMenu from '../DeadlineNudgeMenu'
 import useAiUsage from '../../hooks/useAiUsage'
 import { iconProps } from '../../assets/icons'

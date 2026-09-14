@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from 'react'
 import api, { getApiErrorMessage } from '../services/api'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import Dialog from './Dialog'
 
 export default function ContactModal({ onClose }) {

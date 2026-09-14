@@ -74,6 +74,16 @@ describe('정돈된 레트로 공통 변형', () => {
     })
   })
 
+  it('밑줄 선택 버튼은 중립 표면과 선택 강조선을 사용한다', () => {
+    expect(ruleFor('.btn-refined-underline').declarations).toMatchObject({
+      background: 'transparent',
+      'border-color': 'transparent',
+      'white-space': 'nowrap',
+    })
+    expect(ruleFor('.btn-refined-underline[aria-pressed="true"]::after').declarations)
+      .toMatchObject({ background: 'var(--accent2-text)' })
+  })
+
   it('Dialog의 refined 표면도 기존 패널의 정렬·높이·스크롤 계약을 유지한다', () => {
     expect(ruleFor('.dialog-retro > .surface-refined').declarations).toMatchObject({
       margin: '0 auto',
@@ -104,7 +114,9 @@ describe('정돈된 레트로 공통 변형', () => {
       '.btn-refined:not(.btn-refined-primary):not(.btn-refined-danger):not(.btn-refined-selected):not(:disabled):active',
     )
     expect(neutralHover.declarations.background).toBe('var(--chip)')
+    expect(neutralHover.declarations.color).toBe('var(--fg)')
     expect(neutralActive.declarations.background).toBe('var(--chip)')
+    expect(neutralActive.declarations.color).toBe('var(--fg)')
     for (const selector of [
       '.btn-refined-danger:not(:disabled):hover',
       '.btn-refined-danger:not(:disabled):active',
@@ -125,6 +137,19 @@ describe('정돈된 레트로 공통 변형', () => {
       cursor: 'not-allowed',
       opacity: '.5',
     })
+  })
+
+  it('선택 밑줄은 aria-pressed=true에서만 드러난다', () => {
+    expect(ruleFor('.btn-refined-underline::after').declarations.background).toBe('transparent')
+    expect(ruleFor('.btn-refined-underline[aria-pressed="true"]::after').declarations.background)
+      .toBe('var(--accent2-text)')
+    let falseUnderlineRule = false
+    stylesheet.walkRules((rule) => {
+      if (rule.selectors.includes('.btn-refined-underline[aria-pressed="false"]::after')) {
+        falseUnderlineRule = true
+      }
+    })
+    expect(falseUnderlineRule).toBe(false)
   })
 
   it('입력은 본문 타이포그래피, 44px 높이, 내용 경계 토큰을 사용한다', () => {

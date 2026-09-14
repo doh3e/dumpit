@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { TOAST_EVENT } from './notifyToast'
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL
   || (import.meta.env.PROD ? 'https://api.dumpit.kr/api' : '/api')
@@ -37,7 +38,7 @@ api.interceptors.response.use(
       !isCalendarActionRequired &&
       (status === 403 || status >= 500)
     ) {
-      window.dispatchEvent(new CustomEvent('dumpit:toast', {
+      window.dispatchEvent(new CustomEvent(TOAST_EVENT, {
         detail: { message: error.userMessage, type: 'error' },
       }))
     }

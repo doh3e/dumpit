@@ -13,7 +13,7 @@ let authValue
 const { pomodoroMock } = vi.hoisted(() => ({ pomodoroMock: vi.fn() }))
 const stylesheet = postcss.parse(readFileSync(resolve(process.cwd(), 'src/index.css'), 'utf8'))
 
-vi.mock('../../context/AuthContext', () => ({
+vi.mock('../../hooks/useAuth', () => ({
   useAuth: () => authValue,
 }))
 

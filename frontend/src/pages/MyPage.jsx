@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../services/api'
+import { clearDraft } from '../services/brainDumpDraft'
 import { saveUserSettings } from '../services/userSettings'
 import { iconProps } from '../assets/icons'
 import PixelStation from '../components/PixelStation'
 import Dialog from '../components/Dialog'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import useReducedMotion from '../hooks/useReducedMotion'
 
 function useDragScroll() {
@@ -191,7 +192,7 @@ function formatDeadline(value) {
 }
 
 export default function MyPage() {
-  const { refreshCoins } = useAuth()
+  const { refreshCoins, user } = useAuth()
   const [profile, setProfile] = useState(null)
   const [stats, setStats] = useState(null)
   const [overdue, setOverdue] = useState([])
@@ -281,6 +282,13 @@ export default function MyPage() {
     setWithdrawing(true)
     try {
       await api.delete('/me/account')
+      if (user?.email) {
+        try {
+          clearDraft(user.email)
+        } catch {
+          window.alert('탈퇴했지만 이 기기의 원문 초안을 지우지 못했어요.')
+        }
+      }
       window.location.href = '/'
     } catch (err) {
       alert(getApiErrorMessage(err, '회원 탈퇴 처리에 실패했어요. 잠시 후 다시 시도해주세요.'))

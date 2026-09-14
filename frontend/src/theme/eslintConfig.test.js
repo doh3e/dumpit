@@ -17,3 +17,17 @@ it('비활성 권장 규칙은 꺼져 있고 현재 린트 정책은 유지된�
   expect(config.rules['jsx-a11y/click-events-have-key-events'][0]).toBe(2)
   expect(config.rules['jsx-a11y/no-static-element-interactions'][0]).toBe(2)
 })
+
+it('Fast Refresh 대상 컴포넌트는 컴포넌트만 export한다', async () => {
+  const eslint = new ESLint({
+    overrideConfig: eslintConfig,
+    overrideConfigFile: true,
+  })
+  const results = await eslint.lintFiles([
+    'src/components/DeadlineModeField.jsx',
+    'src/context/AuthContext.jsx',
+    'src/context/ToastContext.jsx',
+  ])
+
+  expect(results.flatMap((result) => result.messages)).toEqual([])
+})
