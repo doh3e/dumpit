@@ -1,234 +1,268 @@
-# Dumpit! : 우주먼지처럼 복잡한 일정과 생각을 정리해요
+# Dumpit! · 머릿속은 가볍게, 오늘 할 일은 하나씩
 
-<img src="./docs/image/logo.png" alt="덤핏 로고" width="700">
+<img src="./docs/image/logo.png" alt="Dumpit! 로고" width="280">
 
+덤핏은 흩어진 할 일과 아이디어를 정리하고, 작은 실천으로 이어가도록 돕는 생산성 서비스입니다. 생각을 자유롭게 쏟아내면 AI가 실행할 목록으로 정리합니다. 레트로 우주를 배경으로 할 일, 루틴, 집중 시간과 성취를 한곳에서 관리하세요.
 
-<Dumpit!> 은 머릿속에 흩어진 할 일, 아이디어, 루틴을 빠르게 정리하고 실행 가능한 태스크로 관리하는 생산성 웹앱입니다. 데스크탑 및 노트북 인터넷 환경에 최적화되어 있습니다.
+**[웹에서 시작하기](https://dumpit.kr)** · **[Windows 앱 다운로드](https://github.com/doh3e/dumpit/releases/latest)** · **[데스크톱 개발 안내](./desktop/README.md)** · **[Android 개발 안내](./mobile/README.md)**
 
-&nbsp;
+| 클라이언트 | 구성 |
+|---|---|
+| 웹 | React 기반 반응형 웹 앱 |
+| Windows | 웹 화면을 포함하는 Electron 앱 · 트레이, 자동 시작, 자동 업데이트, 뽀모도로 위젯 |
+| Android | React Native·Expo 기반 네이티브 앱 · Google 로그인, 푸시 알림, 홈 화면 위젯 |
 
-## 주요 기능
+세 클라이언트는 같은 백엔드를 사용합니다. 할 일과 계정 설정은 서버에서 관리하며, 테마·글자 크기·고대비·굵은 글자 설정은 기기별로 저장합니다.
 
-&nbsp;
+## 화면과 주요 기능
 
-### 대시보드
-▶ 마감일, 예상 소요 시간, 카테고리, 우선순위를 설정할 수 있습니다.<br>
-▶ 완료 시 코인을 획득할 수 있습니다.<br>
-▶ 마감 임박 태스크 알림을 제공합니다.<br><br>
+아래 화면은 **2026년 9월 14일 기준 웹 UI**를 로컬에서 실행해 캡처했습니다. 계정·할 일·AI 결과·통계·코인샵 상품은 설명을 위한 예시 데이터입니다.
 
-<img src="./docs/image/dashboard.PNG" alt="대시보드 화면" width="700">
+### 지금 할 일부터 시작하는 대시보드
 
-<br>
+지금 할 일과 다음 순서를 확인하고, 오늘·내일·일주일·언젠가·전체 목록으로 할 일을 살펴봅니다. 마감, 예상 시간, 카테고리와 우선순위를 관리하며 달력에서 일정도 확인할 수 있습니다.
 
-### 브레인 덤프
-▶ 자유롭게 입력한 생각을 AI가 여러 개의 태스크 후보로 정리합니다.<br>
-▶ 선택한 태스크를 할 일에 등록할 수 있습니다.<br><br>
+<img src="./docs/image/dashboard.PNG" alt="지금 할 일, 다음 할 일, 목록, 달력과 뽀모도로를 함께 보여주는 대시보드" width="960">
 
-<img src="./docs/image/brain_dump.PNG" alt="브레인 덤프 예시" width="700">
+| 기능 | 할 수 있는 일 |
+|---|---|
+| 브레인 덤프 | 자유롭게 쓴 생각을 AI가 할 일 후보로 정리하고, 필요한 항목을 선택·편집해 등록 |
+| 아이디어 덤프 | AI로 아이디어 추출, 직접 기록, 상·하위 아이디어 연결, 마크다운 미리보기, 태스크 전환 |
+| 루틴 | 매일·요일·날짜·주차 반복 조건으로 할 일을 자동 생성 |
+| 뽀모도로 | 할 일과 연결한 집중·휴식 타이머, 세트와 긴 휴식 설정, 집중 기록 |
+| 코인샵 | 할 일 완료와 유효한 집중 기록으로 모은 코인으로 테마·스티커·꾸미기 아이템 구매 |
+| 마이페이지 | 완료 기록, 연속 완료 일수, 집중 시간, 카테고리별 통계와 AI 메모리 관리 |
+| 보기 편하게 | 라이트·다크·시스템 테마, 글자 크기, 고대비·굵은 글자 설정과 키보드 조작 |
 
-<br>
+<details>
+<summary><strong>브레인 덤프 · 생각을 할 일로 바꾸기</strong></summary>
 
-### 아이디어 덤프
-▶ 아이디어를 저장하고 부모/자식 관계로 연결할 수 있습니다. <br>
-▶ 트리 형태로 아이디어를 접고 펼쳐 볼 수 있습니다.<br>
-▶ 아이디어를 태스크로 전환할 수 있습니다. <br><br>
+최대 3,000자의 원문을 입력하면 AI가 제목·설명·마감·예상 시간을 가진 후보로 정리합니다. 등록 전에 각 후보를 수정하거나 선택에서 제외할 수 있습니다.
 
-<img src="./docs/image/idea_dump.PNG" alt="아이디어 덤프 예시" width="700">
+원문 초안은 같은 기기의 브라우저/앱에서 계정별로 마지막 수정 후 7일 동안 복구됩니다. AI 분석 결과는 초안 복구 대상에 포함되지 않습니다.
 
-<br>
+<img src="./docs/image/brain_dump.PNG" alt="브레인 덤프 원문 초안과 AI가 정리한 세 개의 할 일 후보" width="960">
 
-### 루틴 관리
-▶ 반복적으로 해야 하는 일을 루틴으로 등록할 수 있습니다.<br>
-▶ 날짜, 요일, 월 반복 조건을 설정할 수 있습니다.<br>
-▶ 실행 가능한 루틴은 자동으로 오늘의 태스크에 추가됩니다.<br><br>
+</details>
 
-<img src="./docs/image/routine.PNG" alt="루틴 예시" width="700">
+<details>
+<summary><strong>아이디어 덤프 · 떠오른 생각을 연결하기</strong></summary>
 
-<br>
+아이디어를 자유롭게 적거나 AI로 정리하고, 검색·고정·상하위 연결로 모아둡니다. 마크다운으로 내용을 정리한 뒤 실행할 아이디어는 태스크로 전환할 수 있습니다.
 
-### 마이페이지
-▶ 완료 태스크, 진행 중 태스크, 보유 코인 등 개인 통계를 확인할 수 있습니다.<br>
-▶ 최근 28주 완료 기록을 히트맵으로 확인할 수 있습니다.<br>
-▶ 기한이 지났지만 완료하지 못한 태스크를 따로 확인하고 완료 처리할 수 있습니다.<br><br>
+<img src="./docs/image/idea_dump.PNG" alt="저장한 아이디어 목록과 선택한 아이디어의 마크다운 미리보기" width="960">
 
-<img src="./docs/image/mypage.PNG" alt="마이페이지 예시" width="700">
+</details>
 
-<br>
+<details>
+<summary><strong>루틴 · 반복할 일을 미리 정하기</strong></summary>
 
-&nbsp;
+반복 조건과 시작·종료일을 설정하면 해당 날짜에 할 일이 생성됩니다. 루틴을 잠시 끄거나, 기존 루틴의 시간과 메모를 수정할 수 있습니다.
+
+<img src="./docs/image/routine.PNG" alt="반복 루틴 목록과 아침 스트레칭의 시간 및 반복 조건 편집 화면" width="960">
+
+</details>
+
+<details>
+<summary><strong>코인샵 · 나만의 우주 꾸미기</strong></summary>
+
+배경, 행성, 뽀모도로, 정거장, 완료 효과와 스티커를 둘러보고 미리보기·구매·장착할 수 있습니다.
+
+<img src="./docs/image/shop.png" alt="보유 코인과 배경 테마를 살펴보는 코인샵" width="960">
+
+</details>
+
+<details>
+<summary><strong>마이페이지 · 쌓인 실천 돌아보기</strong></summary>
+
+완료한 할 일, 뽀모도로 집중 시간, 연속 완료 기록과 최근 28주의 완료 히트맵을 확인합니다. AI가 참고할 생활 패턴이나 선호는 AI 메모리에 적어둘 수 있습니다.
+
+<img src="./docs/image/mypage.PNG" alt="프로필, AI 메모리, 성취 통계, 완료 히트맵과 카테고리 분포" width="960">
+
+</details>
+
+<details>
+<summary><strong>설정 · 나에게 편한 화면과 시간</strong></summary>
+
+화면 표시 옵션은 기기에 즉시 적용됩니다. 활동 시간은 저장·취소로 확정하며, 알림 설정은 계정에 저장되어 로그인한 기기에 적용됩니다.
+
+<img src="./docs/image/settings.png" alt="테마, 글자 크기, 고대비, 굵은 글자, 활동 시간과 알림 설정" width="448">
+
+</details>
+
+AI 사용량은 한국 시간 자정에 하루 100점으로 초기화됩니다. 브레인 덤프와 아이디어 AI 분석은 각각 5점을 사용합니다. Google Calendar 연동은 일정을 할 일로 한 번 가져오는 방식입니다.
 
 ## 기술 스택
-  
-### Backend
 
-<span>
-<img src="https://img.shields.io/badge/OpenJDK%2021-000000?style=for-the-badge&logo=openjdk&logoColor=white">
-<img src="https://img.shields.io/badge/Spring%20Boot%203.4.1-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
-<img src="https://img.shields.io/badge/Spring%20Web-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
-<img src="https://img.shields.io/badge/Spring%20Security%20OAuth2-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white">
-<img src="https://img.shields.io/badge/Spring%20Data%20JPA-6DB33F?style=for-the-badge&logo=hibernate&logoColor=white">
-<img src="https://img.shields.io/badge/Spring%20Data%20Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white">
-<img src="https://img.shields.io/badge/Bean%20Validation-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
-<img src="https://img.shields.io/badge/Lombok-BC4521?style=for-the-badge&logo=&logoColor=white">
-</span>
+버전은 저장소의 빌드 설정과 패키지 manifest 기준입니다. 세부 의존성은 각 `package-lock.json`에서 확인할 수 있습니다.
 
-### Frontend
-
-<span>
-<img src="https://img.shields.io/badge/React%2019-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
-<img src="https://img.shields.io/badge/Vite%206-646CFF?style=for-the-badge&logo=vite&logoColor=white">
-<img src="https://img.shields.io/badge/React%20Router-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white">
-<img src="https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white">
-<img src="https://img.shields.io/badge/Tailwind%20CSS-0F172A?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8">
-<img src="https://img.shields.io/badge/Context%20API-61DAFB?style=for-the-badge&logo=react&logoColor=20232A">
-<img src="https://img.shields.io/badge/Custom%20Hooks-61DAFB?style=for-the-badge&logo=react&logoColor=20232A">
-<img src="https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white">
-</span>
-
-### Database & Cache
-
-<span>
-<img src="https://img.shields.io/badge/PostgreSQL%2017-4169E1?style=for-the-badge&logo=postgresql&logoColor=white">
-<img src="https://img.shields.io/badge/Redis%207-FF4438?style=for-the-badge&logo=redis&logoColor=white">
-</span>
-
-### Infra & CI/CD
-
-<span>
-<img src="https://img.shields.io/badge/AWS%20EC2-FF9900?style=for-the-badge&logo=amazonec2&logoColor=white">
-<img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white">
-<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
-<img src="https://img.shields.io/badge/Docker%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white">
-<img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white">
-</span>
-
-### AI & External Services
-
-<span>
-<img src="https://img.shields.io/badge/OpenAI%20API-412991?style=for-the-badge&logo=openai&logoColor=white">
-<img src="https://img.shields.io/badge/Google%20OAuth2-4285F4?style=for-the-badge&logo=google&logoColor=white">
-<img src="https://img.shields.io/badge/Google%20Calendar-4285F4?style=for-the-badge&logo=googlecalendar&logoColor=white">
-<img src="https://img.shields.io/badge/Resend-000000?style=for-the-badge&logo=resend&logoColor=white">
-</span>
-
-### Monitoring
-
-<span>
-<img src="https://img.shields.io/badge/Sentry-362D59?style=for-the-badge&logo=sentry&logoColor=white">
-</span>
-
-### Development Environment & Tools
-
-<span>
-<img src="https://img.shields.io/badge/Windows%2010-0078D6?style=for-the-badge&logo=windows&logoColor=white">
-<img src="https://img.shields.io/badge/Visual%20Studio%20Code-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white">
-<img src="https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=claude&logoColor=white">
-<img src="https://img.shields.io/badge/Codex-000000?style=for-the-badge&logo=openai&logoColor=white">
-</span>
-
-> Claude와 Codex는 코드 작성, 구조 설계, 리팩토링 보조 등 개발 과정에서 활용했습니다.
-
-&nbsp;
+| 영역 | 사용 기술 |
+|---|---|
+| 백엔드 | Java 21, Spring Boot 4.1, Spring MVC, Security OAuth2, JPA, Flyway |
+| 웹 | React 19, Vite 6, React Router 7, Tailwind CSS 3, Axios |
+| 데스크톱 | Electron 30, electron-builder 24, electron-updater |
+| Android | React Native 0.86.3, Expo SDK 57, Expo Router, TypeScript 6, TanStack Query, Kotlin Glance |
+| 데이터·세션 | PostgreSQL, Redis, Spring Session |
+| 외부 연동 | OpenAI API, Google OAuth·Calendar, Firebase Cloud Messaging, Resend, Sentry |
+| 검증 | JUnit·Spring Boot Test, Vitest·Testing Library, Playwright, Jest, ESLint |
+| 빌드·운영 구성 | GitHub Actions, Docker Compose, AWS EC2, Supabase PostgreSQL, 웹 정적 호스팅 |
 
 ## 아키텍처
 
-```text
-사용자 브라우저
-  |
-  | React / Vite
-  v
-프론트엔드
-  |
-  | REST API / OAuth2 세션
-  v
-Spring Boot 백엔드
-  |-- PostgreSQL: 사용자, 태스크, 아이디어, 루틴, 브레인덤프, 문의 데이터 저장
-  |-- Redis: AI 사용량 제한, 마감 임박 알림 보조 데이터 관리
-  |-- OpenAI API: 브레인덤프 분석, 태스크 우선순위 판단
-  |-- Google OAuth2 / Calendar: 로그인 및 캘린더 연동
-  |-- Resend: 문의 알림 메일 발송
-  |-- Sentry: 프론트엔드/백엔드 에러 모니터링
+```mermaid
+flowchart TD
+    Web[웹 · React] --> API[Spring Boot API]
+    Desktop[Windows · Electron] --> API
+    Android[Android · React Native] --> API
+    API --> DB[(PostgreSQL)]
+    API --> Redis[(Redis · 세션과 사용량)]
+    API --> OpenAI[OpenAI · 생각 정리와 실행 보조]
+    API --> Google[Google · 로그인과 Calendar 가져오기]
+    API --> Notify[FCM · 푸시 / Resend · 메일]
 ```
 
-### 백엔드 계층 구조
+인증은 서버 세션을 사용합니다. Android의 Google 로그인도 ID 토큰 검증 후 같은 서버 세션 방식으로 연결됩니다. 클라이언트가 DB에 직접 접근하지 않으며, Supabase의 PostgreSQL은 백엔드의 JDBC/JPA로 사용합니다.
 
-```text
-controller  -> HTTP API 요청과 응답 처리
-service     -> 핵심 비즈니스 로직 및 외부 API 연동
-repository  -> JPA 기반 데이터 조회 및 저장
-entity      -> 데이터베이스 테이블 매핑
-dto         -> 요청/응답 데이터 전달 객체
-config      -> 보안, Redis, CORS, 예외 처리 설정
+백엔드는 `controller → service → repository` 구조로 요청 처리와 비즈니스 규칙, 저장을 분리합니다. 브레인 덤프는 **원문 분석 → 후보 확인·편집 → 선택한 할 일 저장** 순서로 진행됩니다.
+
+## 로컬에서 실행하기
+
+### 준비
+
+- Java 21
+- Node.js 22.13 이상인 22.x 또는 24.3 이상인 24.x와 npm
+- 개발 전용 PostgreSQL DB와 Redis
+- 로컬 리디렉션을 등록한 Google OAuth 웹 클라이언트
+- AI 기능을 사용할 경우 OpenAI API 키
+- Android·Windows 앱의 추가 준비는 [모바일](./mobile/README.md), [데스크톱](./desktop/README.md) 문서 참고
+
+```powershell
+git clone https://github.com/doh3e/dumpit.git
+cd dumpit
 ```
 
-### 주요 처리 흐름
+### 1. 백엔드 설정
 
-```text
-브레인 덤프 입력
-  -> 백엔드 입력값 검증
-  -> AI 사용량 차감
-  -> OpenAI 분석 요청
-  -> 태스크 후보 생성
-  -> 사용자가 확정한 태스크 저장
+`backend/src/main/resources/application-local.yml`을 준비합니다. 아래는 **빈 개발 DB**를 위한 예시입니다. DB는 먼저 생성해야 합니다. 이미 로컬 설정이 있다면 필요한 항목만 확인하세요.
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dumpit
+    username: dumpit
+    password: ${LOCAL_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+
+mail:
+  resend:
+    api-key: ""
+  from: noreply@example.com
+  admin-notification: admin@example.com
+
+sentry:
+  dsn: ""
 ```
 
-```text
-루틴 생성/수정
-  -> 반복 조건 저장
-  -> 오늘 실행 가능한 루틴이면 즉시 태스크 생성
-  -> 자정 이후 스케줄러가 활성 루틴 확인
-  -> routine_id + routine_scheduled_date 제약으로 중복 생성 방지
+`LOCAL_DB_PASSWORD`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`과 필요한 `OPENAI_API_KEY`를 백엔드 실행 터미널 또는 IDE의 환경 변수로 전달합니다. Google OAuth에는 로컬 콜백 `http://localhost:8080/api/login/oauth2/code/google`을 등록합니다.
+
+현재 Flyway V1은 기존 스키마를 기준으로 하는 빈 baseline이므로, 빈 로컬 DB의 엔티티 테이블은 `ddl-auto: update`로 생성합니다. 이 설정은 개발 DB용이며 운영 설정으로 사용하지 않습니다.
+
+루트 [`.env.example`](./.env.example)은 환경 변수 목록의 참고 자료입니다. Vite는 루트 `.env`를 읽지만 **Spring Boot는 이 파일을 자동으로 읽지 않습니다**. 비밀값은 프런트엔드에 노출되는 `VITE_` 변수에 넣지 않습니다.
+
+### 2. 백엔드와 웹 실행
+
+저장소 루트에서 백엔드를 실행합니다.
+
+```powershell
+cd backend
+.\gradlew.bat bootRun
 ```
 
-```text
-마이페이지 조회
-  -> 프로필 정보 조회
-  -> 태스크 통계 및 완료 히트맵 조회
-  -> 기한 지난 미완료 태스크 조회
-  -> 프론트엔드에서 카드, 차트, 히트맵으로 표시
+새 터미널을 저장소 루트에서 열고 웹을 실행합니다.
+
+```powershell
+cd frontend
+npm ci
+npm run dev
 ```
 
-&nbsp;
+브라우저에서 `http://localhost:5173`을 엽니다. 개발 서버의 `/api` 요청은 `http://localhost:8080`으로 전달됩니다. OAuth와 쿠키 호스트가 일치하도록 로컬 실행 주소는 `localhost`로 통일합니다. macOS/Linux에서는 Gradle 명령을 `./gradlew`로 실행합니다.
+
+루트 `docker-compose.yml`은 외부 DB와 사전 빌드된 JAR을 사용하는 배포 구성입니다. 로컬 DB·OAuth 설정까지 자동으로 준비하는 개발 환경은 아닙니다.
+
+## 검증 명령
+
+각 모듈 디렉터리에서 실행합니다. 일반 변경은 관련 테스트부터 확인하고, 공통 동작 변경이나 출시 준비에서 검사 범위를 넓힙니다.
+
+| 위치 | 명령 | 용도 |
+|---|---|---|
+| `backend/` | `.\gradlew.bat test` | 백엔드 테스트 |
+| `frontend/` | `npm test` | Vitest 단위·컴포넌트 테스트 |
+| `frontend/` | `npm run lint` | ESLint 검사 |
+| `frontend/` | `npm run build` | 웹 빌드 |
+| `frontend/` | `npm run test:e2e` | 브레인 덤프·설정 브라우저 회귀 검사 |
+| `mobile/` | `npm test` · `npx tsc --noEmit` · `npm run lint` | Jest·타입·ESLint 검사 |
+| `desktop/` | `node --test tests/*.test.cjs` | Electron 도우미·위젯 로직 테스트 |
+| `desktop/` | `npm run build:frontend` · `npm run package:win` | 번들·Windows 패키지 생성 |
+
+백엔드 테스트에는 PostgreSQL의 `dumpit_test` DB가 필요합니다. 기본 연결은 [테스트 설정](./backend/src/main/resources/application-test.yml)에 있으며 `TEST_DB_URL`, `TEST_DB_USERNAME`, `TEST_DB_PASSWORD`로 바꿀 수 있습니다. 같은 테스트 DB를 쓰는 검사는 동시에 실행하지 않습니다.
+
+웹 E2E는 처음 실행할 때 `frontend/`에서 `npx playwright install chromium`으로 브라우저를 준비합니다. 테스트가 전용 로컬 서버와 예시 API 응답을 사용합니다.
 
 ## 프로젝트 구조
 
 ```text
 dumpit/
-  backend/
-    src/main/java/com/dumpit/
-      config/          # 보안, Redis, CORS, 전역 예외 처리 설정
-      controller/      # REST API 컨트롤러
-      dto/             # 요청/응답 DTO
-      entity/          # JPA 엔티티
-      repository/      # Spring Data JPA 레포지토리
-      service/         # 서비스 인터페이스
-      service/impl/    # 서비스 구현체 및 비즈니스 로직
-      DumpitApplication.java
-    src/main/resources/
-      application.yml  # Spring Boot 기본 설정
-    build.gradle       # 백엔드 빌드 및 의존성 설정
-    Dockerfile         # 백엔드 Docker 이미지 설정
-
-  frontend/
-    src/
-      assets/          # 이미지 및 정적 리소스
-      components/      # 공통 UI 컴포넌트
-      components/layout/ # 헤더, 사이드바, 푸터 등 레이아웃 컴포넌트
-      constants/       # 공통 상수
-      context/         # 인증 등 전역 Context
-      hooks/           # 커스텀 훅
-      pages/           # 라우트 단위 페이지
-      services/        # Axios API 클라이언트
-      App.jsx          # 라우팅 및 앱 진입 구조
-      main.jsx         # React 앱 마운트 진입점
-      sentry.js        # 프론트엔드 Sentry 설정
-    package.json       # 프론트엔드 스크립트 및 의존성 설정
-
-  .github/workflows/
-    ci.yml             # 백엔드/프론트엔드 빌드 검증
-    deploy.yml         # main 브랜치 EC2 배포 자동화
-
-  docker-compose.yml   # 백엔드와 Redis 실행 구성
-  .env.example         # 환경 변수 예시
-  README.md            # 프로젝트 문서
+├─ backend/
+│  ├─ src/main/java/com/dumpit/   API, 서비스, 엔티티와 저장소
+│  ├─ src/main/resources/        Spring 설정과 Flyway 마이그레이션
+│  └─ src/test/                  백엔드 테스트
+├─ frontend/
+│  ├─ src/                       화면, 컴포넌트, 상태와 API 클라이언트
+│  ├─ public/                    정적 리소스와 웹 호스팅 설정
+│  └─ e2e/                       Playwright 시나리오와 예시 응답
+├─ desktop/
+│  ├─ electron/                  앱 창, IPC, 트레이, 알림과 위젯
+│  ├─ scripts/                   웹 번들 빌드
+│  └─ tests/                     데스크톱 로직 테스트
+├─ mobile/
+│  ├─ app/                       Expo Router 화면
+│  ├─ src/                       인증, API, 테마와 기능 모듈
+│  ├─ modules/dumpit-widget/      Android 홈 화면 위젯
+│  └─ plugins/                   Expo 네이티브 설정 플러그인
+├─ docs/image/                   README 화면 캡처
+├─ .github/workflows/            CI, 백엔드 배포, 데스크톱 릴리즈
+└─ docker-compose.yml           백엔드·Redis 배포 구성
 ```
+
+## 브랜치와 배포
+
+- `main`: 통합·배포 기준. 새 커밋 push는 웹·백엔드 배포에 영향을 줍니다.
+- `dev`: 웹·백엔드 공통 개발 기준. 작업 브랜치에서 검증한 뒤 반영합니다.
+- `desktop`, `mobile`: 각 앱 디렉터리의 전용 개발 브랜치. 공통 소스 변경은 `dev`에서 진행합니다.
+
+GitHub의 웹·백엔드 워크플로는 `desktop/**`, `mobile/**`, `.github/workflows/desktop.yml`만 바뀐 경우를 제외합니다. **README와 일반 문서 변경은 제외 대상이 아닙니다.** 데스크톱 릴리즈는 `v*` 태그 워크플로를 사용하며, Android 빌드 프로필은 `mobile/eas.json`에서 관리합니다.
+
+## 라이선스와 크레딧
+
+사용한 오픈소스의 버전·라이선스와 원문 고지는 [라이선스 안내](./docs/LICENSING.md), 폰트·픽셀 아트·아이콘의 출처와 변경 내역은 [에셋 출처 문서](./docs/ATTRIBUTIONS.md)에서 확인할 수 있습니다.
+
+DumpIt 자체 코드의 라이선스는 학습·참고 공개와 상업적 복제 제한 방향으로 검토 중이며 아직 확정하지 않았습니다. 제3자 자료에는 각각의 원래 라이선스가 적용됩니다.
+
+개발 과정에서 Claude와 Codex를 코드 작성, 설계, 검토 보조에 활용했습니다.

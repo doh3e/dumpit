@@ -1,0 +1,7 @@
+# Preserve upstream bytes, including whitespace, so recorded SHA-256 values survive checkout.
+npm/** -text -whitespace
+jvm/** -text -whitespace
+fonts/** -text -whitespace
+assets/** -text -whitespace
+python/** -text -whitespace
+proposals/** -text -whitespace

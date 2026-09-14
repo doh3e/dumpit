@@ -1,0 +1,1184 @@
+{
+    "configuration": "runtimeClasspath",
+    "project": ":",
+    "components": [
+        {
+            "group": "",
+            "name": "dumpit-jvm-license-audit",
+            "version": "unspecified"
+        },
+        {
+            "group": "ch.qos.logback",
+            "name": "logback-classic",
+            "version": "1.5.34"
+        },
+        {
+            "group": "ch.qos.logback",
+            "name": "logback-core",
+            "version": "1.5.34"
+        },
+        {
+            "group": "com.fasterxml.jackson.core",
+            "name": "jackson-annotations",
+            "version": "2.21"
+        },
+        {
+            "group": "com.fasterxml.jackson.core",
+            "name": "jackson-core",
+            "version": "2.21.4"
+        },
+        {
+            "group": "com.fasterxml.jackson",
+            "name": "jackson-bom",
+            "version": "2.21.4"
+        },
+        {
+            "group": "com.fasterxml",
+            "name": "classmate",
+            "version": "1.7.3"
+        },
+        {
+            "group": "com.github.stephenc.jcip",
+            "name": "jcip-annotations",
+            "version": "1.0-1"
+        },
+        {
+            "group": "com.google.android",
+            "name": "annotations",
+            "version": "4.1.1.4"
+        },
+        {
+            "group": "com.google.api-client",
+            "name": "google-api-client",
+            "version": "2.7.1"
+        },
+        {
+            "group": "com.google.api-client",
+            "name": "google-api-client-gson",
+            "version": "2.7.1"
+        },
+        {
+            "group": "com.google.api.grpc",
+            "name": "gapic-google-cloud-storage-v2",
+            "version": "2.46.0-beta"
+        },
+        {
+            "group": "com.google.api.grpc",
+            "name": "grpc-google-cloud-storage-v2",
+            "version": "2.46.0-beta"
+        },
+        {
+            "group": "com.google.api.grpc",
+            "name": "proto-google-cloud-firestore-v1",
+            "version": "3.30.2"
+        },
+        {
+            "group": "com.google.api.grpc",
+            "name": "proto-google-cloud-monitoring-v3",
+            "version": "3.52.0"
+        },
+        {
+            "group": "com.google.api.grpc",
+            "name": "proto-google-cloud-storage-v2",
+            "version": "2.46.0-beta"
+        },
+        {
+            "group": "com.google.api.grpc",
+            "name": "proto-google-common-protos",
+            "version": "2.70.0"
+        },
+        {
+            "group": "com.google.api.grpc",
+            "name": "proto-google-iam-v1",
+            "version": "1.45.0"
+        },
+        {
+            "group": "com.google.api",
+            "name": "api-common",
+            "version": "2.42.0"
+        },
+        {
+            "group": "com.google.api",
+            "name": "gax",
+            "version": "2.59.0"
+        },
+        {
+            "group": "com.google.api",
+            "name": "gax-grpc",
+            "version": "2.59.0"
+        },
+        {
+            "group": "com.google.api",
+            "name": "gax-httpjson",
+            "version": "2.59.0"
+        },
+        {
+            "group": "com.google.apis",
+            "name": "google-api-services-storage",
+            "version": "v1-rev20241206-2.0.0"
+        },
+        {
+            "group": "com.google.auth",
+            "name": "google-auth-library-credentials",
+            "version": "1.30.1"
+        },
+        {
+            "group": "com.google.auth",
+            "name": "google-auth-library-oauth2-http",
+            "version": "1.30.1"
+        },
+        {
+            "group": "com.google.auto.value",
+            "name": "auto-value-annotations",
+            "version": "1.11.0"
+        },
+        {
+            "group": "com.google.cloud.opentelemetry",
+            "name": "detector-resources-support",
+            "version": "0.33.0"
+        },
+        {
+            "group": "com.google.cloud.opentelemetry",
+            "name": "exporter-metrics",
+            "version": "0.33.0"
+        },
+        {
+            "group": "com.google.cloud.opentelemetry",
+            "name": "shared-resourcemapping",
+            "version": "0.33.0"
+        },
+        {
+            "group": "com.google.cloud",
+            "name": "google-cloud-core",
+            "version": "2.49.0"
+        },
+        {
+            "group": "com.google.cloud",
+            "name": "google-cloud-core-grpc",
+            "version": "2.49.0"
+        },
+        {
+            "group": "com.google.cloud",
+            "name": "google-cloud-core-http",
+            "version": "2.49.0"
+        },
+        {
+            "group": "com.google.cloud",
+            "name": "google-cloud-firestore",
+            "version": "3.30.2"
+        },
+        {
+            "group": "com.google.cloud",
+            "name": "google-cloud-monitoring",
+            "version": "3.52.0"
+        },
+        {
+            "group": "com.google.cloud",
+            "name": "google-cloud-storage",
+            "version": "2.46.0"
+        },
+        {
+            "group": "com.google.cloud",
+            "name": "libraries-bom",
+            "version": "26.48.0"
+        },
+        {
+            "group": "com.google.cloud",
+            "name": "proto-google-cloud-firestore-bundle-v1",
+            "version": "3.30.2"
+        },
+        {
+            "group": "com.google.code.findbugs",
+            "name": "jsr305",
+            "version": "3.0.2"
+        },
+        {
+            "group": "com.google.code.gson",
+            "name": "gson",
+            "version": "2.13.2"
+        },
+        {
+            "group": "com.google.errorprone",
+            "name": "error_prone_annotations",
+            "version": "2.45.0"
+        },
+        {
+            "group": "com.google.firebase",
+            "name": "firebase-admin",
+            "version": "9.4.3"
+        },
+        {
+            "group": "com.google.guava",
+            "name": "failureaccess",
+            "version": "1.0.2"
+        },
+        {
+            "group": "com.google.guava",
+            "name": "guava",
+            "version": "33.3.1-jre"
+        },
+        {
+            "group": "com.google.guava",
+            "name": "listenablefuture",
+            "version": "9999.0-empty-to-avoid-conflict-with-guava"
+        },
+        {
+            "group": "com.google.http-client",
+            "name": "google-http-client",
+            "version": "1.45.3"
+        },
+        {
+            "group": "com.google.http-client",
+            "name": "google-http-client-apache-v2",
+            "version": "1.45.3"
+        },
+        {
+            "group": "com.google.http-client",
+            "name": "google-http-client-appengine",
+            "version": "1.45.3"
+        },
+        {
+            "group": "com.google.http-client",
+            "name": "google-http-client-gson",
+            "version": "1.45.3"
+        },
+        {
+            "group": "com.google.http-client",
+            "name": "google-http-client-jackson2",
+            "version": "1.45.3"
+        },
+        {
+            "group": "com.google.j2objc",
+            "name": "j2objc-annotations",
+            "version": "3.0.0"
+        },
+        {
+            "group": "com.google.oauth-client",
+            "name": "google-oauth-client",
+            "version": "1.36.0"
+        },
+        {
+            "group": "com.google.protobuf",
+            "name": "protobuf-java",
+            "version": "4.34.2"
+        },
+        {
+            "group": "com.google.protobuf",
+            "name": "protobuf-java-util",
+            "version": "4.34.2"
+        },
+        {
+            "group": "com.google.re2j",
+            "name": "re2j",
+            "version": "1.7"
+        },
+        {
+            "group": "com.nimbusds",
+            "name": "content-type",
+            "version": "2.3"
+        },
+        {
+            "group": "com.nimbusds",
+            "name": "lang-tag",
+            "version": "1.7"
+        },
+        {
+            "group": "com.nimbusds",
+            "name": "nimbus-jose-jwt",
+            "version": "10.9"
+        },
+        {
+            "group": "com.nimbusds",
+            "name": "oauth2-oidc-sdk",
+            "version": "11.37.2"
+        },
+        {
+            "group": "com.sun.istack",
+            "name": "istack-commons-runtime",
+            "version": "4.1.2"
+        },
+        {
+            "group": "com.zaxxer",
+            "name": "HikariCP",
+            "version": "7.0.2"
+        },
+        {
+            "group": "commons-codec",
+            "name": "commons-codec",
+            "version": "1.21.0"
+        },
+        {
+            "group": "commons-logging",
+            "name": "commons-logging",
+            "version": "1.3.6"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-alts",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-api",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-auth",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-context",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-core",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-googleapis",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-grpclb",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-inprocess",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-netty-shaded",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-opentelemetry",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-protobuf",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-protobuf-lite",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-rls",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-services",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-stub",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-util",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.grpc",
+            "name": "grpc-xds",
+            "version": "1.80.0"
+        },
+        {
+            "group": "io.lettuce",
+            "name": "lettuce-core",
+            "version": "7.5.2.RELEASE"
+        },
+        {
+            "group": "io.micrometer",
+            "name": "micrometer-commons",
+            "version": "1.17.0"
+        },
+        {
+            "group": "io.micrometer",
+            "name": "micrometer-observation",
+            "version": "1.17.0"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-buffer",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-codec-base",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-codec-compression",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-codec-dns",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-codec-http",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-common",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-handler",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-resolver",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-resolver-dns",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-transport",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.netty",
+            "name": "netty-transport-native-unix-common",
+            "version": "4.2.15.Final"
+        },
+        {
+            "group": "io.opencensus",
+            "name": "opencensus-api",
+            "version": "0.31.1"
+        },
+        {
+            "group": "io.opencensus",
+            "name": "opencensus-contrib-http-util",
+            "version": "0.31.1"
+        },
+        {
+            "group": "io.opentelemetry.contrib",
+            "name": "opentelemetry-gcp-resources",
+            "version": "1.37.0-alpha"
+        },
+        {
+            "group": "io.opentelemetry.instrumentation",
+            "name": "opentelemetry-grpc-1.6",
+            "version": "2.1.0-alpha"
+        },
+        {
+            "group": "io.opentelemetry.instrumentation",
+            "name": "opentelemetry-instrumentation-api",
+            "version": "2.1.0"
+        },
+        {
+            "group": "io.opentelemetry.instrumentation",
+            "name": "opentelemetry-instrumentation-api-incubator",
+            "version": "2.1.0-alpha"
+        },
+        {
+            "group": "io.opentelemetry.semconv",
+            "name": "opentelemetry-semconv",
+            "version": "1.27.0-alpha"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-api",
+            "version": "1.62.0"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-api-incubator",
+            "version": "1.45.0-alpha"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-bom",
+            "version": "1.42.1"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-common",
+            "version": "1.62.0"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-context",
+            "version": "1.62.0"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-extension-incubator",
+            "version": "1.35.0-alpha"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-sdk",
+            "version": "1.62.0"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-sdk-common",
+            "version": "1.62.0"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-sdk-extension-autoconfigure-spi",
+            "version": "1.62.0"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-sdk-logs",
+            "version": "1.62.0"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-sdk-metrics",
+            "version": "1.62.0"
+        },
+        {
+            "group": "io.opentelemetry",
+            "name": "opentelemetry-sdk-trace",
+            "version": "1.62.0"
+        },
+        {
+            "group": "io.perfmark",
+            "name": "perfmark-api",
+            "version": "0.27.0"
+        },
+        {
+            "group": "io.projectreactor",
+            "name": "reactor-core",
+            "version": "3.8.6"
+        },
+        {
+            "group": "io.sentry",
+            "name": "sentry",
+            "version": "8.44.1"
+        },
+        {
+            "group": "io.sentry",
+            "name": "sentry-reactor",
+            "version": "8.44.1"
+        },
+        {
+            "group": "io.sentry",
+            "name": "sentry-spring-7",
+            "version": "8.44.1"
+        },
+        {
+            "group": "io.sentry",
+            "name": "sentry-spring-boot-4",
+            "version": "8.44.1"
+        },
+        {
+            "group": "jakarta.activation",
+            "name": "jakarta.activation-api",
+            "version": "2.1.4"
+        },
+        {
+            "group": "jakarta.annotation",
+            "name": "jakarta.annotation-api",
+            "version": "3.0.0"
+        },
+        {
+            "group": "jakarta.inject",
+            "name": "jakarta.inject-api",
+            "version": "2.0.1"
+        },
+        {
+            "group": "jakarta.persistence",
+            "name": "jakarta.persistence-api",
+            "version": "3.2.0"
+        },
+        {
+            "group": "jakarta.transaction",
+            "name": "jakarta.transaction-api",
+            "version": "2.0.1"
+        },
+        {
+            "group": "jakarta.validation",
+            "name": "jakarta.validation-api",
+            "version": "3.1.1"
+        },
+        {
+            "group": "jakarta.xml.bind",
+            "name": "jakarta.xml.bind-api",
+            "version": "4.0.5"
+        },
+        {
+            "group": "javax.activation",
+            "name": "javax.activation-api",
+            "version": "1.2.0"
+        },
+        {
+            "group": "javax.annotation",
+            "name": "javax.annotation-api",
+            "version": "1.3.2"
+        },
+        {
+            "group": "javax.xml.bind",
+            "name": "jaxb-api",
+            "version": "2.3.1"
+        },
+        {
+            "group": "net.bytebuddy",
+            "name": "byte-buddy",
+            "version": "1.18.10"
+        },
+        {
+            "group": "net.minidev",
+            "name": "accessors-smart",
+            "version": "2.6.0"
+        },
+        {
+            "group": "net.minidev",
+            "name": "json-smart",
+            "version": "2.6.0"
+        },
+        {
+            "group": "org.antlr",
+            "name": "antlr4-runtime",
+            "version": "4.13.2"
+        },
+        {
+            "group": "org.apache.httpcomponents.client5",
+            "name": "httpclient5",
+            "version": "5.6.1"
+        },
+        {
+            "group": "org.apache.httpcomponents.core5",
+            "name": "httpcore5",
+            "version": "5.4.2"
+        },
+        {
+            "group": "org.apache.httpcomponents.core5",
+            "name": "httpcore5-h2",
+            "version": "5.4.2"
+        },
+        {
+            "group": "org.apache.httpcomponents",
+            "name": "httpclient",
+            "version": "4.5.14"
+        },
+        {
+            "group": "org.apache.httpcomponents",
+            "name": "httpcore",
+            "version": "4.4.16"
+        },
+        {
+            "group": "org.apache.logging.log4j",
+            "name": "log4j-api",
+            "version": "2.25.4"
+        },
+        {
+            "group": "org.apache.logging.log4j",
+            "name": "log4j-to-slf4j",
+            "version": "2.25.4"
+        },
+        {
+            "group": "org.apache.tomcat.embed",
+            "name": "tomcat-embed-core",
+            "version": "11.0.22"
+        },
+        {
+            "group": "org.apache.tomcat.embed",
+            "name": "tomcat-embed-el",
+            "version": "11.0.22"
+        },
+        {
+            "group": "org.apache.tomcat.embed",
+            "name": "tomcat-embed-websocket",
+            "version": "11.0.22"
+        },
+        {
+            "group": "org.aspectj",
+            "name": "aspectjweaver",
+            "version": "1.9.25.1"
+        },
+        {
+            "group": "org.checkerframework",
+            "name": "checker-qual",
+            "version": "3.48.3"
+        },
+        {
+            "group": "org.codehaus.mojo",
+            "name": "animal-sniffer-annotations",
+            "version": "1.26"
+        },
+        {
+            "group": "org.conscrypt",
+            "name": "conscrypt-openjdk-uber",
+            "version": "2.5.2"
+        },
+        {
+            "group": "org.eclipse.angus",
+            "name": "angus-activation",
+            "version": "2.0.3"
+        },
+        {
+            "group": "org.flywaydb",
+            "name": "flyway-core",
+            "version": "12.4.0"
+        },
+        {
+            "group": "org.flywaydb",
+            "name": "flyway-database-postgresql",
+            "version": "12.4.0"
+        },
+        {
+            "group": "org.glassfish.jaxb",
+            "name": "jaxb-core",
+            "version": "4.0.9"
+        },
+        {
+            "group": "org.glassfish.jaxb",
+            "name": "jaxb-runtime",
+            "version": "4.0.9"
+        },
+        {
+            "group": "org.glassfish.jaxb",
+            "name": "txw2",
+            "version": "4.0.9"
+        },
+        {
+            "group": "org.hibernate.models",
+            "name": "hibernate-models",
+            "version": "1.1.1"
+        },
+        {
+            "group": "org.hibernate.orm",
+            "name": "hibernate-core",
+            "version": "7.4.1.Final"
+        },
+        {
+            "group": "org.hibernate.orm",
+            "name": "hibernate-platform",
+            "version": "7.4.1.Final"
+        },
+        {
+            "group": "org.hibernate.validator",
+            "name": "hibernate-validator",
+            "version": "9.1.0.Final"
+        },
+        {
+            "group": "org.jboss.logging",
+            "name": "jboss-logging",
+            "version": "3.6.3.Final"
+        },
+        {
+            "group": "org.jspecify",
+            "name": "jspecify",
+            "version": "1.0.0"
+        },
+        {
+            "group": "org.ow2.asm",
+            "name": "asm",
+            "version": "9.7.1"
+        },
+        {
+            "group": "org.postgresql",
+            "name": "postgresql",
+            "version": "42.7.11"
+        },
+        {
+            "group": "org.reactivestreams",
+            "name": "reactive-streams",
+            "version": "1.0.4"
+        },
+        {
+            "group": "org.slf4j",
+            "name": "jul-to-slf4j",
+            "version": "2.0.18"
+        },
+        {
+            "group": "org.slf4j",
+            "name": "slf4j-api",
+            "version": "2.0.18"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-autoconfigure",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-data-commons",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-data-jpa",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-data-redis",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-dependencies",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-flyway",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-hibernate",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-http-client",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-http-converter",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-jackson",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-jdbc",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-jpa",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-netty",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-persistence",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-restclient",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-security",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-security-oauth2-client",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-servlet",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-sql",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-data-jpa",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-data-redis",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-flyway",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-jackson",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-jdbc",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-logging",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-restclient",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-security",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-security-oauth2-client",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-tomcat",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-tomcat-runtime",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-validation",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-starter-webmvc",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-tomcat",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-transaction",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-validation",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-web-server",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.boot",
+            "name": "spring-boot-webmvc",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.data",
+            "name": "spring-data-commons",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.data",
+            "name": "spring-data-jpa",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.data",
+            "name": "spring-data-keyvalue",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.data",
+            "name": "spring-data-redis",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.security",
+            "name": "spring-security-config",
+            "version": "7.1.0"
+        },
+        {
+            "group": "org.springframework.security",
+            "name": "spring-security-core",
+            "version": "7.1.0"
+        },
+        {
+            "group": "org.springframework.security",
+            "name": "spring-security-crypto",
+            "version": "7.1.0"
+        },
+        {
+            "group": "org.springframework.security",
+            "name": "spring-security-oauth2-client",
+            "version": "7.1.0"
+        },
+        {
+            "group": "org.springframework.security",
+            "name": "spring-security-oauth2-core",
+            "version": "7.1.0"
+        },
+        {
+            "group": "org.springframework.security",
+            "name": "spring-security-oauth2-jose",
+            "version": "7.1.0"
+        },
+        {
+            "group": "org.springframework.security",
+            "name": "spring-security-web",
+            "version": "7.1.0"
+        },
+        {
+            "group": "org.springframework.session",
+            "name": "spring-session-core",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework.session",
+            "name": "spring-session-data-redis",
+            "version": "4.1.0"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-aop",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-aspects",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-beans",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-context",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-context-support",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-core",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-expression",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-jdbc",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-messaging",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-orm",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-oxm",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-tx",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-web",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.springframework",
+            "name": "spring-webmvc",
+            "version": "7.0.8"
+        },
+        {
+            "group": "org.threeten",
+            "name": "threetenbp",
+            "version": "1.7.0"
+        },
+        {
+            "group": "org.yaml",
+            "name": "snakeyaml",
+            "version": "2.6"
+        },
+        {
+            "group": "redis.clients.authentication",
+            "name": "redis-authx-core",
+            "version": "0.1.1-beta2"
+        },
+        {
+            "group": "tools.jackson.core",
+            "name": "jackson-core",
+            "version": "3.1.4"
+        },
+        {
+            "group": "tools.jackson.core",
+            "name": "jackson-databind",
+            "version": "3.1.4"
+        },
+        {
+            "group": "tools.jackson",
+            "name": "jackson-bom",
+            "version": "3.1.4"
+        }
+    ],
+    "unresolved": [
+        
+    ]
+}

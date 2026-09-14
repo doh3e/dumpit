@@ -1,0 +1,14 @@
+[
+  {
+    "file": "Galmuri-OFL.md",
+    "source": "https://raw.githubusercontent.com/quiple/galmuri/main/ofl.md",
+    "sha256": "9a9e5a342c430c3fcf01a408b680f4405d5bf4ac659c931be35f8a1b27ea69c9",
+    "retrieved": "2026-09-14"
+  },
+  {
+    "file": "Pretendard-OFL.txt",
+    "source": "https://raw.githubusercontent.com/orioncactus/pretendard/v1.3.9/LICENSE",
+    "sha256": "d31ddd9f2bed32fd7e302a205cf2380ba0de6529152d239ef99cfb6f261bfc04",
+    "retrieved": "2026-09-14"
+  }
+]

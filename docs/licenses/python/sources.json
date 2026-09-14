@@ -1,0 +1,23 @@
+[
+  {
+    "package": "Pillow",
+    "version": "11.3.0",
+    "file": "Pillow-11.3.0-LICENSE.txt",
+    "distributionFile": "pillow-11.3.0.dist-info/licenses/LICENSE",
+    "sha256": "19544bf53af689a3319a4fb5067370f0f0d68d2c5300a2157674f5ef8a4fd965"
+  },
+  {
+    "package": "fonttools",
+    "version": "4.63.0",
+    "file": "fonttools-4.63.0-LICENSE.txt",
+    "distributionFile": "fonttools-4.63.0.dist-info/licenses/LICENSE",
+    "sha256": "22bef80697ecfaa17f97e62b9a26dfa12820be05583e8dd12ad169b241274c99"
+  },
+  {
+    "package": "fonttools",
+    "version": "4.63.0",
+    "file": "fonttools-4.63.0-LICENSE.external.txt",
+    "distributionFile": "fonttools-4.63.0.dist-info/licenses/LICENSE.external",
+    "sha256": "b082a5f86775b2641f01bccb8b9c82908481de5f502bb254b1e13bfc2a9f303d"
+  }
+]

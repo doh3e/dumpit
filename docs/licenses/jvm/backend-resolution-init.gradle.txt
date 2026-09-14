@@ -1,0 +1,15 @@
+gradle.projectsEvaluated {
+    rootProject.tasks.register('dumpitLicenseInventory') {
+        doLast {
+            def targetPath = System.getProperty('license.project', ':')
+            def configName = System.getProperty('license.configuration', 'runtimeClasspath')
+            def conf = rootProject.project(targetPath).configurations.getByName(configName)
+            def rows = conf.incoming.resolutionResult.allComponents.findAll { it.moduleVersion != null }.collect {
+                [group:it.moduleVersion.group, name:it.moduleVersion.name, version:it.moduleVersion.version]
+            }.sort { a,b -> "${a.group}:${a.name}" <=> "${b.group}:${b.name}" }
+            def unresolved = conf.incoming.resolutionResult.allDependencies.findAll { it instanceof org.gradle.api.artifacts.result.UnresolvedDependencyResult }.collect { it.attempted.displayName }; def payload = [configuration:configName, project:targetPath, components:rows, unresolved:unresolved]
+            new File(System.getProperty('license.output')).text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(payload))
+            println "LICENSE_COMPONENTS=${rows.size()}"
+        }
+    }
+}
