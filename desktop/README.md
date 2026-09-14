@@ -92,4 +92,5 @@ npm start
 
 Electron·업데이트 라이브러리와 웹 번들의 고지는 [라이선스 안내](../LICENSING.md),
 폰트·이미지의 출처는 [에셋 출처 문서](../ATTRIBUTIONS.md)를 확인합니다.
-DumpIt 자체 코드의 새 라이선스는 아직 검토 중입니다.
+DumpIt 자체 코드는 [PolyForm Noncommercial License 1.0.0](../LICENSE)을 따릅니다.
+비상업적 사용·수정·재배포를 허용하며, 원문에서 허용한 목적 외의 상업적 코드 재사용에는 별도 허락이 필요합니다.

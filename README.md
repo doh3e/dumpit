@@ -248,7 +248,8 @@ dumpit/
 │  └─ plugins/                   Expo 네이티브 설정 플러그인
 ├─ docs/image/                   README 화면 캡처
 ├─ docs/licenses/                제3자 의존성 목록과 라이선스 원문
-├─ LICENSING.md                  라이선스 안내와 자체 정책 검토
+├─ LICENSE                       DumpIt 자체 코드 라이선스 전문
+├─ LICENSING.md                  이용 조건과 제3자 라이선스 안내
 ├─ ATTRIBUTIONS.md               이미지·폰트 출처와 개작 고지
 ├─ .github/workflows/            CI, 백엔드 배포, 데스크톱 릴리즈
 └─ docker-compose.yml           백엔드·Redis 배포 구성
@@ -262,10 +263,12 @@ dumpit/
 
 GitHub의 웹·백엔드 워크플로는 `desktop/**`, `mobile/**`, `.github/workflows/desktop.yml`만 바뀐 경우를 제외합니다. **README와 일반 문서 변경은 제외 대상이 아닙니다.** 데스크톱 릴리즈는 `v*` 태그 워크플로를 사용하며, Android 빌드 프로필은 `mobile/eas.json`에서 관리합니다.
 
-## 라이선스와 크레딧
+## 라이선스
 
-사용한 오픈소스의 버전·라이선스와 원문 고지는 [라이선스 안내](./LICENSING.md), 폰트·픽셀 아트·아이콘의 출처와 변경 내역은 [에셋 출처 문서](./ATTRIBUTIONS.md)에서 확인할 수 있습니다.
+DumpIt 자체 코드는 [PolyForm Noncommercial License 1.0.0](./LICENSE)으로 공개합니다. 비상업적 학습·사용·수정·재배포를 허용하며, 원문에서 허용한 목적 외의 상업적 코드 재사용에는 별도 허락이 필요합니다.
 
-DumpIt 자체 코드의 라이선스는 학습·참고 공개와 상업적 복제 제한 방향으로 검토 중이며 아직 확정하지 않았습니다. 제3자 자료에는 각각의 원래 라이선스가 적용됩니다.
+적용 범위와 문의는 [라이선스 안내](./LICENSING.md), 폰트·픽셀 아트·아이콘의 출처와 변경 내역은 [에셋 출처 문서](./ATTRIBUTIONS.md)를 확인하세요. 제3자 자료에는 각각의 원래 라이선스가 적용됩니다.
+
+## 개발 도구
 
 개발 과정에서 Claude와 Codex를 코드 작성, 설계, 검토 보조에 활용했습니다.
