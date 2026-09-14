@@ -37,7 +37,12 @@ let auth
 
 function Probe() {
   auth = useAuth()
-  return <p>{auth.user?.email ?? 'anonymous'}</p>
+  return (
+    <>
+      <p>{auth.user?.email ?? 'anonymous'}</p>
+      <p>{auth.loading ? 'loading' : 'ready'}</p>
+    </>
+  )
 }
 
 function deferred() {
@@ -76,17 +81,70 @@ describe('AuthProvider 계정 수명', () => {
     vi.restoreAllMocks()
   })
 
-  it('startup 정리는 현재 시각 인자 없이 실행하고 자동 인증 만료는 초안을 지우지 않는다', async () => {
-    mocks.get.mockRejectedValueOnce(new Error('expired'))
+  it.each([
+    [{ response: { status: 503 } }, '503'],
+    [new Error('network unavailable'), 'network'],
+  ])('startup %s failure ends loading without clearing local auth state', async (error) => {
+    mocks.get.mockRejectedValueOnce(error)
 
     await renderProvider()
 
     expect(mocks.pruneExpiredDrafts).toHaveBeenCalledWith()
     expect(await screen.findByText('anonymous')).toBeInTheDocument()
+    expect(screen.getByText('ready')).toBeInTheDocument()
+    expect(mocks.clearSkins).not.toHaveBeenCalled()
+    expect(mocks.resetUserSettings).not.toHaveBeenCalled()
     expect(mocks.clearDraft).not.toHaveBeenCalled()
   })
 
-  it('늦은 startup A 응답이 최신 refresh B 계정과 설정 세션을 덮지 않는다', async () => {
+  it.each([
+    [{ response: { status: 503 } }, '503'],
+    [new Error('network unavailable'), 'network'],
+  ])('refresh %s failure preserves the signed-in user, skins, and settings', async (error) => {
+    mocks.get
+      .mockResolvedValueOnce({ data: { email: 'a@example.com', equipments: {} } })
+      .mockRejectedValueOnce(error)
+    await renderProvider()
+
+    await act(async () => { await auth.refreshCoins() })
+
+    expect(screen.getByText('a@example.com')).toBeInTheDocument()
+    expect(mocks.applySkins).toHaveBeenCalledTimes(1)
+    expect(mocks.clearSkins).not.toHaveBeenCalled()
+    expect(mocks.resetUserSettings).not.toHaveBeenCalled()
+  })
+
+  it.each([401, 403])('refresh %i clears authentication for an invalid session', async (status) => {
+    mocks.get
+      .mockResolvedValueOnce({ data: { email: 'a@example.com', equipments: {} } })
+      .mockRejectedValueOnce({ response: { status } })
+    await renderProvider()
+
+    await act(async () => { await auth.refreshCoins() })
+
+    expect(screen.getByText('anonymous')).toBeInTheDocument()
+    expect(mocks.clearSkins).toHaveBeenCalledTimes(1)
+    expect(mocks.resetUserSettings).toHaveBeenCalledTimes(1)
+  })
+
+  it('refresh with an invalid 200 auth payload clears authentication', async () => {
+    mocks.get
+      .mockResolvedValueOnce({ data: { email: 'a@example.com', equipments: {} } })
+      .mockResolvedValueOnce({ data: { coins: 99, equipments: {} } })
+    await renderProvider()
+
+    await act(async () => { await auth.refreshCoins() })
+
+    expect(screen.getByText('anonymous')).toBeInTheDocument()
+    expect(mocks.clearSkins).toHaveBeenCalledTimes(1)
+    expect(mocks.resetUserSettings).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([
+    ['성공 응답', (startupA) => startupA.resolve({ data: { email: 'a@example.com', equipments: {} } })],
+    ['401 실패', (startupA) => startupA.reject({ response: { status: 401 } })],
+    ['403 실패', (startupA) => startupA.reject({ response: { status: 403 } })],
+  ])('늦은 startup A %s가 최신 refresh B 계정을 덮지 않는다', async (_caseName, settleStartupA) => {
     const startupA = deferred()
     const refreshB = deferred()
     mocks.get.mockReturnValueOnce(startupA.promise).mockReturnValueOnce(refreshB.promise)
@@ -98,8 +156,8 @@ describe('AuthProvider 계정 수명', () => {
       refreshB.resolve({ data: { email: 'b@example.com', equipments: {} } })
       await refresh
     })
-    startupA.resolve({ data: { email: 'a@example.com', equipments: {} } })
-    await act(async () => { await startupA.promise })
+    settleStartupA(startupA)
+    await act(async () => { await startupA.promise.catch(() => {}) })
 
     expect(screen.getByText('b@example.com')).toBeInTheDocument()
     expect(mocks.startUserSettingsSession).toHaveBeenCalledTimes(1)
