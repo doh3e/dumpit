@@ -38,9 +38,10 @@ export function AuthProvider({ children }) {
       const response = await api.get('/auth/me')
       if (!mountedRef.current || generation !== requestGenerationRef.current) return
       applyMeResponse(response)
-    } catch {
+    } catch (error) {
       if (!mountedRef.current || generation !== requestGenerationRef.current) return
-      applyMeResponse(null)
+      const status = error?.response?.status
+      if (status === 401 || status === 403) applyMeResponse(null)
     } finally {
       if (mountedRef.current && generation === requestGenerationRef.current) setLoading(false)
     }
