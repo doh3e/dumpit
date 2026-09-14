@@ -494,7 +494,7 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     await act(async () => tree.unmount());
   });
 
-  it('서브태스크 제안은 로딩 뒤 선택한 항목만 실제 확정 요청으로 넘긴다', async () => {
+  it('서브태스크 제안은 IME 회전 중 비제어 제목과 선택을 유지해 수정한 항목만 확정한다', async () => {
     const pending = deferred();
     mockProposeSplit.mockReturnValue(pending.promise);
     const proposed = { subtasks: [
@@ -502,7 +502,11 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
       { title: '둘째 단계', description: null, estimatedMinutes: 20 },
     ] };
     const ref = React.createRef();
-    const tree = await render(<SubtaskProposalSheet ref={ref} onCreated={jest.fn()} />);
+    const onCreated = jest.fn();
+    const screen = () => <SubtaskProposalSheet ref={ref} onCreated={onCreated} />;
+    mockWindowWidth = 600;
+    mockWindowHeight = 960;
+    const tree = await render(screen());
     await act(async () => ref.current.present({ taskId: 'task-1', title: '긴 태스크', status: 'TODO' }));
     expect(tree.root.find((node) => node.type === Text && node.props.children === 'AI가 잘게 쪼개는 중…')).toBeTruthy();
     await act(async () => pending.resolve(proposed));
@@ -510,15 +514,105 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     const scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
     expect(modal.props.topInset).toBe(36);
     expect(modal.props.snapPoints).toEqual(['65%']);
+    expect(modal.props.android_keyboardInputMode).toBe('adjustResize');
     expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
     expect(Array.isArray(scroll.props.contentContainerStyle)).toBe(false);
+    const firstTitle = tree.root.findAll((node) => node.props.accessibilityLabel === '서브태스크 제목')[0];
+    expect(firstTitle.props.value).toBeUndefined();
+    expect(firstTitle.props.defaultValue).toBe('첫 단계');
+    await act(async () => firstTitle.props.onChangeText('첫 단계 한글'));
     const second = tree.root.find((node) => node.props.accessibilityLabel === '둘째 단계 포함');
     await act(async () => second.props.onPress());
+    expect(second.props.accessibilityState.checked).toBe(false);
+    expect(control(tree, '1개 만들기')).toBeTruthy();
+    expect(mockProposeSplit).toHaveBeenCalledTimes(1);
+    expect(mockConfirmSplit).not.toHaveBeenCalled();
+    expect(mockToastError).not.toHaveBeenCalled();
+
+    mockWindowWidth = 960;
+    mockWindowHeight = 600;
+    await act(async () => tree.update(screen()));
+    expect(tree.root.findAll((node) => node.props.accessibilityLabel === '서브태스크 제목')[0]).toBe(firstTitle);
+    expect(firstTitle.props.value).toBeUndefined();
+
+    mockWindowWidth = 600;
+    mockWindowHeight = 960;
+    await act(async () => tree.update(screen()));
+    expect(tree.root.findAll((node) => node.props.accessibilityLabel === '서브태스크 제목')[0]).toBe(firstTitle);
+    expect(firstTitle.props.value).toBeUndefined();
+    expect(second.props.accessibilityState.checked).toBe(false);
+    expect(control(tree, '1개 만들기')).toBeTruthy();
+    expect(mockProposeSplit).toHaveBeenCalledTimes(1);
+    expect(mockConfirmSplit).not.toHaveBeenCalled();
+    expect(mockToastError).not.toHaveBeenCalled();
+
     await act(async () => control(tree, '1개 만들기').props.onPress());
-    expect(mockConfirmSplit).toHaveBeenCalledWith('task-1', [expect.objectContaining({ title: '첫 단계', estimatedMinutes: 10 })]);
-    await act(async () => control(tree, '서브태스크 제안 닫기').props.onPress());
-    expect(mockDismiss).toHaveBeenCalled();
+    expect(mockConfirmSplit).toHaveBeenCalledTimes(1);
+    expect(mockConfirmSplit).toHaveBeenCalledWith('task-1', [{
+      title: '첫 단계 한글', description: '설명', estimatedMinutes: 10,
+    }]);
+    expect(onCreated).toHaveBeenCalledTimes(1);
     await act(async () => tree.unmount());
+  });
+
+  it('서브태스크 제안은 실제 viewport-keyboard 겹침만 여백으로 반영하고 해제한다', async () => {
+    const pending = deferred();
+    mockProposeSplit.mockReturnValue(pending.promise);
+    const ref = React.createRef();
+    const tree = await render(<SubtaskProposalSheet ref={ref} onCreated={jest.fn()} />);
+    await act(async () => ref.current.present({ taskId: 'task-keyboard', title: '긴 태스크', status: 'TODO' }));
+    await act(async () => pending.resolve({ subtasks: [{ title: '첫 단계', description: '설명', estimatedMinutes: 10 }] }));
+
+    let scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    const basePadding = style(scroll).paddingBottom;
+    expect(scroll.props.onLayout).toEqual(expect.any(Function));
+    expect(Keyboard.addListener).toHaveBeenCalledTimes(2);
+
+    // adjustResize가 viewport를 이미 IME 위로 줄이면 추가 겹침은 없다.
+    mockSheetViewportFrame = { x: 0, y: 100, width: 320, height: 400 };
+    await emitKeyboard('keyboardDidShow', { screenX: 0, screenY: 500, width: 320, height: 300 });
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding);
+
+    // 실제로 시트가 가려졌을 때만 보이는 viewport와 keyboard top의 차이를 더한다.
+    mockSheetViewportFrame = { x: 0, y: 100, width: 320, height: 700 };
+    await act(async () => scroll.props.onLayout({ nativeEvent: { layout: mockSheetViewportFrame } }));
+    scroll = tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' });
+    expect(style(scroll).paddingBottom).toBe(basePadding + 300);
+
+    await emitKeyboard('keyboardDidHide');
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding);
+
+    await emitKeyboard('keyboardDidShow', { screenX: 0, screenY: 500, width: 320, height: 300 });
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding + 300);
+    await act(async () => control(tree, '서브태스크 제안 닫기').props.onPress());
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding);
+
+    mockDeferViewportMeasurement = true;
+    await emitKeyboard('keyboardDidShow', { screenX: 0, screenY: 200, width: 320, height: 600 });
+    const staleMeasurements = mockPendingViewportMeasurements.splice(0);
+    await emitKeyboard('keyboardDidHide');
+    await act(async () => staleMeasurements.forEach((measure) => measure()));
+    expect(style(tree.root.findByProps({ testID: 'bottom-sheet-scroll-content' })).paddingBottom).toBe(basePadding);
+
+    await act(async () => tree.unmount());
+    expect(mockKeyboardListeners.keyboardDidShow.size).toBe(0);
+    expect(mockKeyboardListeners.keyboardDidHide.size).toBe(0);
+  });
+
+  it('서브태스크 제안은 Android에서만 fillParent와 restore keyboard 동작을 사용한다', async () => {
+    const androidTree = await render(<SubtaskProposalSheet ref={React.createRef()} onCreated={jest.fn()} />);
+    const androidModal = androidTree.root.findByProps({ testID: 'bottom-sheet-modal' });
+    expect(androidModal.props.keyboardBehavior).toBe('fillParent');
+    expect(androidModal.props.keyboardBlurBehavior).toBe('restore');
+    await act(async () => androidTree.unmount());
+
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
+    const iosTree = await render(<SubtaskProposalSheet ref={React.createRef()} onCreated={jest.fn()} />);
+    const iosModal = iosTree.root.findByProps({ testID: 'bottom-sheet-modal' });
+    expect(iosModal.props.keyboardBehavior).toBeUndefined();
+    expect(iosModal.props.keyboardBlurBehavior).toBeUndefined();
+    await act(async () => iosTree.unmount());
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'android' });
   });
 
   it('스티커 선택과 떼기는 실제 선택 핸들러만 호출하고 48dp 표면을 유지한다', async () => {

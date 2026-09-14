@@ -1,10 +1,11 @@
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput, type BottomSheetScrollViewMethods } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View, type NativeMethods } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSheetFocus } from '../../a11y/useSheetFocus';
 import { useContentFrame } from '../../layout/useContentFrame';
+import { useSheetKeyboardOverlap } from '../../layout/useSheetKeyboardOverlap';
 import { getApiErrorMessage } from '../../api/client';
 import { confirmSplit, proposeSplit } from '../../api/tasks';
 import type { TaskResponse } from '../../api/types';
@@ -32,6 +33,8 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
     const toast = useToast();
     const qc = useQueryClient();
     const sheetRef = useRef<BottomSheetModal>(null);
+    const scrollRef = useRef<(BottomSheetScrollViewMethods & NativeMethods) | null>(null);
+    const { keyboardOverlap, onViewportLayout, resetKeyboardOverlap } = useSheetKeyboardOverlap(scrollRef);
     const presentedIdRef = useRef<string | null>(null);
     const { headingRef, onChange } = useSheetFocus();
 
@@ -103,14 +106,20 @@ export const SubtaskProposalSheet = forwardRef<SubtaskProposalSheetHandle, Props
         ref={sheetRef}
         snapPoints={['65%']}
         topInset={topInset}
+        android_keyboardInputMode="adjustResize"
+        keyboardBehavior={Platform.OS === 'android' ? 'fillParent' : undefined}
+        keyboardBlurBehavior={Platform.OS === 'android' ? 'restore' : undefined}
+        onDismiss={resetKeyboardOverlap}
         onChange={onChange}
         backgroundStyle={{ backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.line }}
         handleIndicatorStyle={{ backgroundColor: colors.line, width: 44 }}
       >
         {/* 하단 인셋 — 고정 paddingBottom만 두면 edge-to-edge에서 확정 버튼이 OS 내비 바에 가려진다 */}
         <BottomSheetScrollView
+          ref={scrollRef}
+          onLayout={onViewportLayout}
           accessibilityViewIsModal
-          contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 }])}
+          contentContainerStyle={StyleSheet.flatten([styles.body, frame, { paddingBottom: insets.bottom + 24 + keyboardOverlap }])}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.headingRow}>
