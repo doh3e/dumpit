@@ -90,6 +90,6 @@ npm start
 
 ## 라이선스
 
-Electron·업데이트 라이브러리와 웹 번들의 고지는 [라이선스 안내](../docs/LICENSING.md),
-폰트·이미지의 출처는 [에셋 출처 문서](../docs/ATTRIBUTIONS.md)를 확인합니다.
+Electron·업데이트 라이브러리와 웹 번들의 고지는 [라이선스 안내](../LICENSING.md),
+폰트·이미지의 출처는 [에셋 출처 문서](../ATTRIBUTIONS.md)를 확인합니다.
 DumpIt 자체 코드의 새 라이선스는 아직 검토 중입니다.

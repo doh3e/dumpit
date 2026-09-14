@@ -6,11 +6,11 @@
 
 | 자료 | 목록·원문 | 조사 기준 |
 |---|---|---|
-| 웹·데스크톱·모바일 npm 패키지 | [npm 의존성 고지](licenses/NPM_DEPENDENCIES.md) | 세 클라이언트의 lockfile 확정 버전, 설치 패키지 메타데이터와 LICENSE/NOTICE |
-| 백엔드 및 Android JVM 의존성 | [JVM 의존성 고지](licenses/JVM_DEPENDENCIES.md) | Gradle 선언, BOM, 확인 가능한 POM·JAR의 고지. 정확한 해석 범위는 해당 문서에 기재 |
+| 웹·데스크톱·모바일 npm 패키지 | [npm 의존성 고지](docs/licenses/NPM_DEPENDENCIES.md) | 세 클라이언트의 lockfile 확정 버전, 설치 패키지 메타데이터와 LICENSE/NOTICE |
+| 백엔드 및 Android JVM 의존성 | [JVM 의존성 고지](docs/licenses/JVM_DEPENDENCIES.md) | Gradle 선언, BOM, 확인 가능한 POM·JAR의 고지. 정확한 해석 범위는 해당 문서에 기재 |
 | 이미지·픽셀 아트·폰트 | [에셋 출처와 라이선스](ATTRIBUTIONS.md) | 실제 파일, 생성 스크립트, 폰트 메타데이터, 원작자의 배포 페이지 |
-| Expo에서 도입한 모바일 템플릿 | [기존 Expo MIT 고지](../mobile/LICENSE) | Copyright (c) 2015-present 650 Industries, Inc. (aka Expo) |
-| 이미지·폰트 제작용 Python 도구 | [Pillow·fontTools 고지](licenses/python/README.md) | 생성 스크립트의 import와 조사 환경의 설치 배포물. 프로젝트 고정 버전과 구분 |
+| Expo에서 도입한 모바일 템플릿 | [기존 Expo MIT 고지](mobile/LICENSE) | Copyright (c) 2015-present 650 Industries, Inc. (aka Expo) |
+| 이미지·폰트 제작용 Python 도구 | [Pillow·fontTools 고지](docs/licenses/python/README.md) | 생성 스크립트의 import와 조사 환경의 설치 배포물. 프로젝트 고정 버전과 구분 |
 
 의존성 목록의 라이선스 이름은 원문을 찾기 위한 색인이다. 원문에 있는 저작권, 예외, NOTICE, 다중 라이선스 조건을 함께 읽어야 한다. 개발·테스트 도구까지 목록에 포함된 경우 실제 앱에 전부 번들된다는 뜻은 아니다. 반대로 npm 목록만으로 Electron/Chromium 및 Android 네이티브 바이너리의 모든 구성 요소를 설명할 수는 없다.
 
@@ -33,7 +33,7 @@ PostgreSQL·Redis 서버와 Docker 베이스 이미지, JDK·Android SDK 등 실
 | **PolyForm Noncommercial 1.0.0** | 허용된 비상업 목적의 학습·수정·재배포 허용 | 원문이 허용하는 목적 이외의 상업 이용에는 별도 허락 필요 | 상업적 복제뿐 아니라 회사의 업무용 코드 재사용도 제한할 수 있다. 비상업적 공개 파생본 자체를 막는 조건은 아니다 |
 | **PolyForm Shield 1.0.0** | 경쟁 제품 제공에 해당하지 않는 이용·수정·공유 허용 | 소프트웨어 또는 이를 이용한 권리자·관계사의 제품과 경쟁하는 제품·서비스 제공 제한 | 경쟁하지 않는 상업적 이용을 허용하지만, 무료로 제공하는 경쟁 서비스까지 제한한다 |
 
-근거: [Noncommercial 공식 원문](https://github.com/polyformproject/polyform-licenses/blob/1.0.0/PolyForm-Noncommercial-1.0.0.md), [Shield 공식 원문](https://github.com/polyformproject/polyform-licenses/blob/1.0.0/PolyForm-Shield-1.0.0.md). [비교용으로 보존한 Noncommercial 원문](licenses/proposals/PolyForm-Noncommercial-1.0.0.md)은 채택 선언이 아니다.
+근거: [Noncommercial 공식 원문](https://github.com/polyformproject/polyform-licenses/blob/1.0.0/PolyForm-Noncommercial-1.0.0.md), [Shield 공식 원문](https://github.com/polyformproject/polyform-licenses/blob/1.0.0/PolyForm-Shield-1.0.0.md). [비교용으로 보존한 Noncommercial 원문](docs/licenses/proposals/PolyForm-Noncommercial-1.0.0.md)은 채택 선언이 아니다.
 
 학습·개인 실험 중심으로 넓게 공개하고 상업적 재사용을 별도 협의하려면 **Noncommercial**이 유력하다. 상업적 복제 서비스만 막고 일반 기업의 비경쟁 재사용은 허용하려면 **Shield**가 더 가깝다. 두 후보의 제한은 동일하지 않으므로 이 차이를 정한 뒤 원문을 선택한다. Noncommercial은 교육·연구·자선 등 원문에 열거된 기관의 사용도 허용하며, 그 예외를 요약에서 지우지 않는다.
 

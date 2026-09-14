@@ -247,6 +247,9 @@ dumpit/
 │  ├─ modules/dumpit-widget/      Android 홈 화면 위젯
 │  └─ plugins/                   Expo 네이티브 설정 플러그인
 ├─ docs/image/                   README 화면 캡처
+├─ docs/licenses/                제3자 의존성 목록과 라이선스 원문
+├─ LICENSING.md                  라이선스 안내와 자체 정책 검토
+├─ ATTRIBUTIONS.md               이미지·폰트 출처와 개작 고지
 ├─ .github/workflows/            CI, 백엔드 배포, 데스크톱 릴리즈
 └─ docker-compose.yml           백엔드·Redis 배포 구성
 ```
@@ -261,7 +264,7 @@ GitHub의 웹·백엔드 워크플로는 `desktop/**`, `mobile/**`, `.github/wor
 
 ## 라이선스와 크레딧
 
-사용한 오픈소스의 버전·라이선스와 원문 고지는 [라이선스 안내](./docs/LICENSING.md), 폰트·픽셀 아트·아이콘의 출처와 변경 내역은 [에셋 출처 문서](./docs/ATTRIBUTIONS.md)에서 확인할 수 있습니다.
+사용한 오픈소스의 버전·라이선스와 원문 고지는 [라이선스 안내](./LICENSING.md), 폰트·픽셀 아트·아이콘의 출처와 변경 내역은 [에셋 출처 문서](./ATTRIBUTIONS.md)에서 확인할 수 있습니다.
 
 DumpIt 자체 코드의 라이선스는 학습·참고 공개와 상업적 복제 제한 방향으로 검토 중이며 아직 확정하지 않았습니다. 제3자 자료에는 각각의 원래 라이선스가 적용됩니다.
 

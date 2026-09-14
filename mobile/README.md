@@ -96,7 +96,7 @@ Expo 관련 API나 설정을 확인해야 한다면 이 프로젝트의 기준 �
 
 ## 라이선스
 
-React Native·Expo 및 네이티브 의존성은 [라이선스 안내](../docs/LICENSING.md),
-폰트·이미지는 [에셋 출처 문서](../docs/ATTRIBUTIONS.md)를 확인합니다.
+React Native·Expo 및 네이티브 의존성은 [라이선스 안내](../LICENSING.md),
+폰트·이미지는 [에셋 출처 문서](../ATTRIBUTIONS.md)를 확인합니다.
 [LICENSE](LICENSE)는 Expo 템플릿의 MIT 고지이며 그대로 보존합니다.
 DumpIt 자체 코드의 새 라이선스는 아직 검토 중입니다.
