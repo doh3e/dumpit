@@ -11,7 +11,7 @@ import org.junit.Test
 
 class WidgetFrameLayoutTest {
     @Test
-    fun `패턴은 24dp 외곽에 남고 정보 표면은 12dp 안전 영역 안에 놓인다`() {
+    fun `패턴 띠 8dp와 카드 내부 12dp를 분리한다`() {
         val actual = retroFrameLayoutModifiers(
             modifier = GlanceModifier,
             background = Color(0xFF1B2617),
@@ -30,12 +30,12 @@ class WidgetFrameLayoutTest {
             cornerValues(requireNotNull(actual.pattern)),
         )
         assertEquals(
-            paddingElements(GlanceModifier.padding(12.dp)),
+            paddingElements(GlanceModifier.padding(8.dp)),
             paddingElements(actual.contentWrapper),
         )
-        assertEquals(emptyList<PaddingModifier>(), paddingElements(requireNotNull(actual.contentSurface)))
+        assertEquals(paddingElements(GlanceModifier.padding(12.dp)), paddingElements(requireNotNull(actual.contentSurface)))
         assertEquals(
-            listOf(12f),
+            listOf(16f),
             cornerValues(requireNotNull(actual.contentSurface)),
         )
     }
@@ -54,18 +54,18 @@ class WidgetFrameLayoutTest {
 
         assertNull(actual.pattern)
         assertEquals(
-            paddingElements(GlanceModifier.padding(12.dp)),
+            paddingElements(GlanceModifier.padding(8.dp)),
             paddingElements(actual.contentWrapper),
         )
-        assertEquals(emptyList<PaddingModifier>(), paddingElements(requireNotNull(actual.contentSurface)))
+        assertEquals(paddingElements(GlanceModifier.padding(12.dp)), paddingElements(requireNotNull(actual.contentSurface)))
         assertEquals(
-            listOf(12f),
+            listOf(16f),
             cornerValues(requireNotNull(actual.contentSurface)),
         )
     }
 
     @Test
-    fun `솔리드 override도 같은 12dp 안전 여백을 사용한다`() {
+    fun `솔리드 override도 총 20dp 콘텐츠 여백을 사용한다`() {
         val actual = retroFrameLayoutModifiers(
             modifier = GlanceModifier,
             background = Color(0xFFEF685A),
@@ -80,30 +80,19 @@ class WidgetFrameLayoutTest {
         assertEquals(listOf(24f), cornerValues(actual.frame))
         assertNull(actual.pattern)
         assertEquals(
-            paddingElements(GlanceModifier.padding(12.dp)),
+            paddingElements(GlanceModifier.padding(20.dp)),
             paddingElements(actual.contentWrapper),
         )
         assertNull(actual.contentSurface)
     }
 
     @Test
-    fun `compact 6dp inset은 24dp 외곽 안에 98dp 고정 배치를 만든다`() {
+    fun `시스템 반경이 작은 구형 호스트에서도 안쪽 반경은 음수가 아니다`() {
         val actual = retroFrameLayoutModifiers(
-            modifier = GlanceModifier,
-            background = Color(0xFF1F1B2E),
-            card = Color(0xFF2B2442),
-            useCardSurface = true,
-            showPattern = true,
-            contentPadding = 6.dp,
-            outerRadius = 24.dp,
+            GlanceModifier, Color.Black, Color.White, true, false, 12.dp, 6.dp,
         )
-
-        assertEquals(
-            paddingElements(GlanceModifier.padding(6.dp)),
-            paddingElements(actual.contentWrapper),
-        )
-        assertEquals(listOf(18f), cornerValues(requireNotNull(actual.contentSurface)))
-        assertEquals(98.dp, widgetContentSize(110.dp, 6.dp))
+        assertEquals(listOf(0f), cornerValues(requireNotNull(actual.contentSurface)))
+        assertEquals(20.dp, WIDGET_CONTENT_INSET)
     }
 
     private fun elements(modifier: GlanceModifier): List<GlanceModifier.Element> =

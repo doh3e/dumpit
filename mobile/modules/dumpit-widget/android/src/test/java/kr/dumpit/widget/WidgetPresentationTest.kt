@@ -7,6 +7,31 @@ import org.junit.Test
 
 class WidgetPresentationTest {
     @Test
+    fun `링 타이머 크기는 짧은 시간에도 20sp를 넘지 않는다`() {
+        assertEquals(20f, fitRingTimerTextSize(72f) { it * 2f }, 0f)
+    }
+
+    @Test
+    fun `120분 일시정지와 시간 단위 실행 표시도 측정된 내부 폭에 맞춘다`() {
+        listOf("25:00", "120:00", "2:00:00").forEach { time ->
+            listOf(1f, 1.5f).forEach { fontScale ->
+                val measure = { sizeSp: Float -> time.length * sizeSp * 0.6f * fontScale }
+                val size = fitRingTimerTextSize(72f, measure)
+                assertTrue("$time at $fontScale", measure(size) <= 72f)
+                assertTrue(size > 0f && size <= 20f)
+            }
+        }
+    }
+
+    @Test
+    fun `비선형 글자 확대에서도 후보 크기를 다시 측정한다`() {
+        val measure = { sizeSp: Float -> 7f * 0.6f * (if (sizeSp < 16f) sizeSp * 1.5f else sizeSp + 8f) }
+        val size = fitRingTimerTextSize(72f, measure)
+        assertTrue(measure(size) <= 72f)
+        assertTrue(measure(size + 0.01f) > 72f)
+    }
+
+    @Test
     fun `집중 라벨은 첫 회차와 서로 다른 후속 회차를 그대로 표시한다`() {
         listOf(1, 2, 3, 12).forEach { index ->
             assertEquals(
