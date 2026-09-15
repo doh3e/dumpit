@@ -79,7 +79,7 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
         style={({ pressed }) => [
           styles.tab,
           styles.addTab,
-          { backgroundColor: pressed ? colors.card : colors.chip, borderColor: colors.accent2Text },
+          { backgroundColor: pressed ? colors.card : colors.chip },
         ]}
       >
         <View style={styles.addGlyph} accessible={false}>
@@ -95,10 +95,10 @@ export function RetroTabBar({ state, navigation, onFabPress, fabOpen }: Props) {
 }
 
 const styles = StyleSheet.create({
-  bar: { flexDirection: 'row', borderTopWidth: 1, paddingTop: 8, paddingHorizontal: 4 },
-  tab: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 4, minHeight: 48 },
+  bar: { flexDirection: 'row', borderTopWidth: 1, paddingHorizontal: 4 },
+  tab: { flex: 1, alignItems: 'center', gap: 2, paddingTop: 12, paddingBottom: 4, minHeight: 56 },
   label: { fontSize: 10 },
-  addTab: { borderWidth: 1, borderRadius: 8 },
+  addTab: { flexDirection: 'row', justifyContent: 'center', paddingTop: 0, paddingBottom: 0 },
   addGlyph: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
   addGlyphLine: { position: 'absolute', width: 14, height: 2 },
   addGlyphPlusFirst: { transform: [{ rotate: '0deg' }] },

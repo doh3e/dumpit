@@ -164,16 +164,29 @@ describe('하단 탐색', () => {
       (node) => node.type === View && StyleSheet.flatten(node.props.style)?.width === 14,
     );
     const routine = tree.root.find((node) => node.props.accessibilityRole === 'tab' && node.props.accessibilityLabel === '루틴');
+    const bar = tree.root.find(
+      (node) => node.type === View && StyleSheet.flatten(node.props.style)?.borderTopWidth === 1,
+    );
+    const barStyle = StyleSheet.flatten(bar.props.style);
+    const addStyle = StyleSheet.flatten(add.props.style({ pressed: false }));
+    const indexStyle = StyleSheet.flatten(index.props.style({ pressed: false }));
 
     expect(addLabel).toBeTruthy();
     expect(indexIcon.props.size).toBe(20);
     expect(addLines).toHaveLength(2);
     expect(StyleSheet.flatten(addLines[0].props.style).transform).toEqual([{ rotate: '0deg' }]);
     expect(StyleSheet.flatten(addLines[1].props.style).transform).toEqual([{ rotate: '90deg' }]);
-    expect(StyleSheet.flatten(add.props.style({ pressed: false })).minHeight)
-      .toBe(StyleSheet.flatten(index.props.style({ pressed: false })).minHeight);
-    expect(StyleSheet.flatten(add.props.style({ pressed: false })).paddingVertical)
-      .toBe(StyleSheet.flatten(index.props.style({ pressed: false })).paddingVertical);
+    expect(addStyle.minHeight).toBe(indexStyle.minHeight);
+    expect(barStyle.paddingTop ?? 0).toBe(0);
+    expect(indexStyle.paddingTop).toBe(12);
+    expect(addStyle).toMatchObject({
+      flexDirection: 'row',
+      justifyContent: 'center',
+      paddingTop: 0,
+      paddingBottom: 0,
+    });
+    expect(addStyle.borderWidth ?? 0).toBe(0);
+    expect(addStyle.borderRadius ?? 0).toBe(0);
     expect(add.props.accessibilityState).toEqual({ expanded: false });
     await act(async () => add.props.onPress());
     await act(async () => routine.props.onPress());
