@@ -56,11 +56,12 @@ class WidgetHeroWidthLayoutTest {
     }
 
     @Test
-    fun `compact running은 기존 일시정지와 세트 도트만 유지한다`() {
+    fun `compact running은 회차 라벨과 기존 일시정지 및 세트 도트를 유지한다`() {
         val running = pomodoroSource().section("private fun RunningContent", "private fun CompactPausedButtons")
 
         assertTrue(running.contains("PixelButton(\"w_t_pause\""))
         assertTrue(running.contains("SetDots(snapshot, now, theme, vertical = true)"))
+        assertTrue(running.contains("PhaseLabel(phase, theme,"))
         assertFalse(running.contains("CompactPomodoroButtons"))
         assertFalse(running.contains("CommandParam to \"reset\""))
     }

@@ -3,6 +3,7 @@ package kr.dumpit.widget
 import android.content.Context
 import android.content.res.Configuration
 import android.os.SystemClock
+import android.util.TypedValue
 import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.toArgb
@@ -191,13 +192,13 @@ private fun RunningContent(snapshot: PomodoroSnapshot, theme: WTheme, now: Long)
                 .semantics { contentDescription = "뽀모도로 열기" }
                 .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    PixelText(
-                        if (phase.kind == "FOCUS") "w_t_mode_focus" else if (phase.long) "w_t_rest_long" else "w_t_rest",
-                        if (phase.kind == "FOCUS") theme.pomo.focus else theme.palette.fg,
-                        8.dp,
-                    )
-                    Box(modifier = GlanceModifier.height(40.dp), contentAlignment = Alignment.Center) {
-                        AndroidRemoteViews(remoteViews = chronometerRemoteViews(LocalContext.current, theme, phase, now))
+                    // 150% 숫자 폰트의 위아래 패딩도 포함해 상단 48dp를 나눈다.
+                    Box(modifier = GlanceModifier.height(16.dp), contentAlignment = Alignment.Center) {
+                        PhaseLabel(phase, theme, indexSp = 8.sp, textDp = 8.dp)
+                    }
+                    Box(modifier = GlanceModifier.height(32.dp), contentAlignment = Alignment.Center) {
+                        AndroidRemoteViews(remoteViews = chronometerRemoteViews(LocalContext.current, theme, phase, now,
+                            textSizeSp = 17f))
                     }
                 }
             }
@@ -283,6 +284,12 @@ private fun TomatoFlipper(size: Dp) {
     }
 }
 
+internal data class PomodoroPhaseLabel(val index: Int?, val textRes: String)
+
+internal fun pomodoroPhaseLabel(phase: PomodoroPhase): PomodoroPhaseLabel =
+    if (phase.kind == "FOCUS") PomodoroPhaseLabel(phase.index, "w_t_nth_focus")
+    else PomodoroPhaseLabel(null, if (phase.long) "w_t_rest_long" else "w_t_rest")
+
 /**
  * 페이즈 라벨(FOCUS면 "N번째 집중", REST/REST_LONG이면 해당 문구) — RunningContent(컴팩트)와
  * SessionRing(확장형) 공용. 크기만 파라미터로 갈라 두 문맥에 맞춘다.
@@ -291,16 +298,17 @@ private fun TomatoFlipper(size: Dp) {
  */
 @Composable
 private fun PhaseLabel(phase: PomodoroPhase, theme: WTheme, indexSp: TextUnit = 14.sp, textDp: Dp = 13.dp) {
-    if (phase.kind == "FOCUS") {
+    val label = pomodoroPhaseLabel(phase)
+    if (label.index != null) {
         val focusText = readableWidgetText(theme.pomo.focus, theme.pomo.soft)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("${phase.index}", style = TextStyle(
+            Text("${label.index}", style = TextStyle(
                 fontWeight = FontWeight.Bold, fontSize = indexSp, color = ColorProvider(focusText)))
             Spacer(GlanceModifier.width(2.dp))
-            PixelText("w_t_nth_focus", focusText, textDp)
+            PixelText(label.textRes, focusText, textDp)
         }
     } else {
-        PixelText(if (phase.long) "w_t_rest_long" else "w_t_rest", theme.palette.fg, textDp)
+        PixelText(label.textRes, theme.palette.fg, textDp)
     }
 }
 
@@ -309,12 +317,15 @@ private fun PhaseLabel(phase: PomodoroPhase, theme: WTheme, indexSp: TextUnit = 
  * 거친다. widget_chronometer.xml은 textColor가 라이트 fg로 고정돼 있어(다크·스킨 배경에서
  * 안 읽힘) setTextColor로 런타임에 덮어쓴다. XML 자체는 건드리지 않는다.
  */
-private fun chronometerRemoteViews(context: Context, theme: WTheme, phase: PomodoroPhase, now: Long): RemoteViews =
+private fun chronometerRemoteViews(
+    context: Context, theme: WTheme, phase: PomodoroPhase, now: Long, textSizeSp: Float = 26f,
+): RemoteViews =
     RemoteViews(context.packageName, R.layout.widget_chronometer).apply {
         setChronometerCountDown(R.id.widget_chronometer, true)
         setChronometer(R.id.widget_chronometer,
             SystemClock.elapsedRealtime() + (phase.endsAt - now), null, true)
         setTextColor(R.id.widget_chronometer, theme.palette.fg.toArgb())
+        setTextViewTextSize(R.id.widget_chronometer, TypedValue.COMPLEX_UNIT_SP, textSizeSp)
     }
 
 /** dp → px, WidgetRing 비트맵 생성 전용(Compose dp 단위계 밖에서 Bitmap 픽셀 크기가 필요). */
@@ -502,7 +513,7 @@ private fun SessionRing(
 @Composable
 private fun TaskChip(taskTitle: String, theme: WTheme, clickable: Boolean = true, compact: Boolean = false) {
     val modifier = GlanceModifier.fillMaxWidth().background(theme.palette.card).cornerRadius(8.dp)
-        .padding(horizontal = if (compact) 4.dp else 8.dp, vertical = if (compact) 2.dp else 6.dp).let {
+        .padding(horizontal = if (compact) 4.dp else 8.dp, vertical = 2.dp).let {
             if (clickable) it.semantics { contentDescription = "뽀모도로 열기" }
                 .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO))) else it
         }
