@@ -77,7 +77,10 @@ class PomodoroWidget : GlanceAppWidget() {
             // 앱 컨텍스트를 상속하므로 런처 프로세스가 아니라 이 앱 리소스 설정을 본다).
             val systemDark = (LocalContext.current.resources.configuration.uiMode and
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            val theme = WidgetTheme.resolve(state[WidgetStore.THEME_STATE_KEY], systemDark)
+            val theme = WidgetTheme.resolve(
+                themeJsonForRender(state[WidgetStore.THEME_STATE_KEY], themeJson),
+                systemDark,
+            )
             PomodoroContent(snapshot, theme, System.currentTimeMillis())
         }
     }

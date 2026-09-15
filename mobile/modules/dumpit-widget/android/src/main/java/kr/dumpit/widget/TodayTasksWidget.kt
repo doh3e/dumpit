@@ -84,8 +84,8 @@ class TodayTasksWidget : GlanceAppWidget() {
         }
         // 세션 시작 시 SharedPreferences의 최신 스냅샷을 Glance 상태로 동기화해둔다 — 앱 업데이트
         // 직후처럼 이 GlanceId에 한 번도 상태가 쓰인 적 없을 수 있고(신선도 게이트를 안 탄 경우도
-        // 포함), 매 provideGlance마다 맞춰야 한다. 자기 자신 update() 호출은 불필요하다 — 세션
-        // 시작 직전이라 상태만 써두면 곧이어 실행되는 provideContent가 currentState()로 즉시 읽는다.
+        // 포함), 매 provideGlance마다 맞춰야 한다. Glance 1.1.1 세션은 이 쓰기보다 먼저 상태를
+        // 캡처하므로 첫 composition은 아래 themeJson 보완값을 사용하고, 이후 update()는 currentState를 쓴다.
         // 테마·뽀모도로도 같은 이유로 함께 동기화한다(테마는 배경/행성, 뽀모도로는 "집중 타임" 표시).
         val latest = WidgetStore.read(context, WidgetStore.KEY_TODAY)
         val themeJson = WidgetStore.read(context, WidgetStore.KEY_THEME)
@@ -105,7 +105,10 @@ class TodayTasksWidget : GlanceAppWidget() {
             // 설정을 본다(위젯 호스트는 앱 컨텍스트를 상속한다).
             val systemDark = (LocalContext.current.resources.configuration.uiMode and
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            val theme = WidgetTheme.resolve(state[WidgetStore.THEME_STATE_KEY], systemDark)
+            val theme = WidgetTheme.resolve(
+                themeJsonForRender(state[WidgetStore.THEME_STATE_KEY], themeJson),
+                systemDark,
+            )
             // "집중 타임"은 진행 중(일시정지·종료 아님)인 FOCUS 페이즈일 때만 — 휴식 중이나
             // 세션 종료 후에는 평소 히어로 화면으로 돌아간다.
             val pomodoro = PomodoroSnapshot.from(state[WidgetStore.POMODORO_STATE_KEY])
