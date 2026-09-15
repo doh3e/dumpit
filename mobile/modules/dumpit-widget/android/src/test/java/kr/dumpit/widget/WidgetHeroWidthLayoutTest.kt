@@ -36,7 +36,9 @@ class WidgetHeroWidthLayoutTest {
         assertEquals(60.dp, buttons.primary)
         assertEquals(48.dp, buttons.secondary)
         assertTrue(buttons.primary >= pixelButtonLabelWidth("w_t_pause"))
-        assertTrue(buttons.secondary >= pixelButtonLabelWidth("w_t_reset"))
+        val secondaryInnerWidth = buttons.secondary - 2.dp - 2.dp
+        assertEquals(44.dp, secondaryInnerWidth)
+        assertTrue(secondaryInnerWidth >= pixelButtonLabelWidth("w_t_reset"))
     }
 
     @Test

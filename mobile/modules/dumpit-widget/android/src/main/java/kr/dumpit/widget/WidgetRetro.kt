@@ -191,6 +191,6 @@ fun PixelButton(
 internal fun pixelButtonLabelWidth(labelRes: String): Dp = when (labelRes) {
     "w_t_complete", "w_t_pause" -> 60.dp
     "w_t_resume" -> 31.dp
-    "w_t_reset" -> 46.dp
+    "w_t_reset" -> 44.dp
     else -> 60.dp
 }
