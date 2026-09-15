@@ -1,5 +1,6 @@
 package kr.dumpit.widget
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -9,7 +10,6 @@ import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
-import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.cornerRadius
@@ -18,6 +18,32 @@ import androidx.glance.layout.*
 import androidx.glance.semantics.contentDescription
 import androidx.glance.semantics.semantics
 import androidx.glance.unit.ColorProvider
+
+internal val WIDGET_SAFE_PADDING = 12.dp
+private val LEGACY_WIDGET_RADIUS = 16.dp
+
+internal fun widgetSafeContentWidth(widgetWidth: Dp): Dp =
+    (widgetWidth - WIDGET_SAFE_PADDING - WIDGET_SAFE_PADDING).coerceAtLeast(0.dp)
+
+internal enum class CompactButtonArrangement { Inline, Stacked }
+
+internal fun compactButtonArrangement(widgetWidth: Dp): CompactButtonArrangement =
+    if (widgetSafeContentWidth(widgetWidth) >= 100.dp) {
+        CompactButtonArrangement.Inline
+    } else {
+        CompactButtonArrangement.Stacked
+    }
+
+internal fun systemWidgetRadius(context: Context): Dp {
+    // Android 12 이전에는 시스템 위젯 반경 리소스가 없으므로 이름으로 조회해 구버전 호스트를 보호한다.
+    val radiusId = context.resources.getIdentifier(
+        "system_app_widget_background_radius",
+        "dimen",
+        "android",
+    )
+    if (radiusId == 0) return LEGACY_WIDGET_RADIUS
+    return (context.resources.getDimension(radiusId) / context.resources.displayMetrics.density).dp
+}
 
 @Composable
 fun drawableId(name: String): Int {
@@ -29,13 +55,15 @@ fun drawableId(name: String): Int {
 @Composable
 fun RetroFrame(theme: WTheme, modifier: GlanceModifier = GlanceModifier, bgOverride: Color? = null, content: @Composable () -> Unit) {
     val bgColor = bgOverride ?: theme.palette.bg
+    val outerRadius = systemWidgetRadius(LocalContext.current)
     val layoutModifiers = retroFrameLayoutModifiers(
         modifier = modifier,
         background = bgColor,
         card = theme.palette.card,
         useCardSurface = bgOverride == null,
         showPattern = bgOverride == null && theme.patternRes != null,
-        contentPadding = if (bgOverride == null || LocalSize.current.width <= 110.dp) 2.dp else 4.dp,
+        contentPadding = WIDGET_SAFE_PADDING,
+        outerRadius = outerRadius,
     )
     Box(modifier = layoutModifiers.frame) {
         layoutModifiers.pattern?.let { patternModifier ->
@@ -67,12 +95,14 @@ internal fun retroFrameLayoutModifiers(
     useCardSurface: Boolean,
     showPattern: Boolean,
     contentPadding: Dp,
+    outerRadius: Dp,
 ) = RetroFrameLayoutModifiers(
-    frame = modifier.fillMaxSize().background(background).cornerRadius(12.dp),
-    pattern = if (showPattern) GlanceModifier.fillMaxSize().cornerRadius(12.dp) else null,
+    frame = modifier.fillMaxSize().background(background).cornerRadius(outerRadius),
+    pattern = if (showPattern) GlanceModifier.fillMaxSize().cornerRadius(outerRadius) else null,
     contentWrapper = GlanceModifier.fillMaxSize().padding(contentPadding),
     contentSurface = if (useCardSurface) {
-        GlanceModifier.fillMaxSize().background(card).cornerRadius(12.dp).padding(2.dp)
+        GlanceModifier.fillMaxSize().background(card)
+            .cornerRadius((outerRadius - contentPadding).coerceAtLeast(0.dp))
     } else {
         null
     },
