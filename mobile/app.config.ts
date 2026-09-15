@@ -4,7 +4,7 @@ import type { ExpoConfig } from 'expo/config';
 const config: ExpoConfig = {
   name: '덤핏',
   slug: 'dumpit-mobile',
-  version: '1.2.0',
+  version: '1.2.1',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   scheme: 'dumpit',
