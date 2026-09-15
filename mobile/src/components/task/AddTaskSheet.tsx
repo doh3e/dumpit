@@ -56,6 +56,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
   const [customDeadline, setCustomDeadline] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [startTime, setStartTime] = useState<string | null>(null);
+  const [useEstimate, setUseEstimate] = useState(false);
   const [estimate, setEstimate] = useState('');
   const [category, setCategory] = useState<Category | null>(null);
   const [saving, setSaving] = useState(false);
@@ -81,7 +82,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
 
   const reset = useCallback(() => {
     setTitle(''); setDescription(''); setDeadlineMode('AI'); setCustomDeadline(null);
-    setMoreOpen(false); setStartTime(null); setEstimate(''); setCategory(null);
+    setMoreOpen(false); setStartTime(null); setUseEstimate(false); setEstimate(''); setCategory(null);
     setFormKey((k) => k + 1);   // uncontrolled 입력 리마운트
   }, []);
   const handleDismiss = useCallback(() => {
@@ -100,7 +101,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
         description: description.trim() || null,
         deadline, noDeadline,
         startTime: startTime ?? null,
-        estimatedMinutes: estimate ? parseInt(estimate, 10) : null,
+        estimatedMinutes: useEstimate && estimate ? parseInt(estimate, 10) : null,
         category: category ?? null,   // null = 서버 AI 자동 분류
       });
       qc.invalidateQueries({ queryKey: keys.planning });
@@ -113,7 +114,7 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
     } finally {
       setSaving(false);
     }
-  }, [title, description, deadline, noDeadline, startTime, estimate, category, qc, toast, reset, ref]);
+  }, [title, description, deadline, noDeadline, startTime, useEstimate, estimate, category, qc, toast, reset, ref]);
 
   return (
     <BottomSheetModal
@@ -211,10 +212,15 @@ export const AddTaskSheet = forwardRef<BottomSheetModal>(function AddTaskSheet(_
             <View style={styles.optionRow}>
               <Chip
                 label="예상 시간(분)"
-                selected={estimate !== ''}
-                appearance="refined" insetTarget onPress={() => setEstimate(estimate === '' ? '30' : '')}
+                selected={useEstimate}
+                appearance="refined" insetTarget onPress={() => {
+                  const next = !useEstimate;
+                  setUseEstimate(next);
+                  if (next && !estimate) setEstimate('30');
+                  if (!next) setEstimate('');
+                }}
               />
-              {estimate !== '' && (
+              {useEstimate && (
                 <BottomSheetTextInput
                   value={estimate}
                   onChangeText={(v) => setEstimate(v.replace(/[^0-9]/g, ''))}

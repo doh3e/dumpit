@@ -73,6 +73,14 @@ fun readableWidgetBorder(border: Color, background: Color): Color = Color(
     ).toInt(),
 )
 
+/**
+ * Glance 1.1.1은 세션을 만들 때 DataStore 상태를 먼저 캡처한다. 따라서 provideGlance 안에서
+ * 저장소를 동기화해도 첫 composition의 currentState에는 그 값이 아직 없을 수 있다. 첫 렌더만
+ * 세션 시작 시 읽은 값을 보완값으로 쓰고, update()로 다시 읽은 상태는 항상 우선한다.
+ */
+internal fun themeJsonForRender(currentStateJson: String?, startupJson: String?): String? =
+    currentStateJson ?: startupJson
+
 object WidgetTheme {
     private fun c(hex: String) = Color(android.graphics.Color.parseColor(hex))
 

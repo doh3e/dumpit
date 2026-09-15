@@ -61,6 +61,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
   const [useStart, setUseStart] = useState(false);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [initialStartTime, setInitialStartTime] = useState<string>('');
+  const [useEstimate, setUseEstimate] = useState(false);
   const [estimate, setEstimate] = useState('');
   const [category, setCategory] = useState<Category>('OTHER');
   const [priorityScore, setPriorityScore] = useState(0.5);
@@ -88,6 +89,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
       setUseStart(!!start);
       setStartTime(start || null);
       setInitialStartTime(start);
+      setUseEstimate(target.estimatedMinutes != null);
       setEstimate(target.estimatedMinutes != null ? String(target.estimatedMinutes) : '');
       setCategory(target.category === 'ROUTINE' ? 'OTHER' : target.category);
       // 슬라이더는 편집 대상 값에서 시작 — 지정값 또는 AI 중요도 (실효값은 힌트 줄이 따로 표시)
@@ -167,7 +169,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
         title: title.trim(),
         description: description.trim() || null,
         deadline, noDeadline,
-        estimatedMinutes: estimate ? parseInt(estimate, 10) : null,
+        estimatedMinutes: useEstimate && estimate ? parseInt(estimate, 10) : null,
         ...buildPriorityPatch(priorityDirty, clearOverride, priorityScore),
         category,
         startTime: useStart ? (startTime || null) : null,
@@ -183,7 +185,7 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
     } finally {
       setSaving(false);
     }
-  }, [task, title, description, deadlineMode, customDeadline, estimate, priorityScore, priorityDirty, clearOverride, category, useStart, startTime, initialStartTime, qc, toast]);
+  }, [task, title, description, deadlineMode, customDeadline, useEstimate, estimate, priorityScore, priorityDirty, clearOverride, category, useStart, startTime, initialStartTime, qc, toast]);
 
   const confirmDelete = useCallback(() => {
     if (!task) return;
@@ -312,8 +314,13 @@ export const TaskDetailSheet = forwardRef<TaskDetailSheetHandle>(function TaskDe
           )}
 
           <View style={styles.optionRow}>
-            <Chip appearance="refined" label="예상(분)" selected={estimate !== ''} onPress={() => setEstimate(estimate === '' ? '30' : '')} />
-            {estimate !== '' && (
+            <Chip appearance="refined" label="예상(분)" selected={useEstimate} onPress={() => {
+              const next = !useEstimate;
+              setUseEstimate(next);
+              if (next && !estimate) setEstimate('30');
+              if (!next) setEstimate('');
+            }} />
+            {useEstimate && (
               <BottomSheetTextInput
                 value={estimate}
                 onChangeText={(v) => setEstimate(v.replace(/[^0-9]/g, ''))}

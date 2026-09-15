@@ -23,8 +23,6 @@ import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.lazy.LazyColumn
-import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
@@ -45,6 +43,23 @@ import kotlinx.coroutines.withContext
 const val DEEPLINK_HOME = "dumpit:///"
 const val DEEPLINK_POMODORO = "dumpit:///pomodoro"
 
+internal val HERO_MIN_SIZE = DpSize(250.dp, 170.dp)
+
+internal enum class HeroLayout { ResizeRequired, Wide, Tall }
+
+internal fun heroLayoutFor(size: DpSize): HeroLayout = when {
+    size.width < HERO_MIN_SIZE.width || size.height < HERO_MIN_SIZE.height -> HeroLayout.ResizeRequired
+    size.height >= 250.dp -> HeroLayout.Tall
+    else -> HeroLayout.Wide
+}
+
+internal fun heroQueueRows(size: DpSize): Int = when {
+    heroLayoutFor(size) == HeroLayout.ResizeRequired -> 0
+    size.height >= 310.dp -> 3
+    size.height >= 250.dp -> 2
+    else -> 1
+}
+
 // setPackage로 우리 앱에 고정한다 — dumpit 스킴은 검증되지 않은 커스텀 스킴이라, 암시적
 // 인텐트로 두면 같은 스킴을 선언한 다른 앱이 위젯 탭의 후보로 끼어들 수 있다.
 @Composable
@@ -60,19 +75,7 @@ class TodayTasksWidget : GlanceAppWidget() {
     // 등이 기록).
     override val stateDefinition: GlanceStateDefinition<Preferences> = PreferencesGlanceStateDefinition
 
-    companion object {
-        // 반응형 브레이크포인트 — 런처가 준 크기에 가장 가까운 값이 LocalSize로 들어온다.
-        // 주의: Samsung DIY 런처(hsResizeRatio=0.8)는 appWidgetSizes로 보고한 값의 80%로만
-        // 실제 렌더한다(실측: 4x2 보고 452×192 → 실제 ~352×150). 그래서 각 버킷의 콘텐츠는
-        // 실제 frame inset은 8dp이며, WIDE 정보는 고정 높이 예산이 아니라 LazyColumn overflow로 보존한다.
-        // 버킷별로 1/2/3으로 가른 이유다(WIDE에 2줄을 넣으면 실기기에서 둘째 줄이 반쯤 잘린다).
-        private val COMPACT = DpSize(150.dp, 110.dp) // 2x2 — 헤더·제목·완료 버튼만
-        private val WIDE = DpSize(250.dp, 110.dp)    // 4x2 — + 행성·진행률·큐 1줄
-        private val TALL = DpSize(250.dp, 220.dp)    // 4x3 — 큰 행성·제안 문구·큐 2줄
-        private val XTALL = DpSize(250.dp, 300.dp)   // 4x4+ — 큐 3줄
-    }
-
-    override val sizeMode: SizeMode = SizeMode.Responsive(setOf(COMPACT, WIDE, TALL, XTALL))
+    override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         // 세션 시작 시 1회: 주기 onUpdate(30분)·재부팅 등으로 렌더될 때 미러가 오래됐으면
@@ -84,8 +87,8 @@ class TodayTasksWidget : GlanceAppWidget() {
         }
         // 세션 시작 시 SharedPreferences의 최신 스냅샷을 Glance 상태로 동기화해둔다 — 앱 업데이트
         // 직후처럼 이 GlanceId에 한 번도 상태가 쓰인 적 없을 수 있고(신선도 게이트를 안 탄 경우도
-        // 포함), 매 provideGlance마다 맞춰야 한다. 자기 자신 update() 호출은 불필요하다 — 세션
-        // 시작 직전이라 상태만 써두면 곧이어 실행되는 provideContent가 currentState()로 즉시 읽는다.
+        // 포함), 매 provideGlance마다 맞춰야 한다. Glance 1.1.1 세션은 이 쓰기보다 먼저 상태를
+        // 캡처하므로 첫 composition은 아래 themeJson 보완값을 사용하고, 이후 update()는 currentState를 쓴다.
         // 테마·뽀모도로도 같은 이유로 함께 동기화한다(테마는 배경/행성, 뽀모도로는 "집중 타임" 표시).
         val latest = WidgetStore.read(context, WidgetStore.KEY_TODAY)
         val themeJson = WidgetStore.read(context, WidgetStore.KEY_THEME)
@@ -105,31 +108,27 @@ class TodayTasksWidget : GlanceAppWidget() {
             // 설정을 본다(위젯 호스트는 앱 컨텍스트를 상속한다).
             val systemDark = (LocalContext.current.resources.configuration.uiMode and
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            val theme = WidgetTheme.resolve(state[WidgetStore.THEME_STATE_KEY], systemDark)
+            val theme = WidgetTheme.resolve(
+                themeJsonForRender(state[WidgetStore.THEME_STATE_KEY], themeJson),
+                systemDark,
+            )
             // "집중 타임"은 진행 중(일시정지·종료 아님)인 FOCUS 페이즈일 때만 — 휴식 중이나
             // 세션 종료 후에는 평소 히어로 화면으로 돌아간다.
             val pomodoro = PomodoroSnapshot.from(state[WidgetStore.POMODORO_STATE_KEY])
             val focusTitle = pomodoro?.takeIf { it.pausedAt == null && !it.done }
                 ?.let { s -> s.currentPhase(System.currentTimeMillis())?.let { if (it.kind == "FOCUS") s.taskTitle else null } }
-            HeroContent(snapshot, theme, focusTitle, compact = LocalSize.current.width < 250.dp)
+            HeroContent(snapshot, theme, focusTitle, LocalSize.current)
         }
     }
 }
 
-/**
- * 히어로 카드 미러 — 헤더(고정 문구) + 본문 3상태(로그인 필요·집중 타임·다 비웠어요/지금 할 일/빈 시간)
- * + 우상단 행성·진행률 + 하단 큐. 고정 문구는 픽셀 이미지(PixelText), 사용자 데이터는 시스템 폰트.
- */
 @Composable
-private fun HeroContent(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?, compact: Boolean) {
+private fun HeroContent(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?, size: DpSize) {
     RetroFrame(theme) {
-        val snap = snapshot?.takeIf { it.loggedIn }
-        when {
-            compact -> HeroCompact(snap, theme, focusTitle)
-            LocalSize.current.height >= 220.dp -> HeroTall(
-                snap, theme, focusTitle, if (LocalSize.current.height >= 300.dp) 3 else 2,
-            )
-            else -> HeroWide(snap, theme, focusTitle)
+        if (heroLayoutFor(size) == HeroLayout.ResizeRequired) {
+            WidgetResizeNotice(theme, actionStartActivity(deepLinkIntent(DEEPLINK_HOME)))
+        } else {
+            HeroRows(snapshot?.takeIf { it.loggedIn }, theme, focusTitle, size)
         }
     }
 }
@@ -149,121 +148,32 @@ internal fun wideHeroPresentation(snapshot: HeroSnapshot?, focusTitle: String?):
 }
 
 @Composable
-private fun HeroCompact(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?) {
-    val p = theme.palette
-    if (snapshot != null && focusTitle == null && !snapshot.allDone && snapshot.hero == null) {
-        Row(modifier = GlanceModifier.fillMaxSize()) {
-            Box(
-                modifier = GlanceModifier.defaultWeight().fillMaxHeight()
-                    .semantics { contentDescription = "오늘 할 일 열기" }
-                    .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_HOME))),
-            ) { CompactSuggestion(snapshot, p) }
-            Spacer(GlanceModifier.width(4.dp))
-            Column(modifier = GlanceModifier.width(48.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                PlanetFlipper(theme, 32.dp)
-                Spacer(GlanceModifier.height(6.dp))
-                PixelIcon("w_i_refresh", p.sub, 16.dp, actionRunCallback<RefreshTodayAction>(), "오늘 할 일 새로고침")
-            }
-        }
-        return
-    }
-
-    Column(modifier = GlanceModifier.fillMaxSize()) {
-        val openPomo = focusTitle != null
-        Box(
-            modifier = GlanceModifier.fillMaxWidth().height(48.dp)
-                .semantics { contentDescription = if (openPomo) "뽀모도로 열기" else "오늘 할 일 열기" }
-                .clickable(actionStartActivity(deepLinkIntent(if (openPomo) DEEPLINK_POMODORO else DEEPLINK_HOME))),
-        ) {
-            Row(modifier = GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = GlanceModifier.defaultWeight()) {
-                    PixelText(if (openPomo) "w_t_focus_time" else "w_t_now", p.accent2, 13.dp, width = 60.dp)
-                    Spacer(GlanceModifier.height(2.dp))
-                    when {
-                        snapshot == null -> PixelText("w_t_login", p.sub, 14.dp)
-                        focusTitle != null -> Text("「$focusTitle」 집중 중", maxLines = 2,
-                            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)))
-                        snapshot.allDone -> PixelText("w_t_done_all", p.fg, 16.dp)
-                        else -> Text(snapshot.hero!!.title, maxLines = 1,
-                            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)))
-                    }
-                }
-                if (snapshot != null) PlanetFlipper(theme, 32.dp)
-            }
-        }
-        Spacer(GlanceModifier.height(6.dp))
-        Row(modifier = GlanceModifier.fillMaxWidth().height(48.dp)) {
-            PixelIcon("w_i_refresh", p.sub, 16.dp, actionRunCallback<RefreshTodayAction>(), "오늘 할 일 새로고침")
-            if (snapshot?.hero != null && focusTitle == null) {
-                Spacer(GlanceModifier.width(4.dp))
+private fun HeroRows(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?, size: DpSize) {
+    val queue = if (focusTitle == null && snapshot != null && !snapshot.allDone) {
+        snapshot.queue.take(heroQueueRows(size))
+    } else emptyList()
+    val showSuggestion = size.height >= 250.dp
+    Column(modifier = GlanceModifier.fillMaxWidth()) {
+        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            RefreshPlanet(theme, snapshot)
+            Spacer(GlanceModifier.width(8.dp))
+            if (snapshot?.hero != null && focusTitle == null && !snapshot.allDone) {
+                HeroDetails(snapshot.hero, snapshot.suggestionMessage, theme, showSuggestion, GlanceModifier.defaultWeight())
+                Spacer(GlanceModifier.width(8.dp))
                 PixelButton("w_t_complete", theme, true,
                     actionRunCallback<ToggleTaskAction>(actionParametersOf(ToggleTaskAction.TaskIdParam to snapshot.hero.taskId)),
-                    "${snapshot.hero.title} 완료", modifier = GlanceModifier.defaultWeight())
+                    "${snapshot.hero.title} 완료")
+            } else {
+                WideSingleInfo(snapshot, theme, focusTitle, showSuggestion, GlanceModifier.defaultWeight())
             }
         }
-    }
-}
-
-@Composable
-private fun CompactSuggestion(snapshot: HeroSnapshot, p: WPalette) {
-    Column(modifier = GlanceModifier.fillMaxSize()) {
-        PixelText("w_t_now", p.accent2, 13.dp, width = 60.dp)
-        Spacer(GlanceModifier.height(2.dp))
-        Text(snapshot.suggestionTitle?.takeIf { it.isNotBlank() } ?: "지금은 비어 있는 시간이에요.", maxLines = 2,
-            style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)))
-        Spacer(GlanceModifier.height(2.dp))
-        Text(snapshot.suggestionMessage?.takeIf { it.isNotBlank() } ?: "가벼운 일부터 하나 시작해볼까요?", maxLines = 2,
-            style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.sub)))
-    }
-}
-
-@Composable
-private fun HeroWide(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?) {
-    val p = theme.palette
-    val queue = if (focusTitle == null && snapshot != null && !snapshot.allDone) snapshot.queue.take(1) else emptyList()
-    LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
-        when {
-            snapshot == null || snapshot.allDone || focusTitle != null -> item(itemId = "state".hashCode().toLong()) {
-                Row(modifier = GlanceModifier.fillMaxWidth()) {
-                    RefreshPlanet(theme, snapshot, 64.dp,
-                        refreshable = snapshot?.hero == null || focusTitle != null, fillHeight = false)
-                    Spacer(GlanceModifier.width(4.dp))
-                    WideSingleInfo(snapshot, theme, focusTitle, GlanceModifier.defaultWeight())
-                }
-            }
-            snapshot.hero != null -> {
-                item(itemId = "hero:${snapshot.hero.taskId}".hashCode().toLong()) {
-                    Row(modifier = GlanceModifier.fillMaxWidth()) {
-                        RefreshPlanet(theme, snapshot, 64.dp, fillHeight = false)
-                        Spacer(GlanceModifier.width(4.dp))
-                        HeroDetails(snapshot.hero, snapshot.suggestionMessage, theme, false, GlanceModifier.defaultWeight())
-                        Spacer(GlanceModifier.width(4.dp))
-                        Column(modifier = GlanceModifier.width(68.dp)) {
-                            PixelButton("w_t_complete", theme, true,
-                                actionRunCallback<ToggleTaskAction>(actionParametersOf(ToggleTaskAction.TaskIdParam to snapshot.hero.taskId)),
-                                "${snapshot.hero.title} 완료", modifier = GlanceModifier.fillMaxWidth())
-                        }
-                    }
-                }
-                items(queue, itemId = { item -> "queue:${item.taskId}".hashCode().toLong() }) { item ->
-                    Row(modifier = GlanceModifier.fillMaxWidth().height(48.dp)) {
-                        QueueInfo(item, theme, true, GlanceModifier.defaultWeight().fillMaxHeight())
-                        Spacer(GlanceModifier.width(4.dp))
-                        QueueToggle(item, theme)
-                    }
-                }
-            }
-            else -> {
-                item(itemId = "suggestion".hashCode().toLong()) {
-                    Row(modifier = GlanceModifier.fillMaxWidth()) {
-                        RefreshPlanet(theme, snapshot, 64.dp, fillHeight = false)
-                        Spacer(GlanceModifier.width(4.dp))
-                        WideSuggestion(snapshot, p, GlanceModifier.defaultWeight())
-                    }
-                }
-                items(queue, itemId = { item -> "queue:${item.taskId}".hashCode().toLong() }) { item ->
-                    Row(modifier = GlanceModifier.fillMaxWidth().height(48.dp)) {
-                        QueueInfo(item, theme, true, GlanceModifier.defaultWeight().fillMaxHeight())
+        if (queue.isNotEmpty()) {
+            Spacer(GlanceModifier.height(12.dp))
+            Column(modifier = GlanceModifier.fillMaxWidth()) {
+                queue.forEachIndexed { index, item ->
+                    Row(modifier = GlanceModifier.fillMaxWidth().height(WIDGET_TOUCH_SIZE),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        QueueInfo(item, theme, index == 0, GlanceModifier.defaultWeight().fillMaxHeight())
                         Spacer(GlanceModifier.width(4.dp))
                         QueueToggle(item, theme)
                     }
@@ -274,39 +184,32 @@ private fun HeroWide(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?
 }
 
 @Composable
-private fun RefreshPlanet(
-    theme: WTheme,
-    snapshot: HeroSnapshot?,
-    size: Dp,
-    refreshable: Boolean = true,
-    fillHeight: Boolean = true,
-) {
-    val p = theme.palette
-    val modifier = GlanceModifier.width(size).let { if (fillHeight) it.fillMaxHeight() else it }.let {
-        if (refreshable) it.semantics { contentDescription = "오늘 할 일 새로고침" }
-            .clickable(actionRunCallback<RefreshTodayAction>()) else it
-    }
-    Column(
-        modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        PixelIcon("w_i_refresh", p.sub, 16.dp)
-        PlanetFlipper(theme, size)
+private fun RefreshPlanet(theme: WTheme, snapshot: HeroSnapshot?) {
+    Column(modifier = GlanceModifier.width(WIDGET_TOUCH_SIZE), horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = GlanceModifier.size(WIDGET_TOUCH_SIZE)
+                .semantics { contentDescription = "오늘 할 일 새로고침" }
+                .clickable(actionRunCallback<RefreshTodayAction>()),
+            contentAlignment = Alignment.Center,
+        ) {
+            PlanetFlipper(theme, 36.dp)
+        }
         if (snapshot != null) Text("${snapshot.todayDone}/${snapshot.todayTotal}", maxLines = 1,
-            style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.fg)))
+            style = TextStyle(fontSize = 12.sp, color = ColorProvider(theme.palette.fg)))
     }
 }
 
 @Composable
-private fun WideSingleInfo(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?, modifier: GlanceModifier) {
+private fun WideSingleInfo(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?, showSuggestion: Boolean, modifier: GlanceModifier) {
     val p = theme.palette
     val presentation = wideHeroPresentation(snapshot, focusTitle)
     if (presentation is WideHeroPresentation.Suggestion) {
-        WideSuggestion(presentation.snapshot, p, modifier)
+        WideSuggestion(presentation.snapshot, p, showSuggestion, modifier)
         return
     }
     Box(
         modifier = modifier
-            .semantics { contentDescription = if (presentation is WideHeroPresentation.Focus) "뽀모도로 열기" else "오늘 할 일 열기" }
+            .semantics { contentDescription = if (presentation is WideHeroPresentation.Focus) "${presentation.title} 집중 중. 뽀모도로 열기" else "오늘 할 일 열기" }
             .clickable(actionStartActivity(deepLinkIntent(if (presentation is WideHeroPresentation.Focus) DEEPLINK_POMODORO else DEEPLINK_HOME))),
     ) {
         Spacer(GlanceModifier.fillMaxWidth().height(48.dp))
@@ -315,7 +218,7 @@ private fun WideSingleInfo(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: S
             Spacer(GlanceModifier.height(4.dp))
             when (presentation) {
                 WideHeroPresentation.Login -> PixelText("w_t_login", p.sub, 14.dp)
-                is WideHeroPresentation.Focus -> Text("「${presentation.title}」 집중 중", maxLines = 3,
+                is WideHeroPresentation.Focus -> Text("「${presentation.title}」 집중 중", maxLines = 1,
                     style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)))
                 WideHeroPresentation.AllDone -> PixelText("w_t_done_all", p.fg, 16.dp)
                 is WideHeroPresentation.Suggestion -> Unit
@@ -325,90 +228,38 @@ private fun WideSingleInfo(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: S
 }
 
 @Composable
-private fun HeroTall(snapshot: HeroSnapshot?, theme: WTheme, focusTitle: String?, queueRows: Int) {
-    val p = theme.palette
-    val queue = if (focusTitle == null && snapshot != null && !snapshot.allDone) snapshot.queue.take(queueRows) else emptyList()
-    when {
-        snapshot?.hero != null && focusTitle == null -> LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
-            item(itemId = "hero:${snapshot.hero.taskId}".hashCode().toLong()) {
-                Row(modifier = GlanceModifier.fillMaxWidth()) {
-                    RefreshPlanet(theme, snapshot, 64.dp, refreshable = false, fillHeight = false)
-                    Spacer(GlanceModifier.width(2.dp))
-                    HeroDetails(snapshot.hero, snapshot.suggestionMessage, theme, true, GlanceModifier.defaultWeight())
-                    Spacer(GlanceModifier.width(4.dp))
-                    Column(modifier = GlanceModifier.width(68.dp)) {
-                        PixelIcon("w_i_refresh", p.sub, 16.dp, actionRunCallback<RefreshTodayAction>(), "오늘 할 일 새로고침")
-                        Spacer(GlanceModifier.height(4.dp))
-                        PixelButton("w_t_complete", theme, true,
-                            actionRunCallback<ToggleTaskAction>(actionParametersOf(ToggleTaskAction.TaskIdParam to snapshot.hero.taskId)),
-                            "${snapshot.hero.title} 완료", modifier = GlanceModifier.fillMaxWidth())
-                    }
-                }
-            }
-            items(queue, itemId = { item -> "queue:${item.taskId}".hashCode().toLong() }) { item ->
-                Row(modifier = GlanceModifier.fillMaxWidth().height(48.dp)) {
-                    QueueInfo(item, theme, item == queue.first(), GlanceModifier.defaultWeight().fillMaxHeight())
-                    Spacer(GlanceModifier.width(4.dp))
-                    QueueToggle(item, theme)
-                }
-            }
-        }
-        queue.isNotEmpty() -> LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
-            item(itemId = "suggestion".hashCode().toLong()) {
-                Row(modifier = GlanceModifier.fillMaxWidth()) {
-                    RefreshPlanet(theme, snapshot, 64.dp, fillHeight = false)
-                    Spacer(GlanceModifier.width(2.dp))
-                    WideSingleInfo(snapshot, theme, focusTitle, GlanceModifier.defaultWeight())
-                }
-            }
-            items(queue, itemId = { item -> "queue:${item.taskId}".hashCode().toLong() }) { item ->
-                Row(modifier = GlanceModifier.fillMaxWidth().height(48.dp)) {
-                    QueueInfo(item, theme, item == queue.first(), GlanceModifier.defaultWeight().fillMaxHeight())
-                    Spacer(GlanceModifier.width(4.dp))
-                    QueueToggle(item, theme)
-                }
-            }
-        }
-        else -> Row(modifier = GlanceModifier.fillMaxSize()) {
-            RefreshPlanet(theme, snapshot, 64.dp, refreshable = snapshot?.hero == null || focusTitle != null)
-            Spacer(GlanceModifier.width(2.dp))
-            WideSingleInfo(snapshot, theme, focusTitle, GlanceModifier.defaultWeight().fillMaxHeight())
-        }
-    }
-}
-
-@Composable
 private fun HeroDetails(hero: HeroTask, suggestion: String?, theme: WTheme, showSuggestion: Boolean, modifier: GlanceModifier) {
     val p = theme.palette
+    val titleLines = heroTitleMaxLines(showSuggestion, LocalContext.current.resources.configuration.fontScale)
     Box(modifier = modifier.semantics { contentDescription = "${hero.title} 열기" }
         .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_HOME)))) {
         Spacer(GlanceModifier.fillMaxWidth().height(48.dp))
         Column {
             PixelText("w_t_now", p.accent2, 13.dp, width = 60.dp)
-            Text(hero.title,
+            Text(hero.title, maxLines = titleLines,
                 style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)))
-            if (hero.deadlineLabel != null) Text(hero.deadlineLabel,
+            if (hero.deadlineLabel != null) Text(hero.deadlineLabel, maxLines = 1,
                 style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.warn)))
-            if (showSuggestion && !suggestion.isNullOrBlank()) Text(suggestion,
+            if (showSuggestion && !suggestion.isNullOrBlank()) Text(suggestion, maxLines = 1,
                 style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.sub)))
         }
     }
 }
 
+internal fun heroTitleMaxLines(showSuggestion: Boolean, fontScale: Float): Int =
+    if (showSuggestion && fontScale < 1.2f) 2 else 1
+
 @Composable
-private fun WideSuggestion(snapshot: HeroSnapshot, p: WPalette, modifier: GlanceModifier) {
+private fun WideSuggestion(snapshot: HeroSnapshot, p: WPalette, showSuggestion: Boolean, modifier: GlanceModifier) {
     Box(modifier = modifier.semantics { contentDescription = "오늘 할 일 열기" }
         .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_HOME)))) {
         Spacer(GlanceModifier.fillMaxWidth().height(48.dp))
-        Row(modifier = GlanceModifier.fillMaxWidth()) {
-            Column(modifier = GlanceModifier.defaultWeight()) {
-                PixelText("w_t_now", p.accent2, 13.dp, width = 60.dp)
-                Text(snapshot.suggestionTitle?.takeIf { it.isNotBlank() } ?: "지금은 비어 있는 시간이에요.", maxLines = 2,
-                    style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)))
-            }
-            Spacer(GlanceModifier.width(4.dp))
-            Text(snapshot.suggestionMessage?.takeIf { it.isNotBlank() } ?: "가벼운 일부터 하나 시작해볼까요?", maxLines = 2,
-                style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.sub)), modifier = GlanceModifier.defaultWeight())
+        Column(modifier = GlanceModifier.fillMaxWidth()) {
+            PixelText("w_t_now", p.accent2, 13.dp, width = 60.dp)
+            Text(snapshot.suggestionTitle?.takeIf { it.isNotBlank() } ?: "지금은 비어 있는 시간이에요.", maxLines = 1,
+                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)))
+            if (showSuggestion) Text(snapshot.suggestionMessage?.takeIf { it.isNotBlank() } ?: "가벼운 일부터 하나 시작해볼까요?", maxLines = 1,
+                style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.sub)))
         }
     }
 }
@@ -418,18 +269,18 @@ private fun QueueInfo(item: QueueItem, theme: WTheme, showNext: Boolean, modifie
     val p = theme.palette
     Box(modifier = modifier.semantics { contentDescription = "${item.title} 열기" }
         .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_HOME)))) {
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (showNext) {
-                    PixelText("w_t_next", p.sub, 11.dp, width = 34.dp)
-                    Spacer(GlanceModifier.width(4.dp))
-                }
-                Box(modifier = GlanceModifier.background(p.chip).cornerRadius(6.dp).padding(horizontal = 5.dp, vertical = 2.dp)) {
-                    PixelText(bucketRes(item.bucket), readableWidgetText(p.sub, p.chip), 11.dp)
-                }
+        Row(modifier = GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+            if (showNext) {
+                PixelText("w_t_next", p.sub, 11.dp, width = 34.dp)
+                Spacer(GlanceModifier.width(4.dp))
             }
+            Box(modifier = GlanceModifier.background(p.chip).cornerRadius(6.dp).padding(horizontal = 5.dp, vertical = 2.dp)) {
+                PixelText(bucketRes(item.bucket), readableWidgetText(p.sub, p.chip), 11.dp)
+            }
+            Spacer(GlanceModifier.width(6.dp))
             Text(item.title, maxLines = 1, style = TextStyle(fontSize = 13.sp, color = ColorProvider(p.fg),
-                textDecoration = if (item.done) TextDecoration.LineThrough else TextDecoration.None))
+                textDecoration = if (item.done) TextDecoration.LineThrough else TextDecoration.None),
+                modifier = GlanceModifier.defaultWeight())
         }
     }
 }
@@ -440,98 +291,6 @@ private fun QueueToggle(item: QueueItem, theme: WTheme) {
         PixelIcon(if (item.done) "w_i_check_on" else "w_i_check_off", theme.palette.accent, 18.dp,
             actionRunCallback<ToggleTaskAction>(actionParametersOf(ToggleTaskAction.TaskIdParam to item.taskId)),
             if (item.done) "${item.title} 완료 취소" else "${item.title} 완료")
-    }
-}
-
-/** 집중 타임 — 탭하면 뽀모도로 화면으로. 큐는 숨기고 행성·진행률만 남긴다. */
-@Composable
-private fun FocusBody(focusTitle: String, p: WPalette, compact: Boolean) {
-    Column(modifier = GlanceModifier.fillMaxWidth()
-        .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_POMODORO)))) {
-        Text(
-            "「$focusTitle」 집중 중",
-            maxLines = if (compact) 2 else 3,
-            // 18sp — 히어로 제목과 동일(위젯의 주인공 텍스트, 16sp는 실기기에서 작다는 지적).
-            // 컴팩트(2x2)만 예산이 빠듯해 16sp 유지.
-            style = TextStyle(fontSize = if (compact) 16.sp else 18.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)),
-        )
-    }
-}
-
-/**
- * 지금 할 일 — 제목·마감·제안 문구 + 완료 버튼. 컴팩트는 제목+버튼만 남겨 잘림을 막는다.
- * WIDE(세로 110dp 버킷·실기기 실높이 ~150dp)는 제목 1줄·제안 문구 생략 — 2줄 제목+제안까지
- * 쌓으면 하단 큐가 실기기에서 잘린다(제안 문구·2줄 제목은 tall부터).
- */
-@Composable
-private fun HeroBody(hero: HeroTask, suggestionMessage: String?, theme: WTheme, compact: Boolean, tall: Boolean) {
-    val p = theme.palette
-    Column(modifier = GlanceModifier.fillMaxWidth()) {
-        Text(
-            hero.title,
-            maxLines = if (tall) 2 else 1,
-            // 18sp — 위젯의 주인공 텍스트(16sp는 실기기에서 작다는 지적). 컴팩트(2x2)만 16sp 유지.
-            style = TextStyle(fontSize = if (compact) 16.sp else 18.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)),
-            modifier = GlanceModifier.fillMaxWidth()
-                .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_HOME))),
-        )
-        if (!compact) {
-            if (hero.deadlineLabel != null) {
-                Spacer(GlanceModifier.height(2.dp))
-                Text(hero.deadlineLabel, maxLines = 1,
-                    style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.warn)))
-            }
-            if (tall && !suggestionMessage.isNullOrBlank()) {
-                Spacer(GlanceModifier.height(2.dp))
-                Text(suggestionMessage, maxLines = 1,
-                    style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.sub)))
-            }
-        }
-        Spacer(GlanceModifier.height(6.dp))
-        PixelButton(
-            labelRes = "w_t_complete", theme = theme, primary = true,
-            onClick = actionRunCallback<ToggleTaskAction>(
-                actionParametersOf(ToggleTaskAction.TaskIdParam to hero.taskId)),
-            actionLabel = "${hero.title} 완료",
-        )
-    }
-}
-
-/** 빈 시간 — 서버 제안 문구를 그대로 보여준다(스냅샷에 없으면 앱 기본 문구와 동일한 폴백). */
-@Composable
-private fun SuggestionBody(snapshot: HeroSnapshot, p: WPalette) {
-    Column(modifier = GlanceModifier.fillMaxWidth()
-        .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_HOME)))) {
-        Text(
-            snapshot.suggestionTitle?.takeIf { it.isNotBlank() } ?: "지금은 비어 있는 시간이에요.",
-            maxLines = 2,
-            style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ColorProvider(p.fg)),
-        )
-        Spacer(GlanceModifier.height(2.dp))
-        Text(
-            snapshot.suggestionMessage?.takeIf { it.isNotBlank() } ?: "가벼운 일부터 하나 시작해볼까요?",
-            maxLines = 2,
-            style = TextStyle(fontSize = 12.sp, color = ColorProvider(p.sub)),
-        )
-    }
-}
-
-/** 우상단 블록 — 행성 플리퍼 + 오늘 진행률(완료/전체). */
-@Composable
-private fun PlanetBlock(theme: WTheme, snapshot: HeroSnapshot, tall: Boolean) {
-    // 행성이 위젯 꾸미기의 핵심이라 과감하게 크게 — 실기기에서 "더 컸으면" 지적 2회 반영.
-    Column(
-        modifier = GlanceModifier.width(if (tall) 96.dp else 72.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        PlanetFlipper(theme, if (tall) 88.dp else 64.dp)
-        Spacer(GlanceModifier.height(2.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("${snapshot.todayDone}/${snapshot.todayTotal}", maxLines = 1,
-                style = TextStyle(fontSize = 12.sp, color = ColorProvider(theme.palette.fg)))
-            Spacer(GlanceModifier.width(2.dp))
-            PixelIcon("w_i_sparkle", theme.palette.starlight, 10.dp)
-        }
     }
 }
 
@@ -555,55 +314,6 @@ private fun PlanetFlipper(theme: WTheme, size: Dp) {
     // (픽셀=dp 그대로)로 렌더돼 박스 크기를 무시한다(실기기: 토마토 18dp·행성 시트 띠 증상).
     Box(modifier = GlanceModifier.size(size)) {
         AndroidRemoteViews(remoteViews = rv, modifier = GlanceModifier.fillMaxSize())
-    }
-}
-
-/**
- * 다음 대기열 — 구분선 + "다음" 라벨 + 버킷 뱃지·제목·체크박스 행.
- * 자체 Column으로 감싼다: Glance 컨테이너는 자식 10개가 상한이라(초과 시 런타임 예외) 큐 4줄
- * (구분선·여백·라벨·행 3)을 바깥 Column에 그대로 풀면 헤더·본문과 합쳐 11개가 된다.
- */
-@Composable
-private fun QueueSection(items: List<QueueItem>, theme: WTheme) {
-    val p = theme.palette
-    Column(modifier = GlanceModifier.fillMaxWidth()) {
-        Spacer(GlanceModifier.height(6.dp))
-        Box(modifier = GlanceModifier.fillMaxWidth().height(2.dp).background(p.line)) {}
-        Spacer(GlanceModifier.height(4.dp))
-        PixelText("w_t_next", p.sub, 11.dp)
-        items.forEach { item -> QueueRow(item, theme) }
-    }
-}
-
-@Composable
-private fun QueueRow(item: QueueItem, theme: WTheme) {
-    val p = theme.palette
-    Row(
-        modifier = GlanceModifier.fillMaxWidth().padding(top = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(modifier = GlanceModifier.background(p.chip).cornerRadius(6.dp)
-            .padding(horizontal = 5.dp, vertical = 3.dp)) {
-            PixelText(bucketRes(item.bucket), p.sub, 11.dp)
-        }
-        Spacer(GlanceModifier.width(6.dp))
-        Text(
-            item.title, maxLines = 1,
-            style = TextStyle(
-                fontSize = 13.sp, color = ColorProvider(p.fg),
-                // 완료 표시는 취소선으로 — 위젯에서 완료해도 목록 순서는 그대로 유지된다.
-                textDecoration = if (item.done) TextDecoration.LineThrough else TextDecoration.None,
-            ),
-            modifier = GlanceModifier.defaultWeight()
-                .clickable(actionStartActivity(deepLinkIntent(DEEPLINK_HOME))),
-        )
-        Spacer(GlanceModifier.width(4.dp))
-        PixelIcon(
-            if (item.done) "w_i_check_on" else "w_i_check_off", p.accent, 18.dp,
-            onClick = actionRunCallback<ToggleTaskAction>(
-                actionParametersOf(ToggleTaskAction.TaskIdParam to item.taskId)),
-            actionLabel = if (item.done) "${item.title} 완료 취소" else "${item.title} 완료",
-        )
     }
 }
 

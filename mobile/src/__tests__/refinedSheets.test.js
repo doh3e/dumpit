@@ -302,6 +302,71 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     await act(async () => tree.unmount());
   });
 
+  it('태스크 추가 예상시간은 전체 삭제와 재입력 중 같은 입력을 유지해 제목과 60분을 저장한다', async () => {
+    const ref = React.createRef();
+    const tree = await render(<AddTaskSheet ref={ref} />);
+    await act(async () => ref.current.present());
+    const title = tree.root.find((node) => node.props.accessibilityLabel === '할 일 제목');
+    await act(async () => title.props.onChangeText('추가 원본'));
+    await act(async () => control(tree, '옵션 더보기 ▼').props.onPress());
+    await act(async () => control(tree, '예상 시간(분)').props.onPress());
+
+    const estimate = tree.root.find((node) => node.props.accessibilityLabel === '예상 시간(분)' && node.props.keyboardType === 'number-pad');
+    expect(estimate.props.keyboardType).toBe('number-pad');
+    expect(estimate.props.maxLength).toBe(4);
+    await act(async () => estimate.props.onChangeText('45'));
+    await act(async () => estimate.props.onChangeText(''));
+
+    const emptyEstimate = tree.root.find((node) => node.props.accessibilityLabel === '예상 시간(분)' && node.props.keyboardType === 'number-pad');
+    expect(emptyEstimate).toBe(estimate);
+    expect(emptyEstimate.props.value).toBe('');
+    await act(async () => emptyEstimate.props.onChangeText('60'));
+    await act(async () => control(tree, '추가').props.onPress());
+
+    expect(mockCreateTask).toHaveBeenCalledTimes(1);
+    expect(mockCreateTask).toHaveBeenCalledWith(expect.objectContaining({
+      title: '추가 원본',
+      estimatedMinutes: 60,
+    }));
+    await act(async () => tree.unmount());
+  });
+
+  it('태스크 추가 예상시간은 명시적 OFF/ON과 빈 값 저장 후 재열기 초기화를 지킨다', async () => {
+    const ref = React.createRef();
+    const tree = await render(<AddTaskSheet ref={ref} />);
+    await act(async () => ref.current.present());
+    await act(async () => tree.root.findByProps({ accessibilityLabel: '할 일 제목' }).props.onChangeText('빈 예상시간'));
+    await act(async () => control(tree, '옵션 더보기 ▼').props.onPress());
+    const estimateChip = () => control(tree, '예상 시간(분)');
+
+    await act(async () => estimateChip().props.onPress());
+    expect(tree.root.find((node) => node.props.accessibilityLabel === '예상 시간(분)' && node.props.keyboardType === 'number-pad').props.value).toBe('30');
+    await act(async () => estimateChip().props.onPress());
+    expect(tree.root.findAll((node) => node.props.accessibilityLabel === '예상 시간(분)' && node.props.keyboardType === 'number-pad')).toHaveLength(0);
+    expect(estimateChip().props.accessibilityState.selected).toBe(false);
+    await act(async () => estimateChip().props.onPress());
+    const estimate = tree.root.find((node) => node.props.accessibilityLabel === '예상 시간(분)' && node.props.keyboardType === 'number-pad');
+    expect(estimate.props.value).toBe('30');
+    await act(async () => estimate.props.onChangeText(''));
+    expect(estimateChip().props.accessibilityState.selected).toBe(true);
+    await act(async () => control(tree, '추가').props.onPress());
+
+    expect(mockCreateTask).toHaveBeenCalledWith(expect.objectContaining({ estimatedMinutes: null }));
+    await act(async () => ref.current.present());
+    expect(control(tree, '옵션 더보기 ▼').props.accessibilityState.expanded).toBe(false);
+    await act(async () => control(tree, '옵션 더보기 ▼').props.onPress());
+    expect(control(tree, '예상 시간(분)').props.accessibilityState.selected).toBe(false);
+    expect(tree.root.findAll((node) => node.props.accessibilityLabel === '예상 시간(분)' && node.props.keyboardType === 'number-pad')).toHaveLength(0);
+    await act(async () => control(tree, '예상 시간(분)').props.onPress());
+    await act(async () => control(tree, '취소').props.onPress());
+    await act(async () => ref.current.present());
+    expect(control(tree, '옵션 더보기 ▼').props.accessibilityState.expanded).toBe(false);
+    await act(async () => control(tree, '옵션 더보기 ▼').props.onPress());
+    expect(control(tree, '예상 시간(분)').props.accessibilityState.selected).toBe(false);
+    expect(tree.root.findAll((node) => node.props.accessibilityLabel === '예상 시간(분)' && node.props.keyboardType === 'number-pad')).toHaveLength(0);
+    await act(async () => tree.unmount());
+  });
+
   it('태스크 추가 시트는 실제 viewport-keyboard 겹침만 스크롤 여백으로 반영하고 수명주기를 정리한다', async () => {
     const ref = React.createRef();
     const screen = () => <AddTaskSheet ref={ref} />;
@@ -491,6 +556,67 @@ describe('refined sheet의 제목·닫기·보조 조작', () => {
     expect(mockPatchTask).toHaveBeenCalledTimes(1);
     expect(mockPatchTask).toHaveBeenCalledWith('task-keyboard', expect.objectContaining({ title: '상세 회전 제목' }));
     expect(style(detailScroll()).paddingBottom).toBe(basePadding);
+    await act(async () => tree.unmount());
+  });
+
+  it('태스크 상세 예상시간은 45를 지우고 60을 재입력할 때 같은 입력과 원래 제목을 유지한다', async () => {
+    const ref = React.createRef();
+    const tree = await render(<TaskDetailSheet ref={ref} />);
+    await act(async () => ref.current.present({
+      taskId: 'task-estimate', title: '상세 원본', description: '메모', deadline: null, startTime: null,
+      estimatedMinutes: 45, category: 'OTHER', userPriorityScore: null, aiPriorityScore: 0.5,
+      isLocked: false, stickerCode: null, parentTaskId: null,
+    }));
+    const title = tree.root.findByProps({ accessibilityLabel: '제목' });
+    const estimate = tree.root.find((node) => node.props.accessibilityLabel === '예상 시간(분)');
+    expect(title.props.value).toBeUndefined();
+    expect(title.props.defaultValue).toBe('상세 원본');
+    expect(estimate.props.keyboardType).toBe('number-pad');
+    expect(estimate.props.maxLength).toBe(4);
+    await act(async () => estimate.props.onChangeText(''));
+
+    const emptyEstimate = tree.root.find((node) => node.props.accessibilityLabel === '예상 시간(분)');
+    expect(emptyEstimate).toBe(estimate);
+    expect(emptyEstimate.props.value).toBe('');
+    await act(async () => emptyEstimate.props.onChangeText('60'));
+    await act(async () => control(tree, '저장').props.onPress());
+
+    expect(mockPatchTask).toHaveBeenCalledTimes(1);
+    expect(mockPatchTask).toHaveBeenCalledWith('task-estimate', expect.objectContaining({
+      title: '상세 원본',
+      estimatedMinutes: 60,
+    }));
+    await act(async () => tree.unmount());
+  });
+
+  it('태스크 상세 예상시간은 명시적 OFF/ON, 빈 값 저장, 다른 태스크 초기화를 지킨다', async () => {
+    const ref = React.createRef();
+    const tree = await render(<TaskDetailSheet ref={ref} />);
+    const target = (taskId, estimatedMinutes) => ({
+      taskId, title: `${taskId} 제목`, description: null, deadline: null, startTime: null,
+      estimatedMinutes, category: 'OTHER', userPriorityScore: null, aiPriorityScore: 0.5,
+      isLocked: false, stickerCode: null, parentTaskId: null,
+    });
+    await act(async () => ref.current.present(target('first', 45)));
+    const estimateChip = () => control(tree, '예상(분)');
+
+    await act(async () => estimateChip().props.onPress());
+    expect(estimateChip().props.accessibilityState.selected).toBe(false);
+    expect(tree.root.findAllByProps({ accessibilityLabel: '예상 시간(분)' })).toHaveLength(0);
+    await act(async () => estimateChip().props.onPress());
+    const estimate = tree.root.findByProps({ accessibilityLabel: '예상 시간(분)' });
+    expect(estimate.props.value).toBe('30');
+    await act(async () => estimate.props.onChangeText(''));
+    expect(estimateChip().props.accessibilityState.selected).toBe(true);
+    await act(async () => control(tree, '저장').props.onPress());
+    expect(mockPatchTask).toHaveBeenCalledWith('first', expect.objectContaining({ estimatedMinutes: null }));
+
+    await act(async () => ref.current.present(target('second', null)));
+    expect(estimateChip().props.accessibilityState.selected).toBe(false);
+    expect(tree.root.findAllByProps({ accessibilityLabel: '예상 시간(분)' })).toHaveLength(0);
+    await act(async () => ref.current.present(target('third', 25)));
+    expect(estimateChip().props.accessibilityState.selected).toBe(true);
+    expect(tree.root.findByProps({ accessibilityLabel: '예상 시간(분)' }).props.value).toBe('25');
     await act(async () => tree.unmount());
   });
 
