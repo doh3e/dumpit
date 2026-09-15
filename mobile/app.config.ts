@@ -58,6 +58,16 @@ const config: ExpoConfig = {
     'react-native-notify-kit',
     '@react-native-firebase/app',
     '@react-native-firebase/messaging',
+    [
+      'expo-build-properties',
+      {
+        android: {
+          enableMinifyInReleaseBuilds: true,
+          enableShrinkResourcesInReleaseBuilds: true,
+        },
+      },
+    ],
+    './plugins/withR8Optimization',
     './plugins/withMavenContentFilter',
   ],
   experiments: {
