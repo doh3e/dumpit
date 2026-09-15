@@ -86,6 +86,26 @@ class WidgetFrameLayoutTest {
         assertNull(actual.contentSurface)
     }
 
+    @Test
+    fun `compact 6dp inset은 24dp 외곽 안에 98dp 고정 배치를 만든다`() {
+        val actual = retroFrameLayoutModifiers(
+            modifier = GlanceModifier,
+            background = Color(0xFF1F1B2E),
+            card = Color(0xFF2B2442),
+            useCardSurface = true,
+            showPattern = true,
+            contentPadding = 6.dp,
+            outerRadius = 24.dp,
+        )
+
+        assertEquals(
+            paddingElements(GlanceModifier.padding(6.dp)),
+            paddingElements(actual.contentWrapper),
+        )
+        assertEquals(listOf(18f), cornerValues(requireNotNull(actual.contentSurface)))
+        assertEquals(98.dp, widgetContentSize(110.dp, 6.dp))
+    }
+
     private fun elements(modifier: GlanceModifier): List<GlanceModifier.Element> =
         modifier.foldIn(emptyList()) { elements, element -> elements + element }
 

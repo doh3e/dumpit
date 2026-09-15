@@ -2,6 +2,7 @@ package kr.dumpit.widget
 
 import java.io.File
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.DpSize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,29 +17,42 @@ class WidgetHeroWidthLayoutTest {
     }
 
     @Test
-    fun `실제 compact 반응형 버킷은 stacked와 inline 버튼 경로를 모두 선택한다`() {
+    fun `최소 wide 높이도 compact 두 행 예산에 맞는다`() {
+        assertEquals(98.dp, widgetContentSize(110.dp, WIDGET_COMPACT_PADDING))
+        assertEquals(98.dp, WIDGET_COMPACT_CONTENT_SIZE)
+        assertEquals(HeroLayout.Compact, heroLayoutFor(DpSize(150.dp, 110.dp)))
+        assertEquals(HeroLayout.ShortWide, heroLayoutFor(DpSize(250.dp, 110.dp)))
+        assertEquals(HeroLayout.Wide, heroLayoutFor(DpSize(423.dp, 179.dp)))
+        assertEquals(HeroLayout.Tall, heroLayoutFor(DpSize(250.dp, 300.dp)))
+        assertEquals(HeroLayout.ShortWide, heroLayoutFor(HERO_SHORT_WIDE))
+        assertEquals(HeroLayout.Wide, heroLayoutFor(HERO_WIDE))
+        assertTrue(HERO_RESPONSIVE_SIZES.containsAll(listOf(HERO_SHORT_WIDE, HERO_WIDE)))
+    }
+
+    @Test
+    fun `실제 compact 반응형 버킷은 두 48dp 행을 자르지 않는다`() {
         val compactSizes = POMODORO_RESPONSIVE_SIZES
             .filter { pomodoroLayoutFor(it) == PomodoroLayout.Compact }
 
         assertEquals(setOf(110.dp, 150.dp), compactSizes.map { it.width }.toSet())
-        assertEquals(
-            setOf(CompactButtonArrangement.Stacked, CompactButtonArrangement.Inline),
-            compactSizes.map { compactButtonArrangement(it.width) }.toSet(),
-        )
+        assertEquals(setOf(98.dp), compactSizes.map { widgetContentSize(it.height, 6.dp) }.toSet())
+        assertEquals(98.dp, WIDGET_COMPACT_CONTENT_SIZE)
     }
 
     @Test
-    fun `최소 expanded wide의 두 버튼은 48dp 이상이며 라벨 폭을 담는다`() {
-        val actionWidth = pomodoroExpandedWideActionWidth(POMODORO_EXPANDED_WIDE.width)
-        val buttons = expandedPairedButtonWidths(actionWidth)
+    fun `expanded 버튼 배치는 라벨 여백과 48dp 초기화 조작을 보존한다`() {
+        assertEquals(100.dp, expandedWideVerticalActionHeight())
+        assertTrue(widgetContentSize(POMODORO_EXPANDED_WIDE.height, 12.dp) >= expandedWideVerticalActionHeight())
+        assertEquals(120.dp, expandedTallPairedActionWidth())
+        assertTrue(widgetContentSize(POMODORO_EXPANDED_TALL.width, 12.dp) >= expandedTallPairedActionWidth())
+        assertEquals(4.dp, (68.dp - pixelButtonLabelWidth("w_t_pause")) / 2f)
+    }
 
-        assertEquals(112.dp, actionWidth)
-        assertEquals(60.dp, buttons.primary)
-        assertEquals(48.dp, buttons.secondary)
-        assertTrue(buttons.primary >= pixelButtonLabelWidth("w_t_pause"))
-        val secondaryInnerWidth = buttons.secondary - 2.dp - 2.dp
-        assertEquals(44.dp, secondaryInnerWidth)
-        assertTrue(secondaryInnerWidth >= pixelButtonLabelWidth("w_t_reset"))
+    @Test
+    fun `Hero 큰 글자에서는 상단 제목 한 줄로 큐 높이를 확보한다`() {
+        assertEquals(2, heroTitleMaxLines(showSuggestion = true, fontScale = 1.001f))
+        assertEquals(1, heroTitleMaxLines(showSuggestion = true, fontScale = 1.5f))
+        assertEquals(1, heroTitleMaxLines(showSuggestion = false, fontScale = 1f))
     }
 
     @Test
@@ -46,7 +60,7 @@ class WidgetHeroWidthLayoutTest {
         val running = pomodoroSource().section("private fun RunningContent", "private fun CompactPausedButtons")
 
         assertTrue(running.contains("PixelButton(\"w_t_pause\""))
-        assertTrue(running.contains("SetDots(snapshot, now, theme)"))
+        assertTrue(running.contains("SetDots(snapshot, now, theme, vertical = true)"))
         assertFalse(running.contains("CompactPomodoroButtons"))
         assertFalse(running.contains("CommandParam to \"reset\""))
     }

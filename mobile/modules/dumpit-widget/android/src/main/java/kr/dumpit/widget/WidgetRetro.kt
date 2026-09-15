@@ -20,19 +20,18 @@ import androidx.glance.semantics.semantics
 import androidx.glance.unit.ColorProvider
 
 internal val WIDGET_SAFE_PADDING = 12.dp
+internal val WIDGET_COMPACT_PADDING = 6.dp
+internal val WIDGET_COMPACT_ROW_HEIGHT = 48.dp
+internal val WIDGET_COMPACT_GAP = 2.dp
+internal val WIDGET_COMPACT_CONTENT_SIZE =
+    WIDGET_COMPACT_ROW_HEIGHT + WIDGET_COMPACT_GAP + WIDGET_COMPACT_ROW_HEIGHT
 private val LEGACY_WIDGET_RADIUS = 16.dp
 
+internal fun widgetContentSize(size: Dp, padding: Dp): Dp =
+    (size - padding - padding).coerceAtLeast(0.dp)
+
 internal fun widgetSafeContentWidth(widgetWidth: Dp): Dp =
-    (widgetWidth - WIDGET_SAFE_PADDING - WIDGET_SAFE_PADDING).coerceAtLeast(0.dp)
-
-internal enum class CompactButtonArrangement { Inline, Stacked }
-
-internal fun compactButtonArrangement(widgetWidth: Dp): CompactButtonArrangement =
-    if (widgetSafeContentWidth(widgetWidth) >= 100.dp) {
-        CompactButtonArrangement.Inline
-    } else {
-        CompactButtonArrangement.Stacked
-    }
+    widgetContentSize(widgetWidth, WIDGET_SAFE_PADDING)
 
 internal fun systemWidgetRadius(context: Context): Dp {
     // Android 12 이전에는 시스템 위젯 반경 리소스가 없으므로 이름으로 조회해 구버전 호스트를 보호한다.
@@ -53,7 +52,13 @@ fun drawableId(name: String): Int {
 
 /** Flat widget frame — 스킨은 가장자리에 남기고 정보 표면은 불투명하게 분리한다. */
 @Composable
-fun RetroFrame(theme: WTheme, modifier: GlanceModifier = GlanceModifier, bgOverride: Color? = null, content: @Composable () -> Unit) {
+fun RetroFrame(
+    theme: WTheme,
+    modifier: GlanceModifier = GlanceModifier,
+    bgOverride: Color? = null,
+    contentPadding: Dp = WIDGET_SAFE_PADDING,
+    content: @Composable () -> Unit,
+) {
     val bgColor = bgOverride ?: theme.palette.bg
     val outerRadius = systemWidgetRadius(LocalContext.current)
     val layoutModifiers = retroFrameLayoutModifiers(
@@ -62,7 +67,7 @@ fun RetroFrame(theme: WTheme, modifier: GlanceModifier = GlanceModifier, bgOverr
         card = theme.palette.card,
         useCardSurface = bgOverride == null,
         showPattern = bgOverride == null && theme.patternRes != null,
-        contentPadding = WIDGET_SAFE_PADDING,
+        contentPadding = contentPadding,
         outerRadius = outerRadius,
     )
     Box(modifier = layoutModifiers.frame) {
@@ -188,9 +193,41 @@ fun PixelButton(
     }
 }
 
+@Composable
+fun PixelIconButton(
+    iconRes: String,
+    theme: WTheme,
+    primary: Boolean,
+    onClick: Action,
+    actionLabel: String,
+    accentOverride: Color? = null,
+    modifier: GlanceModifier = GlanceModifier,
+) {
+    val bg = if (primary) (accentOverride ?: theme.palette.accent) else theme.palette.card
+    val fg = if (primary) readableWidgetText(theme.palette.onAccent, bg) else theme.palette.fg
+    val border = if (primary) bg else readableWidgetBorder(theme.palette.line, bg)
+    val layoutModifiers = pixelButtonLayoutModifiers(modifier, primary, border, bg)
+    Box(
+        modifier = layoutModifiers.frame
+            .semantics { contentDescription = actionLabel }.clickable(onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (primary) {
+            PixelIcon(iconRes, fg, 18.dp)
+        } else {
+            Box(
+                modifier = checkNotNull(layoutModifiers.secondarySurface),
+                contentAlignment = Alignment.Center,
+            ) {
+                PixelIcon(iconRes, fg, 18.dp)
+            }
+        }
+    }
+}
+
 internal fun pixelButtonLabelWidth(labelRes: String): Dp = when (labelRes) {
     "w_t_complete", "w_t_pause" -> 60.dp
     "w_t_resume" -> 31.dp
-    "w_t_reset" -> 44.dp
+    "w_t_reset" -> 46.dp
     else -> 60.dp
 }

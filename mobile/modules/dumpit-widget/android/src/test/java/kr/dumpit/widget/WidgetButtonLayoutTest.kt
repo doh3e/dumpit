@@ -7,6 +7,7 @@ import androidx.glance.layout.PaddingModifier
 import androidx.glance.layout.padding
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WidgetButtonLayoutTest {
@@ -49,9 +50,19 @@ class WidgetButtonLayoutTest {
         assertNull(actual.secondarySurface)
     }
 
+    @Test
+    fun `픽셀 라벨은 자연 비율과 좌우 4dp 여백을 함께 확보한다`() {
+        assertEquals(4.dp, horizontalGutter(68.dp, "w_t_pause", primary = true))
+        assertEquals(4.dp, horizontalGutter(68.dp, "w_t_complete", primary = true))
+        assertTrue(horizontalGutter(48.dp, "w_t_resume", primary = true) >= 4.dp)
+    }
+
     private fun elements(modifier: GlanceModifier): List<GlanceModifier.Element> =
         modifier.foldIn(emptyList()) { elements, element -> elements + element }
 
     private fun paddingElements(modifier: GlanceModifier): List<PaddingModifier> =
         elements(modifier).filterIsInstance<PaddingModifier>()
+
+    private fun horizontalGutter(frameWidth: androidx.compose.ui.unit.Dp, labelRes: String, primary: Boolean) =
+        (frameWidth - (if (primary) 0.dp else 4.dp) - pixelButtonLabelWidth(labelRes)) / 2f
 }
