@@ -168,12 +168,7 @@ fun PixelButton(
     val bg = if (primary) (accentOverride ?: theme.palette.accent) else theme.palette.card
     val fg = if (primary) readableWidgetText(theme.palette.onAccent, bg) else theme.palette.fg
     val border = if (primary) bg else readableWidgetBorder(theme.palette.line, bg)
-    val labelWidth = when (labelRes) {
-        "w_t_complete", "w_t_pause" -> 60.dp
-        "w_t_resume" -> 31.dp
-        "w_t_reset" -> 46.dp
-        else -> 60.dp
-    }
+    val labelWidth = pixelButtonLabelWidth(labelRes)
     val layoutModifiers = pixelButtonLayoutModifiers(modifier, primary, border, bg)
     Box(
         modifier = layoutModifiers.frame
@@ -191,4 +186,11 @@ fun PixelButton(
             }
         }
     }
+}
+
+internal fun pixelButtonLabelWidth(labelRes: String): Dp = when (labelRes) {
+    "w_t_complete", "w_t_pause" -> 60.dp
+    "w_t_resume" -> 31.dp
+    "w_t_reset" -> 46.dp
+    else -> 60.dp
 }

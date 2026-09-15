@@ -16,9 +16,37 @@ class WidgetHeroWidthLayoutTest {
     }
 
     @Test
-    fun `두 48dp 뽀모도로 조작은 폭이 부족할 때 세로로 쌓는다`() {
-        assertEquals(CompactButtonArrangement.Stacked, compactButtonArrangement(110.dp))
-        assertEquals(CompactButtonArrangement.Inline, compactButtonArrangement(156.dp))
+    fun `실제 compact 반응형 버킷은 stacked와 inline 버튼 경로를 모두 선택한다`() {
+        val compactSizes = POMODORO_RESPONSIVE_SIZES
+            .filter { pomodoroLayoutFor(it) == PomodoroLayout.Compact }
+
+        assertEquals(setOf(110.dp, 150.dp), compactSizes.map { it.width }.toSet())
+        assertEquals(
+            setOf(CompactButtonArrangement.Stacked, CompactButtonArrangement.Inline),
+            compactSizes.map { compactButtonArrangement(it.width) }.toSet(),
+        )
+    }
+
+    @Test
+    fun `최소 expanded wide의 두 버튼은 48dp 이상이며 라벨 폭을 담는다`() {
+        val actionWidth = pomodoroExpandedWideActionWidth(POMODORO_EXPANDED_WIDE.width)
+        val buttons = expandedPairedButtonWidths(actionWidth)
+
+        assertEquals(112.dp, actionWidth)
+        assertEquals(60.dp, buttons.primary)
+        assertEquals(48.dp, buttons.secondary)
+        assertTrue(buttons.primary >= pixelButtonLabelWidth("w_t_pause"))
+        assertTrue(buttons.secondary >= pixelButtonLabelWidth("w_t_reset"))
+    }
+
+    @Test
+    fun `compact running은 기존 일시정지와 세트 도트만 유지한다`() {
+        val running = pomodoroSource().section("private fun RunningContent", "private fun CompactPausedButtons")
+
+        assertTrue(running.contains("PixelButton(\"w_t_pause\""))
+        assertTrue(running.contains("SetDots(snapshot, now, theme)"))
+        assertFalse(running.contains("CompactPomodoroButtons"))
+        assertFalse(running.contains("CommandParam to \"reset\""))
     }
 
     @Test
@@ -102,6 +130,14 @@ class WidgetHeroWidthLayoutTest {
         "mobile/modules/dumpit-widget/android/src/main/java/kr/dumpit/widget/TodayTasksWidget.kt",
     ).map(::File).firstOrNull(File::isFile)?.readText()
         ?: error("TodayTasksWidget.kt source file was not found")
+
+    private fun pomodoroSource(): String = sequenceOf(
+        "src/main/java/kr/dumpit/widget/PomodoroWidget.kt",
+        "../modules/dumpit-widget/android/src/main/java/kr/dumpit/widget/PomodoroWidget.kt",
+        "modules/dumpit-widget/android/src/main/java/kr/dumpit/widget/PomodoroWidget.kt",
+        "mobile/modules/dumpit-widget/android/src/main/java/kr/dumpit/widget/PomodoroWidget.kt",
+    ).map(::File).firstOrNull(File::isFile)?.readText()
+        ?: error("PomodoroWidget.kt source file was not found")
 
     private fun String.section(start: String, end: String): String =
         substring(indexOf(start), indexOf(end, indexOf(start)))
