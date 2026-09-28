@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""크롬 아이콘 srcset 사이즈 세트 생성기.
+"""래스터 크롬 아이콘 srcset 사이즈 세트 생성기.
 
 100×100(메뉴는 512×512) 원본을 <img>에서 12~24px로 그때그때 축소하면
 브라우저의 저품질 리샘플링 때문에 계단·자글거림이 생긴다(로고에서 겪은 것과 동일,
@@ -8,6 +8,7 @@ gen_logo_sizes.py 참조). 표시 슬롯별 × DPR{1, 1.25, 1.5, 2, 3 — Window
 
 소스: src/assets/*.png (원본은 그대로 둠 — 재생성 스크립트·모바일 앱의 마스터)
 산출물: src/assets/icons/<name>_<devicePx>.png  (src/assets/icons/index.js가 글롭)
+설정 톱니와 마감 시계는 SVG로 제공하므로 이 생성 대상에 포함하지 않는다.
 
 슬롯 목록은 사용처의 Tailwind w-* 클래스와 일치해야 한다. 새 표시 크기를
 추가하면 여기 슬롯에도 추가하고 재실행할 것.
@@ -27,9 +28,7 @@ OUT = ROOT / 'src' / 'assets' / 'icons'
 ICONS = {
     'coin': ('coin_image.png', [12, 16, 20, 24]),
     'token': ('remain_ai_token.png', [16, 20]),
-    'deadline': ('deadline_alarm.png', [16, 20]),
     'menu': ('menu.png', [20]),
-    'setting': ('setting_image.png', [20]),
     'download': ('download.png', [16]),
     'arrowhead': ('arrowheads.png', [14]),
     'puzzle': ('ui_puzzle.png', [14]),

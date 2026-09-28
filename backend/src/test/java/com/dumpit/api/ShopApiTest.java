@@ -3,6 +3,8 @@ package com.dumpit.api;
 import com.dumpit.entity.User;
 import tools.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -56,12 +58,12 @@ class ShopApiTest extends ApiIntegrationTestBase {
     // ---------- GET /shop/catalog ----------
 
     @Test
-    void 카탈로그_62종_반환_및_구매전후_owned_equipped_플래그_변화() throws Exception {
+    void 카탈로그_63종_반환_및_구매전후_owned_equipped_플래그_변화() throws Exception {
         seedCoins(userA, 1000);
 
         JsonNode before = catalogBody(USER_A);
         assertThat(before.get("coinBalance").asInt()).isEqualTo(1000);
-        assertThat(before.get("items")).hasSize(62);
+        assertThat(before.get("items")).hasSize(63);
         JsonNode bgOceanBefore = findItem(before.get("items"), "bg.ocean");
         assertThat(bgOceanBefore.get("type").asString()).isEqualTo("THEME");
         assertThat(bgOceanBefore.get("slot").asString()).isEqualTo("BACKGROUND");
@@ -87,6 +89,8 @@ class ShopApiTest extends ApiIntegrationTestBase {
         // 스티커는 slot이 없다
         JsonNode sticker = findItem(after.get("items"), "sticker.heart");
         assertThat(sticker.get("slot").isNull()).isTrue();
+        assertThat(sticker.get("variants")).isEmpty();
+        assertThat(sticker.get("selectedVariant").isNull()).isTrue();
     }
 
     @Test
@@ -104,16 +108,141 @@ class ShopApiTest extends ApiIntegrationTestBase {
         seedPurchase(userA, "chrome.ocean", 150);
         seedPurchase(userA, "pomo.ocean", 150);
         seedPurchase(userA, "sticker.heart", 80);
+        seedPurchase(userA, "station.cat", 800);
+        seedPurchase(userA, "station.dog", 800);
         seedEquipment(userA, "BACKGROUND", "bg.ocean");
         seedEquipment(userA, "CHROME", "chrome.ocean");
 
         long count = queryCount(() -> mockMvc.perform(get("/shop/catalog").with(asUser(USER_A)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(62)));
+                .andExpect(jsonPath("$.items.length()").value(63)));
 
-        // 실측값 3 (2026-07-13 측정: 유저 조회 1 + 구매목록 1 + 장착목록 1,
-        // 카탈로그 자체는 인메모리 리스트라 아이템 62종·구매 4건에도 N+1 없음) + 여유 2 = 5로 고정
         assertThat(count).isLessThanOrEqualTo(5);
+    }
+
+    @Test
+    void 외형_선택_구매는_1600코인_차감하고_선택과_기존_장착코드를_반환한다() throws Exception {
+        seedCoins(userA, 2000);
+
+        mockMvc.perform(post("/shop/purchase").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"station.cat\",\"variant\":\"gray\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.remainingCoins").value(400))
+                .andExpect(jsonPath("$.equipped").value(true));
+
+        JsonNode cat = findItem(catalogBody(USER_A).get("items"), "station.cat");
+        assertThat(cat.get("variants")).hasSize(6);
+        assertThat(cat.get("selectedVariant").asString()).isEqualTo("gray");
+        assertThat(cat.get("owned").asBoolean()).isTrue();
+        mockMvc.perform(get("/auth/me").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.equipments.STATION").value("station.cat"))
+                .andExpect(jsonPath("$.equipmentVariants.STATION").value("gray"));
+        mockMvc.perform(get("/auth/me").with(asUser(USER_B)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.equipmentVariants.STATION").doesNotExist());
+    }
+
+    @Test
+    void 기존_800코인_구매자는_무료로_변경하고_동물별_외형을_기억한다() throws Exception {
+        seedCoins(userA, 123);
+        seedPurchase(userA, "station.cat", 800);
+        seedPurchase(userA, "station.dog", 800);
+        seedEquipment(userA, "STATION", "station.cat");
+        var before = jdbcTemplate.queryForMap(
+                "SELECT purchase_id, price, purchased_at FROM user_purchases WHERE user_id = ? AND item_code = ?",
+                userA.getUserId(), "station.cat");
+
+        JsonNode legacyCat = findItem(catalogBody(USER_A).get("items"), "station.cat");
+        assertThat(legacyCat.get("selectedVariant").asString()).isEqualTo("ginger");
+        mockMvc.perform(get("/auth/me").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.equipmentVariants.STATION").value("ginger"));
+
+        mockMvc.perform(put("/shop/equip").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"station.cat\",\"variant\":\"white\"}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/shop/equip").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"station.dog\",\"variant\":\"akita\"}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/shop/equip").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"code\":\"station.cat\"}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/auth/me").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(123))
+                .andExpect(jsonPath("$.equipments.STATION").value("station.cat"))
+                .andExpect(jsonPath("$.equipmentVariants.STATION").value("white"));
+        assertThat(jdbcTemplate.queryForMap(
+                "SELECT purchase_id, price, purchased_at FROM user_purchases WHERE user_id = ? AND item_code = ?",
+                userA.getUserId(), "station.cat")).isEqualTo(before);
+        JsonNode items = catalogBody(USER_A).get("items");
+        assertThat(findItem(items, "station.cat").get("selectedVariant").asString()).isEqualTo("white");
+        assertThat(findItem(items, "station.dog").get("selectedVariant").asString()).isEqualTo("akita");
+
+        mockMvc.perform(delete("/shop/equip/STATION").with(asUser(USER_A))).andExpect(status().isOk());
+        mockMvc.perform(get("/auth/me").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.equipmentVariants.STATION").doesNotExist());
+        mockMvc.perform(put("/shop/equip").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"code\":\"station.dog\"}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/auth/me").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.equipmentVariants.STATION").value("akita"));
+    }
+
+    @Test
+    void 구_클라이언트의_외형없는_구매는_기본외형을_저장한다() throws Exception {
+        seedCoins(userA, 1600);
+        mockMvc.perform(post("/shop/purchase").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"code\":\"station.dog\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.remainingCoins").value(0));
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT selected_variant FROM user_purchases WHERE user_id = ? AND item_code = ?",
+                String.class, userA.getUserId(), "station.dog")).isEqualTo("golden-retriever");
+    }
+
+    @ParameterizedTest
+    @CsvSource({"station.cat,''", "station.cat,missing", "station.cat,akita", "station.dog,ginger",
+            "station.hamster,ginger", "bg.ocean,ginger", "sticker.heart,ginger"})
+    void 잘못된_외형_구매는_코인과_구매_장착을_변경하지_않는다(String code, String variant) throws Exception {
+        seedCoins(userA, 2000);
+        mockMvc.perform(post("/shop/purchase").with(asUser(USER_A))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("code", code, "variant", variant))))
+                .andExpect(status().isBadRequest());
+        assertThat(userRepository.findById(userA.getUserId()).orElseThrow().getCoinBalance()).isEqualTo(2000);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user_purchases", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user_equipments", Integer.class)).isZero();
+    }
+
+    @Test
+    void 잘못된_외형_장착과_다른_사용자의_상품_장착은_기존선택을_유지한다() throws Exception {
+        seedCoins(userA, 100);
+        seedPurchase(userA, "station.cat", 800);
+        seedEquipment(userA, "STATION", "station.cat");
+        for (String variant : new String[]{"", "akita", "unknown"}) {
+            mockMvc.perform(put("/shop/equip").with(asUser(USER_A))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(java.util.Map.of("code", "station.cat", "variant", variant))))
+                    .andExpect(status().isBadRequest());
+        }
+        mockMvc.perform(put("/shop/equip").with(asUser(USER_B))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"station.cat\",\"variant\":\"gray\"}"))
+                .andExpect(status().isBadRequest());
+        assertThat(jdbcTemplate.queryForObject("SELECT selected_variant FROM user_purchases WHERE user_id = ?",
+                String.class, userA.getUserId())).isNull();
+        mockMvc.perform(get("/auth/me").with(asUser(USER_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(100))
+                .andExpect(jsonPath("$.equipments.STATION").value("station.cat"))
+                .andExpect(jsonPath("$.equipmentVariants.STATION").value("ginger"));
     }
 
     // ---------- POST /shop/purchase ----------

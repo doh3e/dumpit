@@ -196,7 +196,22 @@ function fireworks(sprite) {
   ])
 }
 
-export const BUILDERS = { launch, meteor, petal, sprout, burst, bonfire, fireworks }
+function hearts(sprite) {
+  return Array.from({ length: 14 }, (_, i) => ({
+    src: sprite.img,
+    className: `${BASE} celeb-heart`,
+    style: {
+      left: `${i % 2 === 0 ? 8 + (i * 3) % 25 : 68 + (i * 3) % 25}%`,
+      top: `${39 + (i % 4) * 10}%`,
+      width: `${16 + (i % 3) * 8}px`,
+      animationDuration: '1.7s',
+      animationDelay: `${(i % 4) * 0.12}s`,
+      '--drift': `${i % 2 === 0 ? -18 : 18}px`,
+    },
+  }))
+}
+
+export const BUILDERS = { launch, meteor, petal, sprout, burst, bonfire, fireworks, hearts }
 
 export function buildParticles(sprite) {
   const builder = BUILDERS[sprite.motion ?? 'launch'] ?? BUILDERS.launch

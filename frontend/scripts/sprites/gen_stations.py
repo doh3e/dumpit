@@ -1,4 +1,5 @@
-# gen_stations.py — 상점 우주정거장 32×32 도트 생성기
+# gen_stations.py — 자체 제작 우주정거장 32×32 도트 생성기
+# 외부 CC0 동물 원본은 assets/shop/pets/에 보존하며 이 생성기의 대상에서 제외한다.
 # 사용: python gen_stations.py                    → frontend/src/assets/shop/에 PNG 저장
 #       python gen_stations.py --preview OUT.png  → 미리보기 시트만 저장 (8배 확대, 검수용)
 # 스타일: 외곽선 없음, 좌상단 광원, 톤 2~4개, 투명 배경, 핵심 디테일 2px 클러스터 이상
@@ -558,9 +559,6 @@ SPRITES = {
     'station_galaxy': draw_galaxy,
     'station_wood': draw_wood,
     'station_candy': draw_candy,
-    'station_dog': draw_dog,
-    'station_cat': draw_cat,
-    'station_hamster': draw_hamster,
 }
 
 

@@ -1,0 +1,11 @@
+Duckhive Bunny and Squirrel
+Source pages checked 2026-09-28:
+https://duckhive.itch.io/bunny
+https://duckhive.itch.io/squirrel
+
+Author states CC0 license on both pages; personal, educational and commercial use allowed, no credit needed. Archives do not contain a separate license text.
+CC0 1.0 legal text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Original ZIP SHA256:
+Bunny: 76775e5876789a03168362ee343ff5672898e683f99d92b3af8bd9c784fad7b4
+Squirrel: 2c39493882ff96ec961e3135dc3b9b71a481e723d660998b3080eac938af22f2

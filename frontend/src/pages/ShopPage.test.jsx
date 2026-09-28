@@ -85,6 +85,26 @@ const pomodoroItem = {
   equipped: false,
 }
 
+const catItem = {
+  code: 'station.cat', name: '고양이', description: '함께 지내는 고양이',
+  price: 1600, type: 'THEME', slot: 'STATION', tier: 'CONCEPT',
+  owned: true, equipped: true, selectedVariant: 'ginger',
+  variants: [
+    { code: 'ginger', name: '치즈 고양이' }, { code: 'black', name: '검정 고양이' },
+    { code: 'gray', name: '회색 고양이' }, { code: 'brown', name: '갈색 고양이' },
+    { code: 'white', name: '흰색 고양이' }, { code: 'gray-tabby', name: '회색 줄무늬 고양이' },
+  ],
+}
+
+async function openPet(item = catItem, coins = 2000) {
+  mocks.get.mockResolvedValue({ data: { coinBalance: coins, items: [item] } })
+  render(<ShopPage />)
+  await screen.findByRole('heading', { name: '코인샵' })
+  fireEvent.click(screen.getByRole('button', { name: '우주정거장' }))
+  fireEvent.click(screen.getByRole('button', { name: item.owned ? '외형 변경' : '미리보기' }))
+  return screen.getByRole('dialog', { name: '고양이' })
+}
+
 function catalog(coinBalance = 300) {
   return { data: { coinBalance, items: [...backgroundItems, pomodoroItem, planetItem] } }
 }
@@ -209,5 +229,58 @@ describe('ShopPage', () => {
     expect(screen.getByRole('button', { name: '코인 부족' })).toBeDisabled()
     expect(screen.getByRole('button', { name: '코인 부족' })).toHaveClass('btn-refined')
     expect(mocks.post).not.toHaveBeenCalled()
+  })
+
+  it('보유 동물 외형을 미리 고른 뒤 취소하면 장착이나 구매하지 않는다', async () => {
+    const dialog = await openPet()
+    expect(within(dialog).getByRole('button', { name: '치즈 고양이', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(within(dialog).getByRole('button', { name: '검정 고양이', exact: true }))
+    expect(within(dialog).getByRole('button', { name: '검정 고양이', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(within(dialog).getByRole('button', { name: '닫기' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(mocks.put).not.toHaveBeenCalled()
+    expect(mocks.post).not.toHaveBeenCalled()
+  })
+
+  it('보유 동물은 고른 외형을 무료로 장착하고 재조회한 선택을 표시한다', async () => {
+    const dialog = await openPet()
+    fireEvent.click(within(dialog).getByRole('button', { name: '회색 고양이', exact: true }))
+    mocks.get.mockResolvedValue({ data: { coinBalance: 2000, items: [{ ...catItem, selectedVariant: 'gray' }] } })
+    fireEvent.click(within(dialog).getByRole('button', { name: '이 모습으로 장착' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(mocks.put).toHaveBeenCalledExactlyOnceWith('/shop/equip', { code: 'station.cat', variant: 'gray' })
+    expect(mocks.post).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: '외형 변경' }))
+    expect(within(screen.getByRole('dialog')).getByRole('button', { name: '회색 고양이', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('동물 구매는 6종 포함을 확인하고 선택한 외형을 전송한다', async () => {
+    const dialog = await openPet({ ...catItem, owned: false, equipped: false })
+    fireEvent.click(within(dialog).getByRole('button', { name: '흰색 고양이', exact: true }))
+    fireEvent.click(within(dialog).getByRole('button', { name: '1,600코인으로 구매' }))
+    const confirm = screen.getByRole('dialog', { name: '고양이' })
+    expect(within(confirm).getByText(/6종 모두 포함/)).toBeInTheDocument()
+    expect(within(confirm).getByText(/구매 후 잔액 400코인/)).toBeInTheDocument()
+    expect(within(confirm).getByText(/흰색 고양이/)).toBeInTheDocument()
+    expect(mocks.post).not.toHaveBeenCalled()
+    fireEvent.click(within(confirm).getByRole('button', { name: '구매하기' }))
+    await waitFor(() => expect(mocks.post).toHaveBeenCalledExactlyOnceWith('/shop/purchase', { code: 'station.cat', variant: 'white' }))
+  })
+
+  it('외형 저장 실패는 창 안에 알리고 선택과 기존 장착을 유지한다', async () => {
+    const dialog = await openPet()
+    mocks.put.mockRejectedValue({ response: { data: { message: '외형을 저장하지 못했어요.' } } })
+    fireEvent.click(within(dialog).getByRole('button', { name: '검정 고양이', exact: true }))
+    fireEvent.click(within(dialog).getByRole('button', { name: '이 모습으로 장착' }))
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('외형을 저장하지 못했어요.')
+    expect(within(dialog).getByRole('button', { name: '검정 고양이', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    expect(mocks.refreshCoins).not.toHaveBeenCalled()
+    expect(mocks.post).not.toHaveBeenCalled()
+  })
+
+  it('코인이 부족해도 6종을 미리 볼 수 있고 상세 구매는 비활성화한다', async () => {
+    const dialog = await openPet({ ...catItem, owned: false, equipped: false }, 100)
+    expect(within(dialog).getByRole('button', { name: '흰색 고양이', exact: true })).toBeEnabled()
+    expect(within(dialog).getByRole('button', { name: '코인 부족' })).toBeDisabled()
   })
 })

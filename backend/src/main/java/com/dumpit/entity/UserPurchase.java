@@ -31,6 +31,9 @@ public class UserPurchase {
     @Column(nullable = false)
     private Integer price;
 
+    @Column(name = "selected_variant", length = 32)
+    private String selectedVariant;
+
     @CreationTimestamp
     private LocalDateTime purchasedAt;
 
@@ -40,5 +43,9 @@ public class UserPurchase {
         p.itemCode = itemCode;
         p.price = price;
         return p;
+    }
+
+    public void changeSelectedVariant(String variant) {
+        this.selectedVariant = variant;
     }
 }

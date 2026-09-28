@@ -16,5 +16,24 @@
     "source": "https://raw.githubusercontent.com/polyformproject/polyform-licenses/1.0.0/PolyForm-Noncommercial-1.0.0.md",
     "sha256": "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5",
     "retrieved": "2026-09-14"
+  },
+  {
+    "file": "assets/pets/cats-LICENSE.txt",
+    "source": "https://luizmelo.itch.io/pet-cat-pack",
+    "sha256": "78127e210bac37f543998092b4e881b16c5d0af765648bbd871a8ee2ec08790e",
+    "retrieved": "2026-09-28"
+  },
+  {
+    "file": "assets/pets/dogs-LICENSE.txt",
+    "source": "https://luizmelo.itch.io/pet-dogs-pack",
+    "sha256": "632f486266776e34129f67e14e197800d6593133a6b858c79a388daac202c79a",
+    "retrieved": "2026-09-28"
+  },
+  {
+    "file": "assets/pets/duckhive-LICENSE-SOURCE.txt",
+    "source": "https://duckhive.itch.io/bunny",
+    "sha256": "8b95778de7ec5a02b22bf64eeba5eed39af32713088aaafb3bd1aebcb6f7834a",
+    "retrieved": "2026-09-28",
+    "additionalSource": "https://duckhive.itch.io/squirrel"
   }
 ]

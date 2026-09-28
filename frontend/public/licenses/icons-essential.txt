@@ -1,0 +1,42 @@
+설정 아이콘 출처 및 라이선스
+
+작품: Icons Essential v1.2 — Gear
+원작자: Crusenho Agus Hennihuno
+원작: https://crusenho.itch.io/icons-essential-pack-free-icons
+작가: https://crusenho.itch.io
+라이선스: Creative Commons Attribution 4.0 International (CC BY 4.0)
+라이선스 조건: https://creativecommons.org/licenses/by/4.0/
+라이선스 전문: https://creativecommons.org/licenses/by/4.0/legalcode
+
+DumpIt의 변경 사항: 원본 16×16 PNG의 불투명 픽셀 위치와 색상을 보존하고,
+각 픽셀을 SVG 사각형으로 변환했습니다. 화면 크기에 따라 SVG로 표시합니다.
+적용 파일: frontend/src/assets/icons/setting.svg
+원본 경로: Icons_Essential/v1.2/Icons/Gear.png
+원본 PNG SHA-256: 92989874396321da1729cc274a24c83822d8277a2f723d7fd473fc0f0804e0e9
+
+원작자가 DumpIt을 보증하거나 후원한다는 의미가 아닙니다.
+이 제3자 아이콘에는 DumpIt 자체 라이선스의 제한을 추가하지 않습니다.
+시계 아이콘은 이 팩에 포함된 자료가 아니라 DumpIt에서 별도로 제작했습니다.
+
+아래는 원본 팩에 동봉된 라이선스 고지입니다.
+
+Attribution 4.0 International (CC BY 4.0)
+
+You are free to:
+
+Share — copy and redistribute the material in any medium or format for any purpose, even commercially.
+
+Adapt — remix, transform, and build upon the material for any purpose, even commercially.
+
+The licensor cannot revoke these freedoms as long as you follow the license terms.
+
+Under the following terms:
+
+Attribution - You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+
+No additional restrictions - You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+
+License Link: https://creativecommons.org/licenses/by/4.0/
+
+Licensor Owner: Crusenho Agus Hennihuno
+Licensor Store Link: https://crusenho.itch.io

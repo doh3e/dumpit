@@ -1,0 +1,478 @@
+[
+  {
+    "id": "C1",
+    "group": "cat",
+    "name": "치즈 고양이",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-cat-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "cat-1-idle.png",
+      "cell": 50,
+      "frames": 10,
+      "box": [
+        14,
+        18,
+        35,
+        32
+      ],
+      "transparent": true,
+      "sha256": "544fb2874728150ecb67bcc32977f896114d0bf773c1942e38b6e0ca9d2b4747"
+    },
+    "action": {
+      "file": "cat-1-licking-1.png",
+      "cell": 50,
+      "frames": 5,
+      "box": [
+        18,
+        16,
+        31,
+        32
+      ],
+      "transparent": true,
+      "sha256": "69db4b5a590d9752e7d152a6a7bb86b644a68e38ae1120c68dc5ff3741638316"
+    }
+  },
+  {
+    "id": "C2",
+    "group": "cat",
+    "name": "검정 고양이",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-cat-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "cat-2-idle.png",
+      "cell": 50,
+      "frames": 10,
+      "box": [
+        14,
+        18,
+        35,
+        32
+      ],
+      "transparent": true,
+      "sha256": "017b70044118e6e076fa80be19c482a82c9a52e7d51b96e9befa320532f2545b"
+    },
+    "action": {
+      "file": "cat-2-licking-1.png",
+      "cell": 50,
+      "frames": 5,
+      "box": [
+        18,
+        16,
+        31,
+        32
+      ],
+      "transparent": true,
+      "sha256": "0b5534a1d3c4fddcc739100d5d0423300efa27ba8abdf742f8f1280fa55346ce"
+    }
+  },
+  {
+    "id": "C3",
+    "group": "cat",
+    "name": "회색 고양이",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-cat-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "cat-3-idle.png",
+      "cell": 50,
+      "frames": 10,
+      "box": [
+        14,
+        18,
+        35,
+        32
+      ],
+      "transparent": true,
+      "sha256": "802608db0ccdd1f6824a1fb0f17a07f05ed994a427913ff40066de2c9225e947"
+    },
+    "action": {
+      "file": "cat-3-licking-1.png",
+      "cell": 50,
+      "frames": 5,
+      "box": [
+        18,
+        16,
+        31,
+        32
+      ],
+      "transparent": true,
+      "sha256": "4c3c9fffba2996b944efa245d549f83072860adf50fea32fb8cf8155615c9441"
+    }
+  },
+  {
+    "id": "C4",
+    "group": "cat",
+    "name": "갈색 고양이",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-cat-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "cat-4-idle.png",
+      "cell": 50,
+      "frames": 10,
+      "box": [
+        14,
+        16,
+        36,
+        32
+      ],
+      "transparent": true,
+      "sha256": "dd06c95b2aa70e2491325a805fb6c186b5db35e217e67b916526f44ffc2a8706"
+    },
+    "action": {
+      "file": "cat-4-licking-1.png",
+      "cell": 50,
+      "frames": 5,
+      "box": [
+        18,
+        15,
+        32,
+        32
+      ],
+      "transparent": true,
+      "sha256": "6d416eb46e51ff6771b57812d72d81e2a674693ff00fa67548c467dc5c4bf45e"
+    }
+  },
+  {
+    "id": "C5",
+    "group": "cat",
+    "name": "흰색 고양이",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-cat-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "cat-5-idle.png",
+      "cell": 50,
+      "frames": 10,
+      "box": [
+        14,
+        16,
+        35,
+        32
+      ],
+      "transparent": true,
+      "sha256": "166aacfaa8e092ce16c572c044da0a570aafffe6dc4f1cc8934d3846cbb31009"
+    },
+    "action": {
+      "file": "cat-5-licking-1.png",
+      "cell": 50,
+      "frames": 5,
+      "box": [
+        18,
+        16,
+        32,
+        32
+      ],
+      "transparent": true,
+      "sha256": "afc46527f6faa00e8164ee590cb28bdca4b9be20a342518327a0517e8f3a5f3c"
+    }
+  },
+  {
+    "id": "C6",
+    "group": "cat",
+    "name": "회색 줄무늬 고양이",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-cat-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "cat-6-idle.png",
+      "cell": 50,
+      "frames": 10,
+      "box": [
+        14,
+        18,
+        35,
+        32
+      ],
+      "transparent": true,
+      "sha256": "0337b25eb2f7b8000a4e7d5022fbc96bd3d126559bd88b79c875deacc75b2a40"
+    },
+    "action": {
+      "file": "cat-6-licking-1.png",
+      "cell": 50,
+      "frames": 5,
+      "box": [
+        18,
+        16,
+        31,
+        32
+      ],
+      "transparent": true,
+      "sha256": "e1c04fc7d6bb158cc47549feda3a36d24bbe2bc745012b6efdbba7200ba7ac68"
+    }
+  },
+  {
+    "id": "D1",
+    "group": "dog",
+    "name": "골든 리트리버",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-dogs-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "golden-retriever-idle.png",
+      "cell": 100,
+      "frames": 10,
+      "box": [
+        34,
+        39,
+        67,
+        61
+      ],
+      "transparent": true,
+      "sha256": "50225c29efb452785590151c1c7cd6263dabe66cdb5e03e9592d4f554e6cf3a7"
+    },
+    "action": {
+      "file": "golden-retriever-bark.png",
+      "cell": 100,
+      "frames": 3,
+      "box": [
+        34,
+        39,
+        70,
+        61
+      ],
+      "transparent": true,
+      "sha256": "ee19deba9fb23fd8a99879fa7fcf4b7d9a2968ba0034f845ff7f487150e03940"
+    }
+  },
+  {
+    "id": "D2",
+    "group": "dog",
+    "name": "아키타",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-dogs-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "akita-idle.png",
+      "cell": 100,
+      "frames": 10,
+      "box": [
+        41,
+        43,
+        60,
+        58
+      ],
+      "transparent": true,
+      "sha256": "1114d44038fc55b92a87ebb5857b189449023f5c6046211919c8a15a608dcd8c"
+    },
+    "action": {
+      "file": "akita-bark.png",
+      "cell": 100,
+      "frames": 3,
+      "box": [
+        41,
+        43,
+        62,
+        58
+      ],
+      "transparent": true,
+      "sha256": "563fca62c2cdecf3cb1428d0f7b464335f130372d653fd3478a77fcd8a927691"
+    }
+  },
+  {
+    "id": "D3",
+    "group": "dog",
+    "name": "그레이트 데인",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-dogs-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "great-dane-idle.png",
+      "cell": 100,
+      "frames": 10,
+      "box": [
+        31,
+        33,
+        70,
+        67
+      ],
+      "transparent": true,
+      "sha256": "1fff23bcf7dffc67d76059c23b192afbcf0a73fe951b6a533fa6af2ebe63d266"
+    },
+    "action": {
+      "file": "great-dane-bark.png",
+      "cell": 100,
+      "frames": 3,
+      "box": [
+        31,
+        33,
+        77,
+        67
+      ],
+      "transparent": true,
+      "sha256": "d474b74f5bc7e8861fe336b02c57f5e98e30ceeac47e099462eb6ce80b5b1e8c"
+    }
+  },
+  {
+    "id": "D4",
+    "group": "dog",
+    "name": "슈나우저",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-dogs-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "schnauzer-idle.png",
+      "cell": 100,
+      "frames": 10,
+      "box": [
+        37,
+        39,
+        64,
+        62
+      ],
+      "transparent": true,
+      "sha256": "005a522e0b1c3d3eafe06ca471f2041ee2f2475e2d1f2115d90ec9d92e2cedf3"
+    },
+    "action": {
+      "file": "schnauzer-bark.png",
+      "cell": 100,
+      "frames": 3,
+      "box": [
+        37,
+        39,
+        67,
+        62
+      ],
+      "transparent": true,
+      "sha256": "3acdaa6eaad2a88ac6a70b0b74b24d292810bb3018386fc4994c3f6afd8c87e1"
+    }
+  },
+  {
+    "id": "D5",
+    "group": "dog",
+    "name": "세인트 버나드",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-dogs-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "saint-bernard-idle.png",
+      "cell": 100,
+      "frames": 10,
+      "box": [
+        29,
+        36,
+        72,
+        65
+      ],
+      "transparent": true,
+      "sha256": "5ca75bfe2029a2f26f0bd1889f9b5fdffc015b718ee10628c579cc7eafec574a"
+    },
+    "action": {
+      "file": "saint-bernard-bark.png",
+      "cell": 100,
+      "frames": 3,
+      "box": [
+        29,
+        37,
+        75,
+        65
+      ],
+      "transparent": true,
+      "sha256": "d1d51007e530bf965f6242b654edf33b032634eba16b3b09cf6c74e3e77af70c"
+    }
+  },
+  {
+    "id": "D6",
+    "group": "dog",
+    "name": "시베리안 허스키",
+    "author": "LuizMelo",
+    "source": "https://luizmelo.itch.io/pet-dogs-pack",
+    "license": "CC0",
+    "idle": {
+      "file": "siberian-husky-idle.png",
+      "cell": 100,
+      "frames": 10,
+      "box": [
+        34,
+        38,
+        67,
+        62
+      ],
+      "transparent": true,
+      "sha256": "564c493905691d5cfd28276dbd7cccf7bb5f9e59e71880a679db389836da1456"
+    },
+    "action": {
+      "file": "siberian-husky-bark.png",
+      "cell": 100,
+      "frames": 3,
+      "box": [
+        34,
+        38,
+        70,
+        62
+      ],
+      "transparent": true,
+      "sha256": "9ccd72aff8f723ec3434566c524ff78e44056dd0fad2c1aa5edffad280211401"
+    }
+  },
+  {
+    "id": "S1",
+    "group": "small",
+    "name": "회색 토끼",
+    "author": "Duckhive",
+    "source": "https://duckhive.itch.io/bunny",
+    "license": "CC0",
+    "idle": {
+      "file": "bunny-idle.png",
+      "cell": 64,
+      "frames": 2,
+      "box": [
+        20,
+        21,
+        42,
+        40
+      ],
+      "transparent": true,
+      "sha256": "9ed31d93ec866cd96d792460fbcbcb5e6a15f6e1e85772fa4400b9ff52d2eae2"
+    },
+    "action": {
+      "file": "bunny-walk.png",
+      "cell": 64,
+      "frames": 4,
+      "box": [
+        19,
+        19,
+        43,
+        40
+      ],
+      "transparent": true,
+      "sha256": "8bdf88aa27a9d08be9c2d7789229533ef22a62f8584964ad1e01bc699da3666b"
+    }
+  },
+  {
+    "id": "S2",
+    "group": "small",
+    "name": "다람쥐",
+    "author": "Duckhive",
+    "source": "https://duckhive.itch.io/squirrel",
+    "license": "CC0",
+    "idle": {
+      "file": "squirrel-idle.png",
+      "cell": 64,
+      "frames": 2,
+      "box": [
+        18,
+        16,
+        40,
+        32
+      ],
+      "transparent": true,
+      "sha256": "aa2589bbea76fe550b2ac06d0e76c247cc5f43da4a6ca7cf1cb8f4ba768691ed"
+    },
+    "action": {
+      "file": "squirrel-run.png",
+      "cell": 64,
+      "frames": 3,
+      "box": [
+        16,
+        12,
+        46,
+        32
+      ],
+      "transparent": true,
+      "sha256": "44ecfcd1ba825724983f22c5d8814f1b19702df83ae43d7f02ad9a3b73e2b089"
+    }
+  }
+]

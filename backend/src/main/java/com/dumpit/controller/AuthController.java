@@ -41,10 +41,11 @@ public class AuthController {
             user.getPicture(),
             coins,
             isAdmin,
-            shopService.getEquipments(user)
+            shopService.getEquipments(user),
+            shopService.getEquipmentVariants(user)
         ));
     }
 
     public record UserMeResponse(String email, String name, String picture, int coins, boolean isAdmin,
-                                 Map<String, String> equipments) {}
+                                 Map<String, String> equipments, Map<String, String> equipmentVariants) {}
 }

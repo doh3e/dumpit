@@ -45,7 +45,9 @@ class AuthProfileApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.picture").doesNotExist())
                 .andExpect(jsonPath("$.coins").value(0))
                 .andExpect(jsonPath("$.isAdmin").value(false))
-                .andExpect(jsonPath("$.equipments").isMap());
+                .andExpect(jsonPath("$.equipments").isMap())
+                .andExpect(jsonPath("$.equipmentVariants").isMap())
+                .andExpect(jsonPath("$.equipmentVariants.STATION").doesNotExist());
     }
 
     @Test

@@ -1,6 +1,6 @@
 import { useAuth } from '../hooks/useAuth'
 import PixelSprite from './PixelSprite'
-import { spriteFor, STATION_SPRITES } from '../shop/registry'
+import { stationSpriteFor } from '../shop/registry'
 
 export default function PixelStation() {
   const { user } = useAuth()
@@ -8,7 +8,7 @@ export default function PixelStation() {
   return (
     <div className="flex justify-center pt-1 pb-3" aria-hidden="true">
       <PixelSprite
-        sprite={spriteFor(STATION_SPRITES, user?.equipments?.STATION)}
+        sprite={stationSpriteFor(user?.equipments?.STATION, user?.equipmentVariants?.STATION)}
         className="w-16 h-16"
       />
     </div>
