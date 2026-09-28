@@ -580,15 +580,19 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { .orbit-sat, .animate-bounce { animation: none; } }
 
-/* ---- 도트 시트 애니 (PixelSprite) — 8프레임 전용: steps(8)가 시트를 8등분 순환
-   (N프레임 일반식: to = 100% * N/(N-1). 다른 프레임 수 추가 시 keyframes도 추가) ---- */
-.pixel-sprite-anim {
-  background-repeat: no-repeat;
-  animation: pixel-sprite-8 1.6s steps(8) infinite;
+/* 마지막 셀 다음 위치까지 steps(N)으로 이동해 N개 프레임만 순환한다. */
+.pixel-sprite { display: flex; align-items: center; justify-content: center; }
+.pixel-sprite-frame { position: relative; overflow: hidden; flex: none; }
+.pixel-sprite-strip {
+  position: absolute; max-width: none; image-rendering: pixelated;
+  pointer-events: none; user-select: none;
 }
-@keyframes pixel-sprite-8 {
-  from { background-position-x: 0%; }
-  to { background-position-x: 114.2857%; }
+.pixel-sprite-anim {
+  animation: pixel-sprite-strip var(--sprite-duration) steps(var(--sprite-frames)) infinite;
+}
+@keyframes pixel-sprite-strip {
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--sprite-travel)); }
 }
 
 /* ---- 마이페이지 우주정거장 픽셀아트 ---- */
@@ -642,6 +646,14 @@ body {
 
 /* ---- 프리미엄 완료축하 모션 (celebrationMotions.js 빌더와 클래스 계약) ---- */
 .celeb-part { position: absolute; height: auto; image-rendering: pixelated; }
+
+.celeb-heart { opacity: 0; animation: heart-rise 1.7s ease-out both; }
+@keyframes heart-rise {
+  0% { transform: translate(0, 12px) scale(.8); opacity: 0; }
+  15% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { transform: translate(var(--drift), -135px) scale(1.05); opacity: 0; }
+}
 
 /* 유성우 — 우상→좌하 스트릭 2층(배경 소형 + 전경 대형) + 잔별 반짝 */
 .celeb-meteor { top: -10vh; opacity: 0; animation: meteor-fall 1.15s linear forwards; }
@@ -765,8 +777,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .btn-refined, .input-refined, .sidebar-refined-menu-item { transition: none; }
-  /* 도트 시트 애니는 첫 프레임 고정 (인라인 animation-duration보다 우선하도록 !important) */
-  .pixel-sprite-anim { animation: none !important; }
+  .pixel-sprite-anim { animation: none !important; transform: translateX(0); }
   .pixel-spark { animation: none; opacity: 0; }
   /* 비행 스프라이트는 JS(matchMedia)에서 렌더링 자체를 건너뛰고 배너 안 정적 3개로 대체 — 아래는 안전망 */
   .celebration-sprite { animation: none; opacity: 0; }

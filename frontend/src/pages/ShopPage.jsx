@@ -4,6 +4,8 @@ import { iconProps } from '../assets/icons'
 import { useAuth } from '../hooks/useAuth'
 import RocketLaunch from '../components/RocketLaunch'
 import PixelSprite from '../components/PixelSprite'
+import PetVariantDialog from '../components/PetVariantDialog'
+import { isPetStation } from '../shop/petSprites'
 import Dialog from '../components/Dialog'
 import useReducedMotion from '../hooks/useReducedMotion'
 import { applySkinsTransient, applyCachedSkins } from '../shop/applySkins'
@@ -13,6 +15,7 @@ import {
   STATION_SPRITES,
   STICKER_SPRITES,
   spriteFor,
+  stationSpriteFor,
 } from '../shop/registry'
 
 const PREVIEW_TOKENS = {
@@ -97,7 +100,9 @@ function ItemPreview({ item, theme }) {
     return <SwatchPreview code={item.code} theme={theme} />
   }
   const map = item.type === 'STICKER' ? STICKER_SPRITES : SPRITE_MAP_BY_SLOT[item.slot]
-  const sprite = spriteFor(map || {}, item.code)
+  const sprite = item.slot === 'STATION'
+    ? stationSpriteFor(item.code, item.selectedVariant)
+    : spriteFor(map || {}, item.code)
   if (!sprite) return null
   return <PixelSprite sprite={sprite} className="w-10 h-10 object-contain flex-shrink-0" />
 }
@@ -158,7 +163,7 @@ function ShopItemCard({ item, theme, coinBalance, busyCode, onBuyClick, onEquip,
               onClick={() => onSpritePreview(item)}
               className="btn-refined btn-refined-text !px-2 text-[0.6875rem] text-sub"
             >
-              미리보기
+              {item.variants?.length > 0 && item.owned ? '외형 변경' : '미리보기'}
             </button>
           )}
         </div>
@@ -245,6 +250,12 @@ function PurchaseConfirmModal({ item, coinBalance, submitting, error, onConfirm,
         <span className="font-dungeon" style={{ color: 'var(--danger-text)' }}>{item.price}</span>코인으로 구매할까요?
       </p>
       <p className="mt-1 text-xs font-semibold text-sub">구매 후 잔액 {remaining}코인</p>
+      {item.variants?.length > 0 && (
+        <p className="mt-2 text-xs font-semibold text-sub">
+          {item.variants.length}종 모두 포함 · 언제든 변경 가능
+          <br />처음 만날 친구: {item.variants.find(v => v.code === item.selectedVariant)?.name ?? item.variants[0].name}
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="mt-3 text-xs font-bold" style={{ color: 'var(--danger-text)' }}>{error}</p>
@@ -359,6 +370,11 @@ export default function ShopPage() {
 
   const handleBuyClick = (item) => {
     setConfirmError(null)
+    if (item.variants?.length > 0) {
+      setActionError(null)
+      setSpritePreviewItem(item)
+      return
+    }
     setConfirmItem(item)
   }
 
@@ -367,7 +383,10 @@ export default function ShopPage() {
     setConfirmSubmitting(true)
     setConfirmError(null)
     try {
-      await api.post('/shop/purchase', { code: confirmItem.code })
+      await api.post('/shop/purchase', {
+        code: confirmItem.code,
+        ...(confirmItem.variants?.length > 0 ? { variant: confirmItem.selectedVariant ?? confirmItem.variants[0].code } : {}),
+      })
       setConfirmItem(null)
       await afterAction()
     } catch (err) {
@@ -377,13 +396,19 @@ export default function ShopPage() {
     }
   }
 
-  const handleEquip = async (item) => {
+  const handleEquip = async (item, variant) => {
+    if (item.variants?.length > 0 && variant === undefined) {
+      setActionError(null)
+      setSpritePreviewItem(item)
+      return
+    }
     setBusyCode(item.code)
     setActionError(null)
     try {
-      await api.put('/shop/equip', { code: item.code })
+      await api.put('/shop/equip', { code: item.code, ...(variant === undefined ? {} : { variant }) })
       await afterAction()
       clearSlotPreview(item.slot)
+      setSpritePreviewItem(null)
     } catch (err) {
       setActionError(getApiErrorMessage(err, '장착에 실패했어요.'))
     } finally {
@@ -479,7 +504,7 @@ export default function ShopPage() {
     previewBusy: Boolean(previewCode),
     previews,
     onLivePreviewToggle: handleLivePreviewToggle,
-    onSpritePreview: setSpritePreviewItem,
+    onSpritePreview: (item) => { setActionError(null); setSpritePreviewItem(item) },
   }
 
   return (
@@ -561,6 +586,11 @@ export default function ShopPage() {
         <a href={`${import.meta.env.BASE_URL}licenses/icons-essential.txt`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
           Crusenho (CC BY 4.0) · 출처와 변경 사항
         </a>
+        <br />
+        동물 정거장:{' '}
+        <a href={`${import.meta.env.BASE_URL}licenses/pet-stations.txt`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+          LuizMelo · Duckhive (CC0) · 출처
+        </a>
       </p>
 
       {Object.keys(previews).length > 0 && (
@@ -584,7 +614,18 @@ export default function ShopPage() {
         </div>
       )}
 
-      <SpritePreviewModal item={spritePreviewItem} onClose={() => setSpritePreviewItem(null)} />
+      {spritePreviewItem && isPetStation(spritePreviewItem.code) ? (
+        <PetVariantDialog
+          key={spritePreviewItem.code}
+          item={spritePreviewItem}
+          coinBalance={coinBalance}
+          busy={busyCode === spritePreviewItem.code}
+          error={actionError}
+          onClose={() => { setSpritePreviewItem(null); setActionError(null) }}
+          onBuy={(item) => { setSpritePreviewItem(null); setConfirmError(null); setConfirmItem(item) }}
+          onEquip={handleEquip}
+        />
+      ) : <SpritePreviewModal item={spritePreviewItem} onClose={() => setSpritePreviewItem(null)} />}
 
       <PurchaseConfirmModal
         item={confirmItem}

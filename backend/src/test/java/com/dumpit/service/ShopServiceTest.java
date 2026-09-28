@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -115,7 +116,7 @@ class ShopServiceTest {
     @Test
     void 장착은_보유_아이템만() {
         User user = userWithCoins(0);
-        when(purchaseRepository.existsByUserAndItemCode(user, "bg.ocean")).thenReturn(false);
+        when(purchaseRepository.findByUserAndItemCode(user, "bg.ocean")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> shopService.equip(EMAIL, "bg.ocean"))
                 .isInstanceOf(BadRequestException.class);
@@ -126,7 +127,8 @@ class ShopServiceTest {
     void 장착은_같은_슬롯을_교체한다() {
         User user = userWithCoins(0);
         UserEquipment equipment = UserEquipment.of(user, "BACKGROUND", "bg.lavender");
-        when(purchaseRepository.existsByUserAndItemCode(user, "bg.ocean")).thenReturn(true);
+        when(purchaseRepository.findByUserAndItemCode(user, "bg.ocean"))
+                .thenReturn(Optional.of(UserPurchase.of(user, "bg.ocean", 200)));
         when(equipmentRepository.findByUserAndSlot(user, "BACKGROUND")).thenReturn(Optional.of(equipment));
 
         shopService.equip(EMAIL, "bg.ocean");
@@ -173,5 +175,79 @@ class ShopServiceTest {
         assertThatThrownBy(() -> shopService.assertOwnsSticker(user, "bg.ocean"))
                 .isInstanceOf(BadRequestException.class);
         verify(purchaseRepository, never()).existsByUserAndItemCode(any(), any());
+    }
+
+    @Test
+    void 선택한_고양이_외형으로_구매하고_새_가격만큼_차감한다() {
+        User user = userWithCoins(2000);
+
+        ShopService.PurchaseResult result = shopService.purchase(EMAIL, "station.cat", "gray");
+
+        assertThat(result.remainingCoins()).isEqualTo(400);
+        ArgumentCaptor<UserPurchase> saved = ArgumentCaptor.forClass(UserPurchase.class);
+        verify(purchaseRepository).save(saved.capture());
+        assertThat(saved.getValue().getPrice()).isEqualTo(1600);
+        assertThat(saved.getValue().getSelectedVariant()).isEqualTo("gray");
+    }
+
+    @Test
+    void 기존_구매의_외형_변경은_코인과_원래_가격을_보존한다() {
+        User user = userWithCoins(123);
+        UserPurchase purchase = UserPurchase.of(user, "station.cat", 800);
+        when(purchaseRepository.findByUserAndItemCode(user, "station.cat")).thenReturn(Optional.of(purchase));
+
+        shopService.equip(EMAIL, "station.cat", "black");
+        shopService.equip(EMAIL, "station.cat");
+
+        assertThat(user.getCoinBalance()).isEqualTo(123);
+        assertThat(purchase.getPrice()).isEqualTo(800);
+        assertThat(purchase.getSelectedVariant()).isEqualTo("black");
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void 저장된_외형이_없거나_알수없으면_카탈로그와_장착정보는_기본외형을_반환한다() {
+        User user = userWithCoins(0);
+        UserPurchase cat = UserPurchase.of(user, "station.cat", 800);
+        UserPurchase dog = UserPurchase.of(user, "station.dog", 800);
+        dog.changeSelectedVariant("removed-variant");
+        when(purchaseRepository.findByUser(user)).thenReturn(List.of(cat, dog));
+        when(equipmentRepository.findByUser(user)).thenReturn(List.of(UserEquipment.of(user, "STATION", "station.dog")));
+
+        ShopService.CatalogResponse response = shopService.getCatalog(EMAIL);
+        assertThat(response.items()).filteredOn(item -> item.code().equals("station.cat"))
+                .singleElement().satisfies(item -> assertThat(item.selectedVariant()).isEqualTo("ginger"));
+        assertThat(response.items()).filteredOn(item -> item.code().equals("station.dog"))
+                .singleElement().satisfies(item -> assertThat(item.selectedVariant()).isEqualTo("golden-retriever"));
+        assertThat(shopService.getEquipmentVariants(user)).containsEntry("STATION", "golden-retriever");
+        assertThat(cat.getSelectedVariant()).isNull();
+        assertThat(dog.getSelectedVariant()).isEqualTo("removed-variant");
+    }
+
+    @Test
+    void 잘못된_외형_구매는_예외전에도_잔액을_바꾸지_않는다() {
+        User user = userWithCoins(2000);
+
+        assertThatThrownBy(() -> shopService.purchase(EMAIL, "station.cat", "akita"))
+                .isInstanceOf(BadRequestException.class);
+
+        assertThat(user.getCoinBalance()).isEqualTo(2000);
+        verify(userRepository, never()).save(any());
+        verify(purchaseRepository, never()).save(any());
+        verify(equipmentRepository, never()).save(any());
+    }
+
+    @Test
+    void 외형_상품의_중복구매와_잔액부족은_선택과_코인을_바꾸지_않는다() {
+        User user = userWithCoins(1599);
+        assertThatThrownBy(() -> shopService.purchase(EMAIL, "station.cat", "white"))
+                .isInstanceOf(BadRequestException.class).hasMessage("코인이 부족합니다.");
+        when(purchaseRepository.existsByUserAndItemCode(user, "station.cat")).thenReturn(true);
+        assertThatThrownBy(() -> shopService.purchase(EMAIL, "station.cat", "gray"))
+                .isInstanceOf(BadRequestException.class).hasMessage("이미 보유한 아이템입니다.");
+
+        assertThat(user.getCoinBalance()).isEqualTo(1599);
+        verify(purchaseRepository, never()).save(any());
+        verify(equipmentRepository, never()).save(any());
     }
 }

@@ -14,7 +14,6 @@ import planetWhale from '../assets/shop/planet_whale.png'
 import planetSun from '../assets/shop/planet_sun.png'
 import planetBlackhole from '../assets/shop/planet_blackhole.png'
 import celebrationDefault from '../assets/shop/celeb_rocket_default.png'
-import celebrationShootingStar from '../assets/shop/celeb_shooting_star.png'
 import celebrationUfo from '../assets/shop/celeb_ufo.png'
 import celebrationGoldenRocket from '../assets/shop/celeb_golden_rocket.png'
 import celebFireworks from '../assets/shop/celeb_fireworks.png'
@@ -45,9 +44,7 @@ import stationSprout from '../assets/shop/station_sprout.png'
 import stationGalaxy from '../assets/shop/station_galaxy.png'
 import stationWood from '../assets/shop/station_wood.png'
 import stationCandy from '../assets/shop/station_candy.png'
-import stationDog from '../assets/shop/station_dog.png'
-import stationCat from '../assets/shop/station_cat.png'
-import stationHamster from '../assets/shop/station_hamster.png'
+import { petSpriteFor } from './petSprites'
 import stickerHeart from '../assets/shop/sticker_heart.png'
 import stickerImportant from '../assets/shop/sticker_important.png'
 import stickerStar from '../assets/shop/sticker_star.png'
@@ -80,7 +77,7 @@ export const PLANET_SPRITES = {
 // img는 대표 스프라이트 — 상점 카드·reduced-motion 폴백에 사용.
 export const CELEBRATION_SPRITES = {
   default: { name: '기본 로켓', img: celebrationDefault },
-  'celeb.shooting-star': { name: '별똥별', img: celebrationShootingStar },
+  'celeb.shooting-star': { name: '하트 축하', img: stickerHeart, motion: 'hearts' },
   'celeb.ufo': { name: 'UFO', img: celebrationUfo },
   'celeb.golden-rocket': { name: '황금 로켓', img: celebrationGoldenRocket },
   'celeb.fireworks': {
@@ -122,9 +119,10 @@ export const STATION_SPRITES = {
   'station.galaxy': { name: '은하수 전망대', img: stationGalaxy },
   'station.wood': { name: '원목 오두막', img: stationWood },
   'station.candy': { name: '과자집', img: stationCandy },
-  'station.dog': { name: '강아지', img: stationDog, frames: 8, fps: 5 },
-  'station.cat': { name: '고양이', img: stationCat, frames: 8, fps: 5 },
-  'station.hamster': { name: '햄스터', img: stationHamster, frames: 8, fps: 5 },
+  'station.dog': petSpriteFor('station.dog'),
+  'station.cat': petSpriteFor('station.cat'),
+  'station.hamster': petSpriteFor('station.hamster'),
+  'station.squirrel': petSpriteFor('station.squirrel'),
 }
 
 export const STICKER_SPRITES = {
@@ -140,4 +138,8 @@ export const STICKER_SPRITES = {
 
 export function spriteFor(map, code) {
   return map[code] ?? map.default
+}
+
+export function stationSpriteFor(code, variant, action = 'idle') {
+  return petSpriteFor(code, variant, action) ?? spriteFor(STATION_SPRITES, code)
 }

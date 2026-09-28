@@ -25,7 +25,7 @@ public class ShopController {
     @PostMapping("/purchase")
     public ResponseEntity<?> purchase(@AuthenticationPrincipal OAuth2User principal,
                                       @RequestBody CodeRequest req) {
-        ShopService.PurchaseResult result = shopService.purchase(principal.getAttribute("email"), req.code());
+        ShopService.PurchaseResult result = shopService.purchase(principal.getAttribute("email"), req.code(), req.variant());
         return ResponseEntity.ok(Map.of(
                 "message", "구매 완료!",
                 "remainingCoins", result.remainingCoins(),
@@ -35,7 +35,7 @@ public class ShopController {
     @PutMapping("/equip")
     public ResponseEntity<?> equip(@AuthenticationPrincipal OAuth2User principal,
                                    @RequestBody CodeRequest req) {
-        shopService.equip(principal.getAttribute("email"), req.code());
+        shopService.equip(principal.getAttribute("email"), req.code(), req.variant());
         return ResponseEntity.ok(Map.of("message", "장착했어요."));
     }
 
@@ -46,5 +46,5 @@ public class ShopController {
         return ResponseEntity.ok(Map.of("message", "기본으로 되돌렸어요."));
     }
 
-    public record CodeRequest(String code) {}
+    public record CodeRequest(String code, String variant) {}
 }

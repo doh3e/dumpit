@@ -15,7 +15,7 @@
 
 ## 상점 픽셀 아트
 
-웹의 `frontend/src/assets/shop/`와 모바일의 `mobile/assets/shop/`에 같은 계열의 에셋이 있다. 데스크톱은 웹 번들을 포함한다. 모바일의 `@2x`·`@3x` 파일은 [확대 스크립트](mobile/scripts/upscale_sprites.py)로 만든 파생본이며 원본의 출처·라이선스를 유지한다.
+웹의 `frontend/src/assets/shop/`와 모바일의 `mobile/assets/shop/`에 같은 계열의 에셋이 있다. 아래 새 동물 `pets/`는 웹에만 적용했고 모바일은 기존 동물을 유지한다. 데스크톱은 웹 번들을 포함한다. 모바일의 `@2x`·`@3x` 파일은 [확대 스크립트](mobile/scripts/upscale_sprites.py)로 만든 파생본이며 원본의 출처·라이선스를 유지한다.
 
 | 파일명 / 계열 | 작품·원작자 | 라이선스 | DumpIt에서 변경한 내용 |
 |---|---|---|---|
@@ -25,9 +25,17 @@
 | `celeb_golden_rocket.png` | Space - Pixel Art / peony, RocketGrey | CC BY 4.0 | 무채색 픽셀을 금색으로 변경 |
 | `pattern_galaxy_light.png`, `pattern_galaxy_dark.png` 및 모바일 배율별 파생본 | Space - Pixel Art / peony, 별 스프라이트 | CC BY 4.0 | 별을 추출해 반복 배경 타일로 합성·확대 |
 | `pattern_sprout_light.png`, `pattern_sprout_dark.png` 및 모바일 배율별 파생본 | 16x16 RPG Icon Pack / stealthix, 잎 스프라이트 | CC0 1.0 | 추출·확대·반복 타일 합성 |
+| `pets/cat-*-idle.png`, `pets/cat-*-licking-1.png` 12개 | Pet Cats Pack / LuizMelo | CC0 1.0 | 원본 바이트 유지, 파일명 통일. CSS 프레임 재생·투명 여백 제외·화면 크기 조정 |
+| `pets/*-idle.png`, `pets/*-bark.png` 강아지 12개 | Pet Dogs Pack / LuizMelo | CC0 1.0 | 원본 바이트 유지, 파일명 통일. CSS 프레임 재생·투명 여백 제외·화면 크기 조정 |
+| `pets/bunny-idle.png`, `pets/bunny-walk.png` | Bunny / Duckhive | CC0 1.0 | 원본 바이트 유지, 파일명 통일. CSS 프레임 재생·투명 여백 제외·화면 크기 조정 |
+| `pets/squirrel-idle.png`, `pets/squirrel-run.png` | Squirrel / Duckhive | CC0 1.0 | 원본 바이트 유지, 파일명 통일. CSS 프레임 재생·투명 여백 제외·화면 크기 조정 |
 
 - **Space - Pixel Art — peony:** [원작 배포 페이지](https://opengameart.org/content/space-pixel-art), [CC BY 4.0 조건](https://creativecommons.org/licenses/by/4.0/), [보존한 라이선스 전문](docs/licenses/assets/CC-BY-4.0.txt).
 - **16x16 RPG Icon Pack — stealthix:** [원작 배포 페이지](https://opengameart.org/content/16x16-rpg-icon-pack), [CC0 1.0 조건](https://creativecommons.org/publicdomain/zero/1.0/), [보존한 라이선스 전문](docs/licenses/assets/CC0-1.0.txt).
+- **Pet Cats Pack / Pet Dogs Pack — LuizMelo:** [고양이](https://luizmelo.itch.io/pet-cat-pack), [강아지](https://luizmelo.itch.io/pet-dogs-pack), [동봉 고양이 라이선스](docs/licenses/assets/pets/cats-LICENSE.txt), [동봉 강아지 라이선스](docs/licenses/assets/pets/dogs-LICENSE.txt).
+- **Bunny / Squirrel — Duckhive:** [토끼](https://duckhive.itch.io/bunny), [다람쥐](https://duckhive.itch.io/squirrel), [제작자 페이지의 CC0 확인 기록](docs/licenses/assets/pets/duckhive-LICENSE-SOURCE.txt).
+
+새 동물 14종은 2026-09-28에 확인했다. [원본 ZIP·파일 해시 및 프레임 메타데이터](docs/licenses/assets/pets/manifest.json), [출처 설명](docs/licenses/assets/pets/README.md), [제품 번들 고지](frontend/public/licenses/pet-stations.txt)를 보존한다. 동물 PNG를 재색칠·재생성하거나 알파를 편집하지 않았다. CC0 자료에는 DumpIt 자체 라이선스의 이용 제한을 적용하지 않는다.
 
 CC BY 4.0 자료를 공유할 때에는 작가·원작·라이선스 링크와 개작 사실을 함께 보존한다. 원작자가 DumpIt을 보증하거나 후원한다는 의미로 사용하지 않는다. CC0 자료는 출처를 추적할 수 있도록 자발적으로 기록했다. 원작 링크와 라이선스는 2026-09-14에 배포 페이지에서 재확인했다.
 
@@ -38,7 +46,7 @@ CC BY 4.0 자료를 공유할 때에는 작가·원작·라이선스 링크와 �
 | 파일명 / 계열 | 제작 근거 |
 |---|---|
 | `planet_*.png` 15종 | [gen_planets.py](frontend/scripts/sprites/gen_planets.py) |
-| `station_*.png` 11종 | [gen_stations.py](frontend/scripts/sprites/gen_stations.py); 동물 우주정거장은 프레임 시트 |
+| `station_*.png` 11종 | [gen_stations.py](frontend/scripts/sprites/gen_stations.py); 현재 비동물 8종 생성. 기존 자체 동물 3종과 생성 함수는 보존하며 새 `pets/` CC0 원본은 생성 대상에서 제외 |
 | `sticker_*.png` 8종 | [gen_stickers.py](frontend/scripts/sprites/gen_stickers.py) |
 | `pattern_wood_*.png`, `pattern_candy_*.png`, `deco_*.png` | [gen_patterns.py](frontend/scripts/sprites/gen_patterns.py); sprout/galaxy **배경 패턴**은 위 제3자 표에 별도로 기재 |
 | peony의 4종을 제외한 `celeb_*.png` 20종 | [gen_celebs.py](frontend/scripts/sprites/gen_celebs.py); 불꽃·유성·꽃잎·새싹·사탕·모닥불 파티클 |
@@ -49,7 +57,7 @@ CC BY 4.0 자료를 공유할 때에는 작가·원작·라이선스 링크와 �
 | `frontend/src/assets/icons/*_<크기>.png` | [gen_icon_sizes.py](frontend/scripts/gen_icon_sizes.py)로 원본에서 크기별 파생. 원본별 출처를 승계하며, `menu`·`download`의 원출처는 아래 확인 항목 참조 |
 | Android 위젯 문자·도트 이미지 | [gen_widget_assets.py](mobile/scripts/gen_widget_assets.py); 문자 렌더링에 Galmuri와 DungGeunMo 사용 |
 
-행성·우주정거장·스티커를 자체 제작으로 교체한 기존 이력을 유지한다. 현재 스티커에는 과거 KerteX_의 Fire/Flame, stealthix의 하트, peony의 별을 사용하지 않는다. 새싹 배경에 남아 있는 stealthix 자료는 위 표에 계속 표시한다.
+행성·우주정거장·스티커를 자체 제작으로 교체한 기존 이력을 유지한다. 웹 동물 정거장은 위 CC0 원본으로 교체했고 기존 자체 동물 PNG는 보존한다. 현재 스티커에는 과거 KerteX_의 Fire/Flame, stealthix의 하트, peony의 별을 사용하지 않는다. 새싹 배경에 남아 있는 stealthix 자료는 위 표에 계속 표시한다.
 
 ## 폰트
 
@@ -86,6 +94,6 @@ Flaticon 자료는 오픈소스 코드나 CC0 에셋으로 분류하지 않는�
 
 ## 배포본의 고지
 
-이 문서는 저장소의 출처 기록이다. 웹 상점에는 `peony (CC-BY 4.0) · stealthix`라는 짧은 크레딧과 Crusenho 설정 아이콘의 상세 고지 링크가 있다. Crusenho 고지는 웹 번들에 포함하지만, 기존 상점 에셋의 짧은 크레딧에는 원작·라이선스 링크와 개작 내역 전체가 들어 있지 않다. 모바일 화면 및 Windows/Android 설치물에 이 문서와 모든 제3자 고지가 포함되는지는 별도의 배포본 확인이 필요하다.
+이 문서는 저장소의 출처 기록이다. 웹 번들에는 Crusenho 설정 아이콘 고지와 LuizMelo·Duckhive 동물 고지를 포함한다. 웹 상점의 기존 `peony (CC-BY 4.0) · stealthix` 짧은 크레딧에는 원작·라이선스 링크와 개작 내역 전체가 들어 있지 않다. 모바일 화면 및 Windows/Android 설치물에 이 문서와 모든 제3자 고지가 포함되는지는 별도의 배포본 확인이 필요하다.
 
 배포할 때에는 실제 포함된 자료의 LICENSE/NOTICE와 OFL 고지, CC BY 출처·개작 기록을 사용자가 열람할 수 있도록 함께 제공한다. 저장소 문서 갱신만으로 기존 설치물의 고지가 변경되지는 않는다.
