@@ -1,6 +1,17 @@
 # 에셋 출처 및 라이선스
 
-2026-09-14 기준 저장소에 포함된 이미지·폰트의 출처와 변경 사항을 기록한다. 오픈소스 코드 의존성은 [라이선스 안내](LICENSING.md)의 별도 목록을 따른다. 이 문서는 제3자 자료를 DumpIt의 라이선스로 다시 허가하지 않는다.
+2026-09-28 기준 저장소에 포함된 이미지·폰트의 출처와 변경 사항을 기록한다. 오픈소스 코드 의존성은 [라이선스 안내](LICENSING.md)의 별도 목록을 따른다. 이 문서는 제3자 자료를 DumpIt의 라이선스로 다시 허가하지 않는다.
+
+## 설정 아이콘
+
+웹의 `frontend/src/assets/icons/setting.svg`는 **Icons Essential v1.2 — Gear / Crusenho Agus Hennihuno**의 파생본이다. [원작 배포 페이지](https://crusenho.itch.io/icons-essential-pack-free-icons), [CC BY 4.0 조건](https://creativecommons.org/licenses/by/4.0/), [동봉 라이선스](docs/licenses/assets/crusenho/Icons-Essential-LICENSE.txt), [라이선스 전문](docs/licenses/assets/CC-BY-4.0.txt)을 함께 보존한다.
+
+- 변경: 16×16 PNG의 불투명 픽셀 위치와 4색을 그대로 SVG 사각형으로 옮겼다. 크기별 PNG 축소 대신 SVG로 표시한다.
+- [보존한 원본](docs/licenses/assets/crusenho/Gear.png) SHA-256: `92989874396321da1729cc274a24c83822d8277a2f723d7fd473fc0f0804e0e9`.
+- 원본 ZIP `Icons_Essential.zip` SHA-256: `a3e5d175a5e3eb82b9464aae5f4278a17cde8b9fd8eb54ee16532ae303a4ec79`; 내부 경로 `Icons_Essential/v1.2/Icons/Gear.png`.
+- 웹 상점의 기존 크레딧 영역에서 [번들에 포함한 고지](frontend/public/licenses/icons-essential.txt)를 열 수 있다. 원작자가 DumpIt을 보증하거나 후원한다는 의미가 아니다.
+
+이 설정 아이콘은 DumpIt 자체 라이선스의 제한을 적용하지 않고 원래 CC BY 4.0 조건을 유지한다. 모바일용 기존 `setting_image.png`와는 별개다. 아래 시계 SVG는 이 팩에 포함된 자료가 아니라 DumpIt에서 별도로 제작했다.
 
 ## 상점 픽셀 아트
 
@@ -34,6 +45,7 @@ CC BY 4.0 자료를 공유할 때에는 작가·원작·라이선스 링크와 �
 | `frontend/src/assets/ui_*.png`, 모바일 `assets/icons/ui_*.png` | [gen_ui_icons.py](frontend/scripts/sprites/gen_ui_icons.py) |
 | `coin_image.png`, `remain_ai_token.png`, `setting_image.png`, `arrowheads.png` | [gen_chrome_icons.py](frontend/scripts/sprites/gen_chrome_icons.py); 설정·화살촉은 저장소 내 logical 마스터 사용 |
 | `deadline_alarm.png` | [gen_deadline_icon.py](frontend/scripts/sprites/gen_deadline_icon.py) |
+| `frontend/src/assets/icons/deadline-16.svg`, `deadline-20.svg` | 16×16·20×20 정수 좌표 사각형으로 직접 작성한 원형 시계. 각 SVG가 편집 가능한 원본이며 PNG·폰트·외부 이미지를 포함하지 않음. 웹 마감 아이콘에서 사용하고 기존 플랫폼용 `deadline_alarm.png`는 유지 |
 | `frontend/src/assets/icons/*_<크기>.png` | [gen_icon_sizes.py](frontend/scripts/gen_icon_sizes.py)로 원본에서 크기별 파생. 원본별 출처를 승계하며, `menu`·`download`의 원출처는 아래 확인 항목 참조 |
 | Android 위젯 문자·도트 이미지 | [gen_widget_assets.py](mobile/scripts/gen_widget_assets.py); 문자 렌더링에 Galmuri와 DungGeunMo 사용 |
 
@@ -74,6 +86,6 @@ Flaticon 자료는 오픈소스 코드나 CC0 에셋으로 분류하지 않는�
 
 ## 배포본의 고지
 
-이 문서는 저장소의 출처 기록이다. 현재 웹 상점에는 `peony (CC-BY 4.0) · stealthix`라는 짧은 크레딧이 있지만 원작·라이선스 링크와 개작 내역 전체를 담고 있지는 않다. 모바일 화면 및 Windows/Android 설치물에 이 문서와 모든 제3자 고지가 포함되는지는 별도의 배포본 확인이 필요하다.
+이 문서는 저장소의 출처 기록이다. 웹 상점에는 `peony (CC-BY 4.0) · stealthix`라는 짧은 크레딧과 Crusenho 설정 아이콘의 상세 고지 링크가 있다. Crusenho 고지는 웹 번들에 포함하지만, 기존 상점 에셋의 짧은 크레딧에는 원작·라이선스 링크와 개작 내역 전체가 들어 있지 않다. 모바일 화면 및 Windows/Android 설치물에 이 문서와 모든 제3자 고지가 포함되는지는 별도의 배포본 확인이 필요하다.
 
 배포할 때에는 실제 포함된 자료의 LICENSE/NOTICE와 OFL 고지, CC BY 출처·개작 기록을 사용자가 열람할 수 있도록 함께 제공한다. 저장소 문서 갱신만으로 기존 설치물의 고지가 변경되지는 않는다.

@@ -556,6 +556,11 @@ export default function ShopPage() {
 
       <p className="text-[0.6875rem] text-sub text-center pt-4 border-t border-line">
         픽셀 아트: peony (CC-BY 4.0) · stealthix
+        <br />
+        설정 아이콘:{' '}
+        <a href={`${import.meta.env.BASE_URL}licenses/icons-essential.txt`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+          Crusenho (CC BY 4.0) · 출처와 변경 사항
+        </a>
       </p>
 
       {Object.keys(previews).length > 0 && (
